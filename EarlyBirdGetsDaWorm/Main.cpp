@@ -1,6 +1,7 @@
 // ---------------------------------------------------------------------------
 // includes
 
+#include <iostream>
 #include <crtdbg.h>
 #include <stdio.h>
 #include "AEEngine.h"
