@@ -1,15 +1,24 @@
 // ---------------------------------------------------------------------------
 // includes
-
 #include <iostream>
 #include <crtdbg.h>
 #include <stdio.h>
+#include <vector>
+#include <string>
+#include <math.h> 
+#include <Windows.h> // Required for SetCursorPos and GetCursorPos
 #include "AEEngine.h"
 #include "mesh_creation.hpp" 
 #include "utils.hpp"
 
-f32 playerX = 0.0f;
-f32 playerY = 0.0f;
+// ---------------------------------------------------------------------------
+// Globals
+// ---------------------------------------------------------------------------
+const int SCREEN_W = 1600;
+const int SCREEN_H = 900;
+
+// Mouse sensitivity - adjust this to your liking
+const float mouseSensitivity = 0.1f;
 
 // ---------------------------------------------------------------------------
 // main
@@ -17,129 +26,207 @@ f32 playerY = 0.0f;
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
+    _In_ int        nCmdShow)
 {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // 1. Initialize System
-    if (AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL) == 0)
+    if (AESysInit(hInstance, nCmdShow, SCREEN_W, SCREEN_H, 1, 60, false, NULL) == 0)
         return 0;
 
-    AESysSetWindowTitle("BurdBurd!");
+    AESysSetWindowTitle("Alpha Raycaster: FPS Controls");
     AESysReset();
 
-	// Variables
-	f32 maxHealth = 980.0f;
-	f32 damageDealt = 0.0f;
-	f32 damagePerSecond = 100.0f;
-    // Create Circle Mesh (Radius 0.5, 40 steps)
-    AEGfxVertexList* circleMesh = CreateCircleMesh(0.5f, 40, 0xFFFFFFFF);
+    // Hide the cursor for better FPS feel
+    ShowCursor(FALSE);
 
-	// Create Square Mesh for Health Bar 
-	AEGfxVertexList* squareMesh = CreateSquareMesh(0xFFFFFFFF);
+    // -----------------------------------------------------------------------
+    // SETUP: DOOM-STYLE VECTORS
+    // -----------------------------------------------------------------------
+    f32 posX = 3.5f, posY = 3.5f;     // Position
+    f32 dirX = -1.0f, dirY = 0.0f;    // Direction Vector
+    f32 planeX = 0.0f, planeY = 0.66f; // Camera Plane (FOV)
+
+    // Map (16x16)
+    int mapHeight = 16;
+    int mapWidth = 16;
+    std::wstring map;
+    map += L"################";
+    map += L"#..............#";
+    map += L"#....##.##.....#";
+    map += L"#....#...#.....#";
+    map += L"#....##.##.....#";
+    map += L"#....#...#.....#";
+    map += L"#....#...#.....#";
+    map += L"#....#...#.....#";
+    map += L"#....#...#.....#";
+    map += L"#..####.####...#";
+    map += L"#.#...#.#...#..#";
+    map += L"#.....#.#......#";
+    map += L"#..####.####...#";
+    map += L"#..............#";
+    map += L"#..............#";
+    map += L"################";
+
+    AEGfxVertexList* pMeshWall = CreateSquareMesh(0xFFFFFFFF);
     int gGameRunning = 1;
 
-    // 3. Game Loop
+    // Get screen center in screen coordinates for SetCursorPos
+    int screenCenterX = GetSystemMetrics(SM_CXSCREEN) / 2;
+    int screenCenterY = GetSystemMetrics(SM_CYSCREEN) / 2;
+
+    // -----------------------------------------------------------------------
+    // GAME LOOP
+    // -----------------------------------------------------------------------
     while (gGameRunning)
     {
         AESysFrameStart();
-
-        // Input & Exit Logic
-        if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist())
-            gGameRunning = 0;
-
         f64 deltaTime = AEFrameRateControllerGetFrameTime();
+        f32 moveSpeed = 5.0f * (f32)deltaTime;
 
-        // Player Movement
-        f32 speed = 200.0f;
-        if (AEInputCheckCurr(AEVK_W)) playerY += speed * (f32)deltaTime;
-        if (AEInputCheckCurr(AEVK_S)) playerY -= speed * (f32)deltaTime;
-        if (AEInputCheckCurr(AEVK_A)) playerX -= speed * (f32)deltaTime;
-        if (AEInputCheckCurr(AEVK_D)) playerX += speed * (f32)deltaTime;
+        if (AEInputCheckTriggered(AEVK_ESCAPE)) gGameRunning = 0;
 
-		// Damage / Heal Logic
-        if (CircleCollision(playerX, playerY, 50.0f, -400.0f, 0.0f, 225.0f)) {
-            damageDealt += damagePerSecond * (f32)deltaTime;
-			if (damageDealt > maxHealth) damageDealt = maxHealth;
-        } else if (CircleCollision(playerX, playerY, 50.0f, 400.0f, 0.0f, 225.0f)) {
-            damageDealt -= damagePerSecond * (f32)deltaTime;
-			if (damageDealt < 0.0f) damageDealt = 0.0f;
-		}
+        // --- 1. MOUSE LOOK (Non-constant Delta Movement) ---
+        POINT currentMousePos;
+        if (GetCursorPos(&currentMousePos))
+        {
+            // Calculate displacement from screen center
+            float mouseDiffX = (float)(currentMousePos.x - screenCenterX);
 
-        // Render
+            if (mouseDiffX != 0)
+            {
+                // Calculate rotation step
+                f32 rotStep = mouseDiffX * mouseSensitivity * (f32)deltaTime;
 
-        AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                // Rotate Direction Vector
+                f32 oldDirX = dirX;
+                dirX = dirX * cosf(-rotStep) - dirY * sinf(-rotStep);
+                dirY = oldDirX * sinf(-rotStep) + dirY * cosf(-rotStep);
 
-        AEMtx33 scale, translate, transform;
+                // Rotate Camera Plane Vector
+                f32 oldPlaneX = planeX;
+                planeX = planeX * cosf(-rotStep) - planeY * sinf(-rotStep);
+                planeY = oldPlaneX * sinf(-rotStep) + planeY * cosf(-rotStep);
 
-		// --- Draw Health Bar Background ---
-        AEMtx33Scale(&scale, 1000.0f, 60.0f);
-        AEMtx33Trans(&translate, 0.0f, 400.0f);
-        AEMtx33Concat(&transform, &translate, &scale);
-
-        AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 1.0f);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-
-        // --- Draw Health Bar  ---
-        AEMtx33Scale(&scale, maxHealth - damageDealt, 40.0f);
-        AEMtx33Trans(&translate, 0.0f - damageDealt / 2, 400.0f);
-        AEMtx33Concat(&transform, &translate, &scale);
-
-        AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-
-        // --- Mini Health Bar ---
-        s8 mini_bar = (maxHealth - damageDealt) / 98;
-        AEMtx33Scale(&scale, 52.63157f, 40.0f);
-
-        for (s8 bars{}; bars < mini_bar; bars++) {
-            AEMtx33Trans(&translate, -473.684215f + bars * (2 * 52.63157f), 330.0f);
-            AEMtx33Concat(&transform, &translate, &scale);
-
-            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+                // SNAP cursor back to center to prevent constant spinning
+                SetCursorPos(screenCenterX, screenCenterY);
+            }
         }
 
-        // --- Left Circle (Red) ---
-        AEMtx33Scale(&scale, 450.0f, 450.0f);
-        AEMtx33Trans(&translate, -400.0f, 0.0f);
-        AEMtx33Concat(&transform, &translate, &scale);
+        // --- 2. WASD MOVEMENT & STRAFING ---
+        // Forward/Backward (W/S)
+        if (AEInputCheckCurr(AEVK_W)) {
+            if (map[(int)posY * mapWidth + (int)(posX + dirX * moveSpeed)] != '#') posX += dirX * moveSpeed;
+            if (map[(int)(posY + dirY * moveSpeed) * mapWidth + (int)posX] != '#') posY += dirY * moveSpeed;
+        }
+        if (AEInputCheckCurr(AEVK_S)) {
+            if (map[(int)posY * mapWidth + (int)(posX - dirX * moveSpeed)] != '#') posX -= dirX * moveSpeed;
+            if (map[(int)(posY - dirY * moveSpeed) * mapWidth + (int)posX] != '#') posY -= dirY * moveSpeed;
+        }
+        // Strafe Left/Right (A/D) - Uses the Plane vector
+        if (AEInputCheckCurr(AEVK_A)) {
+            if (map[(int)posY * mapWidth + (int)(posX - planeX * moveSpeed)] != '#') posX -= planeX * moveSpeed;
+            if (map[(int)(posY - planeY * moveSpeed) * mapWidth + (int)posX] != '#') posY -= planeY * moveSpeed;
+        }
+        if (AEInputCheckCurr(AEVK_D)) {
+            if (map[(int)posY * mapWidth + (int)(posX + planeX * moveSpeed)] != '#') posX += planeX * moveSpeed;
+            if (map[(int)(posY + planeY * moveSpeed) * mapWidth + (int)posX] != '#') posY += planeY * moveSpeed;
+        }
 
-        AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(circleMesh, AE_GFX_MDM_TRIANGLES);
+        // --- RENDER PREP ---
+        AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 
-        // --- Right Circle (Green) ---
-        AEMtx33Scale(&scale, 450.0f, 450.0f);
-        AEMtx33Trans(&translate, 400.0f, 0.0f);
-        AEMtx33Concat(&transform, &translate, &scale);
+        // --- FLOOR & CEILING ---
+        int halfHeight = SCREEN_H / 2;
+        for (int y = 0; y < halfHeight; y += 4) {
+            f32 intensity = ((f32)y / (f32)halfHeight) * 0.6f;
+            AEGfxSetColorToMultiply(intensity, intensity, intensity, 1.0f);
+            AEMtx33 scale, trans, transform;
+            AEMtx33Scale(&scale, (f32)SCREEN_W, 4.0f);
 
-        AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(circleMesh, AE_GFX_MDM_TRIANGLES);
+            AEMtx33Trans(&trans, 0.0f, (f32)y + 2.0f); // Floor
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(pMeshWall, AE_GFX_MDM_TRIANGLES);
 
-        // --- Player Circle (Blue) ---
-        AEMtx33Scale(&scale, 100.0f, 100.0f);
-        AEMtx33Trans(&translate, playerX, playerY);
-        AEMtx33Concat(&transform, &translate, &scale);
+            AEMtx33Trans(&trans, 0.0f, -(f32)y - 2.0f); // Ceiling
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(pMeshWall, AE_GFX_MDM_TRIANGLES);
+        }
 
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 1.0f, 1.0f);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(circleMesh, AE_GFX_MDM_TRIANGLES);
+        // --- RAYCASTING (DDA) ---
+        for (int x = 0; x < SCREEN_W; x += 2) {
+            f32 cameraX = 2.0f * x / (f32)SCREEN_W - 1.0f;
+            f32 rayDirX = dirX + planeX * cameraX;
+            f32 rayDirY = dirY + planeY * cameraX;
 
+            int mapX = (int)posX, mapY = (int)posY;
+            f32 deltaDistX = (rayDirX == 0) ? 1e30f : fabsf(1.0f / rayDirX);
+            f32 deltaDistY = (rayDirY == 0) ? 1e30f : fabsf(1.0f / rayDirY);
+            f32 sideDistX, sideDistY, perpWallDist;
+            int stepX, stepY;
+
+            if (rayDirX < 0) { stepX = -1; sideDistX = (posX - mapX) * deltaDistX; }
+            else { stepX = 1; sideDistX = (mapX + 1.0f - posX) * deltaDistX; }
+            if (rayDirY < 0) { stepY = -1; sideDistY = (posY - mapY) * deltaDistY; }
+            else { stepY = 1; sideDistY = (mapY + 1.0f - posY) * deltaDistY; }
+
+            bool hitWall = false;
+            int side = 0;
+            bool hitWindow = false;
+            f32 windowDist = 0.0f;
+
+            while (!hitWall) {
+                if (sideDistX < sideDistY) { sideDistX += deltaDistX; mapX += stepX; side = 0; }
+                else { sideDistY += deltaDistY; mapY += stepY; side = 1; }
+
+                if (mapX < 0 || mapX >= mapWidth || mapY < 0 || mapY >= mapHeight) {
+                    hitWall = true; perpWallDist = 20.0f;
+                }
+                else {
+                    wchar_t tile = map[mapY * mapWidth + mapX];
+                    if (tile == '#') hitWall = true;
+                    else if (tile == 'w' && !hitWindow) {
+                        hitWindow = true;
+                        windowDist = (side == 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+                    }
+                }
+            }
+
+            perpWallDist = (side == 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+            int lineHeight = (int)(SCREEN_H / perpWallDist);
+            f32 shade = (1.0f - (perpWallDist / 16.0f)) * (side == 1 ? 0.7f : 1.0f);
+            if (shade < 0) shade = 0;
+
+            AEGfxSetBlendMode(AE_GFX_BM_NONE);
+            AEGfxSetColorToMultiply(shade, shade, shade, 1.0f);
+            AEMtx33 scale, trans, transform;
+            f32 drawX = (f32)x - (SCREEN_W / 2.0f);
+            AEMtx33Scale(&scale, 2.0f, (f32)lineHeight);
+            AEMtx33Trans(&trans, drawX, 0.0f);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(pMeshWall, AE_GFX_MDM_TRIANGLES);
+
+            if (hitWindow) {
+                int winHeight = (int)(SCREEN_H / windowDist);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.0f, 1.0f, 1.0f, 0.3f);
+                AEMtx33Scale(&scale, 2.0f, (f32)winHeight);
+                AEMtx33Trans(&trans, drawX, 0.0f);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(pMeshWall, AE_GFX_MDM_TRIANGLES);
+            }
+        }
         AESysFrameEnd();
     }
 
-    // 4. Cleanup
-    if (circleMesh) AEGfxMeshFree(circleMesh);
-
+    if (pMeshWall) AEGfxMeshFree(pMeshWall);
     AESysExit();
     return 1;
 }
