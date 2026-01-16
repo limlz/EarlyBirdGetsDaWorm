@@ -70,6 +70,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     map += L"#..............#";
     map += L"################";
 
+    std::wstring map2;
+    map2 += L"################";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#...########...#";
+    map2 += L"#...#......#...#";
+    map2 += L"#...#......#...#";
+    map2 += L"#...#......#...#";
+    map2 += L"#...###..###...#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"#..............#";
+    map2 += L"################";
+
     AEGfxVertexList* pMeshWall = CreateSquareMesh(0xFFFFFFFF);
     int gGameRunning = 1;
 
@@ -124,6 +142,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         if (AEInputCheckCurr(AEVK_S)) {
             if (map[(int)posY * mapWidth + (int)(posX - dirX * moveSpeed)] != '#') posX -= dirX * moveSpeed;
             if (map[(int)(posY - dirY * moveSpeed) * mapWidth + (int)posX] != '#') posY -= dirY * moveSpeed;
+            map = map2;
         }
         // Strafe Left/Right (A/D) - Uses the Plane vector
         if (AEInputCheckCurr(AEVK_A)) {
