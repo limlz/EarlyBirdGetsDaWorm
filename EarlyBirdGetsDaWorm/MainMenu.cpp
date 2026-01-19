@@ -1,7 +1,6 @@
 #include "pch.hpp"
 
-static
-AEGfxVertexList* squareMesh;
+static AEGfxVertexList* squareMesh;
 
 void MainMenu_Load()
 {
@@ -19,17 +18,22 @@ void MainMenu_Initialize()
 
 void MainMenu_Update()
 {
-	AEGfxSetBackgroundColor(0.2f, 0.0f, 0.0f);
 	if (AEInputCheckTriggered(AEVK_SPACE))
 	{
 		std::cout << "Space key pressed in MainMenu\n";
 		next = GS_QUIT; // Example: Transition to quit state
 		
 	}
+	if (AEInputCheckTriggered(AEVK_N)) {
+		next = GAME_STATE;
+	}
 }
 
 void MainMenu_Draw()
 {
+	// Background
+	AEGfxSetBackgroundColor(0.2f, 0.0f, 0.0f);
+
 	// Draw main menu elements
 	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 	AEMtx33 scale, translate, transform;

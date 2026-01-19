@@ -9,5 +9,4 @@ void MainMenu_Draw();
 
 void MainMenu_Free();
 
-
 void MainMenu_Unload();

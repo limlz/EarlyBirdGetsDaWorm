@@ -13,8 +13,8 @@ void Startup_Load()
 void Startup_Initialize()
 {
 	// Initialize main menu variables
-	splash_screen_timer = 1.0f;
-	title_screen_timer = 1.0f;
+	splash_screen_timer = 0.4f;
+	title_screen_timer = 0.4f;
 
 	std::cout << "Timer: " << splash_screen_timer << "\n";
 	std::cout << "Startup: Initialize\n";

@@ -50,6 +50,15 @@ void GSM_Update()
 		fpUnload = MainMenu_Unload;
 		break;
 
+	case GAME_STATE:
+		fpLoad = Game_Load;
+		fpInitialize = Game_Initialize;
+		fpUpdate = Game_Update;
+		fpDraw = Game_Draw;
+		fpFree = Game_Free;
+		fpUnload = Game_Unload;
+		break;
+
 	case GS_RESTART:
 		// Restart logic is handled in the main game loop
 		break;

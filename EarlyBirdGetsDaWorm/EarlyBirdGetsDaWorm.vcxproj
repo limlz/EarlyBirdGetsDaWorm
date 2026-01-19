@@ -100,7 +100,10 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameStateManager.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Lights.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="MeshCreation.cpp" />
@@ -113,6 +116,9 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="game.hpp" />
+    <ClInclude Include="input.hpp" />
+    <ClInclude Include="lights.hpp" />
     <ClInclude Include="quit.hpp" />
     <ClInclude Include="startup.hpp" />
     <ClInclude Include="state_list.hpp" />
