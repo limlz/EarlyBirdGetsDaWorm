@@ -1,0 +1,8 @@
+enum GS_STATES
+{
+	START_UP = 0,
+	MAIN_MENU,
+
+	GS_QUIT,
+	GS_RESTART
+};
