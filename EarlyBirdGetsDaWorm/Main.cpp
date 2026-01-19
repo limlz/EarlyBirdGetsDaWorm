@@ -38,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Game Loop
 
 	GSM_Initialize(START_UP);
-
+	AESysSetFullScreen(1);
 	while (gGameRunning)
 	{
 		// Informing the system about the loop'stt start
@@ -87,6 +87,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// Unload state resources unless the game is restarting the same state
 		if (next != GS_RESTART) {
 			fpUnload();
+		}
+
+		// Temp Space to Quit
+		if (next == GS_QUIT) {
+			gGameRunning = 0;
 		}
 
 		// Update state tracking variables
