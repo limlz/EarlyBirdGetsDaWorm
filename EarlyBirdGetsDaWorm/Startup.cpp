@@ -40,13 +40,20 @@ void Startup_Update()
 	if (splash_screen_timer > 0)
 	{
 		splash_screen_timer -= AEFrameRateControllerGetFrameTime();
-		std::cout << "SplashScreen: " << splash_screen_timer << "\n";
+		if (AEInputCheckTriggered(AEVK_SPACE))
+		{
+			splash_screen_timer = 0.0f;
+		}
 		return;
 	} 
 	else if (title_screen_timer > 0)
 	{
 		title_screen_timer -= AEFrameRateControllerGetFrameTime();
 		std::cout << "TitleScreen: " << title_screen_timer << "\n";
+		if (AEInputCheckTriggered(AEVK_SPACE))
+		{
+			title_screen_timer = 0.0f;
+		}
 		return;
 	}
 	{

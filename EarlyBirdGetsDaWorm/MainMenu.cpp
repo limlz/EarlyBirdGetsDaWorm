@@ -18,7 +18,7 @@ void MainMenu_Initialize()
 
 void MainMenu_Update()
 {
-	if (AEInputCheckTriggered(AEVK_SPACE))
+	if (AEInputCheckTriggered(AEVK_ESCAPE))
 	{
 		std::cout << "Space key pressed in MainMenu\n";
 		next = GS_QUIT; // Example: Transition to quit state

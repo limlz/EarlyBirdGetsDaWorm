@@ -4,6 +4,7 @@
 // Colors
 #define COLOR_WHITE         0xFFFFFFFF
 #define COLOR_BLACK         0x000000FF
+#define COLOR_NIGHT_BLUE    0x191970FF
 #define COLOR_DOOR_BROWN    0x8B4513FF
 #define COLOR_LIFT_GREY     0x696969FF
 #define COLOR_LIFT_BG       0x2F4F4FFF
@@ -17,6 +18,7 @@
 #define DIST_BETWEEN_DOORS  600.0f
 #define LIFT_WIDTH          200.0f
 #define LIFT_HEIGHT         300.0f
+#define NUM_OF_FLOOR        10
 #define NUM_DOORS           10
 #define SCREEN_WIDTH_HALF   800.0f
 #define SCREEN_HEIGHT_HALF  450.0f
@@ -28,7 +30,7 @@ s8 fontId = 0;
 
 f32 playerX{}, playerY{};
 float textXoffset{ 0.06f }, textY{ 50.0f };
-int floorNum{}; // Current floor the player is on
+int floorNum{1}; // Current floor the player is on
 
 bool liftPromptActivated{}, liftActive{};
 
@@ -50,7 +52,7 @@ void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
 
-    if (AEInputCheckCurr(AEVK_SPACE)) {
+    if (AEInputCheckCurr(AEVK_ESCAPE)) {
         next = GS_QUIT;
     }
 
@@ -89,8 +91,14 @@ void Game_Update()
 
 void Game_Draw()
 {
-    // Background Color
-    AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
+    // Background Color (1-9)
+    if (floorNum >= 1) {
+
+        AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
+    }
+    else {
+		AEGfxSetBackgroundColor(0.8f, 0.6f, 0.6f);
+    }
 
     // Top and bottom floor lines
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
@@ -109,7 +117,13 @@ void Game_Draw()
 
             // Door Text
             char textBuffer[32];
-            sprintf_s(textBuffer, "%02d-%02d", floorNum + 1, i + 1);
+
+            if (floorNum == 0) {
+                sprintf_s(textBuffer, "B1-%02d", i + 1);
+            }
+            else {
+                sprintf_s(textBuffer, "%02d-%02d", floorNum, i + 1);
+            }   
 
             float textNDC_X = (wallX / SCREEN_WIDTH_HALF) - textXoffset;
             float textNDC_Y = textY / SCREEN_HEIGHT_HALF;
@@ -120,8 +134,11 @@ void Game_Draw()
 
     // Draw Left Wall + Lift (Start)
     if (playerX > -(2 * DIST_BETWEEN_DOORS)) {
-        DrawSquareMesh(squareMesh, -600.0f + playerX, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, -600.0f + playerX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
         DrawSquareMesh(squareMesh, playerX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+        if (floorNum != 0) {
+            DrawSquareMesh(squareMesh, -700.0f + playerX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		}
     }
 
     // Draw Right Wall + Lift (End)
@@ -130,9 +147,16 @@ void Game_Draw()
         float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
         float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 
-        DrawSquareMesh(squareMesh, endOffset + playerX, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, endOffset + playerX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
         DrawSquareMesh(squareMesh, liftOffset + playerX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+        if (floorNum != 0) {
+            DrawSquareMesh(squareMesh, endOffset + playerX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+        }
     }
+
+    // Top and bottom floor lines
+    DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+    DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
     // Lift UI Overlay
     if (liftPromptActivated && !liftActive) {
@@ -144,6 +168,12 @@ void Game_Draw()
         // Lift console
         DrawSquareMesh(squareMesh, 0.0f, 0.0f, 400.0f, 700.0f, COLOR_LIFT_CONSOLE);
         // Buttons would go here
+        for (int i{}; i < NUM_OF_FLOOR; i++) {
+            if (AEInputCheckCurr(AEVK_0 + i)) {
+				floorNum = i;
+                liftActive = false;
+            }
+        }
         
     }
 }

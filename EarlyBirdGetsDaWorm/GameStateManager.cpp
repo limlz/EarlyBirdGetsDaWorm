@@ -31,7 +31,7 @@ void GSM_Update()
 	switch (next)
 	{
 	case START_UP:
-		// Assign Level 1 state functions
+		// Assign Start Up state functions
 		fpLoad = Startup_Load;
 		fpInitialize = Startup_Initialize;
 		fpUpdate = Startup_Update;
@@ -41,7 +41,7 @@ void GSM_Update()
 		break;
 
 	case MAIN_MENU:
-		// Assign Level 2 state functions
+		// Assign Main Menu state functions
 		fpLoad = MainMenu_Load;
 		fpInitialize = MainMenu_Initialize;
 		fpUpdate = MainMenu_Update;
@@ -51,6 +51,7 @@ void GSM_Update()
 		break;
 
 	case GAME_STATE:
+		// Assign Main Game State functions
 		fpLoad = Game_Load;
 		fpInitialize = Game_Initialize;
 		fpUpdate = Game_Update;
