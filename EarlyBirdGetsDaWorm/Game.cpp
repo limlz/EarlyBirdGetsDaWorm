@@ -1,169 +1,159 @@
 #include "pch.hpp"
 
+// --- MACROS --- //
+// Colors
+#define COLOR_WHITE         0xFFFFFFFF
+#define COLOR_BLACK         0x000000FF
+#define COLOR_DOOR_BROWN    0x8B4513FF
+#define COLOR_LIFT_GREY     0x696969FF
+#define COLOR_LIFT_BG       0x2F4F4FFF
+#define COLOR_LIFT_CONSOLE  0xC0C0C0FF
+#define COLOR_LIFT_BUTTON   0xFFD700FF
 
+// Dimensions & Settings
+#define PLAYER_SPEED        1500.0f
+#define DOOR_WIDTH          150.0f
+#define DOOR_HEIGHT         300.0f
+#define DIST_BETWEEN_DOORS  600.0f
+#define LIFT_WIDTH          200.0f
+#define LIFT_HEIGHT         300.0f
+#define NUM_DOORS           10
+#define SCREEN_WIDTH_HALF   800.0f
+#define SCREEN_HEIGHT_HALF  450.0f
+
+// Global Variables
 static AEGfxVertexList* squareMesh;
-static AEGfxVertexList* circleMesh;
+static AEGfxVertexList* circleMesh; 
 s8 fontId = 0;
+
 f32 playerX{}, playerY{};
-f32 playerSpeed{ 1500 };
-float doorWidth{ 150.0f }, doorHeight{ 300.0f }, distBetweenDoors{ 600.0f };
-float liftWidth{ 200.0f }, liftHeight{ 300.0f };
-float doorR{0.54f}, doorG{0.32f}, doorB{0.16f};
-int numOfDoors{ 10 }, numOfFloors{ 10 };
-float textXoffset{0.06f}, textY{ 50.0f };
-int floorNum{}, doorNum{};
+float textXoffset{ 0.06f }, textY{ 50.0f };
+int floorNum{}; // Current floor the player is on
+
 bool liftPromptActivated{}, liftActive{};
-std::string doorID;
-
-
-
 
 void Game_Load()
 {
-	// Load resources for the game
-	fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
-	std::cout << "Startup: Load\n";
+    fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    std::cout << "Startup: Load\n";
 }
 
 void Game_Initialize()
 {
-	squareMesh = CreateSquareMesh(0xFFFFFFFF);
-	circleMesh = CreateCircleMesh(0.5f, 70, 0xFFFFFFFF);
-	std::cout << "Startup: Initialize\n";
+    // Removed unused circleMesh
+    squareMesh = CreateSquareMesh(COLOR_WHITE);
+	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
+    std::cout << "Startup: Initialize\n";
 }
 
 void Game_Update()
 {
-	if (AEInputCheckCurr(AEVK_SPACE)) {
-		next = GS_QUIT;
-	}
-	if (AEInputCheckCurr(AEVK_A)) {
-		playerX += playerSpeed * (f32)AEFrameRateControllerGetFrameTime();
-	}
-	if (AEInputCheckCurr(AEVK_D)) {
-		playerX -= playerSpeed * (f32)AEFrameRateControllerGetFrameTime();
-	}
-	if (playerX > 0) {
-		playerX = 0;
-	}
-	else if (playerX < -((numOfDoors + 1) * distBetweenDoors)) {
-		playerX = -((numOfDoors + 1) * distBetweenDoors); // + 1 for right elevator
-	}
-	if (playerX > -5 || playerX < -((numOfDoors + 1) * distBetweenDoors) + 5) {
-		liftPromptActivated = true;
-		if (AEInputCheckTriggered(AEVK_L)) {
-			liftActive = !liftActive;
-		}
-	}
-	else {
-		liftPromptActivated = false;
-		liftActive = false;
-	}
+    float dt = (f32)AEFrameRateControllerGetFrameTime();
+
+    if (AEInputCheckCurr(AEVK_SPACE)) {
+        next = GS_QUIT;
+    }
+
+    // Movement Logic
+    if (AEInputCheckCurr(AEVK_A)) {
+        playerX += PLAYER_SPEED * dt;
+    }
+    if (AEInputCheckCurr(AEVK_D)) {
+        playerX -= PLAYER_SPEED * dt;
+    }
+
+    // Camera/World Bounds
+    // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
+    float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+
+    if (playerX > 0) {
+        playerX = 0;
+    }
+    else if (playerX < -maxDist) {
+        playerX = -maxDist;
+    }
+
+    // Lift Interaction Check
+    // Checks if player is at the far left (start) or far right (end)
+    if (playerX > -5 || playerX < -maxDist + 5) {
+        liftPromptActivated = true;
+        if (AEInputCheckTriggered(AEVK_L)) {
+            liftActive = !liftActive;
+        }
+    }
+    else {
+        liftPromptActivated = false;
+        liftActive = false;
+    }
 }
 
 void Game_Draw()
 {
-	// Black Background
-	AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
-	float halfScreenW = 800.0f;
-	float halfScreenH = 450.0f;
-	// Draw main menu elements
-	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-	AEMtx33 scale, translate, transform;
-	AEMtx33Scale(&scale, 1600.0f, 500.0f);
-	AEMtx33Trans(&translate, 0.0f, 0.0f);
-	AEMtx33Concat(&transform, &translate, &scale);
+    // Background Color
+    AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
 
-	AEGfxSetColorToMultiply(0.9f, 0.9f, 0.9f, 1.0f);
-	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    // Top and bottom floor lines
+    DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+    DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-	// Draw doors
-	for (int i{}; i < numOfDoors; i++) {
-		float wallX = distBetweenDoors + playerX + (distBetweenDoors * i);
-		if (wallX < distBetweenDoors || wallX > -(distBetweenDoors * 10)) {
-			AEMtx33Scale(&scale, doorWidth, doorHeight);
-			AEGfxSetColorToMultiply(doorR, doorG, doorB, 1.0f);
-			AEMtx33Trans(&translate, wallX, -100.0f);
-			AEMtx33Concat(&transform, &translate, &scale);
-			AEGfxSetTransform(transform.m);
-			AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    // Draw Doors
+    for (int i = 0; i < NUM_DOORS; i++) {
+        // Calculate world position of the door based on player offset
+        float wallX = DIST_BETWEEN_DOORS + playerX + (DIST_BETWEEN_DOORS * i);
 
+        // Simple Culling: Only draw if within reasonable screen bounds
+        // (Adjusted logic to be relative to screen width rather than hardcoded 10)
+        if (wallX > -SCREEN_WIDTH_HALF - DOOR_WIDTH && wallX < SCREEN_WIDTH_HALF + DOOR_WIDTH) {
 
-			char textBuffer[32];
-			sprintf_s(textBuffer, "%02d-%02d", floorNum + 1, i + 1);
-			float textNDC_X = (wallX / halfScreenW) - textXoffset;
-			float textNDC_Y = textY / halfScreenH;
+            DrawSquareMesh(squareMesh, wallX, -100.0f, DOOR_WIDTH, DOOR_HEIGHT, COLOR_DOOR_BROWN);
 
-			// Pass the calculated variables instead of fixed numbers
-			AEGfxPrint(fontId, textBuffer, textNDC_X, textNDC_Y, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+            // Door Text
+            char textBuffer[32];
+            sprintf_s(textBuffer, "%02d-%02d", floorNum + 1, i + 1);
 
-		}
-	}
-	
-	if (playerX > -(2 * distBetweenDoors)) { // Draw left wall + lift
-		AEMtx33Scale(&scale, 800, 900);
-		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-		AEMtx33Trans(&translate, - 600.0f + playerX, 0.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+            float textNDC_X = (wallX / SCREEN_WIDTH_HALF) - textXoffset;
+            float textNDC_Y = textY / SCREEN_HEIGHT_HALF;
 
-		AEMtx33Scale(&scale, liftWidth, liftHeight);
-		AEGfxSetColorToMultiply(0.8f, 0.8f, 0.8f, 1.0f);
-		AEMtx33Trans(&translate, playerX, -100.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-	}
-	else if (playerX < -(8 * distBetweenDoors)) { // Right wall + lift
-		AEMtx33Scale(&scale, 800, 900);
-		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-		AEMtx33Trans(&translate, (12 * distBetweenDoors) + playerX, 0.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+            AEGfxPrint(fontId, textBuffer, textNDC_X, textNDC_Y, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+        }
+    }
 
-		AEMtx33Scale(&scale, liftWidth, liftHeight);
-		AEGfxSetColorToMultiply(0.8f, 0.8f, 0.8f, 1.0f);
-		AEMtx33Trans(&translate, (11 * distBetweenDoors) + playerX, -100.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-	}
+    // Draw Left Wall + Lift (Start)
+    if (playerX > -(2 * DIST_BETWEEN_DOORS)) {
+        DrawSquareMesh(squareMesh, -600.0f + playerX, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, playerX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+    }
 
-	if (liftPromptActivated && !liftActive) {
-		AEGfxPrint(fontId, "Click L to access lift!", -0.5f, 0.8f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-	}
-	else if (liftActive) {
-		//Background rectangle
-		AEMtx33Scale(&scale, 400.0f, 700.0f);
-		AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 1.0f);
-		AEMtx33Trans(&translate, 0.0f, 0.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-		//Lift console
-		AEMtx33Scale(&scale, 300.0f, 600.0f);
-		AEGfxSetColorToMultiply(0.7f, 0.7f, 0.7f, 1.0f);
-		AEMtx33Trans(&translate, 0.0f, 0.0f);
-		AEMtx33Concat(&transform, &translate, &scale);
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-		//Buttons?
+    // Draw Right Wall + Lift (End)
+    // Dynamic check based on NUM_DOORS
+    if (playerX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) {
+        float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
+        float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 
-	}
+        DrawSquareMesh(squareMesh, endOffset + playerX, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, liftOffset + playerX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+    }
+
+    // Lift UI Overlay
+    if (liftPromptActivated && !liftActive) {
+        AEGfxPrint(fontId, "Click L to access lift!", -0.5f, 0.8f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+    }
+    else if (liftActive) {
+        // Background rectangle
+        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 500.0f, 800.0f, COLOR_LIFT_BG);
+        // Lift console
+        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 400.0f, 700.0f, COLOR_LIFT_CONSOLE);
+        // Buttons would go here
+        
+    }
 }
 
 void Game_Free()
 {
-	// Free main menu resources
-	std::cout << "Startup: Free\n";
+    std::cout << "Startup: Free\n";
 }
-
 
 void Game_Unload()
 {
-	// Unload main menu resources
-	std::cout << "Startup: Unload\n";
+    std::cout << "Startup: Unload\n";
 }

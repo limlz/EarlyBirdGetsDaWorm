@@ -59,3 +59,37 @@ AEGfxVertexList* CreateSquareMesh(u32 color)
     );
     return AEGfxMeshEnd();
 }
+
+void DrawSquareMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 width, f32 height, u32 color)
+{
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEMtx33 scale, translate, transform;
+    AEMtx33Scale(&scale, width, height);
+    AEMtx33Trans(&translate, x, y);
+    AEMtx33Concat(&transform, &translate, &scale);
+    AEGfxSetColorToMultiply(
+        ((color >> 24) & 0xFF) / 255.0f,
+        ((color >> 16) & 0xFF) / 255.0f,
+        ((color >> 8) & 0xFF) / 255.0f,
+        (color & 0xFF) / 255.0f
+    );
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}
+
+void DrawCircleMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 radius, u32 color)
+{
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEMtx33 scale, translate, transform;
+    AEMtx33Scale(&scale, radius * 2.0f, radius * 2.0f); // Diameter scaling
+    AEMtx33Trans(&translate, x, y);
+    AEMtx33Concat(&transform, &translate, &scale);
+    AEGfxSetColorToMultiply(
+        ((color >> 24) & 0xFF) / 255.0f,
+        ((color >> 16) & 0xFF) / 255.0f,
+        ((color >> 8) & 0xFF) / 255.0f,
+        (color & 0xFF) / 255.0f
+    );
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}
