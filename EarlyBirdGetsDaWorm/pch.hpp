@@ -10,6 +10,7 @@
 #include "input.hpp"
 #include "mesh_creation.hpp"
 #include "lights.hpp"
+#include "frames.hpp"
 
 #include "startup.hpp"
 #include "main_menu.hpp"

@@ -26,6 +26,7 @@
 // Global Variables
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh; 
+
 s8 fontId = 0;
 
 f32 playerX{}, playerY{};
@@ -36,6 +37,7 @@ bool liftPromptActivated{}, liftActive{};
 
 void Game_Load()
 {
+	Frames_Load();
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
 }
@@ -43,6 +45,7 @@ void Game_Load()
 void Game_Initialize()
 {
     // Removed unused circleMesh
+	Frames_Initialize();
     squareMesh = CreateSquareMesh(COLOR_WHITE);
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
@@ -176,6 +179,7 @@ void Game_Draw()
         }
         
     }
+	Frames_Draw(playerX );
 }
 
 void Game_Free()
