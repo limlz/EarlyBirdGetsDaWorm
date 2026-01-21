@@ -93,3 +93,19 @@ void DrawCircleMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 radius, u32 color)
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
+
+void DrawTextureMesh(AEGfxVertexList* mesh, AEGfxTexture* texture, f32 x, f32 y, f32 width, f32 height, f32 opacity)
+{
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxTextureSet(texture, 0.0f, 0.0f);
+    AEGfxSetTransparency(opacity);
+    AEMtx33 scale, translate, transform;
+    AEMtx33Scale(&scale, width, height);
+    AEMtx33Trans(&translate, x, y);
+    AEMtx33Concat(&transform, &translate, &scale);
+
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}

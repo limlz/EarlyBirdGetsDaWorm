@@ -71,34 +71,11 @@ void Startup_Draw()
 	if (splash_screen_timer > 0)
 	{
 		float maxDuration = 3.0f;
-
-		// Normalize the timer to 0.0 - 1.0 range
-		// At start (3.0), this is 1.0. At end (0.0), this is 0.0.
 		float percent = (float)splash_screen_timer / maxDuration;
-
-		// Map to Radians (0 to PI)
-		// PI is approx 3.14159f. 
-		// sin(PI) is 0, sin(PI/2) is 1, sin(0) is 0.
 		float alpha = sinf(percent * 3.14159f);
 
-		AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
-		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-
-		// Use the calculated Alpha
-		AEGfxSetTransparency(alpha);
-
-		AEGfxTextureSet(digipenLogo, 0.0f, 0.0f);
-
-		AEMtx33 scale, trans, transform;
-		AEMtx33Scale(&scale, 1500.0f, 420.0f);
-		AEMtx33Trans(&trans, 0.0f, 0.0f);
-		AEMtx33Concat(&transform, &trans, &scale);
-
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(splashMesh, AE_GFX_MDM_TRIANGLES);
+		DrawTextureMesh(splashMesh, digipenLogo, 0.0f, 0.0f, 1500.0f, 420.0f, alpha);
 		return;
 	}
 	if (title_screen_timer > 0)
