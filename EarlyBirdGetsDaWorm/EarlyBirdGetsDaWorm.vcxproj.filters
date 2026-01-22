@@ -45,13 +45,16 @@
     <ClCompile Include="Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Lights.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Frames.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Doors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleEffects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,13 +89,16 @@
     <ClInclude Include="input.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lights.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="frames.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="doors.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lighting.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="particle_effects.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

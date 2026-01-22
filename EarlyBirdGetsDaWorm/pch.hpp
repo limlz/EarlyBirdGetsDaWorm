@@ -9,8 +9,10 @@
 #include "utils.hpp"
 #include "input.hpp"
 #include "mesh_creation.hpp"
-#include "lights.hpp"
 #include "frames.hpp"
+#include "doors.hpp"
+#include "lighting.hpp"
+#include "particle_effects.hpp"
 
 #include "startup.hpp"
 #include "main_menu.hpp"
@@ -27,6 +29,19 @@
 #define COLOR_LIFT_BG       0x2F4F4FFF
 #define COLOR_LIFT_CONSOLE  0xC0C0C0FF
 #define COLOR_LIFT_BUTTON   0xFFD700FF
+
+// --- MACROS --- //
+// Dimensions & Settings
+#define PLAYER_SPEED        1500.0f
+#define DOOR_WIDTH          200.0f
+#define DOOR_HEIGHT         300.0f
+#define DIST_BETWEEN_DOORS  600.0f
+#define LIFT_WIDTH          200.0f
+#define LIFT_HEIGHT         300.0f
+#define NUM_OF_FLOOR        10
+#define NUM_DOORS           10
+#define SCREEN_WIDTH_HALF   800.0f
+#define SCREEN_HEIGHT_HALF  450.0f
 
 const int SCREEN_W = 1600;
 const int SCREEN_H = 900;

@@ -24,8 +24,8 @@ void Frames_Update() {
 	return;
 }
 
-void Frames_Draw(f32 playerX) {
+void Frames_Draw(f32 camX) {
 	for (int i = 0; i < 10; i++) {
-		DrawTextureMesh(frameMesh, frames_arr[i], 0.0f + 600.0f * i + playerX, 0.0f, 150.0f, 42.0f, 0.5f);
+		DrawTextureMesh(frameMesh, frames_arr[i], 0.0f + 600.0f * i + camX, 0.0f, 150.0f, 42.0f, 0.5f);
 	}
 }
