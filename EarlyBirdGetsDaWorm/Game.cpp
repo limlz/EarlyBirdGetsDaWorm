@@ -74,6 +74,7 @@ void Game_Update()
         liftPromptActivated = false;
         liftActive = false;
     }
+	Lighting_Update(floorNum);
 }
 
 void Game_Draw()
@@ -132,10 +133,7 @@ void Game_Draw()
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
     // 3. Draw The Flashlights (They will glow on top of the dark)
-    for (int i = 0; i < 11; i++) {
-        float lightWx = i * 600.0f + 300.0f;
-        DrawConeLight(lightWx, 250.0f, -camX, left_right);
-    }
+    Draw_and_Flicker(camX, left_right, floorNum);
 
     // Top and bottom floor lines
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);

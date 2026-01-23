@@ -1,17 +1,19 @@
-#include <vector>
+#pragma once
+#include "AEEngine.h" // Or #include "pch.hpp" if that's where AEEngine is
 
-struct Particle {
-    float x, y;          // World Position
-    float velX, velY;    // Velocity
-    float life;          // Life timer (1.0 = full, 0.0 = dead)
-    float scale;         // Size in pixels
-    float r, g, b;       // Color
-};
+// --- FUNCTIONS ---
 
-// Global List of Particles
-static std::vector<Particle> g_ParticleSystem;
+// Call this once at the start of the level/game
+void Particles_Initialize();
 
-// Function Prototypes
-void Particle_Create(float startX, float startY, int count);
-void Particle_Update();
-void Particle_Draw(AEGfxVertexList* mesh, float camX);
+// Call this every frame in Game_Update
+void Particles_Update();
+
+// Call this in Game_Draw (Pass your global squareMesh and camera Position)
+void Particles_Draw(AEGfxVertexList* mesh, float camX);
+
+// Call this whenever you want an explosion (e.g., when a light breaks)
+void Particles_Spawn(float startX, float startY, int count);
+
+// Call this when quitting to clean up memory
+void Particles_Free();

@@ -1,33 +1,98 @@
 #include "pch.hpp"
 
+// 1. Define a struct to hold the memory for each light
+struct FlickerData {
+    float timer;      // How much longer to stay in the current state
+    bool isVisible;   // Is it currently ON or OFF?
+};
+
+// 2. Create a grid of these structs (Parallel to your lightingMatrix)
+static std::array<std::array<FlickerData, 11>, 10> flickerMem;
+
 static AEGfxVertexList* squareMesh;
 static AEGfxTexture* frames_arr[10] = { nullptr };
 float bedLeft{};
 float bedRight{};
 float bedTop{};
 float bedBot{};
-
-
+std::array<std::array<int, 11>, 10> lightingMatrix;
 
 void Lighting_Load() {
-
+    // Load textures if needed
 }
 
 void Lighting_Initialize() {
-	squareMesh = CreateSquareMesh(0xFFFFFFFF);
+    // --- 2. INITIALIZE PARTICLES ---
+    Particles_Initialize();
+
+    // Loop through every floor
+    for (int f = 0; f < 10; f++) {
+        // Loop through every light
+        for (int l = 0; l < 11; l++) {
+            if (f == 0) {
+                lightingMatrix[f][l] = 2; // Floor 0 starts with flickering lights
+                continue;
+            }
+            lightingMatrix[f][l] = 1; // Turn ALL other lights ON by default
+        }
+    }
+    squareMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
-void Lighting_Update() {
-	return;
+void Lighting_Update(s8 floorNum)
+{
+    // --- 3. UPDATE PARTICLE PHYSICS ---
+    Particles_Update();
+
+    float dt = (float)AEFrameRateControllerGetFrameTime();
+
+    for (int i = 0; i < 11; i++) {
+
+        // Only calculate logic if this light is set to mode '2' (Flickering)
+        if (lightingMatrix[floorNum][i] == 2)
+        {
+            // Count down the timer
+            flickerMem[floorNum][i].timer -= dt;
+
+            // If timer runs out, Switch States!
+            if (flickerMem[floorNum][i].timer <= 0.0f)
+            {
+                // Toggle visibility (True -> False, or False -> True)
+                flickerMem[floorNum][i].isVisible = !flickerMem[floorNum][i].isVisible;
+
+                // --- 4. SPAWN SPARKS ON GLITCH ---
+                // Whenever the light switches state (ON->OFF or OFF->ON), spawn sparks!
+                // We only do this if the player is on the same floor to save performance.
+                // (Assuming 'floorNum' is accessible, otherwise remove the check)
+
+                float lightWx = i * 600.0f + 300.0f; // Calculate world position of this bulb
+                float lightWy = 250.0f;              // Height of the bulb
+
+                // Spawn 5-10 sparks
+                Particles_Spawn(lightWx, lightWy, 8);
+                // ----------------------------------
+
+                // Set a NEW random duration based on state
+                if (flickerMem[floorNum][i].isVisible) {
+                    // STAY ON: For 0.1 to 1.5 seconds (Random)
+                    flickerMem[floorNum][i].timer = (float)((rand() % 140) + 10) / 100.0f;
+                }
+                else {
+                    // STAY OFF: For 0.05 to 0.3 seconds (Short blink)
+                    flickerMem[floorNum][i].timer = (float)((rand() % 25) + 5) / 100.0f;
+                }
+            }
+        }
+    }
 }
 
 void Lighting_Draw(f32 camX, s8 floorNum)
 {
     // --- SETTINGS ---
     float lightRadius = 600.0f;   // Total range of the glow
-    float lightCore = 40.0f;    // NEW: How wide the "fully bright" center is
-    int maxDarkness = 0xDD;     // The darkness of the room
-    int stepSize = 2;        // Optimization: Step 2 or 4 is usually plenty smooth
+    float lightCore = 40.0f;      // How wide the "fully bright" center is
+    int maxDarkness = 0xDD;       // The darkness of the room
+    int stepSize = 2;             // Optimization: Step 2
 
     // 1. DRAW DARKNESS OVERLAY
     for (int row = 0; row < SCREEN_W; row += stepSize)
@@ -44,31 +109,25 @@ void Lighting_Draw(f32 camX, s8 floorNum)
 
         int currentAlpha = maxDarkness;
 
-        // --- NEW LOGIC STARTS HERE ---
-
-        // 1. Check if we are inside the "Core" (Fully Bright Area)
+        // Check if we are inside the "Core" (Fully Bright Area)
         if (shortestDist < lightCore)
         {
             currentAlpha = 0; // 0 Alpha = 100% Transparent (Bright)
         }
-        // 2. Otherwise, check if we are in the "Fade" zone
+        // Otherwise, check if we are in the "Fade" zone
         else if (shortestDist < lightRadius)
         {
-            // We need to map the distance from [Core ... Radius] to [0.0 ... 1.0]
             float validRange = lightRadius - lightCore;
             float distFromCore = shortestDist - lightCore;
 
-            // Calculate base linear ratio (0.0 near core, 1.0 near edge)
+            // Calculate base linear ratio
             float ratio = distFromCore / validRange;
 
-            // 3. Make it NATURAL (Easing)
-            // Squaring the ratio makes the gradient softer.
-            // It pushes the darkness further away, making the light feel "volumetric".
+            // Make it NATURAL (Easing)
             ratio = ratio * ratio;
 
             currentAlpha = (int)(maxDarkness * ratio);
         }
-        // --- NEW LOGIC ENDS HERE ---
 
         // Safety Clamps
         if (currentAlpha > 255) currentAlpha = 255;
@@ -99,7 +158,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     if (screenLightX < -900 || screenLightX > 900) return;
 
     float pLeft = -35.0f;
-    float pRight = 20.0f; 
+    float pRight = 20.0f;
 
     // Keep vertical bounds accurate to the sprite size
     float pTop = -40.0f;
@@ -116,9 +175,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
         bedRight = -30.0f;
         bedTop = -160.0f;
         bedBot = -200.0f;
-
     }
-
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 
@@ -165,4 +222,35 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     AEGfxSetTransparency(1.0f);
+}
+
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum)
+{
+    if (floorNum < 0 || floorNum >= 10) return;
+
+    for (int i = 0; i < 11; i++)
+    {
+        float lightWx = i * 600.0f + 300.0f;
+        int state = lightingMatrix[floorNum][i];
+
+        // 1. State 0: Always OFF
+        if (state == 0) continue;
+
+        // 2. State 2: Flicker Mode
+        if (state == 2) {
+            // Check the MEMORY grid we updated in Lighting_Update
+            if (flickerMem[floorNum][i].isVisible == false) {
+                continue; // Skip drawing this frame
+            }
+        }
+
+        // 3. Draw (If State is 1, or State is 2 and isVisible is true)
+        DrawConeLight(lightWx, 250.0f, -camX, left_right);
+    }
+
+    // --- 5. DRAW PARTICLES ---
+    // Draw particles AFTER the lights so they glow nicely.
+    // We pass '-camX' because DrawConeLight uses '-camX' logic (camX is likely player offset).
+    // Ensure this matches how you pass camera pos to other functions.
+    Particles_Draw(squareMesh, -camX);
 }

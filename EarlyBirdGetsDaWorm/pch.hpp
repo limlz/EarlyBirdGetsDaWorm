@@ -1,6 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <array>
+#include <cmath>
+#include <vector>
+#include <cstdlib> // For rand()
 #include "AEEngine.h"
 
 #include "state_list.hpp"
@@ -32,7 +36,7 @@
 
 // --- MACROS --- //
 // Dimensions & Settings
-#define PLAYER_SPEED        1500.0f
+#define PLAYER_SPEED        400.0f
 #define DOOR_WIDTH          200.0f
 #define DOOR_HEIGHT         300.0f
 #define DIST_BETWEEN_DOORS  600.0f
