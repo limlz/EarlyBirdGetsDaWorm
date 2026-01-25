@@ -17,6 +17,7 @@
 #include "doors.hpp"
 #include "lighting.hpp"
 #include "particle_effects.hpp"
+#include "notifications.hpp"
 
 #include "startup.hpp"
 #include "main_menu.hpp"

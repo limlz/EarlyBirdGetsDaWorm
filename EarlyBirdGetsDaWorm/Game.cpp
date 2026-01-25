@@ -20,6 +20,9 @@ void Game_Load()
     lightingtest = AEGfxTextureLoad("Assets/lightingtest.png");
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
+
+    // Notifications
+    Notifications_Load();
 }
 
 void Game_Initialize()
@@ -31,6 +34,9 @@ void Game_Initialize()
     squareMesh = CreateSquareMesh(COLOR_WHITE);
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
+
+    // Notifications
+    Notifications_Initialize();
 }
 
 void Game_Update()
@@ -157,6 +163,9 @@ void Game_Draw()
         
     }
 	Frames_Draw(camX );
+
+    // Notification
+    Notifications_Update(floorNum, liftActive);
 }
 
 void Game_Free()
