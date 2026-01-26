@@ -1,6 +1,6 @@
 void Lighting_Load();
 
-void Lighting_Initialize();
+void Lighting_Initialize(int fucked_floor);
 
 void Lighting_Update(s8 floorNum);
 
