@@ -59,7 +59,7 @@ void Game_Update()
     }
 
     // Door update
-    Doors_Update();
+    doorNumAtPlayer = Doors_Update(camX);
 
     // Camera/World Bounds
     // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
