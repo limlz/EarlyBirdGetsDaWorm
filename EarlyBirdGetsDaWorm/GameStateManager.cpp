@@ -60,6 +60,16 @@ void GSM_Update()
 		fpUnload = Game_Unload;
 		break;
 
+	case BOSS_FIGHT_STATE:
+		// Assign Main Game State functions
+		fpLoad = Boss_Fight_Load;
+		fpInitialize = Boss_Fight_Initialize;
+		fpUpdate = Boss_Fight_Update;
+		fpDraw = Boss_Fight_Draw;
+		fpFree = Boss_Fight_Free;
+		fpUnload = Boss_Fight_Unload;
+		break;
+
 	case GS_RESTART:
 		// Restart logic is handled in the main game loop
 		break;

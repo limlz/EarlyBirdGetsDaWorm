@@ -7,11 +7,13 @@ static AEGfxTexture* lightingtest = nullptr;
 
 s8 fontId = 0;
 
-f32 camX{}, playerY{};
+static f32 camX{}, playerY{};
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 s8 floorNum{1}; // Current floor the player is on
-
-bool liftPromptActivated{}, liftActive{}, left_right{};
+s8 demonFloorNum{ 1 }; // Floor where the demon is located
+s8 demonRoomNum{ 3 }; // Room where the demon is located
+s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
+bool liftPromptActivated{}, liftActive{}, left_right{}, enterPrompt{};
 
 void Game_Load()
 {
@@ -42,7 +44,6 @@ void Game_Initialize()
 void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-
     if (AEInputCheckCurr(AEVK_ESCAPE)) {
         next = GS_QUIT;
     }
@@ -67,7 +68,7 @@ void Game_Update()
     else if (camX < -maxDist) {
         camX = -maxDist;
     }
-
+    doorNumAtPlayer = Doors_Update(camX);
     // Lift Interaction Check
     // Checks if player is at the far left (start) or far right (end)
     if (camX > -5 || camX < -maxDist + 5) {
@@ -81,6 +82,17 @@ void Game_Update()
         liftActive = false;
     }
 	Lighting_Update(floorNum);
+
+	// Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
+    if (AEInputCheckCurr(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) {
+        next = BOSS_FIGHT_STATE;
+    }
+    else if (doorNumAtPlayer == demonRoomNum - 1) {
+		enterPrompt = true;
+    }
+    else {
+		enterPrompt = false;
+    }
 }
 
 void Game_Draw()
@@ -162,6 +174,12 @@ void Game_Draw()
         }
         
     }
+
+	// Draw Enter Prompt
+    if (enterPrompt) {
+        AEGfxPrint(fontId, "Press E to enter the room", -0.5f, 0.7f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+	}
+
 	Frames_Draw(camX );
 
     // Notification

@@ -22,6 +22,7 @@
 #include "startup.hpp"
 #include "main_menu.hpp"
 #include "game.hpp"
+#include "boss_fight.hpp"
 #include "quit.hpp"
 
 // --- MACROS --- //

@@ -13,8 +13,21 @@ void Doors_Initialize() {
 	squareMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
-void Doors_Update() {
-	return;
+int Doors_Update(float camX) {
+	// How close you need to be to the center of a door to be considered "in front" of it
+    float detectionRange = DOOR_WIDTH / 2.0f;
+
+    for (int i = 0; i < NUM_DOORS; i++) {
+        // Calculate world position 
+        float wallX = DIST_BETWEEN_DOORS + camX + (DIST_BETWEEN_DOORS * i);
+
+        // Check if the door is centered on screen (where the player is)
+        if (wallX > -detectionRange && wallX < detectionRange) {
+            return i; // Player is in front of door 'i'
+        }
+    }
+
+    return -1; // Not in front of any door
 }
 
 void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY) {
