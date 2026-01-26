@@ -14,6 +14,9 @@ void Doors_Initialize() {
 }
 
 void Doors_Update() {
+    if (AEInputCheckCurr(AEVK_O)) {
+        next = GS_RESTART;
+    }
 	return;
 }
 

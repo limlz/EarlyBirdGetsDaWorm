@@ -21,8 +21,7 @@ void Lighting_Load() {
     // Load textures if needed
 }
 
-void Lighting_Initialize() {
-    // --- 2. INITIALIZE PARTICLES ---
+void Lighting_Initialize(int fucked_floor) {
     Particles_Initialize();
 
     // Loop through every floor
@@ -33,7 +32,22 @@ void Lighting_Initialize() {
                 lightingMatrix[f][l] = 2; // Floor 0 starts with flickering lights
                 continue;
             }
-            lightingMatrix[f][l] = 1; // Turn ALL other lights ON by default
+            if (f == fucked_floor) {
+                if ((rand() % 100) > 60) {
+                    lightingMatrix[f][l] = 2;
+                }
+                else {
+                    lightingMatrix[f][l] = 1;
+                }
+                continue;
+            }
+            if ((rand() % 100) > 70) {
+                lightingMatrix[f][l] = 2;
+            }
+            else {
+                lightingMatrix[f][l] = 1;
+            }
+            continue;
         }
     }
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
@@ -41,7 +55,6 @@ void Lighting_Initialize() {
 
 void Lighting_Update(s8 floorNum)
 {
-    // --- 3. UPDATE PARTICLE PHYSICS ---
     Particles_Update();
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
@@ -155,7 +168,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     float floorLevel = -400.0f;
     float screenLightX = lightWorldX - camX;
 
-    if (screenLightX < -900 || screenLightX > 900) return;
+    if (screenLightX < -1800 || screenLightX > 1800) return;
 
     float pLeft = -35.0f;
     float pRight = 20.0f;

@@ -30,7 +30,7 @@ void Game_Initialize()
     // Removed unused circleMesh
 	Doors_Initialize();
 	Frames_Initialize();
-	Lighting_Initialize();
+	Lighting_Initialize(7);
     squareMesh = CreateSquareMesh(COLOR_WHITE);
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
@@ -56,6 +56,9 @@ void Game_Update()
         camX -= PLAYER_SPEED * dt;
         left_right = true;
     }
+
+    // Door update
+    Doors_Update();
 
     // Camera/World Bounds
     // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
