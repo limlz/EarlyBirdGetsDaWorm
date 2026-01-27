@@ -9,15 +9,21 @@ const f32 OFFSET			= 50.0f;
 const int FRAMES_PERLVL		= 6;
 const int FRAMES_ID			= 3;
 
-static AEGfxTexture* frame_textures[FRAMES_ID];
+static AEGfxTexture* frametextures_normal[FRAMES_ID];
+static AEGfxTexture* frametextures_tier1[FRAMES_ID];
+static AEGfxTexture* frametextures_tier2[FRAMES_ID];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
-
 void Frames_Load() {
 	for (int i{}; i < FRAMES_ID; i++) {
-		std::string filename = "Assets/frames_" + std::to_string(i) + ".png";
-		frame_textures[i] = AEGfxTextureLoad(filename.c_str());
+        std::string baseName = "Assets/frames_" + std::to_string(i);
+
+        frametextures_normal[i] = AEGfxTextureLoad((baseName + ".png").c_str());
+
+        frametextures_tier1[i] = AEGfxTextureLoad((baseName + "_t1.png").c_str());
+
+        frametextures_tier2[i] = AEGfxTextureLoad((baseName + "_t2.png").c_str());
 	}
 }
 
@@ -71,9 +77,7 @@ void Frames_Initialize() {
             }
 		}
 	}
-
     frameMesh = CreateSquareMesh(0xFFFFFFFF);
-
 }
 
 void Frames_Update() {
@@ -88,13 +92,28 @@ void Frames_Draw(int currentLevel, f32 camX) {
         
         FrameAnomaly* frame = &levelMap[currentLevel][i];
 
-        AEGfxTexture* texture = frame_textures[frame->textureID];
+        AEGfxTexture* texture = nullptr;
+
+        if (frame->type == GHOST) {
+            if (currentLevel == 4) {
+                texture = frametextures_tier1[frame->textureID]; // Tier 1 Visuals
+            }
+            else if (currentLevel == 3 || currentLevel == 0) {
+                texture = frametextures_tier2[frame->textureID]; // Tier 2 Visuals
+            }
+            else {
+                texture = frametextures_normal[frame->textureID]; // Normal Visuals
+            }
+        }
+        else {
+            texture = frametextures_normal[frame->textureID]; // Human/Normal fallback
+        }
 
         const f32 drawX = frame->posX + camX;
 
         DrawTextureMesh(
             frameMesh,
-            frame_textures[frame->textureID],
+            texture,
             drawX,	frame->posY,
             frame->width,	frame->height,
             1.0f 
@@ -107,9 +126,12 @@ void Frames_Unload() {
     if (frameMesh) AEGfxMeshFree(frameMesh);
 
     for (int i = 0; i < FRAMES_ID; i++) {
-        if (frame_textures[i]) {
-            AEGfxTextureUnload(frame_textures[i]);
-            frame_textures[i] = nullptr;    
-        }
+        if (frametextures_normal[i]) AEGfxTextureUnload(frametextures_normal[i]);
+        if (frametextures_tier1[i])  AEGfxTextureUnload(frametextures_tier1[i]);
+        if (frametextures_tier2[i])  AEGfxTextureUnload(frametextures_tier2[i]);
+
+        frametextures_normal[i] = nullptr;
+        frametextures_tier1[i] = nullptr;
+        frametextures_tier2[i] = nullptr;
     }
 }

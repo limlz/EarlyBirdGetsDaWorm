@@ -13,7 +13,7 @@ s8 floorNum{1}; // Current floor the player is on
 s8 demonFloorNum{ 1 }; // Floor where the demon is located
 s8 demonRoomNum{ 3 }; // Room where the demon is located
 s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
-bool liftPromptActivated{}, liftActive{}, left_right{}, enterPrompt{};
+bool liftPromptActivated{}, liftActive{}, left_right{1}, enterPrompt{};
 
 void Game_Load()
 {
@@ -151,6 +151,14 @@ void Game_Draw()
             DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
         }
     }
+    // Player position 
+    float borderCenterY = -650.0f;
+    float borderHeight = 800.0f;
+
+    float borderTopY = borderCenterY + (borderHeight * 0.5f);
+    float playerY = borderTopY + (Player_GetHeight() * 0.5f);
+
+    Player_Draw(50.0f, playerY);
 
     // 2. Draw "Room Darkness" (Simple dark tint)
     // Just draw one giant black square over the screen with alpha 0.7
@@ -171,14 +179,6 @@ void Game_Draw()
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-    // Player position 
-    float borderCenterY = -650.0f;
-    float borderHeight = 800.0f;
-
-    float borderTopY = borderCenterY + (borderHeight * 0.5f);
-    float playerY = borderTopY + (Player_GetHeight() * 0.5f);
-
-    Player_Draw(50.0f, playerY);
     
 
     // Lift UI Overlay
