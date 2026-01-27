@@ -21,6 +21,5 @@ jobs:
             *New push* to `${{ github.repository }}`
             *Author:* `${{ github.actor }}`
             *Message:* ${{ github.event.head_commit.message }}
-            *SHA:* `${{ github.sha }}`
-            *View commit:* https://github.com/${{ github.repository }}/commit/${{ github.sha }}
-            *Da Early Bird Gets Da Werm?*
+            <b>View commit:</b> <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">Open commit</a>
+            *Da Early Bird Will Get Da Werm*
