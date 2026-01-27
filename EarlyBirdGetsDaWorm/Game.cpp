@@ -90,7 +90,7 @@ void Game_Update()
     if (AEInputCheckCurr(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) {
         next = BOSS_FIGHT_STATE;
     }
-    else if (doorNumAtPlayer == demonRoomNum - 1) {
+    else if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum) {
 		enterPrompt = true;
     }
     else {
