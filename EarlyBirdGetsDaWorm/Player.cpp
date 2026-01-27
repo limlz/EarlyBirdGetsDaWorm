@@ -50,8 +50,8 @@ void Player_Load()
     gSpriteMesh = AEGfxMeshEnd();
 
     // load all 4 frames
-    gWheelTex[0] = AEGfxTextureLoad("Assets/playeer_1.png");
-    gWheelTex[1] = AEGfxTextureLoad("Assets/playeer_2.png");
+    gWheelTex[0] = AEGfxTextureLoad("Assets/human player_1.png");
+    gWheelTex[1] = AEGfxTextureLoad("Assets/human player_2.png");
 }
 
 // @brief: Updates player animation based on input
