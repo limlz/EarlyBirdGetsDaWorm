@@ -10,16 +10,38 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout (full history for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed files count
+        id: diff
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          # If this is the first commit on the branch, "before" can be all zeros.
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            COUNT="$(git show --name-only --pretty="" "$AFTER" | sed '/^\s*$/d' | wc -l | tr -d ' ')"
+          else
+            COUNT="$(git diff --name-only "$BEFORE" "$AFTER" | sed '/^\s*$/d' | wc -l | tr -d ' ')"
+          fi
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
       - name: Send Telegram message on push
         uses: appleboy/telegram-action@v1.0.1
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_ID }}
-          format: markdown
+          format: markdownv2
           disable_web_page_preview: true
           message: |
-            *New push* to `${{ github.repository }}`
-            *Author:* `${{ github.actor }}`
+            *New push* to ${{ github.repository }}
+            *Author:* ${{ github.actor }}
             *Message:* ${{ github.event.head_commit.message }}
+            *Files changed:* ${{ steps.diff.outputs.count }}
             *View commit:* [Open commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
             *Bonus:* [Important update](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
