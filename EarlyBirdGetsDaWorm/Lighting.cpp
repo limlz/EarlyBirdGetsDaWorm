@@ -96,7 +96,6 @@ void Lighting_Update(s8 floorNum)
     }
 }
 
-
 void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 {
     // ... Settings ...
