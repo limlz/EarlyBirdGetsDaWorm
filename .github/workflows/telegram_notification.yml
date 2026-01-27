@@ -39,10 +39,9 @@ jobs:
           format: markdownv2
           disable_web_page_preview: true
           message: |
-            *New push* to `${{ github.repository }}`
-            *Branch:* `${{ github.ref_name }}`
-            *Author:* `${{ github.actor }}`
-            *Message:* `${{ github.event.head_commit.message }}`
-            *Files changed:* `${{ steps.diff.outputs.count }}`
+            *New push* to ${{ github.repository }}
+            *Author:* ${{ github.actor }}
+            *Message:* ${{ github.event.head_commit.message }}
+            *Files changed:* ${{ steps.diff.outputs.count }}
             *View commit:* [Open commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
             *Bonus:* [Important update](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
