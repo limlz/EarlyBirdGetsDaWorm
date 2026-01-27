@@ -54,6 +54,8 @@ void MainMenu_Draw()
 	std::string myMsg = "Start";
 	std::cout << mouseX << " " << mouseY << "\n";
 	AEGfxPrintCentered(menuFontId, myMsg, 0.0f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+	myMsg = "Quit";
+	AEGfxPrintCentered(menuFontId, myMsg, 0.0f, -0.03f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 
 
 	//std::cout << "MainMenu: Draw\n";
