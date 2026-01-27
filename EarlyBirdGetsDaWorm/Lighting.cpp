@@ -73,10 +73,7 @@ void Lighting_Update(s8 floorNum)
                 // Toggle visibility (True -> False, or False -> True)
                 flickerMem[floorNum][i].isVisible = !flickerMem[floorNum][i].isVisible;
 
-                // --- 4. SPAWN SPARKS ON GLITCH ---
                 // Whenever the light switches state (ON->OFF or OFF->ON), spawn sparks!
-                // We only do this if the player is on the same floor to save performance.
-                // (Assuming 'floorNum' is accessible, otherwise remove the check)
 
                 float lightWx = i * 600.0f + 300.0f; // Calculate world position of this bulb
                 float lightWy = 250.0f;              // Height of the bulb
@@ -87,11 +84,11 @@ void Lighting_Update(s8 floorNum)
 
                 // Set a NEW random duration based on state
                 if (flickerMem[floorNum][i].isVisible) {
-                    // STAY ON: For 0.1 to 1.5 seconds (Random)
+                    // STAY ON: For 0.1 to 1.5 seconds 
                     flickerMem[floorNum][i].timer = (float)((rand() % 140) + 10) / 100.0f;
                 }
                 else {
-                    // STAY OFF: For 0.05 to 0.3 seconds (Short blink)
+                    // STAY OFF: For 0.05 to 0.3 seconds 
                     flickerMem[floorNum][i].timer = (float)((rand() % 25) + 5) / 100.0f;
                 }
             }
