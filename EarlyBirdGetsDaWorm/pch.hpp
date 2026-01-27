@@ -24,6 +24,7 @@
 #include "game.hpp"
 #include "boss_fight.hpp"
 #include "quit.hpp"
+#include "player.hpp"
 
 // --- MACROS --- //
 // Colors

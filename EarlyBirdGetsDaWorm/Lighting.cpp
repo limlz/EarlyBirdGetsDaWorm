@@ -167,11 +167,11 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 
     if (screenLightX < -1800 || screenLightX > 1800) return;
 
-    float pLeft = -35.0f;
-    float pRight = 20.0f;
+    float pLeft = -50.0f;
+    float pRight = 10.0f;
 
     // Keep vertical bounds accurate to the sprite size
-    float pTop = -40.0f;
+    float pTop = -35.0f;
     float pBot = floorLevel;
 
     if (right_left) {

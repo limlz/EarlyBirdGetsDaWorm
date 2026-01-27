@@ -19,7 +19,8 @@ void Game_Load()
 {
     Doors_Load();
 	Frames_Load();
-    lightingtest = AEGfxTextureLoad("Assets/lightingtest.png");
+    Player_Load();
+
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
 
@@ -57,6 +58,19 @@ void Game_Update()
         camX -= PLAYER_SPEED * dt;
         left_right = true;
     }
+
+    // Walking Animation Logic
+    // - DOES NOT move player
+    // - ONLY cycles through frames when moving
+    // - Left/Right handled in Player_SetFacing
+    bool moveRight = AEInputCheckCurr(AEVK_D);
+    bool moveLeft = AEInputCheckCurr(AEVK_A);
+    bool isWalking = moveRight || moveLeft;
+
+    if (moveRight) Player_SetFacing(1);
+    else if (moveLeft) Player_SetFacing(-1);
+
+    Player_Update(dt, isWalking);
 
     // Door update
     doorNumAtPlayer = Doors_Update(camX);
@@ -138,11 +152,6 @@ void Game_Draw()
         }
     }
 
-
-    //basic player (lighting test)
-
-    DrawTextureMesh(squareMesh, lightingtest, 50.0f, -150.0f, 250.0f, 250.0f, 1.0f);
-
     // 2. Draw "Room Darkness" (Simple dark tint)
     // Just draw one giant black square over the screen with alpha 0.7
     AEMtx33 scale;
@@ -161,6 +170,17 @@ void Game_Draw()
     // Top and bottom floor lines
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+
+    // Player position 
+    float borderCenterY = -650.0f;
+    float borderHeight = 800.0f;
+
+    float borderTopY = borderCenterY + (borderHeight * 0.5f);
+    float playerY = borderTopY + (Player_GetHeight() * 0.5f);
+
+    Player_Draw(50.0f, playerY);
+    
+
     // Lift UI Overlay
     if (liftPromptActivated && !liftActive) {
         AEGfxPrint(fontId, "Click L to access lift!", -0.5f, 0.8f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
@@ -197,5 +217,6 @@ void Game_Free()
 void Game_Unload()
 {
     Frames_Unload();
+    Player_Unload();
     std::cout << "Startup: Unload\n";
 }
