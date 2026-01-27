@@ -1,11 +1,15 @@
 #include "pch.hpp"
 
 static AEGfxVertexList* squareMesh;
+s8 menuFontId = 0;
+s32 mouseX, mouseY;
+f32 worldMouseX, worldMouseY;
 
 void MainMenu_Load()
 {
 	// Load resources for the main menu
 	std::cout << "MainMenu: Load\n";
+	menuFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 }
 
 void MainMenu_Initialize()
@@ -18,14 +22,20 @@ void MainMenu_Initialize()
 
 void MainMenu_Update()
 {
+	AEInputGetCursorPosition(&mouseX, &mouseY);
+	mouseX = mouseX - 800 ; // Convert to NDC
+	mouseY = 450 - mouseY; // Convert to NDC
 	if (AEInputCheckTriggered(AEVK_ESCAPE))
 	{
 		std::cout << "Space key pressed in MainMenu\n";
 		next = GS_QUIT; // Example: Transition to quit state
 		
 	}
-	if (AEInputCheckTriggered(AEVK_N)) {
+	if (IsAreaClicked(0.0f, 100.0f, 300.0f, 60.0f, mouseX, mouseY) && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		next = GAME_STATE;
+	}
+	if (IsAreaClicked(0.0f, 0.0f, 300.0f, 60.0f, mouseX, mouseY) && AEInputCheckTriggered(AEVK_LBUTTON)) {
+		next = GS_QUIT;
 	}
 }
 
@@ -33,26 +43,18 @@ void MainMenu_Draw()
 {
 	// Background
 	AEGfxSetBackgroundColor(0.2f, 0.0f, 0.0f);
+	DrawSquareMesh(squareMesh, 0.0f, 100.0f, 300.0f, 60.0f, COLOR_WHITE);
+	DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 60.0f, COLOR_WHITE);
 
-	// Draw main menu elements
-	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-	AEMtx33 scale, translate, transform;
-	AEMtx33Scale(&scale, 300.0f, 60.0f);
-	AEMtx33Trans(&translate, 0.0f, 0.0f);
-	AEMtx33Concat(&transform, &translate, &scale);
+	// Passing a std::string variable
+	std::string titleMsg = "Early Bird Gets Da Demon Worm In Da Incinerator";
+	AEGfxPrintCentered(menuFontId, titleMsg, 0.0f, 0.5f, 1.2f, 1.0f, 0.0f, 0.0f, 1.0f);
 
-	AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 0.30f);
-	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+	std::string myMsg = "Start";
+	std::cout << mouseX << " " << mouseY << "\n";
+	AEGfxPrintCentered(menuFontId, myMsg, 0.0f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 
 
-	AEMtx33Scale(&scale, 300.0f, 60.0f);
-	AEMtx33Trans(&translate, 0.0f, 100.0f);
-	AEMtx33Concat(&transform, &translate, &scale);
-
-	AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 0.30f);
-	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 	//std::cout << "MainMenu: Draw\n";
 }
 

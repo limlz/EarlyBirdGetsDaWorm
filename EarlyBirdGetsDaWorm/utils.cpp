@@ -25,3 +25,18 @@ bool IsAreaClicked(float area_center_x, float area_center_y, float area_width, f
 		return false;
 	}
 }
+
+void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float y, float scale, float r, float g, float b, float a, float offset)
+{
+	// ESTIMATION: Assume average character width is roughly 0.03 NDC units at scale 1.0
+	float estimatedCharWidth = offset * scale;
+
+	// Calculate total width using .length()
+	float totalWidth = text.length() * estimatedCharWidth;
+
+	// Apply centering formula: Center - (Width / 2)
+	float startX = centerX - (totalWidth / 2.0f);
+
+	// Use .c_str() to convert the C++ string back to the C-style pointer the engine needs
+	AEGfxPrint(fontId, text.c_str(), startX, y, scale, r, g, b, a);
+}
