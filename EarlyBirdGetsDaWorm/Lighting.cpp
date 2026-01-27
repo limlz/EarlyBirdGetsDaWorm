@@ -96,65 +96,6 @@ void Lighting_Update(s8 floorNum)
     }
 }
 
-void Lighting_Draw(f32 camX, s8 floorNum)
-{
-    // --- SETTINGS ---
-    float lightRadius = 600.0f;   // Total range of the glow
-    float lightCore = 40.0f;      // How wide the "fully bright" center is
-    int maxDarkness = 0xDD;       // The darkness of the room
-    int stepSize = 2;             // Optimization: Step 2
-
-    // 1. DRAW DARKNESS OVERLAY
-    for (int row = 0; row < SCREEN_W; row += stepSize)
-    {
-        float sliceScreenX = -SCREEN_WIDTH_HALF + row;
-        float shortestDist = 10000.0f;
-
-        // Find distance to NEAREST light
-        for (int i = 0; i < 11; i++) {
-            float lightScreenX = camX + (DIST_BETWEEN_DOORS * i) + (DIST_BETWEEN_DOORS / 2);
-            float dist = fabsf(sliceScreenX - lightScreenX);
-            if (dist < shortestDist) shortestDist = dist;
-        }
-
-        int currentAlpha = maxDarkness;
-
-        // Check if we are inside the "Core" (Fully Bright Area)
-        if (shortestDist < lightCore)
-        {
-            currentAlpha = 0; // 0 Alpha = 100% Transparent (Bright)
-        }
-        // Otherwise, check if we are in the "Fade" zone
-        else if (shortestDist < lightRadius)
-        {
-            float validRange = lightRadius - lightCore;
-            float distFromCore = shortestDist - lightCore;
-
-            // Calculate base linear ratio
-            float ratio = distFromCore / validRange;
-
-            // Make it NATURAL (Easing)
-            ratio = ratio * ratio;
-
-            currentAlpha = (int)(maxDarkness * ratio);
-        }
-
-        // Safety Clamps
-        if (currentAlpha > 255) currentAlpha = 255;
-        if (currentAlpha < 0) currentAlpha = 0;
-
-        u32 shadowColor = 0x00000000 | (currentAlpha & 0xFF);
-        DrawSquareMesh(squareMesh, sliceScreenX, 0.0f, (float)stepSize, SCREEN_H, shadowColor);
-    }
-
-    // 2. DRAW PHYSICAL BULBS
-    for (int i = 0; i < 11; i++) {
-        float lightX = camX + (DIST_BETWEEN_DOORS * i) + (DIST_BETWEEN_DOORS / 2);
-        if (lightX > -SCREEN_WIDTH_HALF - DOOR_WIDTH && lightX < SCREEN_WIDTH_HALF + DOOR_WIDTH) {
-            DrawSquareMesh(squareMesh, lightX, 200.0f, 50.0f, 50.0f, 0xFFFFFFFF);
-        }
-    }
-}
 
 void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 {
@@ -167,23 +108,27 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 
     if (screenLightX < -1800 || screenLightX > 1800) return;
 
-    float pLeft = -50.0f;
-    float pRight = 10.0f;
+    float pHeadLeft = -50.0f;
+    float pHeadRight = 10.0f;
 
     // Keep vertical bounds accurate to the sprite size
-    float pTop = -35.0f;
-    float pBot = floorLevel;
+    float pHeadTop = -45.0f;
+    float pHeadBot = -95;
 
     if (right_left) {
+        pHeadLeft = -45.0f;
+        pHeadRight = 5.0f;
         bedLeft = 30.0f;
-        bedRight = 145.0f;
-        bedTop = -160.0f;
+        bedRight = 135.0f;
+        bedTop = -150.0f;
         bedBot = -200.0f;
     }
     else {
-        bedLeft = -130.0f;
-        bedRight = -30.0f;
-        bedTop = -160.0f;
+        pHeadLeft = 95.0f;
+        pHeadRight = 145.0f;
+        bedLeft = -30.0f;
+        bedRight = 70.0f;
+        bedTop = -150.0f;
         bedBot = -200.0f;
     }
 
@@ -210,7 +155,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
             float checkX = screenLightX - (dirX * currentDist);
             float checkY = lightY + (dirY * currentDist);
             if (checkY < floorLevel) break;
-            if (checkX > pLeft && checkX < pRight && checkY < pTop && checkY > pBot) break;
+            if (checkX > pHeadLeft && checkX < pHeadRight && checkY < pHeadTop && checkY > pHeadBot) break;
             if (checkX > bedLeft && checkX < bedRight && checkY < bedTop && checkY > bedBot) break;
         }
 
