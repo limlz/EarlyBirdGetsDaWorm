@@ -15,8 +15,6 @@ static AEGfxTexture* frametextures_tier2[FRAMES_ID];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
-
-
 void Frames_Load() {
 	for (int i{}; i < FRAMES_ID; i++) {
         std::string baseName = "Assets/frames_" + std::to_string(i);
@@ -79,9 +77,7 @@ void Frames_Initialize() {
             }
 		}
 	}
-
     frameMesh = CreateSquareMesh(0xFFFFFFFF);
-
 }
 
 void Frames_Update() {
@@ -102,7 +98,7 @@ void Frames_Draw(int currentLevel, f32 camX) {
             if (currentLevel == 4) {
                 texture = frametextures_tier1[frame->textureID]; // Tier 1 Visuals
             }
-            else if (currentLevel == 3) {
+            else if (currentLevel == 3 || currentLevel == 0) {
                 texture = frametextures_tier2[frame->textureID]; // Tier 2 Visuals
             }
             else {
