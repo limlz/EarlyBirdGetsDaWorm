@@ -99,7 +99,9 @@ void Game_Update()
 }
 
 void Game_Draw()
-{
+{   
+    Frames_Draw(floorNum, camX);
+
     // Background Color (1-9)
     if (floorNum >= 1) {
         AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
@@ -183,8 +185,6 @@ void Game_Draw()
         AEGfxPrint(fontId, "Press E to enter the room", -0.5f, 0.7f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 	}
 
-	Frames_Draw(camX );
-
     // Notification
     Notifications_Update(floorNum, liftActive);
 }
@@ -196,5 +196,6 @@ void Game_Free()
 
 void Game_Unload()
 {
+    Frames_Unload();
     std::cout << "Startup: Unload\n";
 }
