@@ -29,7 +29,7 @@ void Boss_Fight_Update()
     float dt = (f32)AEFrameRateControllerGetFrameTime();
 
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        next = GS_QUIT;
+        next = GAME_STATE;
 	}
     if (AEInputCheckCurr(AEVK_D)) {
         playerX += PLAYER_SPEED * dt;
@@ -41,7 +41,7 @@ void Boss_Fight_Update()
     if (AEInputCheckTriggered(AEVK_SPACE)) {
         if (isGrounded || jumpCount < MAX_JUMPS) {
             playerVelY = JUMP_FORCE;  
-            isGrounded = false;       
+            isGrounded = false;        
             jumpCount++;              
         }
     }

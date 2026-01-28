@@ -14,6 +14,7 @@ s8 demonFloorNum{ 1 }; // Floor where the demon is located
 s8 demonRoomNum{ 3 }; // Room where the demon is located
 s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
 bool liftPromptActivated{}, liftActive{}, left_right{1}, enterPrompt{};
+bool dementia{ false };
 
 void Game_Load()
 {
@@ -45,7 +46,7 @@ void Game_Initialize()
 void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-    if (AEInputCheckCurr(AEVK_ESCAPE)) {
+    if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         next = GS_QUIT;
     }
 
@@ -58,6 +59,9 @@ void Game_Update()
         camX -= PLAYER_SPEED * dt;
         left_right = true;
     }
+    if (AEInputCheckTriggered(AEVK_O)) {
+		dementia = !dementia;
+	}
 
     // Walking Animation Logic
     // - DOES NOT move player
@@ -82,7 +86,7 @@ void Game_Update()
     if (camX > 0) {
         camX = 0;
     }
-    else if (camX < -maxDist) {
+    else if ((camX < -maxDist) && !dementia) {
         camX = -maxDist;
     }
     doorNumAtPlayer = Doors_Update(camX);
@@ -104,7 +108,7 @@ void Game_Update()
     if (AEInputCheckCurr(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) {
         next = BOSS_FIGHT_STATE;
     }
-    else if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum) {
+    else if (doorNumAtPlayer != -1) {
 		enterPrompt = true;
     }
     else {
@@ -128,7 +132,7 @@ void Game_Draw()
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     // Draw Doors
-    Doors_Draw(camX, floorNum, textXoffset, textY);
+    Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
 
     // Draw Left Wall + Lift (Start)
     if (camX > -(2 * DIST_BETWEEN_DOORS)) {
@@ -141,7 +145,7 @@ void Game_Draw()
 
     // Draw Right Wall + Lift (End)
     // Dynamic check based on NUM_DOORS
-    if (camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) {
+    if ((camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) && !dementia) {
         float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
         float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 
@@ -176,7 +180,7 @@ void Game_Draw()
     Player_Draw(50.0f, playerY);
 
     // 3. Draw The Flashlights (They will glow on top of the dark)
-    Draw_and_Flicker(camX, left_right, floorNum);
+    Draw_and_Flicker(camX, left_right, floorNum, dementia);
 
     // Top and bottom floor lines
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);

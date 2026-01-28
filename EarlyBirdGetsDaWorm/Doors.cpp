@@ -30,8 +30,9 @@ int Doors_Update(float camX) {
     return -1; // Not in front of any door
 }
 
-void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY) {
-    for (int i = 0; i < NUM_DOORS; i++) {
+void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia) {
+	int max_doors = dementia ? 1000 : NUM_DOORS;
+    for (int i = 0; i < max_doors; i++) {
         // Calculate world position of the door based on player offset
         float wallX = DIST_BETWEEN_DOORS + camX + (DIST_BETWEEN_DOORS * i);
 

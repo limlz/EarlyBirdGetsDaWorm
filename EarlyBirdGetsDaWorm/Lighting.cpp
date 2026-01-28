@@ -178,14 +178,14 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     AEGfxSetTransparency(1.0f);
 }
 
-void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum)
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
-
-    for (int i = 0; i < 11; i++)
+	int max_floor = dementia ? 1000 : 11;
+    for (int i = 0; i < max_floor; i++)
     {
         float lightWx = i * 600.0f + 300.0f;
-        int state = lightingMatrix[floorNum][i];
+        int state = dementia ? 2 : lightingMatrix[floorNum][i];
 
         // 1. State 0: Always OFF
         if (state == 0) continue;
@@ -193,7 +193,7 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum)
         // 2. State 2: Flicker Mode
         if (state == 2) {
             // Check the MEMORY grid we updated in Lighting_Update
-            if (flickerMem[floorNum][i].isVisible == false) {
+            if (!dementia && (flickerMem[floorNum][i].isVisible == false) ) {
                 continue; // Skip drawing this frame
             }
         }
