@@ -158,7 +158,7 @@ void Game_Draw()
     float borderTopY = borderCenterY + (borderHeight * 0.5f);
     float playerY = borderTopY + (Player_GetHeight() * 0.5f);
 
-    Player_Draw(50.0f, playerY);
+
 
     // 2. Draw "Room Darkness" (Simple dark tint)
     // Just draw one giant black square over the screen with alpha 0.7
@@ -171,6 +171,9 @@ void Game_Draw()
     AEMtx33Scale(&scale, 2000.0f, 2000.0f);
     AEGfxSetTransform(scale.m);
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+    // Draw player
+    Player_Draw(50.0f, playerY);
 
     // 3. Draw The Flashlights (They will glow on top of the dark)
     Draw_and_Flicker(camX, left_right, floorNum);
