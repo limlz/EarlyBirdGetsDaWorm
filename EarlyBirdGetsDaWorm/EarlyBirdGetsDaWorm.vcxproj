@@ -120,6 +120,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Quit.cpp" />
     <ClCompile Include="Startup.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="Wall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss_fight.hpp" />
@@ -139,6 +140,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="mesh_creation.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="utils.hpp" />
+    <ClInclude Include="wall.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

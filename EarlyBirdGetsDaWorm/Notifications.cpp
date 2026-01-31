@@ -44,8 +44,8 @@ void Notifications_Initialize()
 	// Misc
 	smallClicked = false;
 	currentPage = 0;
-	mouseX = 0.0f;
-	mouseY = 0.0f;
+	mouseX = static_cast<s32>(0.0f);
+	mouseY = static_cast <s32>(0.0f);
 	prevFloor = -1;
 
 	// Mesh
@@ -76,8 +76,8 @@ void Notifications_Update(s8 floorNum, bool liftActive)
 
 	// Gets the current x and y position of mouse
 	AEInputGetCursorPosition(&initialX, &initialY);
-	mouseX = initialX - (AEGfxGetWindowWidth() / 2.0f);
-	mouseY = (AEGfxGetWindowHeight() / 2.0f) - initialY;
+	mouseX = static_cast<s32>(initialX - (AEGfxGetWindowWidth() / 2.0f));
+	mouseY = static_cast<s32>((AEGfxGetWindowHeight() / 2.0f) - initialY);
 
 	// Resets popup state when player moves to a new floor
 	if (floorNum != prevFloor)
@@ -160,7 +160,7 @@ void Notifications_Draw()
 
 
 	// Clicking of left arrow
-	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-100.0f, -245.0f, 100.0f, 95.0f, mouseX, mouseY))
+	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
 	{
 		if (currentPage > 0)
 		{
@@ -169,7 +169,7 @@ void Notifications_Draw()
 	}
 
 	// Clicking of Right arrow
-	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(100.0f, -245.0f, 100.0f, 95.0f, mouseX, mouseY))
+	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
 	{
 		if (currentPage < 2)
 		{

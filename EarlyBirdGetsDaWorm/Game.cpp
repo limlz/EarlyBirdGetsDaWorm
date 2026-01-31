@@ -25,8 +25,9 @@ void Game_Load()
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
 
-    // Notifications
+    // Notifications and Wall
     Notifications_Load();
+    Wall_Load();
 }
 
 void Game_Initialize()
@@ -39,8 +40,9 @@ void Game_Initialize()
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
 
-    // Notifications
+    // Notifications and Wall
     Notifications_Initialize();
+    Wall_Initialize();
 }
 
 void Game_Update()
@@ -117,7 +119,10 @@ void Game_Update()
 }
 
 void Game_Draw()
-{   
+{
+    // Draws wall anomalies
+    Wall_Draw(camX,floorNum);
+ 
     Frames_Draw(floorNum, camX);
 
     // Background Color (1-9)
@@ -155,6 +160,7 @@ void Game_Draw()
             DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
         }
     }
+
     // Player position 
     float borderCenterY = -650.0f;
     float borderHeight = 800.0f;
