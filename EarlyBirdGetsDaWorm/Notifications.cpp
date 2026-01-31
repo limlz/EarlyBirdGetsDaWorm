@@ -79,12 +79,6 @@ void Notifications_Update(s8 floorNum, bool liftActive)
 	mouseX = initialX - (AEGfxGetWindowWidth() / 2.0f);
 	mouseY = (AEGfxGetWindowHeight() / 2.0f) - initialY;
 
-	// Diplayer pager if Q is pressed
-	if (smallClicked)
-	{
-		Notifications_Draw();
-	}
-
 	// Resets popup state when player moves to a new floor
 	if (floorNum != prevFloor)
 	{
@@ -92,46 +86,43 @@ void Notifications_Update(s8 floorNum, bool liftActive)
 		prevFloor = floorNum;
 	}
 
-	// If user is on floor 0, 3, 7, the pager will be displayed
-	if (floorNum == 0 || floorNum == 3 || floorNum == 7)
-	{
-		if (!popUp)
-		{
-			smallClicked = true;
-			popUp = true;
-		}
-	}
-
 	switch (floorNum)
 	{
 		// If user is in the basement, pop up will display and the
 		// page with the objective will be displayed. The page where the
 		// next objective will be displayed so user does not need to toggle
-		case 0:
+		case 5:
 			if (!popUp)
 			{
+				currentPage = 2;
 				smallClicked = true;
 				popUp = true;
 			}
-			currentPage = 2;
 			break;
 		case 3:
 			if (!popUp)
 			{
+				currentPage = 1;
 				smallClicked = true;
 				popUp = true;
 			}
-			currentPage = 1;
 			break;
 		case 7:
 			if (!popUp)
 			{
+				currentPage = 0;
 				smallClicked = true;
 				popUp = true;
 			}
-			currentPage = 0;
 			break;
 	}
+
+	// Diplayer pager if Q is pressed
+	if (smallClicked)
+	{
+		Notifications_Draw();
+	}
+
 
 	return;
 }
@@ -140,6 +131,28 @@ void Notifications_Draw()
 {
 	// Draws Pager
 	DrawTextureMesh(pagerMesh, pagerTexture, 0.0f, 0.0f, 1000.0f, 635.0f, 1.0f);
+
+
+	// Text
+	char pagetextBuffer[32], textBuffer[32];
+	sprintf_s(pagetextBuffer, "%02d/03", currentPage + 1);
+
+	AEGfxPrint(lineID, pagetextBuffer, textPosition(140.0f, -40.0f).first, textPosition(140.0f, -40.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	switch (currentPage + 1)
+	{
+		case 1:
+			sprintf_s(textBuffer, "Bring patient to room #03-09");
+			break;
+		case 2:
+			sprintf_s(textBuffer, "Bring patient to room #05-06");
+			break;
+		case 3:
+			sprintf_s(textBuffer, "Bring patient to room #07-03");
+		break;
+	}
+	AEGfxPrint(lineID, textBuffer, textPosition(140.0f, -100.0f).first, textPosition(140.0f, -100.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
 
 	// Arrows
 	DrawTextureMesh(leftArrowMesh, leftArrow, -100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
@@ -164,23 +177,4 @@ void Notifications_Draw()
 		}
 	}
 
-	// Text
-	char pagetextBuffer[32], textBuffer[32];
-	sprintf_s(pagetextBuffer, "%02d/03", currentPage + 1);
-
-	AEGfxPrint(lineID, pagetextBuffer, textPosition(140.0f, -40.0f).first, textPosition(140.0f, -40.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-	switch (currentPage + 1)
-	{
-		case 1:
-			sprintf_s(textBuffer, "Bring patient to room #03-09");
-			break;
-		case 2:
-			sprintf_s(textBuffer, "Bring patient to room #B1-06");
-			break;
-		case 3:
-			sprintf_s(textBuffer, "Bring patient to room #07-03");
-		break;
-	}
-	AEGfxPrint(lineID, textBuffer, textPosition(140.0f, -100.0f).first, textPosition(140.0f, -100.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 }
