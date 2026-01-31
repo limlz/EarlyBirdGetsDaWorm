@@ -1,3 +1,4 @@
+// --- INCLUDES --- //
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,7 +10,6 @@
 
 #include "state_list.hpp"
 #include "gsm.hpp"
-
 #include "utils.hpp"
 #include "input.hpp"
 #include "mesh_creation.hpp"
@@ -19,13 +19,13 @@
 #include "particle_effects.hpp"
 #include "notifications.hpp"
 #include "wall.hpp"
-
 #include "startup.hpp"
 #include "main_menu.hpp"
 #include "game.hpp"
 #include "boss_fight.hpp"
 #include "quit.hpp"
 #include "player.hpp"
+#include "timer.hpp"
 
 // --- MACROS --- //
 // Colors

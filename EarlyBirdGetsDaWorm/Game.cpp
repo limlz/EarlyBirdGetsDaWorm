@@ -21,13 +21,15 @@ void Game_Load()
     Doors_Load();
 	Frames_Load();
     Player_Load();
+    Player_NewPatientRandom();
+    Timer_Load();
 
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
 
     // Notifications and Wall
     Notifications_Load();
-    Wall_Load();
+    Wall_Load();    
 }
 
 void Game_Initialize()
@@ -47,7 +49,24 @@ void Game_Initialize()
 
 void Game_Update()
 {
+    // DEBUG: Skip timer to 5:58 AM
+    if (AEInputCheckTriggered(AEVK_K))
+    {
+        Timer_DebugSetTime(5 * 60 + 58); // 5:58 AM
+    }
+    
     float dt = (f32)AEFrameRateControllerGetFrameTime();
+
+    // TIMER
+    // Timer update
+    Timer_Update(dt);
+    if (Timer_IsTimeUp())
+    {
+        // allow only menu/restart keys
+        if (AEInputCheckTriggered(AEVK_H)) next = MAIN_MENU;
+        return; // freezes movement, doors, lighting update, etc.
+    }
+
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         next = GS_QUIT;
     }
@@ -65,7 +84,7 @@ void Game_Update()
 		dementia = !dementia;
 	}
 
-    // Walking Animation Logic
+	// WALKING ANIMATION LOGIC
     // - DOES NOT move player
     // - ONLY cycles through frames when moving
     // - Left/Right handled in Player_SetFacing
@@ -104,7 +123,7 @@ void Game_Update()
         liftPromptActivated = false;
         liftActive = false;
     }
-	Lighting_Update(floorNum);
+    Lighting_Update(floorNum);
 
 	// Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
     if (AEInputCheckCurr(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) {
@@ -161,14 +180,13 @@ void Game_Draw()
         }
     }
 
+    // PLAYER
     // Player position 
     float borderCenterY = -650.0f;
     float borderHeight = 800.0f;
 
     float borderTopY = borderCenterY + (borderHeight * 0.5f);
     float playerY = borderTopY + (Player_GetHeight() * 0.5f);
-
-
 
     // 2. Draw "Room Darkness" (Simple dark tint)
     // Just draw one giant black square over the screen with alpha 0.7
@@ -192,11 +210,9 @@ void Game_Draw()
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-    
-
     // Lift UI Overlay
     if (liftPromptActivated && !liftActive) {
-        AEGfxPrint(fontId, "Click L to access lift!", -0.5f, 0.8f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxPrint(fontId, "Click L to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
     }
     else if (liftActive) {
         // Background rectangle
@@ -213,13 +229,24 @@ void Game_Draw()
         
     }
 
-	// Draw Enter Prompt
+	// Draw Enter Promptaek
     if (enterPrompt) {
-        AEGfxPrint(fontId, "Press E to enter the room", -0.5f, 0.7f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxPrint(fontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 	}
 
     // Notification
     Notifications_Update(floorNum, liftActive);
+
+    // TIMER
+    // Draws Timer 
+    Timer_Draw(0.0f, 0.85f);
+
+    // Draw Shift Over Screen if time is up
+    if (Timer_IsTimeUp())
+    {
+        Timer_DrawShiftOverOverlay(squareMesh);
+    }
+
 }
 
 void Game_Free()

@@ -48,13 +48,13 @@ void MainMenu_Draw()
 	DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 60.0f, COLOR_WHITE);
 
 	// Passing a std::string variable
-	std::string titleMsg = "Early Bird Gets Da Demon Worm In Da Incinerator";
+	std::string titleMsg = "echoes of the ward";
 	AEGfxPrintCentered(menuFontId, titleMsg, 0.0f, 0.5f, 1.2f, 1.0f, 0.0f, 0.0f, 1.0f);
-
-	std::string myMsg = "Start";
+	
+	std::string myMsg = "START";
 	std::cout << mouseX << " " << mouseY << "\n";
 	AEGfxPrintCentered(menuFontId, myMsg, 0.0f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-	myMsg = "Quit";
+	myMsg = "QUIT";
 	AEGfxPrintCentered(menuFontId, myMsg, 0.0f, -0.03f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 
 

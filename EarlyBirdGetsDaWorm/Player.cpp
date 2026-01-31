@@ -1,27 +1,34 @@
 #include "pch.hpp"
 
-// --- animation data ---
-static AEGfxVertexList* gSpriteMesh = nullptr;
-static AEGfxTexture* gWheelTex[2]{};
-
-static int gFacing = 1; // 1 = facing right, -1 = facing left
-static int gWheelFrame = 0;
-static float gWheelTimer = 0.0f;
-
+// ---- config ----
 static constexpr float FRAME_TIME = 0.50f;  // walking speed (time per frame)
 static constexpr float PLAYER_W = 220.0f;
 static constexpr float PLAYER_H = 220.0f;
 
-// @brief: Returns the player's width
-float Player_GetWidth()
+// ---- render data ----
+static AEGfxVertexList* gSpriteMesh = nullptr;
+
+// 2 frames per set
+static AEGfxTexture* gHumanTex[2]{};
+static AEGfxTexture* gScaryTex[2]{};
+
+static bool  gIsScary = false;
+static int   gFacing = 1;     // 1 right, -1 left
+static int   gFrame = 0;
+static float gTimer = 0.0f;
+
+// ---------- helpers ----------
+static AEGfxTexture* GetActiveFrameTex()
 {
-    return PLAYER_W;
+    return gIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
 }
 
-float Player_GetHeight()
-{
-    return PLAYER_H;
-}
+
+// ---------- interface ----------
+// @brief: Returns the player's width
+float Player_GetWidth() { return PLAYER_W; }
+
+float Player_GetHeight() { return PLAYER_H; }
 
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
@@ -29,44 +36,61 @@ void Player_SetFacing(int dir)
     gFacing = (dir >= 0) ? 1 : -1;
 }
 
+// @brief: Randomly determines if the new patient is scary or not
+bool Player_IsScaryPatient()
+{
+    return gIsScary;
+}
+
+
+void Player_NewPatientRandom()
+{
+    // reset animation so patient swap doesn’t “jump” frames
+    gFrame = 0;
+    gTimer = 0.0f;
+
+    // 50/50 random
+    gIsScary = (std::rand() % 2) == 1;
+}
+
 // @brief: Loads player resources
 void Player_Load()
 {
-    std::cout << "Player_Load called\n";
+    std::srand((unsigned)std::time(nullptr));
 
-    // create ONE sprite mesh with UVs (2 triangles making a quad)
+    // mesh (your existing quad)
     AEGfxMeshStart();
-
-    AEGfxTriAdd(
-        -0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
-        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-
-    AEGfxTriAdd(
-        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     gSpriteMesh = AEGfxMeshEnd();
 
-    // load all 4 frames
-    gWheelTex[0] = AEGfxTextureLoad("Assets/human player_1.png");
-    gWheelTex[1] = AEGfxTextureLoad("Assets/human player_2.png");
+    // load BOTH sets (names exactly as you wrote)
+    gHumanTex[0] = AEGfxTextureLoad("Assets/Player/human player_1.png");
+    gHumanTex[1] = AEGfxTextureLoad("Assets/Player/human player_2.png");
+
+    gScaryTex[0] = AEGfxTextureLoad("Assets/Player/scary player_1.png");
+    gScaryTex[1] = AEGfxTextureLoad("Assets/Player/scary player_2.png");
+
+    // pick first patient at game start
+    Player_NewPatientRandom();
 }
 
 // @brief: Updates player animation based on input
 void Player_Update(float dt, bool walkKey)
 {
-    if (walkKey) {
-        gWheelTimer += dt;
-        if (gWheelTimer >= FRAME_TIME) {
-            gWheelTimer -= FRAME_TIME;
-            gWheelFrame = (gWheelFrame + 1) % 2;
+    if (walkKey)
+    {
+        gTimer += dt;
+        if (gTimer >= FRAME_TIME)
+        {
+            gTimer -= FRAME_TIME;
+            gFrame = (gFrame + 1) % 2; // 2 frames
         }
     }
-    else {
-        gWheelFrame = 0;
-        gWheelTimer = 0.0f;
+    else
+    {
+        gFrame = 0;
+        gTimer = 0.0f;
     }
 }
 
@@ -90,7 +114,7 @@ void Player_Draw(float x, float y)
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    AEGfxTextureSet(gWheelTex[gWheelFrame], 0.0f, 0.0f);
+    AEGfxTextureSet(GetActiveFrameTex(), 0.0f, 0.0f);
     AEGfxSetTransform(transform.m);
 
     // draw the UV mesh
@@ -103,13 +127,15 @@ void Player_Draw(float x, float y)
 // @brief: Unloads player resources
 void Player_Unload()
 {
-    for (int i = 0; i < 2; i++) 
+    for (int i = 0; i < 2; ++i)
     {
-        if (gWheelTex[i]) AEGfxTextureUnload(gWheelTex[i]);
-        gWheelTex[i] = nullptr;
+        if (gHumanTex[i]) AEGfxTextureUnload(gHumanTex[i]);
+        if (gScaryTex[i]) AEGfxTextureUnload(gScaryTex[i]);
+        gHumanTex[i] = nullptr;
+        gScaryTex[i] = nullptr;
     }
 
-    if (gSpriteMesh) 
+    if (gSpriteMesh)
     {
         AEGfxMeshFree(gSpriteMesh);
         gSpriteMesh = nullptr;

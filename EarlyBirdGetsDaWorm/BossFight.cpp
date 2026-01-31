@@ -29,6 +29,7 @@ void Boss_Fight_Update()
     float dt = (f32)AEFrameRateControllerGetFrameTime();
 
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+        Player_NewPatientRandom();  // NEW PATIENT on room entry
         next = GAME_STATE;
 	}
     if (AEInputCheckCurr(AEVK_D)) {
