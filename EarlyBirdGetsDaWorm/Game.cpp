@@ -63,7 +63,10 @@ void Game_Update()
     if (Timer_IsTimeUp())
     {
         // allow only menu/restart keys
-        if (AEInputCheckTriggered(AEVK_H)) next = MAIN_MENU;
+        if (AEInputCheckTriggered(AEVK_H))
+        {
+            next = MAIN_MENU;
+        }
         return; // freezes movement, doors, lighting update, etc.
     }
 
