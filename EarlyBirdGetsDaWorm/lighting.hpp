@@ -2,7 +2,7 @@ void Lighting_Load();
 
 void Lighting_Initialize(int fucked_floor);
 
-void Lighting_Update(s8 floorNum);
+void Lighting_Update(s8 floorNum, float camX, bool dementia);
 
 void Lighting_Draw(f32 camX, s8 floorNum);
 

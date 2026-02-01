@@ -53,12 +53,14 @@ void Lighting_Initialize(int fucked_floor) {
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
-void Lighting_Update(s8 floorNum)
+// Change logic to accept Camera Position and Dementia Flag
+void Lighting_Update(s8 floorNum, float camX, bool dementia)
 {
     Particles_Update();
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
+    // Loop through the BASE 11 lights (the memory templates)
     for (int i = 0; i < 11; i++) {
 
         // Only calculate logic if this light is set to mode '2' (Flickering)
@@ -70,25 +72,40 @@ void Lighting_Update(s8 floorNum)
             // If timer runs out, Switch States!
             if (flickerMem[floorNum][i].timer <= 0.0f)
             {
-                // Toggle visibility (True -> False, or False -> True)
+                // Toggle visibility
                 flickerMem[floorNum][i].isVisible = !flickerMem[floorNum][i].isVisible;
 
-                // Whenever the light switches state (ON->OFF or OFF->ON), spawn sparks!
+                // --- SPARK SPAWN LOGIC FIX ---
+                // Whenever the light switches state, spawn sparks.
 
-                float lightWx = i * 600.0f + 300.0f; // Calculate world position of this bulb
-                float lightWy = 250.0f;              // Height of the bulb
+                float lightWx = i * 600.0f + 300.0f; // Base position (0-10)
+                float lightWy = 250.0f;
 
-                // Spawn 5-10 sparks
+                if (dementia) {
+                    // FIX: If we are in the infinite hallway, the player might be at x=50,000.
+                    // We need to spawn the spark at the "Copy" of this light closest to the camera.
+
+                    // The pattern repeats every 10 lights (Indices 0-9 repeat). 
+                    // Distance = 10 lights * 600 spacing = 6000.0f.
+                    float repeatDist = 10 * 600.0f;
+
+                    // Calculate the offset 'k' to bring the light close to -camX (Camera Center)
+                    // roundf finds the nearest integer multiple of 6000.
+                    float k = roundf((-camX - lightWx) / repeatDist);
+
+                    // Apply the offset so the spark spawns on screen
+                    lightWx += k * repeatDist;
+                }
+
+                // Spawn sparks at the calculated position
                 Particles_Spawn(lightWx, lightWy, 8);
-                // ----------------------------------
+                // -----------------------------
 
                 // Set a NEW random duration based on state
                 if (flickerMem[floorNum][i].isVisible) {
-                    // STAY ON: For 0.1 to 1.5 seconds 
                     flickerMem[floorNum][i].timer = (float)((rand() % 140) + 10) / 100.0f;
                 }
                 else {
-                    // STAY OFF: For 0.05 to 0.3 seconds 
                     flickerMem[floorNum][i].timer = (float)((rand() % 25) + 5) / 100.0f;
                 }
             }
@@ -181,30 +198,48 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
-	int max_floor = dementia ? 1000 : 11;
+
+    int max_floor = dementia ? 1000 : 11;
+
     for (int i = 0; i < max_floor; i++)
     {
         float lightWx = i * 600.0f + 300.0f;
-        int state = dementia ? 2 : lightingMatrix[floorNum][i];
 
-        // 1. State 0: Always OFF
-        if (state == 0) continue;
+        // --- CULLING FIX ---
+        // Convert World Position to Screen Position.
+        // Since camX is a negative offset (e.g., -1000), we ADD it.
+        float screenPos = lightWx + camX;
 
-        // 2. State 2: Flicker Mode
-        if (state == 2) {
-            // Check the MEMORY grid we updated in Lighting_Update
-            if (!dementia && (flickerMem[floorNum][i].isVisible == false) ) {
-                continue; // Skip drawing this frame
-            }
+        // Check if the light is within the screen bounds (plus some padding)
+        if (screenPos < -1200.0f || screenPos > 1200.0f) {
+            continue;
         }
 
-        // 3. Draw (If State is 1, or State is 2 and isVisible is true)
-        DrawConeLight(lightWx, 250.0f, -camX, left_right);
+        // --- STATE & VISIBILITY ---
+        int state = 0;
+        bool shouldDraw = false;
+
+        if (dementia) {
+            state = lightingMatrix[floorNum][i % 10];
+
+            if (state == 1) shouldDraw = true;
+            else if (state == 2) shouldDraw = flickerMem[floorNum][i % 10].isVisible;
+
+        }
+        else {
+            state = lightingMatrix[floorNum][i];
+
+            if (state == 1) shouldDraw = true;
+            else if (state == 2) shouldDraw = flickerMem[floorNum][i].isVisible;
+        }
+
+        // --- DRAW ---
+        if (state != 0 && shouldDraw) {
+            // Note: We still pass -camX here because DrawConeLight likely expects 
+            // the positive Camera Position to perform the subtraction internally.
+            DrawConeLight(lightWx, 250.0f, -camX, left_right);
+        }
     }
 
-    // --- 5. DRAW PARTICLES ---
-    // Draw particles AFTER the lights so they glow nicely.
-    // We pass '-camX' because DrawConeLight uses '-camX' logic (camX is likely player offset).
-    // Ensure this matches how you pass camera pos to other functions.
     Particles_Draw(squareMesh, -camX);
 }

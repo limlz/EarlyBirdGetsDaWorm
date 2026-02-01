@@ -188,7 +188,7 @@ void Game_Update()
         liftPromptActivated = false;
         liftActive = false;
     }
-    Lighting_Update(floorNum);
+	Lighting_Update(floorNum, camX ,dementia);
 
 	// Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) 

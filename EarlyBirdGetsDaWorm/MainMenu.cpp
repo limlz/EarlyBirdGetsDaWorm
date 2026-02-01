@@ -39,7 +39,6 @@ void MainMenu_Update()
 	}
 }
 
-
 void MainMenu_Draw()
 {
 	// Background
