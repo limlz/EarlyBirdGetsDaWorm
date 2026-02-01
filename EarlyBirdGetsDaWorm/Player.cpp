@@ -1,11 +1,12 @@
 #include "pch.hpp"
 
-// ---- config ----
+// ------------------------------
+// CONFIG
+// ------------------------------
 static constexpr float FRAME_TIME = 0.50f;  // walking speed (time per frame)
 static constexpr float PLAYER_W = 220.0f;
 static constexpr float PLAYER_H = 220.0f;
 
-// ---- render data ----
 static AEGfxVertexList* gSpriteMesh = nullptr;
 
 // 2 frames per set
@@ -17,18 +18,11 @@ static int   gFacing = 1;     // 1 right, -1 left
 static int   gFrame = 0;
 static float gTimer = 0.0f;
 
-// ---------- helpers ----------
+
 static AEGfxTexture* GetActiveFrameTex()
 {
     return gIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
 }
-
-
-// ---------- interface ----------
-// @brief: Returns the player's width
-float Player_GetWidth() { return PLAYER_W; }
-
-float Player_GetHeight() { return PLAYER_H; }
 
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
@@ -142,3 +136,6 @@ void Player_Unload()
     }
 }
 
+// @brief: Returns the player's 
+float Player_GetWidth() { return PLAYER_W; }
+float Player_GetHeight() { return PLAYER_H; }

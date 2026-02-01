@@ -15,13 +15,17 @@ const int MAX_JUMPS = 2;
 
 void Boss_Fight_Load()
 {
-    return;
+    squareMesh = CreateSquareMesh(COLOR_WHITE);
+    circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 }
 
 void Boss_Fight_Initialize()
 {
-    squareMesh = CreateSquareMesh(COLOR_WHITE);
-    circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
+    playerX = 0.0f;
+    playerY = GROUND_Y;
+    playerVelY = 0.0f;
+    isGrounded = true;
+    jumpCount = 0;
 }
 
 void Boss_Fight_Update()
@@ -29,8 +33,10 @@ void Boss_Fight_Update()
     float dt = (f32)AEFrameRateControllerGetFrameTime();
 
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        Player_NewPatientRandom();  // NEW PATIENT on room entry
+        Player_NewPatientRandom();  // New patient on room exit
+        Timer_SetPaused(false);     // Timer unpause
         next = GAME_STATE;
+        return;
 	}
     if (AEInputCheckCurr(AEVK_D)) {
         playerX += PLAYER_SPEED * dt;
@@ -89,5 +95,7 @@ void Boss_Fight_Free()
 
 void Boss_Fight_Unload()
 {
+    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
+    if (circleMesh) { AEGfxMeshFree(circleMesh); circleMesh = nullptr; }
     std::cout << "Startup: Unload\n";
 }

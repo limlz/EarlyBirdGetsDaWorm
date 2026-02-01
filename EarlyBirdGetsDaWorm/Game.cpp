@@ -7,7 +7,7 @@ static AEGfxTexture* lightingtest = nullptr;
 
 s8 fontId = 0;
 
-static f32 camX{}, playerY{};
+static f32 camX{}, playerY{}, playerX{};
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 s8 floorNum{1}; // Current floor the player is on
 s8 demonFloorNum{ 1 }; // Floor where the demon is located
@@ -16,6 +16,23 @@ s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
 bool liftPromptActivated{}, liftActive{}, left_right{1}, enterPrompt{};
 bool dementia{ false };
 
+// Day counter
+static int gDay = 1;
+static bool gSessionStarted = false;
+
+// plyer's spawn position
+static float gSpawnX = 50.0f;
+static float gSpawnY = 0.0f;
+static float ComputeSpawnYFromBorder()
+{
+    float borderCenterY = -650.0f;
+    float borderHeight = 800.0f;
+
+    float borderTopY = borderCenterY + (borderHeight * 0.5f);
+    return borderTopY + (Player_GetHeight() * 0.5f);
+}
+
+
 void Game_Load()
 {
     Doors_Load();
@@ -23,6 +40,17 @@ void Game_Load()
     Player_Load();
     Player_NewPatientRandom();
     Timer_Load();
+
+	// Day 1 setup
+    if (!gSessionStarted)
+    {
+		gDay = 1;                       // start at Day 1
+        Timer_Reset();                  // reset timer at start of every DAY [i]
+        Timer_StartDayOverlay(gDay);    // print "DAY 1" before gameplay starts
+        camX = 0.0f;                    // reset player's position
+        Player_NewPatientRandom();
+		gSessionStarted = true;         // mark that session has started
+    }
 
     fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
     std::cout << "Startup: Load\n";
@@ -45,33 +73,55 @@ void Game_Initialize()
     // Notifications and Wall
     Notifications_Initialize();
     Wall_Initialize();
+
 }
 
 void Game_Update()
-{
+{    
+    float dt = (f32)AEFrameRateControllerGetFrameTime();
+
+    // 1) Update overlay + Freeze
+    Timer_UpdateDayOverlay(dt);
+
+    // 2) If overlay active, freeze EVERYTHING (including timer)
+    if (Timer_IsDayOverlayActive())
+    {
+        return;
+    }
+
+    // 3) Only update timer when overlay is not active
+    Timer_Update(dt);
+
+	// 4) Check if time is up
+    if (Timer_IsTimeUp())
+    {
+        // End of day 5
+        if (gDay >= 5)
+        {
+            next = MAIN_MENU; // end of Day 5
+            return;
+        }
+
+        // Go to next day
+        gDay++;
+        Timer_Reset();                  // reset timer for next day
+        Timer_StartDayOverlay(gDay);    // fade in "DAY X", fade out, then gameplay continues
+        camX = 0.0f;                    // reset player's position
+        Player_NewPatientRandom();
+        return;                         // freeze during transition (overlay will handle unfreeze)
+
+    }
+
     // DEBUG: Skip timer to 5:58 AM
     if (AEInputCheckTriggered(AEVK_K))
     {
         Timer_DebugSetTime(5 * 60 + 58); // 5:58 AM
     }
-    
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
 
-    // TIMER
-    // Timer update
-    Timer_Update(dt);
-    if (Timer_IsTimeUp())
-    {
-        // allow only menu/restart keys
-        if (AEInputCheckTriggered(AEVK_H))
-        {
-            next = MAIN_MENU;
-        }
-        return; // freezes movement, doors, lighting update, etc.
-    }
-
+	// Exit Game    
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        next = GS_QUIT;
+        next = OTHERS_MENU;
+        return;
     }
 
     // Movement Logic
@@ -87,7 +137,7 @@ void Game_Update()
 		dementia = !dementia;
 	}
 
-	// WALKING ANIMATION LOGIC
+	// Walking animation
     // - DOES NOT move player
     // - ONLY cycles through frames when moving
     // - Left/Right handled in Player_SetFacing
@@ -97,7 +147,8 @@ void Game_Update()
 
     if (moveRight) Player_SetFacing(1);
     else if (moveLeft) Player_SetFacing(-1);
-
+    
+    // Update player + compute doorNumAtPlayer first
     Player_Update(dt, isWalking);
 
     // Door update
@@ -129,8 +180,12 @@ void Game_Update()
     Lighting_Update(floorNum);
 
 	// Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
-    if (AEInputCheckCurr(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) {
-        next = BOSS_FIGHT_STATE;
+    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) 
+    {
+        Timer_SetPaused(true);      // Timer pause
+        next = BOSS_FIGHT_STATE;    // Player enters room
+        return;
+
     }
     else if (doorNumAtPlayer != -1) {
 		enterPrompt = true;
@@ -142,9 +197,8 @@ void Game_Update()
 
 void Game_Draw()
 {
-    // Draws wall anomalies
+    // Draws Anomalies
     Wall_Draw(camX,floorNum);
- 
     Frames_Draw(floorNum, camX);
 
     // Background Color (1-9)
@@ -184,10 +238,9 @@ void Game_Draw()
     }
 
     // PLAYER
-    // Player position 
+    // Player position
     float borderCenterY = -650.0f;
     float borderHeight = 800.0f;
-
     float borderTopY = borderCenterY + (borderHeight * 0.5f);
     float playerY = borderTopY + (Player_GetHeight() * 0.5f);
 
@@ -224,7 +277,7 @@ void Game_Draw()
         DrawSquareMesh(squareMesh, 0.0f, 0.0f, 400.0f, 700.0f, COLOR_LIFT_CONSOLE);
         // Buttons would go here
         for (int i{}; i < NUM_OF_FLOOR; i++) {
-            if (AEInputCheckCurr(AEVK_0 + i)) {
+            if (AEInputCheckTriggered(AEVK_0 + i)) {
 				floorNum = i;
                 liftActive = false;
             }
@@ -232,7 +285,7 @@ void Game_Draw()
         
     }
 
-	// Draw Enter Promptaek
+	// Draw Enter Prompt aek
     if (enterPrompt) {
         AEGfxPrint(fontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 	}
@@ -240,15 +293,11 @@ void Game_Draw()
     // Notification
     Notifications_Update(floorNum, liftActive);
 
-    // TIMER
     // Draws Timer 
     Timer_Draw(0.0f, 0.85f);
 
     // Draw Shift Over Screen if time is up
-    if (Timer_IsTimeUp())
-    {
-        Timer_DrawShiftOverOverlay(squareMesh);
-    }
+    Timer_DrawDayOverlay(squareMesh);
 
 }
 

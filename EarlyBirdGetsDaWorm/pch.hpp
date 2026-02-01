@@ -26,6 +26,7 @@
 #include "quit.hpp"
 #include "player.hpp"
 #include "timer.hpp"
+#include "others_menu.hpp"
 
 // --- MACROS --- //
 // Colors

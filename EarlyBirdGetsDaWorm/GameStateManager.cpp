@@ -50,6 +50,16 @@ void GSM_Update()
 		fpUnload = MainMenu_Unload;
 		break;
 
+	case OTHERS_MENU:
+		// Assign Others Menu state functions
+		fpLoad = OthersMenu_Load;
+		fpInitialize = OthersMenu_Initialize;
+		fpUpdate = OthersMenu_Update;
+		fpDraw = OthersMenu_Draw;
+		fpFree = OthersMenu_Free;
+		fpUnload = OthersMenu_Unload;
+		break;
+
 	case GAME_STATE:
 		// Assign Main Game State functions
 		fpLoad = Game_Load;
