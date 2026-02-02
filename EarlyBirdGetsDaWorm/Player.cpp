@@ -60,9 +60,11 @@ void Player_NewPatientRandom()
     // 50/50 random
     gIsScary = (std::rand() % 2) == 1;
     
-    if (gIsScary) {
-    // Randomly pick 1 of the 4 illnesses (0 to 3)
+    if (!gIsScary) {
+        // Randomly pick 1 of the 4 illnesses (0 to 3)
         gCurrentIllness = (ILLNESSES)(std::rand() % 4);
+    } else {
+		gCurrentIllness = ALL;
     }
 }
 

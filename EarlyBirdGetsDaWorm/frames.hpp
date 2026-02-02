@@ -2,7 +2,7 @@
 
 void Frames_Load();
 void Frames_Initialize();
-void Frames_Update();
+void Frames_Update(float dt);
 void Frames_Draw(int currentLevel, f32 camX);
 void Frames_Unload();
 
@@ -15,7 +15,8 @@ enum ILLNESSES {
 	PARANOIA,
 	MANIA,
 	DEPRESSION,
-	DEMENTIA
+	DEMENTIA,
+	ALL
 };
 
 struct FrameAnomaly {
