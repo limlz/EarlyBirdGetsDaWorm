@@ -8,6 +8,8 @@
 #include <cstdlib> // For rand()
 #include "AEEngine.h"
 
+
+#include "prompts.hpp"
 #include "boss.hpp"
 #include "bullets.hpp"
 #include "state_list.hpp"
