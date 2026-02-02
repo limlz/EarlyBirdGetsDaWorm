@@ -204,6 +204,7 @@ void Game_Update()
     else {
 		enterPrompt = false;
     }
+    Notifications_Update(liftActive);
 }
 
 void Game_Draw()
@@ -302,7 +303,7 @@ void Game_Draw()
 	}
 
     // Notification
-    Notifications_Update(floorNum, liftActive);
+    Notifications_Draw();
 
     // Draws Timer 
     Timer_Draw(0.0f, 0.85f);

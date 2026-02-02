@@ -35,6 +35,7 @@ void Boss_Fight_Update()
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         Player_NewPatientRandom();  // New patient on room exit
         Timer_SetPaused(false);     // Timer unpause
+        Notifications_Trigger();
         next = GAME_STATE;
         return;
 	}

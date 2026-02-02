@@ -34,8 +34,8 @@ static constexpr float DAY_FADE_SPEED   = 1.0f;  // alpha per sec (1/2 sec fade)
 void Timer_Load()
 {
     // load digital clock font
-    gFontId = AEGfxCreateFont("Assets/DS-DIGI.ttf", 32);
-    bFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 30);
+    gFontId = AEGfxCreateFont("Assets/Fonts/DS-DIGI.ttf", 32);
+    bFontId = AEGfxCreateFont("Assets/Fonts/buggy-font.ttf", 30);
     Timer_Reset();
 }
 

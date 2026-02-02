@@ -63,10 +63,17 @@ std::pair<f32, f32> textPosition(float adjustX, float adjustY)
 	return {textX, textY};
 }
 
-void Notifications_Update(s8 floorNum, bool liftActive)
+void Notifications_Trigger() {
+	smallClicked = true;
+}
+
+void Notifications_Update(bool liftActive)
 {
-	// Draws the icon pager in the corner
-	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
+	// Gets the current x and y position of mouse
+	AEInputGetCursorPosition(&initialX, &initialY);
+	mouseX = static_cast<s32>(initialX - (AEGfxGetWindowWidth() / 2.0f));
+	mouseY = static_cast<s32>((AEGfxGetWindowHeight() / 2.0f) - initialY);
+
 
 	// Toggles the pager when user press Q, pager will not be displayed if lift is active
 	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
@@ -74,54 +81,49 @@ void Notifications_Update(s8 floorNum, bool liftActive)
 		smallClicked = !smallClicked;
 	}
 
-	// Gets the current x and y position of mouse
-	AEInputGetCursorPosition(&initialX, &initialY);
-	mouseX = static_cast<s32>(initialX - (AEGfxGetWindowWidth() / 2.0f));
-	mouseY = static_cast<s32>((AEGfxGetWindowHeight() / 2.0f) - initialY);
-
 	// Resets popup state when player moves to a new floor
-	if (floorNum != prevFloor)
+	/*if (floorNum != prevFloor)
 	{
 		popUp = false;
 		prevFloor = floorNum;
-	}
+	}*/
 
-	switch (floorNum)
-	{
-		// If user is in the basement, pop up will display and the
-		// page with the objective will be displayed. The page where the
-		// next objective will be displayed so user does not need to toggle
-		case 5:
-			if (!popUp)
-			{
-				currentPage = 2;
-				smallClicked = true;
-				popUp = true;
-			}
-			break;
-		case 3:
-			if (!popUp)
-			{
-				currentPage = 1;
-				smallClicked = true;
-				popUp = true;
-			}
-			break;
-		case 7:
-			if (!popUp)
-			{
-				currentPage = 0;
-				smallClicked = true;
-				popUp = true;
-			}
-			break;
-	}
+	//switch (floorNum)
+	//{
+	//	// If user is in the basement, pop up will display and the
+	//	// page with the objective will be displayed. The page where the
+	//	// next objective will be displayed so user does not need to toggle
+	//	case 5:
+	//		if (!popUp)
+	//		{
+	//			currentPage = 2;
+	//			smallClicked = true;
+	//			popUp = true;
+	//		}
+	//		break;
+	//	case 3:
+	//		if (!popUp)
+	//		{
+	//			currentPage = 1;
+	//			smallClicked = true;
+	//			popUp = true;
+	//		}
+	//		break;
+	//	case 7:
+	//		if (!popUp)
+	//		{
+	//			currentPage = 0;
+	//			smallClicked = true;
+	//			popUp = true;
+	//		}
+	//		break;
+	//}
 
 	// Diplayer pager if Q is pressed
-	if (smallClicked)
+	/*if (smallClicked)
 	{
 		Notifications_Draw();
-	}
+	}*/
 
 
 	return;
@@ -129,18 +131,22 @@ void Notifications_Update(s8 floorNum, bool liftActive)
 
 void Notifications_Draw()
 {
-	// Draws Pager
-	DrawTextureMesh(pagerMesh, pagerTexture, 0.0f, 0.0f, 1000.0f, 635.0f, 1.0f);
+	// Draws the icon pager in the corner
+	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
 
-
-	// Text
-	char pagetextBuffer[32], textBuffer[32];
-	sprintf_s(pagetextBuffer, "%02d/03", currentPage + 1);
-
-	AEGfxPrint(lineID, pagetextBuffer, textPosition(140.0f, -40.0f).first, textPosition(140.0f, -40.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-	switch (currentPage + 1)
+	if (smallClicked)
 	{
+		// Draws Pager
+		DrawTextureMesh(pagerMesh, pagerTexture, 0.0f, 0.0f, 1000.0f, 635.0f, 1.0f);
+
+		// Text
+		char pagetextBuffer[32], textBuffer[32];
+		sprintf_s(pagetextBuffer, "%02d/03", currentPage + 1);
+
+		AEGfxPrint(lineID, pagetextBuffer, textPosition(140.0f, -40.0f).first, textPosition(140.0f, -40.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		switch (currentPage + 1)
+		{
 		case 1:
 			sprintf_s(textBuffer, "Bring patient to room #03-09");
 			break;
@@ -149,31 +155,32 @@ void Notifications_Draw()
 			break;
 		case 3:
 			sprintf_s(textBuffer, "Bring patient to room #07-03");
-		break;
-	}
-	AEGfxPrint(lineID, textBuffer, textPosition(140.0f, -100.0f).first, textPosition(140.0f, -100.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-
-	// Arrows
-	DrawTextureMesh(leftArrowMesh, leftArrow, -100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
-	DrawTextureMesh(rightArrowMesh, rightArrow, 100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
-
-
-	// Clicking of left arrow
-	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
-	{
-		if (currentPage > 0)
-		{
-			--currentPage;
+			break;
 		}
-	}
+		AEGfxPrint(lineID, textBuffer, textPosition(140.0f, -100.0f).first, textPosition(140.0f, -100.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-	// Clicking of Right arrow
-	if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
-	{
-		if (currentPage < 2)
+
+		// Arrows
+		DrawTextureMesh(leftArrowMesh, leftArrow, -100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
+		DrawTextureMesh(rightArrowMesh, rightArrow, 100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
+
+
+		// Clicking of left arrow
+		if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
 		{
-			++currentPage;
+			if (currentPage > 0)
+			{
+				--currentPage;
+			}
+		}
+
+		// Clicking of Right arrow
+		if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
+		{
+			if (currentPage < 2)
+			{
+				++currentPage;
+			}
 		}
 	}
 
