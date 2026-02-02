@@ -14,7 +14,7 @@ static s8 promptFontId = 0;
 
 // Timer for feedback messages
 static float messageTimer = 0.0f;
-const float MESSAGE_DURATION = 2.0f; // Message stays for 2 seconds
+const float MESSAGE_DURATION = 1.0f; // Message stays for 2 seconds
 
 void Prompts_Load() {
     promptFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
