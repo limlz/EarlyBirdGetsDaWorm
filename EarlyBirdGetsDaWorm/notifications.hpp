@@ -6,4 +6,4 @@ void Notifications_Trigger();
 
 void Notifications_Update(bool liftActive);
 
-void Notifications_Draw();
+void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum);

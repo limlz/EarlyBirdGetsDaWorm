@@ -1,5 +1,4 @@
 #include "pch.hpp"
-#include "Prompts.hpp" // <--- Include the new header
 
 // Global Variables
 static AEGfxVertexList* squareMesh;
@@ -11,7 +10,9 @@ static AEGfxTexture* lightingtest = nullptr;
 static f32 camX{}, playerY{}, playerX{};
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 s8 floorNum{ 1 }; // Current floor the player is on
-s8 demonFloorNum{ 1 }; // Floor where the demon is located
+s8 patientDoorNum{}; // Door number assigned to the current patient
+s8 patientFloorNum{}; // Floor number assigned to the current patient
+s8 demonFloorNum{ 0 }; // Floor where the demon is located
 s8 demonRoomNum{ 3 }; // Room where the demon is located
 s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
 
@@ -77,6 +78,10 @@ void Game_Initialize()
     squareMesh = CreateSquareMesh(COLOR_WHITE);
     circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
+
+	// Randomly assign patient room and floor
+    patientDoorNum = (s8)(rand() % 10);
+    patientFloorNum = (s8)((rand() % 9) + 1);
 
     // Notifications and Wall
     Notifications_Initialize();
@@ -183,7 +188,7 @@ void Game_Update()
 
     // Lift Interaction Check
     // Checks if player is at the far left (start) or far right (end)
-    bool nearLift = (camX > -5 || camX < -maxDist + 5);
+    bool nearLift = ((camX > -5 || camX < -maxDist + 5) && camX > -maxDist -10);
 
     // Only handle the INPUT here. The prompt visualization is now in Prompts_Update
     if (nearLift && AEInputCheckTriggered(AEVK_L)) {
@@ -198,7 +203,7 @@ void Game_Update()
     Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
 
-    // Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
+    // Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 0 only)
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
     {
         Timer_SetPaused(true);      // Timer pause
@@ -206,16 +211,33 @@ void Game_Update()
         return;
 
     }
-    else if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == 0 && floorNum == 0) {
-        floorNum = 1;
-        camX = 0.0f;
+    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) // Check 1: Did we press E AND are we at a door?
+    {
+        // Check 2: Is it the CORRECT door?
+        if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
+        {
+            Timer_SetPaused(true);
+            next = BOSS_FIGHT_STATE;
+            return;
+        }
+        // Check 3: Is it the LOBBY door? (Don't say "Wrong Room" for the lobby)
+        else if (doorNumAtPlayer == patientDoorNum - 1 && floorNum == patientFloorNum)
+        {
+            floorNum = 1;
+            camX = 0.0f;
+        }
+        // Check 4: If it's not the Boss room AND not the Lobby... it must be WRONG.
+        else
+        {
+            Prompts_TriggerWrongRoom();
+        }
     }
 
     Notifications_Update(liftActive);
 
     // --- PROMPTS UPDATE ---
     // One clean call to handle all UI logic
-    Prompts_Update(camX, doorNumAtPlayer, liftActive, nearLift);
+    Prompts_Update(dt, camX, doorNumAtPlayer, liftActive, nearLift);
 }
 
 void Game_Draw()
@@ -304,12 +326,12 @@ void Game_Draw()
         }
     }
 
-    // Notification
-    Notifications_Draw();
-
     // --- PROMPTS DRAW ---
     // One clean call to handle all UI rendering (Enter, Lift, etc.)
     Prompts_Draw();
+
+    // Notification
+    Notifications_Draw(patientDoorNum, patientFloorNum);
 
     // Draws Timer 
     Timer_Draw(0.0f, 0.85f);
