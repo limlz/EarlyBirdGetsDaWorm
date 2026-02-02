@@ -71,7 +71,7 @@ void Wall_Initialize() {
 	for (int i{}; i < MAX_FLOORS; ++i) {
 		// 50% chance of seeing anomaly, if u want to see an anomaly
 		// for each refresh then change it to % 9
-		random[i] = rand() % 18; 
+		random[i] = rand() % 9; 
 
 		// Variables
 		randomX[i] = rand() % 6000;

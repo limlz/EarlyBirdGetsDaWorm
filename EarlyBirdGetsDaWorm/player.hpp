@@ -15,7 +15,8 @@ void Player_SetFacing(int dir);
 // PLAYER RANDOM
 // ------------------------------
 void Player_NewPatientRandom();     
-bool Player_IsScaryPatient();       
+bool Player_IsScaryPatient();   
+ILLNESSES Player_GetCurrentIllness();
 
 // ------------------------------
 // RESET PLAYER POSITION AFTER NEW DAY

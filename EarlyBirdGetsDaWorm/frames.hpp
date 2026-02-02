@@ -6,16 +6,26 @@ void Frames_Update();
 void Frames_Draw(int currentLevel, f32 camX);
 void Frames_Unload();
 
-enum ENTITY {
+enum ENTITIES {
 	HUMAN,
 	GHOST
 };
-   
+
+enum ILLNESSES {
+	PARANOIA,
+	MANIA,
+	DEPRESSION,
+	DEMENTIA
+};
+
 struct FrameAnomaly {
-	ENTITY type;
-	float posX;
-	float posY;
-	f32 width;
-	f32 height;
-	int textureID;
+	ENTITIES entity;
+	ILLNESSES illness;
+
+	float posX, posY;
+	f32 width, height;
+	int designID;
+
+	int currentState;
+	int normalState = 0;
 };	

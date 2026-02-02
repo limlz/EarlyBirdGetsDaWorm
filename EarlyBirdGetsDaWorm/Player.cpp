@@ -17,6 +17,7 @@ static bool  gIsScary = false;
 static int   gFacing = 1;     // 1 right, -1 left
 static int   gFrame = 0;
 static float gTimer = 0.0f;
+ILLNESSES gCurrentIllness{};
 
 
 static AEGfxTexture* GetActiveFrameTex()
@@ -45,6 +46,10 @@ bool Player_IsScaryPatient()
     return gIsScary;
 }
 
+ILLNESSES Player_GetCurrentIllness()
+{
+    return gCurrentIllness;
+}
 
 void Player_NewPatientRandom()
 {
@@ -54,6 +59,11 @@ void Player_NewPatientRandom()
 
     // 50/50 random
     gIsScary = (std::rand() % 2) == 1;
+    
+    if (gIsScary) {
+    // Randomly pick 1 of the 4 illnesses (0 to 3)
+        gCurrentIllness = (ILLNESSES)(std::rand() % 4);
+    }
 }
 
 // @brief: Loads player resources
