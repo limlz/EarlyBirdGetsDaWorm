@@ -198,6 +198,11 @@ void Game_Update()
         return;
 
     }
+    else if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == 0 && floorNum == 0) {
+        floorNum = 1;
+		camX = 0.0f;
+    }
+
     else if (doorNumAtPlayer != -1) {
 		enterPrompt = true;
     }
