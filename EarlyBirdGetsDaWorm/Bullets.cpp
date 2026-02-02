@@ -33,7 +33,7 @@ void Fire_Bullet(float startX, float startY, bool facingRight) {
 }
 
 // Update this function signature to accept the Boss pointer (or use global)
-void Bullets_Update(float dt, float camX, Boss myBoss)
+void Bullets_Update(float dt, float camX, Boss &myBoss)
 {
     float bulletW = 20.0f;
     float bulletH = 10.0f;

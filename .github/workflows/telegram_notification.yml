@@ -22,7 +22,6 @@ jobs:
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.sha }}"
 
-          # If this is the first commit on the branch, "before" can be all zeros.
           if [[ "$BEFORE" =~ ^0+$ ]]; then
             COUNT="$(git show --name-only --pretty="" "$AFTER" | sed '/^\s*$/d' | wc -l | tr -d ' ')"
           else
@@ -36,12 +35,12 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_ID }}
-          format: markdownv2
+          format: html 
           disable_web_page_preview: true
           message: |
-            *New push* to ${{ github.repository }}
-            *Author:* ${{ github.actor }}
-            *Message:* ${{ github.event.head_commit.message }}
-            *Files changed:* ${{ steps.diff.outputs.count }}
-            *View commit:* [Open commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-            *Bonus:* [Important update](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+            <b>New push</b> to ${{ github.repository }}
+            <b>Author:</b> ${{ github.actor }}
+            <b>Message:</b> ${{ github.event.head_commit.message }}
+            <b>Files changed:</b> ${{ steps.diff.outputs.count }}
+            <b>View commit:</b> <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">Open commit</a>
+            <b>Bonus:</b> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Important update</a>
