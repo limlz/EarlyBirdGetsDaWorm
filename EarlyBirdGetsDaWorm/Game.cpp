@@ -48,7 +48,11 @@ void Game_Load()
         Timer_Reset();                  // reset timer at start of every DAY [i]
         Timer_StartDayOverlay(gDay);    // print "DAY 1" before gameplay starts
         camX = 0.0f;                    // reset player's position
-        Player_NewPatientRandom();
+
+        // DEBUG
+        Player_SetScary(false);
+
+        //Player_NewPatientRandom();
 		gSessionStarted = true;         // mark that session has started
     }
 
@@ -107,7 +111,14 @@ void Game_Update()
         Timer_Reset();                  // reset timer for next day
         Timer_StartDayOverlay(gDay);    // fade in "DAY X", fade out, then gameplay continues
         camX = 0.0f;                    // reset player's position
-        Player_NewPatientRandom();
+
+        // DEBUG
+        if (gDay == 2)
+        {
+            Player_SetScary(true);
+        }
+            
+        //Player_NewPatientRandom();
         return;                         // freeze during transition (overlay will handle unfreeze)
 
     }

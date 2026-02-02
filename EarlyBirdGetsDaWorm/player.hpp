@@ -1,6 +1,9 @@
 #pragma once
 struct AEGfxVertexList;
 
+//DEBUG
+void Player_SetScary(bool scary);
+
 void Player_Load();
 void Player_Unload();
 void Player_Update(float dt, bool walkKey);

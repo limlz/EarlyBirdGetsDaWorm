@@ -24,6 +24,15 @@ static AEGfxTexture* GetActiveFrameTex()
     return gIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
 }
 
+// DEBUG
+void Player_SetScary(bool scary)
+{
+    gIsScary = scary;
+    gFrame = 0;
+    gTimer = 0.0f;
+}
+
+
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
 {
