@@ -22,7 +22,7 @@ void Prompts_Update(float camX, int doorNumAtPlayer, bool liftMenuOpen, bool isL
 
     // Priority 1: Lift Prompt
     // Only show if we are in range AND the menu isn't already open
-    if (isLiftRange && !liftMenuOpen) {
+    if (isLiftRange && !liftMenuOpen && !dementia) {
         currentPrompt = PROMPT_LIFT;
         return; // Return early so we don't show two prompts at once
     }
