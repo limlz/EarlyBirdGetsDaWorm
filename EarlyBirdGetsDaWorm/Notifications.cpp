@@ -20,6 +20,8 @@ static bool smallClicked;
 static bool popUp;
 static s8 prevFloor;
 static s8 currentPage;
+static bool isPagerOpen;		// controls big notif
+static bool openPagerAfterDoor;	// request to open pager from room
 
 void Notifications_Load()
 {
@@ -53,6 +55,20 @@ void Notifications_Initialize()
 	pagerMesh = CreateSquareMesh(0xFFFFFFFF);
 	leftArrowMesh = CreateSquareMesh(0xFFFFFFFF);
 	rightArrowMesh = CreateSquareMesh(0xFFFFFFFF);
+
+	// Open pager after completing objective
+	isPagerOpen = false;		
+	if (openPagerAfterDoor)
+	{
+		isPagerOpen = true;			// open big pager immediately
+		openPagerAfterDoor = false;	// request handled
+	}
+}
+
+// To call from boss fight
+void Notifications_Trigger()
+{
+	openPagerAfterDoor = true;   // request open on next state enter
 }
 
 // Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
@@ -61,10 +77,6 @@ std::pair<f32, f32> textPosition(float adjustX, float adjustY)
 	f32 textX = (-500.0f + adjustX) / (AEGfxGetWindowWidth() * 0.5f);
 	f32 textY = (317.5f + adjustY) / (AEGfxGetWindowWidth() * 0.5f);
 	return {textX, textY};
-}
-
-void Notifications_Trigger() {
-	smallClicked = true;
 }
 
 void Notifications_Update(bool liftActive)
@@ -78,7 +90,7 @@ void Notifications_Update(bool liftActive)
 	// Toggles the pager when user press Q, pager will not be displayed if lift is active
 	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
 	{
-		smallClicked = !smallClicked;
+		isPagerOpen = !isPagerOpen;
 	}
 
 	// Resets popup state when player moves to a new floor
@@ -129,12 +141,13 @@ void Notifications_Update(bool liftActive)
 	return;
 }
 
+
 void Notifications_Draw()
 {
 	// Draws the icon pager in the corner
 	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
 
-	if (smallClicked)
+	if (isPagerOpen)
 	{
 		// Draws Pager
 		DrawTextureMesh(pagerMesh, pagerTexture, 0.0f, 0.0f, 1000.0f, 635.0f, 1.0f);
