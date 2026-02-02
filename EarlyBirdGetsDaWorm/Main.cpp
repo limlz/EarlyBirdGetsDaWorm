@@ -1,110 +1,82 @@
 // ---------------------------------------------------------------------------
-// includes
-#include "pch.hpp"
-#include <crtdbg.h> // To check for memory leaks
-
-
-
-
+// Main.cpp
 // ---------------------------------------------------------------------------
-// main
+#include "pch.hpp"
+#include <crtdbg.h> 
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPWSTR    lpCmdLine,
-	_In_ int       nCmdShow)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+    int gGameRunning = 1;
 
-	
-	int gGameRunning = 1;
+    // Initialize System
+    AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, true, NULL);
+    AESysSetWindowTitle("The Porter: Ward 8");
+    AESysReset();
 
-	// Initialization of your own variables go here
-	
-	// Using custom window procedure
-	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, true, NULL);
+    // Initialize Game State Manager (Start at Menu or Game)
+    GSM_Initialize(START_UP);
+    AESysSetFullScreen(1);
 
-	// Changing the window title
-	AESysSetWindowTitle("My New Demo!");
+    // --- SAFE MAIN LOOP ---
+    while (gGameRunning)
+    {
+        // 0. System Check
+        if (0 == AESysDoesWindowExist())
+            gGameRunning = 0;
 
-	// reset the system modules
-	AESysReset();
+        // 1. Update Function Pointers
+        // We do this at the start to ensure fpLoad/fpInit match 'current'
+        GSM_Update();
 
-	printf("Hello World\n");
+        // 2. Load Resources
+        fpLoad();
 
-	// Game Loop
+        // 3. Initialize Variables
+        fpInitialize();
 
-	GSM_Initialize(START_UP);
-	AESysSetFullScreen(1);
-	while (gGameRunning)
-	{
-		// Informing the system about the loop'stt start
+        // 4. Inner Game Loop (Runs every frame)
+        while (current == next)
+        {
+            AESysFrameStart();
 
-		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist())
-			gGameRunning = 0;
+            // Handle Input
+            Input_Update();
 
-		// Your own update logic goes here
-		if (current == GS_RESTART) {
-			current = previous;
-			next = previous;
-		}
-		else {
-			// Update the game state manager and assign function pointers
-			GSM_Update();
+            // Game Logic
+            fpUpdate();
 
-			// Load the current state's resources
-			fpLoad();
-		}
+            // Rendering
+            fpDraw();
 
-		// Initialize the current state
-		fpInitialize();
+            AESysFrameEnd();
+        }
 
-		// --------------------------------------------------------------------
-		// Game loop
-		// Runs as long as the current state does not change
-		// --------------------------------------------------------------------
-		while (current == next)
-		{
-			AESysFrameStart();
-			// Handle user input
-			Input_Update();
-			// Update game logic for the current state
-			fpUpdate();
+        // 5. Free Session Data (Variables, Vectors, etc.)
+        fpFree();
 
-			// Draw the current state
-			fpDraw();
-			AESysFrameEnd();
-		}
-		
-		// Free resources related to the current state
-		fpFree();
+        // 6. Handle State Transitions
+        if (next == GS_QUIT) {
+            // Unload the current state before quitting
+            fpUnload();
+            gGameRunning = 0;
+            break; // BREAK IMMEDIATELY to stop the loop
+        }
+        else if (next == GS_RESTART) {
+            fpUnload();
 
+            next = current;
+        }
+        else {
+            fpUnload(); // Unload Menu assets
+            previous = current;
+            current = next; // Switch to Game
+        }
+    }
 
-
-		// Unload state resources unless the game is restarting the same state
-		if (next != GS_RESTART) {
-			fpUnload();
-		}
-
-		// Temp Space to Quit
-		if (next == GS_QUIT) {
-			gGameRunning = 0;
-		}
-
-		// Update state tracking variables
-		previous = current;
-		current = next;
-		std::cout << previous << current << next;
-
-
-		// Informing the system about the loop's end
-
-	}
-
-
-	// free the system
-	AESysExit();
+    AESysExit();
+    return 0;
 }
