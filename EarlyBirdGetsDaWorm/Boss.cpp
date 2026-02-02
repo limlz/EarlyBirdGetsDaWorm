@@ -27,7 +27,9 @@ void Boss_Initialize(Boss& boss)
 
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
-    if (!boss.active) return;
+    if (!boss.active) {
+        next = GAME_STATE; // End boss fight
+    }
 
     // --- HOVER MOVEMENT (Sine Wave) ---
     // This creates a smooth up/down motion
