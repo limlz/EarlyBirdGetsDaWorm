@@ -56,6 +56,8 @@ void Game_Load()
 
         // DEBUG
         Player_SetScary(false);
+        Player_SetIllness(MANIA);
+
 
         //Player_NewPatientRandom();
         gSessionStarted = true;         // mark that session has started

@@ -58,11 +58,16 @@ void Frames_Initialize() {
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-
+			ILLNESSES illness;
 			FrameAnomaly& currentFrame = levelMap[level][frame];
             ENTITIES entity = Player_IsScaryPatient() ? GHOST : HUMAN;
-			ILLNESSES illness = Player_GetCurrentIllness();
-            
+
+            if (entity == GHOST) {
+				illness = ALL;
+            } else {
+                illness = Player_GetCurrentIllness();
+            }
+			
 			currentFrame.illness = illness;
             currentFrame.entity = entity;
 
@@ -77,13 +82,12 @@ void Frames_Initialize() {
 	}
     frameMesh = CreateSquareMesh(0xFFFFFFFF);
 }
+
 void Frames_Update(float dt) {
-    // 1. STATICS
     static bool  isFlickering = false;
     static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
     static float flickerDuration = 4.0f;
 
-    // 2. Timer Logic
     if (!isFlickering) {
         flickerInterval -= dt;
     }
@@ -102,7 +106,8 @@ void Frames_Update(float dt) {
                     float timePassed = 4.0f - flickerDuration;
 
                     // Cast to int to get 0, 1, 2, 3, then add 1 to get frames 1-4
-                    currentFrame.currentState = (int)timePassed + 1;
+                    float speed = 3.0f;
+                    currentFrame.currentState = (int)(fmodf(timePassed * speed, 4.0f)) + 1;
 
                     // Safety cap to ensure we never hit index 5
                     if (currentFrame.currentState > 4) currentFrame.currentState = 4;
@@ -120,7 +125,7 @@ void Frames_Update(float dt) {
     // 3. State Transitions
     if (!isFlickering && flickerInterval <= 0.0f) {
         isFlickering = true;
-        flickerDuration = 4.0f; // Locked at 4s to match your 4 frames
+        flickerDuration = 4.0f;
     }
     else if (isFlickering && flickerDuration <= 0.0f) {
         isFlickering = false;
@@ -135,7 +140,6 @@ void Frames_Draw(int currentLevel, f32 camX) {
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
         FrameAnomaly& currentFrame = levelMap[currentLevel][i];
 
-        // 2. Determine which design array to use
         AEGfxTexture* Tex = nullptr;
 
         switch (currentFrame.designID) {
@@ -145,10 +149,8 @@ void Frames_Draw(int currentLevel, f32 camX) {
         default: Tex = framedesign_1[0]; break; // Fallback
         }
 
-        // 3. Draw the frame if the texture loaded successfully
         if (Tex) {
             const f32 drawX = currentFrame.posX + camX;
-
             DrawTextureMesh(
                 frameMesh,
                 Tex,

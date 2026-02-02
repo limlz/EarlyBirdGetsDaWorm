@@ -28,5 +28,4 @@ struct FrameAnomaly {
 	int designID;
 
 	int currentState;
-	int normalState = 0;
 };	

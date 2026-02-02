@@ -33,6 +33,10 @@ void Player_SetScary(bool scary)
     gTimer = 0.0f;
 }
 
+void Player_SetIllness(ILLNESSES illness) {
+	gCurrentIllness = illness;
+}
+
 
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
