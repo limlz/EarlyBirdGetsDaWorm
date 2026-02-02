@@ -142,7 +142,7 @@ void Notifications_Update(bool liftActive)
 }
 
 
-void Notifications_Draw()
+void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
 {
 	// Draws the icon pager in the corner
 	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
@@ -161,7 +161,7 @@ void Notifications_Draw()
 		switch (currentPage + 1)
 		{
 		case 1:
-			sprintf_s(textBuffer, "Bring patient to room #03-09");
+			sprintf_s(textBuffer, "Bring patient to room #%02d-%02d", patientFloorNum, patientDoorNum);
 			break;
 		case 2:
 			sprintf_s(textBuffer, "Bring patient to room #05-06");

@@ -1,33 +1,48 @@
 // Prompts.cpp
 #include "pch.hpp"
-#include "Prompts.hpp"
 
 // Internal State
 enum PromptType {
     PROMPT_NONE,
-    PROMPT_LIFT,
-    PROMPT_ENTER
+    PROMPT_WRONG_ROOM, // Priority High
+    PROMPT_LIFT,       // Priority Medium
+    PROMPT_ENTER       // Priority Low
 };
 
 static PromptType currentPrompt = PROMPT_NONE;
-static s8 promptFontId = 0; // Dedicated font ID for prompts
+static s8 promptFontId = 0;
+
+// Timer for feedback messages
+static float messageTimer = 0.0f;
+const float MESSAGE_DURATION = 2.0f; // Message stays for 2 seconds
 
 void Prompts_Load() {
-    // Load the font here so this module is self-contained
     promptFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 }
 
-void Prompts_Update(float camX, int doorNumAtPlayer, bool liftMenuOpen, bool isLiftRange) {
+// Function called by Game.cpp when logic fails
+void Prompts_TriggerWrongRoom() {
+    messageTimer = MESSAGE_DURATION;
+}
+
+void Prompts_Update(float dt, float camX, int doorNumAtPlayer, bool liftMenuOpen, bool isLiftRange) {
     currentPrompt = PROMPT_NONE;
 
-    // Priority 1: Lift Prompt
-    // Only show if we are in range AND the menu isn't already open
-    if (isLiftRange && !liftMenuOpen && !dementia) {
-        currentPrompt = PROMPT_LIFT;
-        return; // Return early so we don't show two prompts at once
+    // --- PRIORITY 0: Feedback Messages (Timed) ---
+    // If the timer is running, show the feedback message and IGNORE everything else
+    if (messageTimer > 0.0f) {
+        messageTimer -= dt;
+        currentPrompt = PROMPT_WRONG_ROOM;
+        return;
     }
 
-    // Priority 2: Door Prompt
+    // --- PRIORITY 1: Lift Prompt ---
+    if (isLiftRange && !liftMenuOpen) {
+        currentPrompt = PROMPT_LIFT;
+        return;
+    }
+
+    // --- PRIORITY 2: Door Prompt ---
     if (doorNumAtPlayer != -1) {
         currentPrompt = PROMPT_ENTER;
     }
@@ -36,13 +51,16 @@ void Prompts_Update(float camX, int doorNumAtPlayer, bool liftMenuOpen, bool isL
 void Prompts_Draw() {
     if (currentPrompt == PROMPT_NONE) return;
 
-    // Use a switch to draw the correct text
     switch (currentPrompt) {
+    case PROMPT_WRONG_ROOM:
+        // Draw in Red (R, G, B, A) -> (1, 0, 0, 1) to indicate error
+        AEGfxPrint(promptFontId, "That's not the right room...", -0.25f, 0.6f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+        break;
     case PROMPT_LIFT:
-        AEGfxPrint(promptFontId, "Click L to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxPrint(promptFontId, "Click L to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         break;
     case PROMPT_ENTER:
-        AEGfxPrint(promptFontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxPrint(promptFontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         break;
     }
 }
