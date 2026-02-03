@@ -201,12 +201,19 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
 
 void Notifications_Free()
 {
-	AEGfxMeshFree(iconMesh);
-	AEGfxMeshFree(pagerMesh);
-	AEGfxMeshFree(leftArrowMesh);
-	AEGfxMeshFree(rightArrowMesh);
-	AEGfxTextureUnload(iconTexture);
-	AEGfxTextureUnload(pagerTexture);
-	AEGfxTextureUnload(leftArrow);
-	AEGfxTextureUnload(rightArrow);
+    if (iconMesh) { AEGfxMeshFree(iconMesh); iconMesh = nullptr; }
+    if (pagerMesh) { AEGfxMeshFree(pagerMesh); pagerMesh = nullptr; }
+    if (leftArrowMesh) { AEGfxMeshFree(leftArrowMesh); leftArrowMesh = nullptr; }
+    if (rightArrowMesh) { AEGfxMeshFree(rightArrowMesh); rightArrowMesh = nullptr; }
+
+    if (iconTexture) { AEGfxTextureUnload(iconTexture); iconTexture = nullptr; }
+    if (pagerTexture) { AEGfxTextureUnload(pagerTexture); pagerTexture = nullptr; }
+    if (leftArrow) { AEGfxTextureUnload(leftArrow); leftArrow = nullptr; }
+    if (rightArrow) { AEGfxTextureUnload(rightArrow); rightArrow = nullptr; }
+
+    // Destroy font if valid
+    if (lineID >= 0) {
+        AEGfxDestroyFont(lineID);
+        lineID = -1;
+    }
 }

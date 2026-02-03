@@ -334,5 +334,6 @@ void Game_Unload()
 	Lighting_Unload();
 	Doors_Unload();
     Notifications_Free();
+	Wall_Unload();
     std::cout << "Startup: Unload\n";
 }

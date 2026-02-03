@@ -61,5 +61,11 @@ void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia
 }
 
 void Doors_Unload() {
-    AEGfxMeshFree(squareMesh);
+    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
+
+    // Destroy font if valid (some AEGfx implementations return >= 0 for valid ids)
+    if (doorFontId >= 0) {
+        AEGfxDestroyFont(doorFontId);
+        doorFontId = -1;
+    }
 }
