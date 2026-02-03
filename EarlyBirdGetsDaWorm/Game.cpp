@@ -350,5 +350,9 @@ void Game_Unload()
     Frames_Unload();
     Player_Unload();
     Prompts_Unload(); // <--- Cleanup Font
+    Boss_Fight_Unload();
+	Lighting_Unload();
+	Doors_Unload();
+    Notifications_Free();
     std::cout << "Startup: Unload\n";
 }

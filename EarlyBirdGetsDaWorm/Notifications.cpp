@@ -198,3 +198,15 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
 	}
 
 }
+
+void Notifications_Free()
+{
+	AEGfxMeshFree(iconMesh);
+	AEGfxMeshFree(pagerMesh);
+	AEGfxMeshFree(leftArrowMesh);
+	AEGfxMeshFree(rightArrowMesh);
+	AEGfxTextureUnload(iconTexture);
+	AEGfxTextureUnload(pagerTexture);
+	AEGfxTextureUnload(leftArrow);
+	AEGfxTextureUnload(rightArrow);
+}
