@@ -3,6 +3,7 @@ struct AEGfxVertexList;
 
 //DEBUG
 void Player_SetScary(bool scary);
+void Player_SetIllness(ILLNESSES illness);
 
 void Player_Load();
 void Player_Unload();

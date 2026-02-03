@@ -33,6 +33,10 @@ void Player_SetScary(bool scary)
     gTimer = 0.0f;
 }
 
+void Player_SetIllness(ILLNESSES illness) {
+	gCurrentIllness = illness;
+}
+
 
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
@@ -60,9 +64,11 @@ void Player_NewPatientRandom()
     // 50/50 random
     gIsScary = (std::rand() % 2) == 1;
     
-    if (gIsScary) {
-    // Randomly pick 1 of the 4 illnesses (0 to 3)
+    if (!gIsScary) {
+        // Randomly pick 1 of the 4 illnesses (0 to 3)
         gCurrentIllness = (ILLNESSES)(std::rand() % 4);
+    } else {
+		gCurrentIllness = ALL;
     }
 }
 

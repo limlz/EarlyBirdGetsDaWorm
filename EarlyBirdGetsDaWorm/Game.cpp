@@ -56,6 +56,8 @@ void Game_Load()
 
         // DEBUG
         Player_SetScary(false);
+        Player_SetIllness(MANIA);
+
 
         //Player_NewPatientRandom();
         gSessionStarted = true;         // mark that session has started
@@ -201,6 +203,7 @@ void Game_Update()
     }
 
     Lighting_Update(floorNum, camX, dementia);
+	Frames_Update(dt);
 
     // Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 0 only)
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)

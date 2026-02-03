@@ -16,26 +16,27 @@ static AEGfxTexture* framedesign_3[FRAME_STATES];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
-namespace {
 
-    int GetRandomStateByIllness(ILLNESSES illness) {
-        static const int paranoiaPool[] = { 0, 5, 6 };
-        static const int maniaPool[] = { 0, 1, 2, 3, 4 };
-        static const int depressionPool[] = { 0, 7, 8 };
-        static const int dementiaPool[] = { 0, 9, 10 };
+int GetRandomStateByIllness(ILLNESSES illness) {
+    static const int paranoiaPool[] = { 5, 6 };
+    static const int maniaPool[] = { 1, 2, 3, 4 };
+    static const int depressionPool[] = { 7, 8 };
+    static const int dementiaPool[] = { 9, 10 };
+	static const int allPool[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-        switch (illness) {
-        case PARANOIA:   return paranoiaPool[rand() % 3];
-        case MANIA:      return maniaPool[rand() % 5];
-        case DEPRESSION: return depressionPool[rand() % 3];
-        case DEMENTIA:   return dementiaPool[rand() % 3];
-        default:         return 0; // Default to normal state
-        }
+    switch (illness) {
+    case PARANOIA:      return paranoiaPool[rand() % 2];
+    case MANIA:         return maniaPool[rand() % 4];
+    case DEPRESSION:    return depressionPool[rand() % 2];
+    case DEMENTIA:      return dementiaPool[rand() % 2];
+	case ALL:           return allPool[rand() % 10];
+    default:            return 0; // Default to normal state
     }
-
 }
 
 void Frames_Load() {
+	Frames_Unload(); // Ensure previous assets are cleared
+
     for (int i = 0; i < FRAME_STATES; i++) {
 
         int fileIndex = i;
@@ -59,11 +60,16 @@ void Frames_Initialize() {
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-
+			ILLNESSES illness;
 			FrameAnomaly& currentFrame = levelMap[level][frame];
             ENTITIES entity = Player_IsScaryPatient() ? GHOST : HUMAN;
-			ILLNESSES illness = Player_GetCurrentIllness();
-            
+
+            if (entity == GHOST) {
+				illness = ALL;
+            } else {
+                illness = Player_GetCurrentIllness();
+            }
+			
 			currentFrame.illness = illness;
             currentFrame.entity = entity;
 
@@ -76,23 +82,58 @@ void Frames_Initialize() {
             currentFrame.currentState = 0;
 		}
 	}
-    frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    if (frameMesh == nullptr) {
+        frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    }
 }
 
-void Frames_Update() {
+void Frames_Update(float dt) {
+    static bool  isFlickering = false;
+    static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
+    static float flickerDuration = 4.0f;
+
+    if (!isFlickering) {
+        flickerInterval -= dt;
+    }
+    else {
+        flickerDuration -= dt;
+    }
+
     for (int level = 0; level < NUM_OF_FLOOR; ++level) {
-
         for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-
             FrameAnomaly& currentFrame = levelMap[level][frame];
 
-            if (rand() % 100 < 1) {
-                currentFrame.currentState = GetRandomStateByIllness(currentFrame.illness);
+            if (isFlickering) {
+                if (currentFrame.illness == MANIA || currentFrame.illness == ALL) {
+                    // Logic: 4.0 minus the countdown gives us a value from 0.0 to 4.0
+                    // Example: At 4.0s left, frame is 1. At 0.1s left, frame is 4.
+                    float timePassed = 4.0f - flickerDuration;
+
+                    // Cast to int to get 0, 1, 2, 3, then add 1 to get frames 1-4
+                    float speed = 3.0f;
+                    currentFrame.currentState = (int)(fmodf(timePassed * speed, 4.0f)) + 1;
+
+                    // Safety cap to ensure we never hit index 5
+                    if (currentFrame.currentState > 4) currentFrame.currentState = 4;
+                }
+                else if (currentFrame.currentState == 0) {
+                    currentFrame.currentState = GetRandomStateByIllness(currentFrame.illness);
+                }
             }
             else {
                 currentFrame.currentState = 0;
             }
         }
+    }
+
+    // 3. State Transitions
+    if (!isFlickering && flickerInterval <= 0.0f) {
+        isFlickering = true;
+        flickerDuration = 4.0f;
+    }
+    else if (isFlickering && flickerDuration <= 0.0f) {
+        isFlickering = false;
+        flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
     }
 }
 
@@ -103,26 +144,23 @@ void Frames_Draw(int currentLevel, f32 camX) {
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
         FrameAnomaly& currentFrame = levelMap[currentLevel][i];
 
-        // 2. Determine which design array to use
-        AEGfxTexture* pTex = nullptr;
+        AEGfxTexture* Tex = nullptr;
 
         switch (currentFrame.designID) {
-        case 1:  pTex = framedesign_1[currentFrame.currentState]; break;
-        case 2:  pTex = framedesign_2[currentFrame.currentState]; break;
-        case 3:  pTex = framedesign_3[currentFrame.currentState]; break;
-        default: pTex = framedesign_1[0]; break; // Fallback
+        case 1:  Tex = framedesign_1[currentFrame.currentState]; break;
+        case 2:  Tex = framedesign_2[currentFrame.currentState]; break;
+        case 3:  Tex = framedesign_3[currentFrame.currentState]; break;
+        default: Tex = framedesign_1[0]; break; // Fallback
         }
 
-        // 3. Draw the frame if the texture loaded successfully
-        if (pTex) {
+        if (Tex) {
             const f32 drawX = currentFrame.posX + camX;
-
             DrawTextureMesh(
                 frameMesh,
-                pTex,
+                Tex,
                 drawX, currentFrame.posY,
                 currentFrame.width, currentFrame.height,
-                1.0f                // Opacity (1.0 = fully visible)
+                1.0f                
             );
         }
     }
@@ -130,7 +168,10 @@ void Frames_Draw(int currentLevel, f32 camX) {
 
 void Frames_Unload() {
 
-    if (frameMesh) AEGfxMeshFree(frameMesh);
+    if (frameMesh) {
+        AEGfxMeshFree(frameMesh);
+        frameMesh = nullptr; // Crucial!
+    }
 
     for (int i = 0; i < FRAME_STATES; i++) {
         if (framedesign_1[i]) AEGfxTextureUnload(framedesign_1[i]);
