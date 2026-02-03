@@ -91,7 +91,7 @@ void Frames_Update(float dt) {
     static bool  isFlickering = false;
     static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
     static float flickerDuration = 4.0f;
-
+    
     if (!isFlickering) {
         flickerInterval -= dt;
     }
@@ -110,7 +110,7 @@ void Frames_Update(float dt) {
                     float timePassed = 4.0f - flickerDuration;
 
                     // Cast to int to get 0, 1, 2, 3, then add 1 to get frames 1-4
-                    float speed = 3.0f;
+                    float speed = 8.0f;
                     currentFrame.currentState = (int)(fmodf(timePassed * speed, 4.0f)) + 1;
 
                     // Safety cap to ensure we never hit index 5

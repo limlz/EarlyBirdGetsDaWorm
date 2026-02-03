@@ -188,19 +188,8 @@ void Game_Update()
 
     doorNumAtPlayer = Doors_Update(camX);
 
-    // Lift Interaction Check
-    // Checks if player is at the far left (start) or far right (end)
-    bool nearLift = ((camX > -5 || camX < -maxDist + 5) && camX > -maxDist -10);
-
-    // Only handle the INPUT here. The prompt visualization is now in Prompts_Update
-    if (nearLift && AEInputCheckTriggered(AEVK_L)) {
-        liftActive = !liftActive;
-    }
-
-    // If we walk away, close the lift
-    if (!nearLift) {
-        liftActive = false;
-    }
+    Lift_Update(dt, camX, maxDist);
+    Lift_HandleInput(floorNum);
 
     Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
@@ -239,7 +228,7 @@ void Game_Update()
 
     // --- PROMPTS UPDATE ---
     // One clean call to handle all UI logic
-    Prompts_Update(dt, camX, doorNumAtPlayer, liftActive, nearLift);
+    Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
 }
 
 void Game_Draw()
@@ -313,21 +302,6 @@ void Game_Draw()
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-    // Lift UI Overlay
-    if (liftActive) {
-        // Background rectangle
-        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 500.0f, 800.0f, COLOR_LIFT_BG);
-        // Lift console
-        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 400.0f, 700.0f, COLOR_LIFT_CONSOLE);
-        // Buttons would go here
-        for (int i{}; i < NUM_OF_FLOOR; i++) {
-            if (AEInputCheckTriggered(AEVK_0 + i)) {
-                floorNum = i;
-                liftActive = false;
-            }
-        }
-    }
-
     // --- PROMPTS DRAW ---
     // One clean call to handle all UI rendering (Enter, Lift, etc.)
     Prompts_Draw();
@@ -340,6 +314,9 @@ void Game_Draw()
 
     // Draw Shift Over Screen if time is up
     Timer_DrawDayOverlay(squareMesh);
+
+    // Lift UI Overlay
+    Lift_Draw(squareMesh);
 
 }
 

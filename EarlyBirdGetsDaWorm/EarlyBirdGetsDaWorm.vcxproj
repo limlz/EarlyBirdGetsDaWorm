@@ -108,6 +108,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameStateManager.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Lift.cpp" />
     <ClCompile Include="Lighting.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
@@ -135,6 +136,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="doors.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="input.hpp" />
+    <ClInclude Include="Lift.hpp" />
     <ClInclude Include="lighting.hpp" />
     <ClInclude Include="notifications.hpp" />
     <ClInclude Include="others_menu.hpp" />

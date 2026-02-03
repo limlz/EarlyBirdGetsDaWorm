@@ -116,6 +116,7 @@ void Player_Update(float dt, bool walkKey)
 // @brief: Draws the player at the specified position
 void Player_Draw(float x, float y)
 {
+
     AEMtx33 scale, trans, transform;
 
     float sx = PLAYER_W * (float)gFacing;   // // 1 = normal, -1 = flipped
