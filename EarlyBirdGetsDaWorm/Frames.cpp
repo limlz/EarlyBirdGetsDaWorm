@@ -35,6 +35,8 @@ int GetRandomStateByIllness(ILLNESSES illness) {
 }
 
 void Frames_Load() {
+	Frames_Unload(); // Ensure previous assets are cleared
+
     for (int i = 0; i < FRAME_STATES; i++) {
 
         int fileIndex = i;
@@ -80,7 +82,9 @@ void Frames_Initialize() {
             currentFrame.currentState = 0;
 		}
 	}
-    frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    if (frameMesh == nullptr) {
+        frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    }
 }
 
 void Frames_Update(float dt) {
@@ -100,7 +104,7 @@ void Frames_Update(float dt) {
             FrameAnomaly& currentFrame = levelMap[level][frame];
 
             if (isFlickering) {
-                if (currentFrame.illness == MANIA) {
+                if (currentFrame.illness == MANIA || currentFrame.illness == ALL) {
                     // Logic: 4.0 minus the countdown gives us a value from 0.0 to 4.0
                     // Example: At 4.0s left, frame is 1. At 0.1s left, frame is 4.
                     float timePassed = 4.0f - flickerDuration;
@@ -164,7 +168,10 @@ void Frames_Draw(int currentLevel, f32 camX) {
 
 void Frames_Unload() {
 
-    if (frameMesh) AEGfxMeshFree(frameMesh);
+    if (frameMesh) {
+        AEGfxMeshFree(frameMesh);
+        frameMesh = nullptr; // Crucial!
+    }
 
     for (int i = 0; i < FRAME_STATES; i++) {
         if (framedesign_1[i]) AEGfxTextureUnload(framedesign_1[i]);
