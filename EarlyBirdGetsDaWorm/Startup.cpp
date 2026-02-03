@@ -94,6 +94,7 @@ void Startup_Free()
 
 void Startup_Unload()
 {
-	// Unload main menu resources
+	AEGfxMeshFree(splashMesh);
+	AEGfxTextureUnload(digipenLogo);
 	std::cout << "Startup: Unload\n";
 }
