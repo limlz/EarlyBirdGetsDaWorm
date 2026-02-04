@@ -40,6 +40,7 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
     Doors_Load();
+    Debug_Load();
     Frames_Load();
     Player_Load();
     Player_NewPatientRandom();
@@ -94,7 +95,8 @@ void Game_Initialize()
 void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-
+    // Debug overlay
+    Debug_Update();
     // 1) Update overlay + Freeze
     Timer_UpdateDayOverlay(dt);
 
@@ -318,6 +320,23 @@ void Game_Draw()
     // Lift UI Overlay
     Lift_Draw(squareMesh);
 
+    // 3. DRAW DEBUG OVERLAY
+    // Pack the data into the struct
+    DebugInfo info;
+    info.camX = camX;
+    info.left_right = left_right;
+    info.day = gDay;
+    info.floorNum = floorNum;
+    info.dementia = dementia;
+    info.doorNumAtPlayer = doorNumAtPlayer;
+    info.patientDoorNum = patientDoorNum;
+    info.patientFloorNum = patientFloorNum;
+    info.demonFloorNum = demonFloorNum;
+    info.demonRoomNum = demonRoomNum;
+
+    // Call the function
+    Debug_Draw(info);
+
 }
 
 void Game_Free()
@@ -333,6 +352,7 @@ void Game_Unload()
     Boss_Fight_Unload();
 	Lighting_Unload();
 	Doors_Unload();
+    Debug_Unload();
     Notifications_Free();
 	Wall_Unload();
     std::cout << "Startup: Unload\n";

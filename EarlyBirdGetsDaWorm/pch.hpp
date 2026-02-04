@@ -8,7 +8,7 @@
 #include <cstdlib> // For rand()
 #include "AEEngine.h"
 
-
+#include "debug.hpp"
 #include "prompts.hpp"
 #include "boss.hpp"
 #include "bullets.hpp"
