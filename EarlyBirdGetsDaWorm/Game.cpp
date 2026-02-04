@@ -159,6 +159,10 @@ void Game_Update()
     if (AEInputCheckTriggered(AEVK_O)) {
         dementia = !dementia;
     }
+    if (AEInputCheckCurr(AEVK_M)) {
+        camX -= 4000;
+        left_right = true;
+    }
 
     // Walking animation
     // - DOES NOT move player

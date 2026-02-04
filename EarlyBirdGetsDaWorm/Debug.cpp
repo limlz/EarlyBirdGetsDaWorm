@@ -27,7 +27,9 @@ void Debug_Draw(const DebugInfo& info)
     // 1. Get Mouse Info (Global function, doesn't need struct)
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
-    std::string illness;
+    // 1. Declare a pointer to a constant character (string literal)
+    const char* illness = "";
+
     switch (Player_GetCurrentIllness()) {
     case 0:
         illness = "PARANOIA";
@@ -43,6 +45,9 @@ void Debug_Draw(const DebugInfo& info)
         break;
     case 4:
         illness = "ALL/GHOST";
+        break;
+    default:
+        illness = "UNKNOWN"; // Good practice to handle unexpected values
         break;
     }
     // Calculate World Mouse using info struct
