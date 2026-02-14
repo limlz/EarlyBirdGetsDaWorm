@@ -3,7 +3,7 @@
 // ------------------------------
 // CONFIG
 // ------------------------------
-static constexpr float FRAME_TIME = 0.50f;  // walking speed (time per frame)
+static constexpr float FRAME_TIME = 0.4f;  // walking speed (time per frame)
 static constexpr float PLAYER_W = 220.0f;
 static constexpr float PLAYER_H = 220.0f;
 
