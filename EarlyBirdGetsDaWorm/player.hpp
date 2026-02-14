@@ -3,6 +3,7 @@ struct AEGfxVertexList;
 
 //DEBUG
 void Player_SetScary(bool scary);
+void Player_SetIllness(ILLNESSES illness);
 
 void Player_Load();
 void Player_Unload();
@@ -15,7 +16,8 @@ void Player_SetFacing(int dir);
 // PLAYER RANDOM
 // ------------------------------
 void Player_NewPatientRandom();     
-bool Player_IsScaryPatient();       
+bool Player_IsScaryPatient();   
+ILLNESSES Player_GetCurrentIllness();
 
 // ------------------------------
 // RESET PLAYER POSITION AFTER NEW DAY

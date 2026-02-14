@@ -7,131 +7,218 @@ const f32 FRAME_SPACING		= DIST_BETWEEN_DOORS * 2.0f;
 const f32 OFFSET			= 50.0f;
 
 const int FRAMES_PERLVL		= 6;
-const int FRAMES_ID			= 3;
+const int FRAME_STATES		= 11;
+const int MAX_FRAMES        = 5;
 
-static AEGfxTexture* frametextures_normal[FRAMES_ID];
-static AEGfxTexture* frametextures_tier1[FRAMES_ID];
-static AEGfxTexture* frametextures_tier2[FRAMES_ID];
+static AEGfxTexture* framedesign_1[FRAME_STATES];
+static AEGfxTexture* framedesign_2[FRAME_STATES];
+static AEGfxTexture* framedesign_3[FRAME_STATES];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
+
+int GetRandomStateByIllness(ILLNESSES illness) {
+    static const int paranoiaPool[] = { 5, 6 };
+    static const int maniaPool[] = { 1, 2, 3, 4 };
+    static const int depressionPool[] = { 7, 8 };
+    static const int dementiaPool[] = { 9, 10 };
+	static const int allPool[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    switch (illness) {
+    case PARANOIA:      return paranoiaPool[rand() % 2];
+    case MANIA:         return maniaPool[rand() % 4];
+    case DEPRESSION:    return depressionPool[rand() % 2];
+    case DEMENTIA:      return dementiaPool[rand() % 2];
+	case ALL:           return allPool[rand() % 10];
+    default:            return 0; // Default to normal state
+    }
+}
+
 void Frames_Load() {
-	for (int i{}; i < FRAMES_ID; i++) {
-        std::string baseName = "Assets/frames_" + std::to_string(i);
+	Frames_Unload(); // Ensure previous assets are cleared
 
-        frametextures_normal[i] = AEGfxTextureLoad((baseName + ".png").c_str());
+    for (int i = 0; i < FRAME_STATES; i++) {
 
-        frametextures_tier1[i] = AEGfxTextureLoad((baseName + "_t1.png").c_str());
+        int fileIndex = i;
+        std::string suffix = "_(" + std::to_string(fileIndex) + ").png";
 
-        frametextures_tier2[i] = AEGfxTextureLoad((baseName + "_t2.png").c_str());
-	}
+        // Load Design 1 (Recovery is a journey...)
+        std::string path1 = "Assets/Frame_Anomaly/Frame_1" + suffix;
+        framedesign_1[i] = AEGfxTextureLoad(path1.c_str());
+
+        // Load Design 2 (Every day is a step forward...)
+        std::string path2 = "Assets/Frame_Anomaly/Frame_2" + suffix;
+        framedesign_2[i] = AEGfxTextureLoad(path2.c_str());
+
+        // Load Design 3 (Hope is stronger than fear...)
+        std::string path3 = "Assets/Frame_Anomaly/Frame_3" + suffix;
+        framedesign_3[i] = AEGfxTextureLoad(path3.c_str());
+    }
 }
 
 void Frames_Initialize() {
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-            levelMap[level][frame].type = GHOST; //to change back to human later
-            levelMap[level][frame].posX = frame * FRAME_SPACING +
-                (DIST_BETWEEN_DOORS / 2);
-            levelMap[level][frame].posY = 0.0f;
-			levelMap[level][frame].width = FRAME_WIDTH;
-			levelMap[level][frame].height = FRAME_HEIGHT;
-			levelMap[level][frame].textureID = (frame + level) % FRAMES_ID;
+			ILLNESSES illness;
+			FrameAnomaly& currentFrame = levelMap[level][frame];
+            ENTITIES entity = Player_IsScaryPatient() ? GHOST : HUMAN;
 
-			//to later attach this to after pick up of !human && not delivery floor
-            if (levelMap[level][frame].type == GHOST && level == 4) {
-                int randomCase = rand() % 4; 
-                switch (randomCase) { 
-                case 0: 
-                    levelMap[level][frame].posX -= OFFSET; 
-                    break;
-                case 1: 
-                    levelMap[level][frame].posX += OFFSET; 
-                    break;
-                case 2: 
-                    levelMap[level][frame].posY -= OFFSET; 
-                    break;
-                case 3: 
-                    levelMap[level][frame].posY += OFFSET; 
-                    break;
-                }
+            if (entity == GHOST) {
+				illness = ALL;
+            } else {
+                illness = Player_GetCurrentIllness();
             }
+			
+			currentFrame.illness = illness;
+            currentFrame.entity = entity;
 
-            //to later attach this to after pick up of !human && on delivery floor
-            if (levelMap[level][frame].type == GHOST && level == 3) {
-                int randomCase = rand() % 4;
-                switch (randomCase) {
-                case 0:
-                    levelMap[level][frame].width = FRAME_WIDTH * 0.75f;
-                    break;
-                case 1:
-                    levelMap[level][frame].height = FRAME_HEIGHT * 0.75f;
-                    break;
-                case 2:
-                    levelMap[level][frame].height = FRAME_HEIGHT * 1.25f;
-                    break;
-                case 3:
-                    levelMap[level][frame].width = FRAME_WIDTH * 1.25f;
-                    break;
-                }
-            }
+            currentFrame.posX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
+            currentFrame.posY = 0.0f;
+			currentFrame.width = FRAME_WIDTH;
+			currentFrame.height = FRAME_HEIGHT;
+			currentFrame.designID = (frame % 3) + 1; // Cycle through design IDs 1, 2, 3
+
+            currentFrame.currentState = 0;
 		}
 	}
-    frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    if (frameMesh == nullptr) {
+        frameMesh = CreateSquareMesh(0xFFFFFFFF);
+    }
 }
 
-void Frames_Update() {
-	return;
+void Frames_Update(float dt) {
+    static bool  isFlickering = false;
+    static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
+    static float flickerDuration = 4.0f;
+    
+    if (!isFlickering) {
+        flickerInterval -= dt;
+    }
+    else {
+        flickerDuration -= dt;
+    }
+
+    for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+        for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
+            FrameAnomaly& currentFrame = levelMap[level][frame];
+
+            if (isFlickering) {
+                if (currentFrame.illness == MANIA || currentFrame.illness == ALL) {
+                    // Logic: 4.0 minus the countdown gives us a value from 0.0 to 4.0
+                    // Example: At 4.0s left, frame is 1. At 0.1s left, frame is 4.
+                    float timePassed = 4.0f - flickerDuration;
+
+                    // Cast to int to get 0, 1, 2, 3, then add 1 to get frames 1-4
+                    float speed = 8.0f;
+                    currentFrame.currentState = (int)(fmodf(timePassed * speed, 4.0f)) + 1;
+
+                    // Safety cap to ensure we never hit index 5
+                    if (currentFrame.currentState > 4) currentFrame.currentState = 4;
+                }
+                else if (currentFrame.currentState == 0) {
+                    currentFrame.currentState = GetRandomStateByIllness(currentFrame.illness);
+                }
+            }
+            else {
+                currentFrame.currentState = 0;
+            }
+        }
+    }
+
+    // 3. State Transitions
+    if (!isFlickering && flickerInterval <= 0.0f) {
+        isFlickering = true;
+        flickerDuration = 4.0f;
+    }
+    else if (isFlickering && flickerDuration <= 0.0f) {
+        isFlickering = false;
+        flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
+    }
 }
 
 void Frames_Draw(int currentLevel, f32 camX) {
-    
+    // 1. Safety check for level bounds
     if (currentLevel < 0 || currentLevel >= NUM_OF_FLOOR) return;
 
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
-        
-        FrameAnomaly* frame = &levelMap[currentLevel][i];
+        FrameAnomaly& currentFrame = levelMap[currentLevel][i];
 
-        AEGfxTexture* texture = nullptr;
+        AEGfxTexture* Tex = nullptr;
 
-        if (frame->type == GHOST) {
-            if (currentLevel == 4) {
-                texture = frametextures_tier1[frame->textureID]; // Tier 1 Visuals
-            }
-            else if (currentLevel == 3 || currentLevel == 0) {
-                texture = frametextures_tier2[frame->textureID]; // Tier 2 Visuals
-            }
-            else {
-                texture = frametextures_normal[frame->textureID]; // Normal Visuals
-            }
-        }
-        else {
-            texture = frametextures_normal[frame->textureID]; // Human/Normal fallback
+        switch (currentFrame.designID) {
+        case 1:  Tex = framedesign_1[currentFrame.currentState]; break;
+        case 2:  Tex = framedesign_2[currentFrame.currentState]; break;
+        case 3:  Tex = framedesign_3[currentFrame.currentState]; break;
+        default: Tex = framedesign_1[0]; break; // Fallback
         }
 
-        const f32 drawX = frame->posX + camX;
-
-        DrawTextureMesh(
-            frameMesh,
-            texture,
-            drawX,	frame->posY,
-            frame->width,	frame->height,
-            1.0f 
-        );
+        if (Tex) {
+            const f32 drawX = currentFrame.posX + camX;
+            DrawTextureMesh(
+                frameMesh,
+                Tex,
+                drawX, currentFrame.posY,
+                currentFrame.width, currentFrame.height,
+                1.0f                
+            );
+        }
     }
 }
 
 void Frames_Unload() {
 
-    if (frameMesh) AEGfxMeshFree(frameMesh);
+    if (frameMesh) {
+        AEGfxMeshFree(frameMesh);
+        frameMesh = nullptr; // Crucial!
+    }
 
-    for (int i = 0; i < FRAMES_ID; i++) {
-        if (frametextures_normal[i]) AEGfxTextureUnload(frametextures_normal[i]);
-        if (frametextures_tier1[i])  AEGfxTextureUnload(frametextures_tier1[i]);
-        if (frametextures_tier2[i])  AEGfxTextureUnload(frametextures_tier2[i]);
+    for (int i = 0; i < FRAME_STATES; i++) {
+        if (framedesign_1[i]) AEGfxTextureUnload(framedesign_1[i]);
+        if (framedesign_2[i])  AEGfxTextureUnload(framedesign_2[i]);
+        if (framedesign_3[i])  AEGfxTextureUnload(framedesign_3[i]);
 
-        frametextures_normal[i] = nullptr;
-        frametextures_tier1[i] = nullptr;
-        frametextures_tier2[i] = nullptr;
+        framedesign_1[i] = nullptr;
+        framedesign_2[i] = nullptr;
+        framedesign_3[i] = nullptr;
     }
 }
+
+
+//to later attach this to after pick up of !human && not delivery floor
+//if (currentFrame.entity == GHOST ) {
+//    int randomCase = rand() % 4; 
+//    switch (randomCase) { 
+//    case 0: 
+//        currentFrame.posX -= OFFSET; 
+//        break;
+//    case 1: 
+//        currentFrame.posX += OFFSET; 
+//        break;
+//    case 2: 
+//        currentFrame.posY -= OFFSET; 
+//        break;
+//    case 3: 
+//        currentFrame.posY += OFFSET; 
+//        break;
+//    }
+//}
+
+//to later attach this to after pick up of !human && on delivery floor
+//if (currentFrame.entity == GHOST && level == 3) {
+//    int randomCase = rand() % 4;
+//    switch (randomCase) {
+//    case 0:
+//        currentFrame.width = FRAME_WIDTH * 0.75f;
+//        break;
+//    case 1:
+//        currentFrame.height = FRAME_HEIGHT * 0.75f;
+//        break;
+//    case 2:
+//        currentFrame.height = FRAME_HEIGHT * 1.25f;
+//        break;
+//    case 3:
+//        currentFrame.width = FRAME_WIDTH * 1.25f;
+//        break;
+//    }
+//}

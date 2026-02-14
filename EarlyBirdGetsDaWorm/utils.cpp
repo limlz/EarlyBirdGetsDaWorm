@@ -40,3 +40,16 @@ void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float
 	// Use .c_str() to convert the C++ string back to the C-style pointer the engine needs
 	AEGfxPrint(fontId, text.c_str(), startX, y, scale, r, g, b, a);
 }
+
+bool IsColliding(float r1x, float r1y, float r1w, float r1h,
+	float r2x, float r2y, float r2w, float r2h)
+{
+	// AABB (Axis-Aligned Bounding Box) Collision
+	// If ANY of these is true, they are NOT overlapping
+	if (r1x - r1w / 2 > r2x + r2w / 2) return false; // R1 is right of R2
+	if (r1x + r1w / 2 < r2x - r2w / 2) return false; // R1 is left of R2
+	if (r1y - r1h / 2 > r2y + r2h / 2) return false; // R1 is above R2
+	if (r1y + r1h / 2 < r2y - r2h / 2) return false; // R1 is below R2
+
+	return true; // None were true, so they must be touching
+}

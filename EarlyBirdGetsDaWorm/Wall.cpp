@@ -71,7 +71,7 @@ void Wall_Initialize() {
 	for (int i{}; i < MAX_FLOORS; ++i) {
 		// 50% chance of seeing anomaly, if u want to see an anomaly
 		// for each refresh then change it to % 9
-		random[i] = rand() % 18; 
+		random[i] = rand() % 9; 
 
 		// Variables
 		randomX[i] = rand() % 6000;
@@ -120,4 +120,32 @@ void Wall_Draw(f32 camX, s8 floorNum) {
 	default:
 		break;
 	}
+}
+
+void Wall_Unload() {
+    // Free meshes
+    if (crack1Mesh) { AEGfxMeshFree(crack1Mesh); crack1Mesh = nullptr; }
+    if (crack2Mesh) { AEGfxMeshFree(crack2Mesh); crack2Mesh = nullptr; }
+    if (crack3Mesh) { AEGfxMeshFree(crack3Mesh); crack3Mesh = nullptr; }
+    if (crack4Mesh) { AEGfxMeshFree(crack4Mesh); crack4Mesh = nullptr; }
+
+    if (drawing1Mesh) { AEGfxMeshFree(drawing1Mesh); drawing1Mesh = nullptr; }
+    if (drawing2Mesh) { AEGfxMeshFree(drawing2Mesh); drawing2Mesh = nullptr; }
+    if (drawing3Mesh) { AEGfxMeshFree(drawing3Mesh); drawing3Mesh = nullptr; }
+
+    if (leftHandMesh) { AEGfxMeshFree(leftHandMesh); leftHandMesh = nullptr; }
+    if (rightHandMesh) { AEGfxMeshFree(rightHandMesh); rightHandMesh = nullptr; }
+
+    // Free textures
+    if (crack1Texture) { AEGfxTextureUnload(crack1Texture); crack1Texture = nullptr; }
+    if (crack2Texture) { AEGfxTextureUnload(crack2Texture); crack2Texture = nullptr; }
+    if (crack3Texture) { AEGfxTextureUnload(crack3Texture); crack3Texture = nullptr; }
+    if (crack4Texture) { AEGfxTextureUnload(crack4Texture); crack4Texture = nullptr; }
+
+    if (drawing1Texture) { AEGfxTextureUnload(drawing1Texture); drawing1Texture = nullptr; }
+    if (drawing2Texture) { AEGfxTextureUnload(drawing2Texture); drawing2Texture = nullptr; }
+    if (drawing3Texture) { AEGfxTextureUnload(drawing3Texture); drawing3Texture = nullptr; }
+
+    if (leftHandTexture) { AEGfxTextureUnload(leftHandTexture); leftHandTexture = nullptr; }
+    if (rightHandTexture) { AEGfxTextureUnload(rightHandTexture); rightHandTexture = nullptr; }
 }

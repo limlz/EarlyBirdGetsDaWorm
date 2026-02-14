@@ -69,6 +69,12 @@ void MainMenu_Free()
 
 void MainMenu_Unload()
 {
-	// Unload main menu resources
-	std::cout << "MainMenu: Unload\n";
+    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
+
+    if (menuFontId >= 0) {
+        AEGfxDestroyFont(menuFontId);
+        menuFontId = -1;
+    }
+
+    std::cout << "MainMenu: Unload\n";
 }

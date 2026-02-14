@@ -124,8 +124,11 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 
     if (screenLightX < -1800 || screenLightX > 1800) return;
 
-    float pHeadLeft = -50.0f;
-    float pHeadRight = 10.0f;
+    float pHeadLeft{};
+    float pHeadRight{};
+
+    float pBodyLeft{};
+    float pBodyRight{};
 
     // Keep vertical bounds accurate to the sprite size
     float pHeadTop = -45.0f;
@@ -134,6 +137,8 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     if (right_left) {
         pHeadLeft = -45.0f;
         pHeadRight = 5.0f;
+        pBodyLeft = -35.0f;
+        pBodyRight = -5.0f;
         bedLeft = 30.0f;
         bedRight = 135.0f;
         bedTop = -150.0f;
@@ -142,6 +147,8 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     else {
         pHeadLeft = 95.0f;
         pHeadRight = 145.0f;
+        pBodyLeft = 105.0f;
+        pBodyRight = 135.0f;
         bedLeft = -30.0f;
         bedRight = 70.0f;
         bedTop = -150.0f;
@@ -172,6 +179,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
             float checkY = lightY + (dirY * currentDist);
             if (checkY < floorLevel) break;
             if (checkX > pHeadLeft && checkX < pHeadRight && checkY < pHeadTop && checkY > pHeadBot) break;
+            if (checkX > pBodyLeft && checkX < pBodyRight && checkY < pHeadTop && checkY > bedBot) break;
             if (checkX > bedLeft && checkX < bedRight && checkY < bedTop && checkY > bedBot) break;
         }
 
@@ -242,4 +250,8 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
     }
 
     Particles_Draw(squareMesh, -camX);
+}
+
+void Lighting_Unload() {
+    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
 }

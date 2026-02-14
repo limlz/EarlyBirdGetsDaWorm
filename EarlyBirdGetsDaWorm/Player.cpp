@@ -17,6 +17,7 @@ static bool  gIsScary = false;
 static int   gFacing = 1;     // 1 right, -1 left
 static int   gFrame = 0;
 static float gTimer = 0.0f;
+ILLNESSES gCurrentIllness{};
 
 
 static AEGfxTexture* GetActiveFrameTex()
@@ -32,6 +33,10 @@ void Player_SetScary(bool scary)
     gTimer = 0.0f;
 }
 
+void Player_SetIllness(ILLNESSES illness) {
+	gCurrentIllness = illness;
+}
+
 
 // @brief: Sets the player's facing direction
 void Player_SetFacing(int dir)
@@ -45,6 +50,10 @@ bool Player_IsScaryPatient()
     return gIsScary;
 }
 
+ILLNESSES Player_GetCurrentIllness()
+{
+    return gCurrentIllness;
+}
 
 void Player_NewPatientRandom()
 {
@@ -54,6 +63,13 @@ void Player_NewPatientRandom()
 
     // 50/50 random
     gIsScary = (std::rand() % 2) == 1;
+    
+    if (!gIsScary) {
+        // Randomly pick 1 of the 4 illnesses (0 to 3)
+        gCurrentIllness = (ILLNESSES)(std::rand() % 4);
+    } else {
+		gCurrentIllness = ALL;
+    }
 }
 
 // @brief: Loads player resources
@@ -100,6 +116,7 @@ void Player_Update(float dt, bool walkKey)
 // @brief: Draws the player at the specified position
 void Player_Draw(float x, float y)
 {
+
     AEMtx33 scale, trans, transform;
 
     float sx = PLAYER_W * (float)gFacing;   // // 1 = normal, -1 = flipped

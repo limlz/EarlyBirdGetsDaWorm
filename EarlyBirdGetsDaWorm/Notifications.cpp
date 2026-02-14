@@ -142,7 +142,7 @@ void Notifications_Update(bool liftActive)
 }
 
 
-void Notifications_Draw()
+void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
 {
 	// Draws the icon pager in the corner
 	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
@@ -161,7 +161,7 @@ void Notifications_Draw()
 		switch (currentPage + 1)
 		{
 		case 1:
-			sprintf_s(textBuffer, "Bring patient to room #03-09");
+			sprintf_s(textBuffer, "Bring patient to room #%02d-%02d", patientFloorNum, patientDoorNum);
 			break;
 		case 2:
 			sprintf_s(textBuffer, "Bring patient to room #05-06");
@@ -197,4 +197,23 @@ void Notifications_Draw()
 		}
 	}
 
+}
+
+void Notifications_Free()
+{
+    if (iconMesh) { AEGfxMeshFree(iconMesh); iconMesh = nullptr; }
+    if (pagerMesh) { AEGfxMeshFree(pagerMesh); pagerMesh = nullptr; }
+    if (leftArrowMesh) { AEGfxMeshFree(leftArrowMesh); leftArrowMesh = nullptr; }
+    if (rightArrowMesh) { AEGfxMeshFree(rightArrowMesh); rightArrowMesh = nullptr; }
+
+    if (iconTexture) { AEGfxTextureUnload(iconTexture); iconTexture = nullptr; }
+    if (pagerTexture) { AEGfxTextureUnload(pagerTexture); pagerTexture = nullptr; }
+    if (leftArrow) { AEGfxTextureUnload(leftArrow); leftArrow = nullptr; }
+    if (rightArrow) { AEGfxTextureUnload(rightArrow); rightArrow = nullptr; }
+
+    // Destroy font if valid
+    if (lineID >= 0) {
+        AEGfxDestroyFont(lineID);
+        lineID = -1;
+    }
 }

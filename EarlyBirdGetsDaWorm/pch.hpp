@@ -8,6 +8,10 @@
 #include <cstdlib> // For rand()
 #include "AEEngine.h"
 
+#include "debug.hpp"
+#include "prompts.hpp"
+#include "boss.hpp"
+#include "bullets.hpp"
 #include "state_list.hpp"
 #include "gsm.hpp"
 #include "utils.hpp"
@@ -27,6 +31,7 @@
 #include "player.hpp"
 #include "timer.hpp"
 #include "others_menu.hpp"
+#include "Lift.hpp"
 
 // --- MACROS --- //
 // Colors

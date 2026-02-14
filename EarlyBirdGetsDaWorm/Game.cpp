@@ -5,22 +5,26 @@ static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 static AEGfxTexture* lightingtest = nullptr;
 
-s8 fontId = 0;
+// REMOVED: s8 fontId = 0; // Now handled inside Prompts.cpp
 
 static f32 camX{}, playerY{}, playerX{};
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
-s8 floorNum{1}; // Current floor the player is on
-s8 demonFloorNum{ 1 }; // Floor where the demon is located
+s8 floorNum{ 1 }; // Current floor the player is on
+s8 patientDoorNum{}; // Door number assigned to the current patient
+s8 patientFloorNum{}; // Floor number assigned to the current patient
+s8 demonFloorNum{ 0 }; // Floor where the demon is located
 s8 demonRoomNum{ 3 }; // Room where the demon is located
 s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
-bool liftPromptActivated{}, liftActive{}, left_right{1}, enterPrompt{};
+
+// REMOVED: bool liftPromptActivated{}, enterPrompt{}; // Handled by Prompts.cpp logic
+bool liftActive{}, left_right{ 1 };
 bool dementia{ false };
 
 // Day counter
 static int gDay = 1;
 static bool gSessionStarted = false;
 
-// plyer's spawn position
+// player's spawn position
 static float gSpawnX = 50.0f;
 static float gSpawnY = 0.0f;
 static float ComputeSpawnYFromBorder()
@@ -36,43 +40,51 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
     Doors_Load();
-	Frames_Load();
+    Debug_Load();
+    Frames_Load();
     Player_Load();
     Player_NewPatientRandom();
     Timer_Load();
+    Prompts_Load(); // <--- New Load Call for the Prompt System
 
-	// Day 1 setup
+    // Day 1 setup
     if (!gSessionStarted)
     {
-		gDay = 1;                       // start at Day 1
+        gDay = 1;                       // start at Day 1
         Timer_Reset();                  // reset timer at start of every DAY [i]
         Timer_StartDayOverlay(gDay);    // print "DAY 1" before gameplay starts
         camX = 0.0f;                    // reset player's position
 
         // DEBUG
         Player_SetScary(false);
+        Player_SetIllness(MANIA);
+
 
         //Player_NewPatientRandom();
-		gSessionStarted = true;         // mark that session has started
+        gSessionStarted = true;         // mark that session has started
     }
 
-    fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    // fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20); // Moved to Prompts.cpp
     std::cout << "Startup: Load\n";
 
     // Notifications and Wall
     Notifications_Load();
-    Wall_Load();    
+    Wall_Load();
 }
 
 void Game_Initialize()
 {
     // Removed unused circleMesh
-	Doors_Initialize();
-	Frames_Initialize();
-	Lighting_Initialize(7);
+    Doors_Initialize();
+    Frames_Initialize();
+    Lighting_Initialize(7);
     squareMesh = CreateSquareMesh(COLOR_WHITE);
-	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
+    circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
     std::cout << "Startup: Initialize\n";
+
+	// Randomly assign patient room and floor
+    patientDoorNum = (s8)(rand() % 10);
+    patientFloorNum = (s8)((rand() % 9) + 1);
 
     // Notifications and Wall
     Notifications_Initialize();
@@ -81,9 +93,10 @@ void Game_Initialize()
 }
 
 void Game_Update()
-{    
+{
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-
+    // Debug overlay
+    Debug_Update();
     // 1) Update overlay + Freeze
     Timer_UpdateDayOverlay(dt);
 
@@ -96,7 +109,7 @@ void Game_Update()
     // 3) Only update timer when overlay is not active
     Timer_Update(dt);
 
-	// 4) Check if time is up
+    // 4) Check if time is up
     if (Timer_IsTimeUp())
     {
         // End of day 5
@@ -117,10 +130,9 @@ void Game_Update()
         {
             Player_SetScary(true);
         }
-            
+
         //Player_NewPatientRandom();
         return;                         // freeze during transition (overlay will handle unfreeze)
-
     }
 
     // DEBUG: Skip timer to 5:58 AM
@@ -129,7 +141,7 @@ void Game_Update()
         Timer_DebugSetTime(5 * 60 + 58); // 5:58 AM
     }
 
-	// Exit Game    
+    // Exit Game    
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         next = OTHERS_MENU;
         return;
@@ -145,10 +157,14 @@ void Game_Update()
         left_right = true;
     }
     if (AEInputCheckTriggered(AEVK_O)) {
-		dementia = !dementia;
-	}
+        dementia = !dementia;
+    }
+    if (AEInputCheckCurr(AEVK_M)) {
+        camX -= 4000;
+        left_right = true;
+    }
 
-	// Walking animation
+    // Walking animation
     // - DOES NOT move player
     // - ONLY cycles through frames when moving
     // - Left/Right handled in Player_SetFacing
@@ -158,7 +174,7 @@ void Game_Update()
 
     if (moveRight) Player_SetFacing(1);
     else if (moveLeft) Player_SetFacing(-1);
-    
+
     // Update player + compute doorNumAtPlayer first
     Player_Update(dt, isWalking);
 
@@ -175,42 +191,56 @@ void Game_Update()
     else if ((camX < -maxDist) && !dementia) {
         camX = -maxDist;
     }
-    doorNumAtPlayer = Doors_Update(camX);
-    // Lift Interaction Check
-    // Checks if player is at the far left (start) or far right (end)
-    if (camX > -5 || camX < -maxDist + 5) {
-        liftPromptActivated = true;
-        if (AEInputCheckTriggered(AEVK_L)) {
-            liftActive = !liftActive;
-        }
-    }
-    else {
-        liftPromptActivated = false;
-        liftActive = false;
-    }
-	Lighting_Update(floorNum, camX ,dementia);
 
-	// Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 1 only)
-    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum-1 && floorNum == demonFloorNum ) 
+    doorNumAtPlayer = Doors_Update(camX);
+
+    Lift_Update(dt, camX, maxDist);
+    Lift_HandleInput(floorNum);
+
+    Lighting_Update(floorNum, camX, dementia);
+	Frames_Update(dt);
+
+    // Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 0 only)
+    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
     {
         Timer_SetPaused(true);      // Timer pause
         next = BOSS_FIGHT_STATE;    // Player enters room
         return;
 
     }
-    else if (doorNumAtPlayer != -1) {
-		enterPrompt = true;
+    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) // Check 1: Did we press E AND are we at a door?
+    {
+        // Check 2: Is it the CORRECT door?
+        if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
+        {
+            Timer_SetPaused(true);
+            next = BOSS_FIGHT_STATE;
+            return;
+        }
+        // Check 3: Is it the LOBBY door? (Don't say "Wrong Room" for the lobby)
+        else if (doorNumAtPlayer == patientDoorNum - 1 && floorNum == patientFloorNum)
+        {
+            floorNum = 1;
+            camX = 0.0f;
+        }
+        // Check 4: If it's not the Boss room AND not the Lobby... it must be WRONG.
+        else
+        {
+            Prompts_TriggerWrongRoom();
+        }
     }
-    else {
-		enterPrompt = false;
-    }
+
     Notifications_Update(liftActive);
+
+    // --- PROMPTS UPDATE ---
+    // One clean call to handle all UI logic
+    Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
 }
 
 void Game_Draw()
 {
     // Draws Anomalies
-    Wall_Draw(camX,floorNum);
+    Wall_Draw(camX, floorNum);
     Frames_Draw(floorNum, camX);
 
     // Background Color (1-9)
@@ -218,7 +248,7 @@ void Game_Draw()
         AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
     }
     else {
-		AEGfxSetBackgroundColor(0.8f, 0.6f, 0.6f);
+        AEGfxSetBackgroundColor(0.8f, 0.6f, 0.6f);
     }
 
     // Top and bottom floor lines
@@ -233,7 +263,7 @@ void Game_Draw()
         DrawSquareMesh(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
         if (floorNum != 0) {
             DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
-		}
+        }
     }
 
     // Draw Right Wall + Lift (End)
@@ -278,38 +308,38 @@ void Game_Draw()
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-    // Lift UI Overlay
-    if (liftPromptActivated && !liftActive) {
-        AEGfxPrint(fontId, "Click L to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    else if (liftActive) {
-        // Background rectangle
-        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 500.0f, 800.0f, COLOR_LIFT_BG);
-        // Lift console
-        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 400.0f, 700.0f, COLOR_LIFT_CONSOLE);
-        // Buttons would go here
-        for (int i{}; i < NUM_OF_FLOOR; i++) {
-            if (AEInputCheckTriggered(AEVK_0 + i)) {
-				floorNum = i;
-                liftActive = false;
-            }
-        }
-        
-    }
-
-	// Draw Enter Prompt aek
-    if (enterPrompt) {
-        AEGfxPrint(fontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-	}
+    // --- PROMPTS DRAW ---
+    // One clean call to handle all UI rendering (Enter, Lift, etc.)
+    Prompts_Draw();
 
     // Notification
-    Notifications_Draw();
+    Notifications_Draw(patientDoorNum, patientFloorNum);
 
     // Draws Timer 
     Timer_Draw(0.0f, 0.85f);
 
     // Draw Shift Over Screen if time is up
     Timer_DrawDayOverlay(squareMesh);
+
+    // Lift UI Overlay
+    Lift_Draw(squareMesh);
+
+    // 3. DRAW DEBUG OVERLAY
+    // Pack the data into the struct
+    DebugInfo info;
+    info.camX = camX;
+    info.left_right = left_right;
+    info.day = gDay;
+    info.floorNum = floorNum;
+    info.dementia = dementia;
+    info.doorNumAtPlayer = doorNumAtPlayer;
+    info.patientDoorNum = patientDoorNum;
+    info.patientFloorNum = patientFloorNum;
+    info.demonFloorNum = demonFloorNum;
+    info.demonRoomNum = demonRoomNum;
+
+    // Call the function
+    Debug_Draw(info);
 
 }
 
@@ -322,5 +352,12 @@ void Game_Unload()
 {
     Frames_Unload();
     Player_Unload();
+    Prompts_Unload(); // <--- Cleanup Font
+    Boss_Fight_Unload();
+	Lighting_Unload();
+	Doors_Unload();
+    Debug_Unload();
+    Notifications_Free();
+	Wall_Unload();
     std::cout << "Startup: Unload\n";
 }
