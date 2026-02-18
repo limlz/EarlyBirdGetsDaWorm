@@ -178,9 +178,6 @@ void Game_Update()
     // Update player + compute doorNumAtPlayer first
     Player_Update(dt, isWalking);
 
-    // Door update
-    doorNumAtPlayer = Doors_Update(camX);
-
     // Camera/World Bounds
     // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
@@ -192,8 +189,9 @@ void Game_Update()
         camX = -maxDist;
     }
 
-    doorNumAtPlayer = Doors_Update(camX);
-
+    doorNumAtPlayer = Doors_Update(camX);       	// Door Detection (must be after player update to get correct position)
+	Doors_Animate(dt, doorNumAtPlayer, camX);       // Door Animation (based on player position and internal timers)
+    
     Lift_Update(dt, camX, maxDist);
     Lift_HandleInput(floorNum);
 
@@ -254,6 +252,7 @@ void Game_Draw()
     // Top and bottom floor lines
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+    
     // Draw Doors
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
 

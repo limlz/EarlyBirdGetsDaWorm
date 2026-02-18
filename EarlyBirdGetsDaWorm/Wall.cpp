@@ -2,6 +2,8 @@
 #include <ctime>
 
 // Mesh
+static AEGfxVertexList* wallBgMesh = nullptr;
+
 static AEGfxVertexList* crack1Mesh;
 static AEGfxVertexList* crack2Mesh;
 static AEGfxVertexList* crack3Mesh;
@@ -15,6 +17,8 @@ static AEGfxVertexList* leftHandMesh;
 static AEGfxVertexList* rightHandMesh;
 
 // Textures
+static AEGfxTexture* wallBgTexture = nullptr;
+
 static AEGfxTexture* crack1Texture;
 static AEGfxTexture* crack2Texture;
 static AEGfxTexture* crack3Texture;
@@ -33,6 +37,12 @@ static s32 random[MAX_FLOORS], randomX[MAX_FLOORS], randomY[MAX_FLOORS];
 static f32 wallX, wallY, camX;
 
 void Wall_Load() {
+	wallBgTexture = AEGfxTextureLoad("Assets/Background/WALL_BG.png");
+
+	if (!wallBgTexture)
+	{
+		std::cout << "FAILED TO LOAD Wall_bg.png\n";
+	}
 
 	crack1Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png");
 	crack2Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png");
@@ -52,6 +62,8 @@ void Wall_Load() {
 void Wall_Initialize() {
 
 	// Mesh
+	wallBgMesh = CreateSquareMesh(0xFFFFFFFF);
+
 	crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
 	crack2Mesh = CreateSquareMesh(0xFFFFFFFF);
 	crack3Mesh = CreateSquareMesh(0xFFFFFFFF);
@@ -83,13 +95,44 @@ void Wall_Initialize() {
 }
 
 void Wall_Draw(f32 camX, s8 floorNum) {
+	// Clamp floor index (prevents out-of-bounds crash)
+	int idx = (int)floorNum;
+	if (idx < 0) idx = 0;
+	if (idx >= MAX_FLOORS) idx = MAX_FLOORS - 1;
+
+	// ---- WALL BACKGROUND (world-anchored tiling) ----
+	if (wallBgTexture && wallBgMesh)
+	{
+		const float TILE_W = 1600.0f;
+		const float TILE_H = 900.0f;
+
+		// Your visible width looks like 1600 in world units
+		const float VIEW_W = 1600.0f;
+		const float HALF_W = VIEW_W * 0.5f;
+
+		// Convert screen edges to WORLD coordinates
+		// screenX = worldX + camX  =>  worldX = screenX - camX
+		const float worldLeft = (-HALF_W) - camX;
+		const float worldRight = (HALF_W)-camX;
+
+		// Find the first tile that covers worldLeft
+		float firstTileWorldX = std::floor(worldLeft / TILE_W) * TILE_W;
+
+		// Draw tiles across the visible world range
+		for (float wx = firstTileWorldX; wx <= worldRight + TILE_W; wx += TILE_W)
+		{
+			// Convert world position back to screen position
+			float sx = wx + camX;
+			DrawTextureMesh(wallBgMesh, wallBgTexture, sx, 0.0f, TILE_W, TILE_H, 1.0f);
+		}
+	}
 
 	// Position of anomalies
-	wallX = camX + randomX[floorNum];
-	wallY = static_cast<f32>(randomY[floorNum]);
+	wallX = camX + (f32)randomX[idx];
+	wallY = (f32)randomY[idx];
 
 	// Draws the anomaly
-	switch (random[floorNum]) {
+	switch (random[idx]) {
 	case 0:
 		DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
 		break;
@@ -124,6 +167,8 @@ void Wall_Draw(f32 camX, s8 floorNum) {
 
 void Wall_Unload() {
     // Free meshes
+	if (wallBgMesh) { AEGfxMeshFree(wallBgMesh); wallBgMesh = nullptr; }
+
     if (crack1Mesh) { AEGfxMeshFree(crack1Mesh); crack1Mesh = nullptr; }
     if (crack2Mesh) { AEGfxMeshFree(crack2Mesh); crack2Mesh = nullptr; }
     if (crack3Mesh) { AEGfxMeshFree(crack3Mesh); crack3Mesh = nullptr; }
@@ -137,6 +182,8 @@ void Wall_Unload() {
     if (rightHandMesh) { AEGfxMeshFree(rightHandMesh); rightHandMesh = nullptr; }
 
     // Free textures
+	if (wallBgTexture) { AEGfxTextureUnload(wallBgTexture); wallBgTexture = nullptr; }
+
     if (crack1Texture) { AEGfxTextureUnload(crack1Texture); crack1Texture = nullptr; }
     if (crack2Texture) { AEGfxTextureUnload(crack2Texture); crack2Texture = nullptr; }
     if (crack3Texture) { AEGfxTextureUnload(crack3Texture); crack3Texture = nullptr; }
