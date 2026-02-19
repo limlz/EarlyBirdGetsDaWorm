@@ -39,6 +39,7 @@ void Game_Load()
 	Timer_Load();
 	Wall_Load();
 	Doors_Load();
+	Lift_Load();
 	Frames_Load();
 	Player_Load();
 	Prompts_Load();
@@ -63,6 +64,7 @@ void Game_Initialize()
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 
 	Doors_Initialize();
+	Lift_Initialize();
 	Frames_Initialize();
 	Lighting_Initialize(7);
 
@@ -227,7 +229,7 @@ void Game_Draw()
 	// Start Lift
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		DrawSquareMesh(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
 		if (floorNum != 0) DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
 	}
 
@@ -236,7 +238,7 @@ void Game_Draw()
 		float endOffset		= (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
 		float liftOffset	= (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		DrawSquareMesh(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
 		if (floorNum != 0) DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
 	}
 
@@ -295,6 +297,7 @@ void Game_Unload()
 	Debug_Unload();
 	Notifications_Free();
 	Wall_Unload();
+	Lift_Unload();
 
 	if (squareMesh) AEGfxMeshFree(squareMesh);
 	if (circleMesh) AEGfxMeshFree(circleMesh);
