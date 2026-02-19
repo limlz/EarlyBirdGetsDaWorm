@@ -17,6 +17,8 @@ void Player_SetFacing(int dir);
 // ------------------------------
 void Player_NewPatientRandom();     
 bool Player_IsScaryPatient();   
+void Player_ResetPatientCounter(int day);
+void Player_SetScaryByDay(int day);
 ILLNESSES Player_GetCurrentIllness();
 
 // ------------------------------
@@ -29,3 +31,11 @@ ILLNESSES Player_GetCurrentIllness();
 // ------------------------------
 float Player_GetWidth();
 float Player_GetHeight();
+
+// Mission States
+enum class MissionPhase { PICKUP, DELIVERY };
+
+void Player_GenerateMission();
+bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day);
+bool Player_HasPatient();
+void Player_GetTargetRoom(s8& floor, s8& door);

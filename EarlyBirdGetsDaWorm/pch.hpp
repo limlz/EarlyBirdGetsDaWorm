@@ -6,6 +6,8 @@
 #include <cmath>
 #include <vector>
 #include <cstdlib> // For rand()
+#include <algorithm> // Required for std::shuffle
+#include <random>    // Required for std::default_random_engine
 #include "AEEngine.h"
 
 #include "debug.hpp"

@@ -4,360 +4,288 @@
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 static AEGfxTexture* lightingtest = nullptr;
-
-// REMOVED: s8 fontId = 0; // Now handled inside Prompts.cpp
-
 static f32 camX{}, playerY{}, playerX{};
-f32 textXoffset{ 0.06f }, textY{ 50.0f };
-s8 floorNum{ 1 }; // Current floor the player is on
-s8 patientDoorNum{}; // Door number assigned to the current patient
-s8 patientFloorNum{}; // Floor number assigned to the current patient
-s8 demonFloorNum{ 0 }; // Floor where the demon is located
-s8 demonRoomNum{ 3 }; // Room where the demon is located
-s8 doorNumAtPlayer{ -1 }; // Door number the player is currently in front of
 
-// REMOVED: bool liftPromptActivated{}, enterPrompt{}; // Handled by Prompts.cpp logic
+f32 textXoffset{ 0.06f }, textY{ 50.0f };
+s8 floorNum{ 1 };           // Current floor the player is on
+s8 demonFloorNum{ 0 };      // Floor where the demon is located
+s8 demonRoomNum{ 3 };       // Room where the demon is located
+s8 doorNumAtPlayer{ -1 };   // Door number the player is currently in front of
+
 bool liftActive{}, left_right{ 1 };
 bool dementia{ false };
 
 // Day counter
-static int gDay = 1;
+static int CurrentDay = 1;
 static bool gSessionStarted = false;
 
 // player's spawn position
 static float gSpawnX = 50.0f;
 static float gSpawnY = 0.0f;
+
 static float ComputeSpawnYFromBorder()
 {
-    float borderCenterY = -650.0f;
-    float borderHeight = 800.0f;
-
-    float borderTopY = borderCenterY + (borderHeight * 0.5f);
-    return borderTopY + (Player_GetHeight() * 0.5f);
+	float borderCenterY = -650.0f;
+	float borderHeight = 800.0f;
+	float borderTopY = borderCenterY + (borderHeight * 0.5f);
+	return borderTopY + (Player_GetHeight() * 0.5f);
 }
-
 
 void Game_Load()
 {
-    Doors_Load();
-    Debug_Load();
-    Frames_Load();
-    Player_Load();
-    Player_NewPatientRandom();
-    Timer_Load();
-    Prompts_Load(); // <--- New Load Call for the Prompt System
+	std::cout << "Startup: Load\n";
 
-    // Day 1 setup
-    if (!gSessionStarted)
-    {
-        gDay = 1;                       // start at Day 1
-        Timer_Reset();                  // reset timer at start of every DAY [i]
-        Timer_StartDayOverlay(gDay);    // print "DAY 1" before gameplay starts
-        camX = 0.0f;                    // reset player's position
+	Debug_Load();
+	Timer_Load();
+	Wall_Load();
+	Doors_Load();
+	Frames_Load();
+	Player_Load();
+	Prompts_Load();
+	Notifications_Load();
 
-        // DEBUG
-        Player_SetScary(false);
-        Player_SetIllness(MANIA);
-
-
-        //Player_NewPatientRandom();
-        gSessionStarted = true;         // mark that session has started
-    }
-
-    // fontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20); // Moved to Prompts.cpp
-    std::cout << "Startup: Load\n";
-
-    // Notifications and Wall
-    Notifications_Load();
-    Wall_Load();
+	// Day 1 setup
+	if (!gSessionStarted)
+	{
+		CurrentDay = 1;
+		Timer_Reset();
+		Timer_StartDayOverlay(CurrentDay);
+		camX = 0.0f;
+		gSessionStarted = true;
+	}
 }
 
 void Game_Initialize()
 {
-    // Removed unused circleMesh
-    Doors_Initialize();
-    Frames_Initialize();
-    Lighting_Initialize(7);
-    squareMesh = CreateSquareMesh(COLOR_WHITE);
-    circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
-    std::cout << "Startup: Initialize\n";
+	std::cout << "Startup: Initialize\n";
 
-	// Randomly assign patient room and floor
-    patientDoorNum = (s8)(rand() % 10);
-    patientFloorNum = (s8)((rand() % 9) + 1);
+	squareMesh = CreateSquareMesh(COLOR_WHITE);
+	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 
-    // Notifications and Wall
-    Notifications_Initialize();
-    Wall_Initialize();
+	Doors_Initialize();
+	Frames_Initialize();
+	Lighting_Initialize(7);
 
+	// Initialize the Randomized Balancing Pool and Mission
+	Player_ResetPatientCounter(CurrentDay);
+	Player_GenerateMission();
+	Player_SetScaryByDay(CurrentDay);
+
+	Notifications_Initialize();
+	Wall_Initialize();
 }
 
 void Game_Update()
 {
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
-    // Debug overlay
-    Debug_Update();
-    // 1) Update overlay + Freeze
-    Timer_UpdateDayOverlay(dt);
+	float dt = (f32)AEFrameRateControllerGetFrameTime();
+	Debug_Update();
 
-    // 2) If overlay active, freeze EVERYTHING (including timer)
-    if (Timer_IsDayOverlayActive())
-    {
-        return;
-    }
+	// 1) Update overlay + Freeze
+	Timer_UpdateDayOverlay(dt);
+	if (Timer_IsDayOverlayActive()) { return; }
 
-    // 3) Only update timer when overlay is not active
-    Timer_Update(dt);
+	// 2) Update timer
+	Timer_Update(dt);
 
-    // 4) Check if time is up
-    if (Timer_IsTimeUp())
-    {
-        // End of day 5
-        if (gDay >= 5)
-        {
-            next = MAIN_MENU; // end of Day 5
-            return;
-        }
+	// 3) Day Transition Check
+	if (Timer_IsTimeUp())
+	{
+		if (CurrentDay >= 5)
+		{
+			next = MAIN_MENU;
+			return;
+		}
 
-        // Go to next day
-        gDay++;
-        Timer_Reset();                  // reset timer for next day
-        Timer_StartDayOverlay(gDay);    // fade in "DAY X", fade out, then gameplay continues
-        camX = 0.0f;                    // reset player's position
+		CurrentDay++;
+		Timer_Reset();
+		Timer_StartDayOverlay(CurrentDay);
 
-        // DEBUG
-        if (gDay == 2)
-        {
-            Player_SetScary(true);
-        }
+		// Reset player for new day
+		camX = 0.0f;
+		floorNum = 1;
+		liftActive = false;
 
-        //Player_NewPatientRandom();
-        return;                         // freeze during transition (overlay will handle unfreeze)
-    }
+		// Re-shuffle pools
+		Player_ResetPatientCounter(CurrentDay);
+		Player_GenerateMission();
+		Player_SetScaryByDay(CurrentDay);
 
-    // DEBUG: Skip timer to 5:58 AM
-    if (AEInputCheckTriggered(AEVK_K))
-    {
-        Timer_DebugSetTime(5 * 60 + 58); // 5:58 AM
-    }
+		return;
+	}
 
-    // Exit Game    
-    if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        next = OTHERS_MENU;
-        return;
-    }
+	/************************************ INPUT HANDLING *************************************/
+	if (AEInputCheckCurr(AEVK_A)) {
+		camX += PLAYER_SPEED * dt;
+		left_right = false;
+	}
+	if (AEInputCheckCurr(AEVK_D)) {
+		camX -= PLAYER_SPEED * dt;
+		left_right = true;
+	}
+	if (AEInputCheckTriggered(AEVK_O)) {
+		dementia = !dementia;
+	}
+	if (AEInputCheckCurr(AEVK_M)) {
+		camX -= 4000;
+		left_right = true;
+	}
 
-    // Movement Logic
-    if (AEInputCheckCurr(AEVK_A)) {
-        camX += PLAYER_SPEED * dt;
-        left_right = false;
-    }
-    if (AEInputCheckCurr(AEVK_D)) {
-        camX -= PLAYER_SPEED * dt;
-        left_right = true;
-    }
-    if (AEInputCheckTriggered(AEVK_O)) {
-        dementia = !dementia;
-    }
-    if (AEInputCheckCurr(AEVK_M)) {
-        camX -= 4000;
-        left_right = true;
-    }
+	if (AEInputCheckTriggered(AEVK_K)) {
+		Timer_DebugSetTime(5 * 60 + 58);
+	}
 
-    // Walking animation
-    // - DOES NOT move player
-    // - ONLY cycles through frames when moving
-    // - Left/Right handled in Player_SetFacing
-    bool moveRight = AEInputCheckCurr(AEVK_D);
-    bool moveLeft = AEInputCheckCurr(AEVK_A);
-    bool isWalking = moveRight || moveLeft;
+	if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+		next = OTHERS_MENU;
+		return;
+	}
 
-    if (moveRight) Player_SetFacing(1);
-    else if (moveLeft) Player_SetFacing(-1);
+	/************************************ MOVEMENT & ANIMATION *******************************/
+	bool moveRight = AEInputCheckCurr(AEVK_D);
+	bool moveLeft = AEInputCheckCurr(AEVK_A);
+	bool isWalking = moveRight || moveLeft;
 
-    // Update player + compute doorNumAtPlayer first
-    Player_Update(dt, isWalking);
+	if (moveRight) Player_SetFacing(1);
+	else if (moveLeft) Player_SetFacing(-1);
 
-    // Door update
-    doorNumAtPlayer = Doors_Update(camX);
+	Player_Update(dt, isWalking);
+	doorNumAtPlayer = Doors_Update(camX);
 
-    // Camera/World Bounds
-    // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
-    float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+	// Camera/World Bounds
+	float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+	if (camX > 0) camX = 0;
+	else if ((camX < -maxDist) && !dementia) camX = -maxDist;
 
-    if (camX > 0) {
-        camX = 0;
-    }
-    else if ((camX < -maxDist) && !dementia) {
-        camX = -maxDist;
-    }
-
-    doorNumAtPlayer = Doors_Update(camX);
-
-    Lift_Update(dt, camX, maxDist);
-    Lift_HandleInput(floorNum);
-
-    Lighting_Update(floorNum, camX, dementia);
+	Lift_Update(dt, camX, maxDist);
+	Lift_HandleInput(floorNum);
+	Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
 
-    // Door Interaction Check (Door 3 is special, leads to boss fight ) (index 2 = door 3) (floor 0 only)
-    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
-    {
-        Timer_SetPaused(true);      // Timer pause
-        next = BOSS_FIGHT_STATE;    // Player enters room
-        return;
+	/************************************ INTERACTION HANDLING *******************************/
+	if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1)
+	{
+		// 1. Boss Room Special Case
+		if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
+		{
+			Timer_SetPaused(true);
+			next = BOSS_FIGHT_STATE;
+			return;
+		}
 
-    }
-    if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) // Check 1: Did we press E AND are we at a door?
-    {
-        // Check 2: Is it the CORRECT door?
-        if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
-        {
-            Timer_SetPaused(true);
-            next = BOSS_FIGHT_STATE;
-            return;
-        }
-        // Check 3: Is it the LOBBY door? (Don't say "Wrong Room" for the lobby)
-        else if (doorNumAtPlayer == patientDoorNum - 1 && floorNum == patientFloorNum)
-        {
-            floorNum = 1;
-            camX = 0.0f;
-        }
-        // Check 4: If it's not the Boss room AND not the Lobby... it must be WRONG.
-        else
-        {
-            Prompts_TriggerWrongRoom();
-        }
-    }
+		// 2. Handle Pickup/Delivery Logic
+		bool success = Player_HandleInteraction(floorNum, (s8)doorNumAtPlayer + 1, CurrentDay);
 
-    Notifications_Update(liftActive);
+		if (success)
+		{
+			// Reset position only if a full delivery just finished
+			if (!Player_HasPatient())
+			{
+				floorNum = 1;
+				camX = 0.0f;
+				liftActive = false;
 
-    // --- PROMPTS UPDATE ---
-    // One clean call to handle all UI logic
-    Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
+				// Roll for the next mission's ghost status
+				Player_SetScaryByDay(CurrentDay);
+			}
+		}
+		else
+		{
+			Prompts_TriggerWrongRoom();
+		}
+	}
+
+	Notifications_Update(liftActive);
+	Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
 }
 
 void Game_Draw()
 {
-    // Draws Anomalies
-    Wall_Draw(camX, floorNum);
-    Frames_Draw(floorNum, camX);
+	Wall_Draw(camX, floorNum);
+	Frames_Draw(floorNum, camX);
 
-    // Background Color (1-9)
-    if (floorNum >= 1) {
-        AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
-    }
-    else {
-        AEGfxSetBackgroundColor(0.8f, 0.6f, 0.6f);
-    }
+	// Background
+	if (floorNum >= 1) AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
+	else AEGfxSetBackgroundColor(0.8f, 0.6f, 0.6f);
 
-    // Top and bottom floor lines
-    DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
-    DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
-    // Draw Doors
-    Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
+	// Floor Lines
+	DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+	DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-    // Draw Left Wall + Lift (Start)
-    if (camX > -(2 * DIST_BETWEEN_DOORS)) {
-        DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-        DrawSquareMesh(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
-        if (floorNum != 0) {
-            DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
-        }
-    }
+	Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
 
-    // Draw Right Wall + Lift (End)
-    // Dynamic check based on NUM_DOORS
-    if ((camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) && !dementia) {
-        float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
-        float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+	// Start Lift
+	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
+		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+		DrawSquareMesh(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+		if (floorNum != 0) DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+	}
 
-        DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-        DrawSquareMesh(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
-        if (floorNum != 0) {
-            DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
-        }
-    }
+	// End Lift
+	if ((camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) && !dementia) {
+		float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
+		float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
+		DrawSquareMesh(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
+		if (floorNum != 0) DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+	}
 
-    // PLAYER
-    // Player position
-    float borderCenterY = -650.0f;
-    float borderHeight = 800.0f;
-    float borderTopY = borderCenterY + (borderHeight * 0.5f);
-    float playerY = borderTopY + (Player_GetHeight() * 0.5f);
+	// Player setup
+	float playerY = -650.0f + (800.0f * 0.5f) + (Player_GetHeight() * 0.5f);
 
-    // 2. Draw "Room Darkness" (Simple dark tint)
-    // Just draw one giant black square over the screen with alpha 0.7
-    AEMtx33 scale;
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+	// Global Darkness Overlay
+	AEMtx33 scale;
+	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+	AEGfxSetTransparency(0.7f);
+	AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+	AEMtx33Scale(&scale, 2000.0f, 2000.0f);
+	AEGfxSetTransform(scale.m);
+	AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(0.7f);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-    AEMtx33Scale(&scale, 2000.0f, 2000.0f);
-    AEGfxSetTransform(scale.m);
-    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+	Player_Draw(50.0f, playerY);
+	Draw_and_Flicker(camX, left_right, floorNum, dementia);
 
-    // Draw player
-    Player_Draw(50.0f, playerY);
+	Prompts_Draw();
 
-    // 3. Draw The Flashlights (They will glow on top of the dark)
-    Draw_and_Flicker(camX, left_right, floorNum, dementia);
+	// Dynamic UI Notifications
+	s8 targetFloor, targetDoor;
+	Player_GetTargetRoom(targetFloor, targetDoor);
+	Notifications_Draw(targetDoor, targetFloor);
 
-    // Top and bottom floor lines
-    DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
-    DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+	Timer_Draw(0.0f, 0.85f);
+	Timer_DrawDayOverlay(squareMesh);
+	Lift_Draw(squareMesh);
 
-    // --- PROMPTS DRAW ---
-    // One clean call to handle all UI rendering (Enter, Lift, etc.)
-    Prompts_Draw();
-
-    // Notification
-    Notifications_Draw(patientDoorNum, patientFloorNum);
-
-    // Draws Timer 
-    Timer_Draw(0.0f, 0.85f);
-
-    // Draw Shift Over Screen if time is up
-    Timer_DrawDayOverlay(squareMesh);
-
-    // Lift UI Overlay
-    Lift_Draw(squareMesh);
-
-    // 3. DRAW DEBUG OVERLAY
-    // Pack the data into the struct
-    DebugInfo info;
-    info.camX = camX;
-    info.left_right = left_right;
-    info.day = gDay;
-    info.floorNum = floorNum;
-    info.dementia = dementia;
-    info.doorNumAtPlayer = doorNumAtPlayer;
-    info.patientDoorNum = patientDoorNum;
-    info.patientFloorNum = patientFloorNum;
-    info.demonFloorNum = demonFloorNum;
-    info.demonRoomNum = demonRoomNum;
-
-    // Call the function
-    Debug_Draw(info);
-
+	// Debug Overlay
+	DebugInfo info;
+	info.camX = camX;
+	info.day = CurrentDay;
+	info.floorNum = floorNum;
+	info.doorNumAtPlayer = doorNumAtPlayer;
+	info.patientDoorNum = targetDoor;
+	info.patientFloorNum = targetFloor;
+	Debug_Draw(info);
 }
 
 void Game_Free()
 {
-    std::cout << "Startup: Free\n";
+	std::cout << "Startup: Free\n";
+	// Meshes are often freed in Unload, but can be added here if needed
 }
 
 void Game_Unload()
 {
-    Frames_Unload();
-    Player_Unload();
-    Prompts_Unload(); // <--- Cleanup Font
-    Boss_Fight_Unload();
+	Frames_Unload();
+	Player_Unload();
+	Prompts_Unload();
+	Boss_Fight_Unload();
 	Lighting_Unload();
 	Doors_Unload();
-    Debug_Unload();
-    Notifications_Free();
+	Debug_Unload();
+	Notifications_Free();
 	Wall_Unload();
-    std::cout << "Startup: Unload\n";
+
+	if (squareMesh) AEGfxMeshFree(squareMesh);
+	if (circleMesh) AEGfxMeshFree(circleMesh);
+
+	std::cout << "Startup: Unload\n";
 }
