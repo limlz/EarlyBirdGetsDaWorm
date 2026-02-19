@@ -49,6 +49,8 @@
 // --- MACROS --- //
 // Dimensions & Settings
 #define PLAYER_SPEED        400.0f
+#define PLAYER_WIDTH        220.0f
+#define PLAYER_HEIGHT       200.0f
 #define DOOR_WIDTH          200.0f
 #define DOOR_HEIGHT         300.0f
 #define DIST_BETWEEN_DOORS  600.0f
@@ -58,6 +60,8 @@
 #define NUM_DOORS           10
 #define SCREEN_WIDTH_HALF   800.0f
 #define SCREEN_HEIGHT_HALF  450.0f
+#define FLOOR_CENTER_Y		650.0f
+#define FLOOR_HEIGHT		800.0f
 
 const int SCREEN_W = 1600;
 const int SCREEN_H = 900;

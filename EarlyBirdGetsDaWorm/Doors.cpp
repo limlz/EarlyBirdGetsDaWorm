@@ -6,25 +6,24 @@
 // ==================================================
 
 // --- Door PNG pixel size (your exported art size) ---
-static constexpr float DOOR_PX_W = 360.0f;
-static constexpr float DOOR_PX_H = 760.0f;
-
-// --- Scale factor to match your hallway world scale ---
-static constexpr float DOOR_SCALE = 0.55f;
-
-// --- Door size in WORLD UNITS ---
-static constexpr float DOOR_W = DOOR_PX_W * DOOR_SCALE;
-static constexpr float DOOR_H = DOOR_PX_H * DOOR_SCALE;
+static constexpr float DOOR_W = DOOR_WIDTH;
+static constexpr float DOOR_H = DOOR_HEIGHT;
 
 // Door draw position (DrawTextureMesh uses CENTER position)
-static constexpr float DOOR_Y = -100.0f;
+static float ComputeDoorY()
+{
+    const float floorLineY = (-FLOOR_CENTER_Y) + (FLOOR_HEIGHT * 0.5f);
+    return floorLineY + (DOOR_H * 0.5f);
+}
 
-// --------------------------------------------------
+const float DOOR_Y = ComputeDoorY();
+
+// ==================================================
 // WINDOW PLACEMENT (normalized in door space)
 // u = 0.5 means centered horizontally
 // v = 0.5 means centered vertically
 // v > 0.5 moves it UP, v < 0.5 moves it DOWN
-// --------------------------------------------------
+// ==================================================
 static constexpr float WINDOW_CENTER_U = 0.5f;   // middle of door
 static constexpr float WINDOW_CENTER_V = 0.62f;  // slightly above middle
 
@@ -36,9 +35,9 @@ static constexpr float WINDOW_SIZE_V = 0.18f;
 static constexpr float WINDOW_W = DOOR_W * WINDOW_SIZE_U;
 static constexpr float WINDOW_H = DOOR_H * WINDOW_SIZE_V;
 
-// --------------------------------------------------
+// ==================================================
 // EVENT TRIGGER TUNING
-// --------------------------------------------------
+// ==================================================
 
 // When you are near a door, we roll chance to trigger an event.
 // Lower = rarer. 35% means: when cooldown allows, we frequently see events.
@@ -201,19 +200,9 @@ void Doors_Load()
     doorFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 
     gDoorTex = AEGfxTextureLoad("Assets/Background/Door_bg.png");
-    if (!gDoorTex) std::cout << "FAILED to load Assets/Background/Door_bg.png\n";
-
-    // Window base always drawn
-    gWindowBaseTex = AEGfxTextureLoad("Assets/Door_Anomaly/Window_0.png");
-    if (!gWindowBaseTex) std::cout << "FAILED to load Assets/Door_Anomaly/Window_0.png\n";
-
-    // Handprint overlay (transparent PNG)
-    gHandprintTex = AEGfxTextureLoad("Assets/Door_Anomaly/Handprint.png");
-    if (!gHandprintTex) std::cout << "FAILED to load Assets/Door_Anomaly/Handprint.png\n";
-
-    // Shadow silhouette overlay (transparent PNG)
-    gShadowTex = AEGfxTextureLoad("Assets/Door_Anomaly/Shadow.png");
-    if (!gShadowTex) std::cout << "FAILED to load Assets/Door_Anomaly/Shadow.png\n";
+    gWindowBaseTex = AEGfxTextureLoad("Assets/Door_Anomaly/Window_0.png");  // Window base always drawn
+    gHandprintTex = AEGfxTextureLoad("Assets/Door_Anomaly/Handprint.png");  // Handprint overlay (transparent PNG)
+    gShadowTex = AEGfxTextureLoad("Assets/Door_Anomaly/Shadow.png");        // Shadow silhouette overlay (transparent PNG)
 }
 
 void Doors_Initialize()
@@ -468,8 +457,7 @@ void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia
             const float textNDC_X = (doorX / SCREEN_WIDTH_HALF) - textXoffset;
             const float textNDC_Y = textY / SCREEN_HEIGHT_HALF;
 
-            AEGfxPrint(doorFontId, textBuffer, textNDC_X, textNDC_Y,
-                1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+            AEGfxPrint(doorFontId, textBuffer, textNDC_X, textNDC_Y, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
         }
     }
 }

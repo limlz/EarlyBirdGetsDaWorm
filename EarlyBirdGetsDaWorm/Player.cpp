@@ -2,8 +2,6 @@
 
 /*************************************** VARIABLES ***************************************/
 static constexpr float FRAME_TIME = 0.4f;  // walking speed (time per frame)
-static constexpr float PLAYER_W = 220.0f;
-static constexpr float PLAYER_H = 220.0f;
 
 static AEGfxVertexList* gSpriteMesh = nullptr;
 static AEGfxTexture* gHumanTex[2]{};
@@ -178,8 +176,8 @@ void Player_GetTargetRoom(s8& floor, s8& door) {
     }
 }
 
-float Player_GetWidth() { return PLAYER_W; }
-float Player_GetHeight() { return PLAYER_H; }
+float Player_GetWidth()  { return PLAYER_WIDTH; }
+float Player_GetHeight() { return PLAYER_HEIGHT; }
 
 /***************************************** LOAD ******************************************/
 void Player_Load()
@@ -199,8 +197,8 @@ void Player_Load()
     gScaryTex[0] = AEGfxTextureLoad("Assets/Player/scary player_1.png");
     gScaryTex[1] = AEGfxTextureLoad("Assets/Player/scary player_2.png");
 
-    gNoPatientTex[0] = AEGfxTextureLoad("Assets/Player/nurse.png");
-    gNoPatientTex[1] = AEGfxTextureLoad("Assets/Player/nurse.png");
+    gNoPatientTex[0] = AEGfxTextureLoad("Assets/Player/nurse_1.png");
+    gNoPatientTex[1] = AEGfxTextureLoad("Assets/Player/nurse_2.png");
 }
 
 /***************************************** UPDATE ****************************************/
@@ -228,8 +226,8 @@ void Player_Draw(float x, float y)
 
     AEMtx33 scale, trans, transform;
     float widthMultiplier = Patient_PickedUp ? 1.0f : 0.3f;
-    float sx = (PLAYER_W * widthMultiplier)*(float)gFacing;   // // 1 = normal, -1 = flipped
-    float sy = PLAYER_H;
+    float sx = (PLAYER_WIDTH * widthMultiplier)*(float)gFacing;   // // 1 = normal, -1 = flipped
+    float sy = PLAYER_HEIGHT;
     
 
 	// build transform matrix

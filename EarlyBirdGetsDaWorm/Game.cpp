@@ -214,11 +214,11 @@ void Game_Draw()
 
 	// Background
 	if (floorNum >= 1) AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
-	// Floor Lines
-	DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
-	DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
-	Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
+	// Floor Lines
+	DrawSquareMesh(squareMesh, 0.0f,  FLOOR_CENTER_Y, 1600.0f, FLOOR_HEIGHT, COLOR_BLACK);
+	DrawSquareMesh(squareMesh, 0.0f, -FLOOR_CENTER_Y, 1600.0f, FLOOR_HEIGHT, COLOR_BLACK);
+
     // Draw Doors
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
 
@@ -231,8 +231,8 @@ void Game_Draw()
 
 	// End Lift
 	if ((camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) && !dementia) {
-		float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
-		float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+		float endOffset		= (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
+		float liftOffset	= (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
 		DrawSquareMesh(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, COLOR_LIFT_GREY);
 		if (floorNum != 0) DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
