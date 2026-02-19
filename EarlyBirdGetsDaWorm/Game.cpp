@@ -191,8 +191,6 @@ void Game_Update()
 			// Reset position only if a full delivery just finished
 			if (!Player_HasPatient())
 			{
-				floorNum = 1;
-				camX = 0.0f;
 				liftActive = false;
 
 				// Roll for the next mission's ghost status
@@ -256,6 +254,10 @@ void Game_Draw()
 	Player_Draw(50.0f, playerY);
 	Draw_and_Flicker(camX, left_right, floorNum, dementia);
 
+	// Floor Lines
+	DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+	DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
+
 	Prompts_Draw();
 
 	// Dynamic UI Notifications
@@ -266,6 +268,7 @@ void Game_Draw()
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
 	Lift_Draw(squareMesh);
+
 
 	// Debug Overlay
 	DebugInfo info;
