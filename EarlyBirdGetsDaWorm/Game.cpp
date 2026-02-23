@@ -42,7 +42,7 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
-	pauseblood = AEGfxTextureLoad("Assets/pause_menu_blood.PNG");
+	pauseblood = LoadTextureChecked("Assets/pause_menu_blood.PNG");
 
 	Debug_Load();
 	Timer_Load();
@@ -377,8 +377,9 @@ void Game_Unload()
 	Wall_Unload();
 	Lift_Unload();
 
-	if (squareMesh) AEGfxMeshFree(squareMesh);
-	if (circleMesh) AEGfxMeshFree(circleMesh);
+	FreeMeshSafe(squareMesh);
+	FreeMeshSafe(circleMesh);
+	UnloadTextureSafe(pauseblood);
 
 	std::cout << "Startup: Unload\n";
 }

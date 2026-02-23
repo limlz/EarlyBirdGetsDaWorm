@@ -10,11 +10,7 @@ static f64 wait_timer{};
 void Startup_Load()
 {
 	// Load resources for the main menu
-	digipenLogo = AEGfxTextureLoad("Assets/digipen_white.png");
-	if(digipenLogo == nullptr)
-	{
-		std::cout << "Failed to load DigiPen logo texture!\n";
-	}
+	digipenLogo = LoadTextureChecked("Assets/digipen_white.png");
 	std::cout << "Startup: Load\n";
 }
 
@@ -94,7 +90,7 @@ void Startup_Free()
 
 void Startup_Unload()
 {
-	AEGfxMeshFree(splashMesh);
-	AEGfxTextureUnload(digipenLogo);
+	FreeMeshSafe(splashMesh);
+	UnloadTextureSafe(digipenLogo);
 	std::cout << "Startup: Unload\n";
 }
