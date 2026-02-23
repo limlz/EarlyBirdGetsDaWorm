@@ -130,6 +130,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Wall.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="assets_catalog.hpp" />
     <ClInclude Include="boss.hpp" />
     <ClInclude Include="boss_fight.hpp" />
     <ClInclude Include="bullets.hpp" />
