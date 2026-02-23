@@ -259,5 +259,5 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 }
 
 void Lighting_Unload() {
-    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
+    FreeMeshSafe(squareMesh);
 }
