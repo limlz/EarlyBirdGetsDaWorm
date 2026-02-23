@@ -33,7 +33,7 @@ static float gLiftAnimTimer = 0.0f;         // counts down from LIFT_TIMER to 0
 void Lift_Load()
 {
     // Load lift art (must be called from Game_Load)
-    gLiftTex = AEGfxTextureLoad("Assets/Background/Lift_bg.png");
+    gLiftTex = LoadTextureChecked("Assets/Background/Lift_bg.png");
 }
 
 void Lift_Initialize()
@@ -50,17 +50,8 @@ void Lift_Initialize()
 void Lift_Unload()
 {
     // Unload texture + mesh (must be called from Game_Unload)
-    if (gLiftTex)
-    {
-        AEGfxTextureUnload(gLiftTex);
-        gLiftTex = nullptr;
-    }
-
-    if (gQuadMesh)
-    {
-        AEGfxMeshFree(gQuadMesh);
-        gQuadMesh = nullptr;
-    }
+    UnloadTextureSafe(gLiftTex);
+    FreeMeshSafe(gQuadMesh);
 }
 
 
