@@ -172,4 +172,5 @@ void Boss_Fight_Free() {
 void Boss_Fight_Unload() {
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
+    Bullets_Free();
 }
