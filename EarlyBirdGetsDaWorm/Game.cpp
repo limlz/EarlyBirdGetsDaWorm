@@ -299,6 +299,7 @@ void Game_Unload()
 	Doors_Unload();
 	Debug_Unload();
 	Notifications_Free();
+	Timer_Unload();
 	Wall_Unload();
 	Lift_Unload();
 

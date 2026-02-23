@@ -34,6 +34,7 @@
 #include "timer.hpp"
 #include "others_menu.hpp"
 #include "Lift.hpp"
+#include "assets_catalog.hpp"
 
 // --- MACROS --- //
 // Colors

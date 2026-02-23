@@ -263,10 +263,13 @@ void Player_Unload()
         gScaryTex[i] = nullptr;
     }
 
-    if (gNoPatientTex)
+    for (int i = 0; i < 2; ++i)
     {
-        AEGfxTextureUnload(gNoPatientTex[gFrame]);
-        gNoPatientTex[gFrame] = nullptr;
+        if (gNoPatientTex[i])
+        {
+            AEGfxTextureUnload(gNoPatientTex[i]);
+            gNoPatientTex[i] = nullptr;
+        }
     }
 
     if (gSpriteMesh)
