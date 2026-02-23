@@ -44,15 +44,15 @@ void Frames_Load() {
 
         // Load Design 1 (Recovery is a journey...)
         std::string path1 = "Assets/Frame_Anomaly/Frame_1" + suffix;
-        framedesign_1[i] = AEGfxTextureLoad(path1.c_str());
+        framedesign_1[i] = LoadTextureChecked(path1.c_str());
 
         // Load Design 2 (Every day is a step forward...)
         std::string path2 = "Assets/Frame_Anomaly/Frame_2" + suffix;
-        framedesign_2[i] = AEGfxTextureLoad(path2.c_str());
+        framedesign_2[i] = LoadTextureChecked(path2.c_str());
 
         // Load Design 3 (Hope is stronger than fear...)
         std::string path3 = "Assets/Frame_Anomaly/Frame_3" + suffix;
-        framedesign_3[i] = AEGfxTextureLoad(path3.c_str());
+        framedesign_3[i] = LoadTextureChecked(path3.c_str());
     }
 }
 
@@ -169,14 +169,13 @@ void Frames_Draw(int currentLevel, f32 camX) {
 void Frames_Unload() {
 
     if (frameMesh) {
-        AEGfxMeshFree(frameMesh);
-        frameMesh = nullptr; // Crucial!
+        FreeMeshSafe(frameMesh); // Crucial!
     }
 
     for (int i = 0; i < FRAME_STATES; i++) {
-        if (framedesign_1[i]) AEGfxTextureUnload(framedesign_1[i]);
-        if (framedesign_2[i])  AEGfxTextureUnload(framedesign_2[i]);
-        if (framedesign_3[i])  AEGfxTextureUnload(framedesign_3[i]);
+        UnloadTextureSafe(framedesign_1[i]);
+        UnloadTextureSafe(framedesign_2[i]);
+        UnloadTextureSafe(framedesign_3[i]);
 
         framedesign_1[i] = nullptr;
         framedesign_2[i] = nullptr;
