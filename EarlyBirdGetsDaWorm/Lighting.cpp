@@ -11,10 +11,6 @@ static std::array<std::array<FlickerData, 11>, 10> flickerMem;
 
 static AEGfxVertexList* squareMesh;
 static AEGfxTexture* frames_arr[10] = { nullptr };
-float bedLeft{};
-float bedRight{};
-float bedTop{};
-float bedBot{};
 std::array<std::array<int, 11>, 10> lightingMatrix;
 
 void Lighting_Load() {
@@ -130,11 +126,23 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
     float pBodyLeft{};
     float pBodyRight{};
 
-    // Keep vertical bounds accurate to the sprite size
-    float pHeadTop = -45.0f;
-    float pHeadBot = -95;
 
-    if (right_left) {
+    float bedLeft{};
+    float bedRight{};
+    float bedTop{};
+    float bedBot = -200.0f;
+
+    // Keep vertical bounds accurate to the sprite size
+    float pHeadTop = -60.0f;
+    float pHeadBot = -105.0f;
+
+    if (!Player_HasPatient()) {
+        pHeadLeft = 30.0f;
+        pHeadRight = 70.0f;
+        pBodyLeft = 35.0f;
+        pBodyRight = 65.0f;
+    }
+    else if (right_left) {
         pHeadLeft = -45.0f;
         pHeadRight = 5.0f;
         pBodyLeft = -35.0f;
@@ -142,7 +150,6 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
         bedLeft = 30.0f;
         bedRight = 135.0f;
         bedTop = -150.0f;
-        bedBot = -200.0f;
     }
     else {
         pHeadLeft = 95.0f;
@@ -152,7 +159,6 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
         bedLeft = -30.0f;
         bedRight = 70.0f;
         bedTop = -150.0f;
-        bedBot = -200.0f;
     }
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);

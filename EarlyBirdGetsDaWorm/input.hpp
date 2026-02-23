@@ -1,24 +1,11 @@
-#pragma once
+#ifndef INPUT_HPP
+#define INPUT_HPP
 
-#include "AEEngine.h"
-
-// Call this at the start of your game loop
+// Call this once per frame in your main update loop
 void Input_Update();
 
-// --- KEYBOARD ---
-bool Input_IsKeyHeld(u8 key);      // True while holding down
-bool Input_IsKeyTriggered(u8 key); // True only once when pressed
+// Call these from ANY file to get the current NDC mouse coordinates
+float Input_GetMouseX();
+float Input_GetMouseY();
 
-// --- MOUSE POSITION ---
-// Returns raw pixel coordinate (0 to 1600)
-s32 Input_GetMouseWindowX();
-s32 Input_GetMouseWindowY();
-
-// Returns coordinate relative to center (-800 to 800)
-// Perfect for your Raycaster rotation or placing objects in the world
-f32 Input_GetMouseWorldX();
-f32 Input_GetMouseWorldY();
-
-// --- MOUSE BUTTONS ---
-bool Input_IsMouseHeld(u8 button);      // AEVK_LBUTTON, AEVK_RBUTTON
-bool Input_IsMouseTriggered(u8 button);
+#endif

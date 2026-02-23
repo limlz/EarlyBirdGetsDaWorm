@@ -22,19 +22,16 @@ void MainMenu_Initialize()
 
 void MainMenu_Update()
 {
-	AEInputGetCursorPosition(&mouseX, &mouseY);
-	mouseX = mouseX - 800 ; // Convert to NDC
-	mouseY = 450 - mouseY; // Convert to NDC
 	if (AEInputCheckTriggered(AEVK_ESCAPE))
 	{
 		std::cout << "Space key pressed in MainMenu\n";
 		next = GS_QUIT; // Example: Transition to quit state
 		
 	}
-	if (IsAreaClicked(0.0f, 100.0f, 300.0f, 60.0f, mouseX, mouseY) && AEInputCheckTriggered(AEVK_LBUTTON)) {
+	if (IsAreaClicked(0.0f, 100.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		next = GAME_STATE;
 	}
-	if (IsAreaClicked(0.0f, 0.0f, 300.0f, 60.0f, mouseX, mouseY) && AEInputCheckTriggered(AEVK_LBUTTON)) {
+	if (IsAreaClicked(0.0f, 0.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		next = GS_QUIT;
 	}
 }
