@@ -191,14 +191,14 @@ void Player_Load()
     gSpriteMesh = AEGfxMeshEnd();
 
     // load BOTH sets
-    gHumanTex[0] = AEGfxTextureLoad("Assets/Player/human player_1.png");
-    gHumanTex[1] = AEGfxTextureLoad("Assets/Player/human player_2.png");
+    gHumanTex[0] = LoadTextureChecked("Assets/Player/human player_1.png");
+    gHumanTex[1] = LoadTextureChecked("Assets/Player/human player_2.png");
 
-    gScaryTex[0] = AEGfxTextureLoad("Assets/Player/scary player_1.png");
-    gScaryTex[1] = AEGfxTextureLoad("Assets/Player/scary player_2.png");
+    gScaryTex[0] = LoadTextureChecked("Assets/Player/scary player_1.png");
+    gScaryTex[1] = LoadTextureChecked("Assets/Player/scary player_2.png");
 
-    gNoPatientTex[0] = AEGfxTextureLoad("Assets/Player/nurse_1.png");
-    gNoPatientTex[1] = AEGfxTextureLoad("Assets/Player/nurse_2.png");
+    gNoPatientTex[0] = LoadTextureChecked("Assets/Player/nurse_1.png");
+    gNoPatientTex[1] = LoadTextureChecked("Assets/Player/nurse_2.png");
 }
 
 /***************************************** UPDATE ****************************************/
@@ -257,8 +257,8 @@ void Player_Unload()
 {
     for (int i = 0; i < 2; ++i)
     {
-        if (gHumanTex[i]) AEGfxTextureUnload(gHumanTex[i]);
-        if (gScaryTex[i]) AEGfxTextureUnload(gScaryTex[i]);
+        UnloadTextureSafe(gHumanTex[i]);
+        UnloadTextureSafe(gScaryTex[i]);
         gHumanTex[i] = nullptr;
         gScaryTex[i] = nullptr;
     }
@@ -267,16 +267,11 @@ void Player_Unload()
     {
         if (gNoPatientTex[i])
         {
-            AEGfxTextureUnload(gNoPatientTex[i]);
-            gNoPatientTex[i] = nullptr;
+            UnloadTextureSafe(gNoPatientTex[i]);
         }
     }
 
-    if (gSpriteMesh)
-    {
-        AEGfxMeshFree(gSpriteMesh);
-        gSpriteMesh = nullptr;
-    }
+    FreeMeshSafe(gSpriteMesh);
 }
 
 /*****************************************************************************************/

@@ -66,7 +66,7 @@ void MainMenu_Free()
 
 void MainMenu_Unload()
 {
-    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
+    FreeMeshSafe(squareMesh);
 
     if (menuFontId >= 0) {
         AEGfxDestroyFont(menuFontId);

@@ -1,6 +1,32 @@
 #include "pch.hpp"
 
+AEGfxTexture* LoadTextureChecked(const char* path)
+{
+	AEGfxTexture* texture = AEGfxTextureLoad(path);
+	if (!texture)
+	{
+		std::cout << "FAILED TO LOAD TEXTURE: " << path << "\n";
+	}
+	return texture;
+}
 
+void UnloadTextureSafe(AEGfxTexture*& texture)
+{
+	if (texture)
+	{
+		AEGfxTextureUnload(texture);
+		texture = nullptr;
+	}
+}
+
+void FreeMeshSafe(AEGfxVertexList*& mesh)
+{
+	if (mesh)
+	{
+		AEGfxMeshFree(mesh);
+		mesh = nullptr;
+	}
+}
 
 bool CircleCollision(f32 x1, f32 y1, f32 r1, f32 x2, f32 y2, f32 r2)
 {

@@ -25,10 +25,10 @@ static bool openPagerAfterDoor;	// request to open pager from room
 
 void Notifications_Load()
 {
-	iconTexture = AEGfxTextureLoad("Assets/pager.png");
-	pagerTexture = AEGfxTextureLoad("Assets/pager.png");
-	leftArrow = AEGfxTextureLoad("Assets/pager-arrow-left.png");
-	rightArrow = AEGfxTextureLoad("Assets/pager-arrow-right.png");
+	iconTexture = LoadTextureChecked("Assets/pager.png");
+	pagerTexture = LoadTextureChecked("Assets/pager.png");
+	leftArrow = LoadTextureChecked("Assets/pager-arrow-left.png");
+	rightArrow = LoadTextureChecked("Assets/pager-arrow-right.png");
 
 	lineID = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 
@@ -201,15 +201,15 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
 
 void Notifications_Free()
 {
-    if (iconMesh) { AEGfxMeshFree(iconMesh); iconMesh = nullptr; }
-    if (pagerMesh) { AEGfxMeshFree(pagerMesh); pagerMesh = nullptr; }
-    if (leftArrowMesh) { AEGfxMeshFree(leftArrowMesh); leftArrowMesh = nullptr; }
-    if (rightArrowMesh) { AEGfxMeshFree(rightArrowMesh); rightArrowMesh = nullptr; }
+    FreeMeshSafe(iconMesh);
+    FreeMeshSafe(pagerMesh);
+    FreeMeshSafe(leftArrowMesh);
+    FreeMeshSafe(rightArrowMesh);
 
-    if (iconTexture) { AEGfxTextureUnload(iconTexture); iconTexture = nullptr; }
-    if (pagerTexture) { AEGfxTextureUnload(pagerTexture); pagerTexture = nullptr; }
-    if (leftArrow) { AEGfxTextureUnload(leftArrow); leftArrow = nullptr; }
-    if (rightArrow) { AEGfxTextureUnload(rightArrow); rightArrow = nullptr; }
+    UnloadTextureSafe(iconTexture);
+    UnloadTextureSafe(pagerTexture);
+    UnloadTextureSafe(leftArrow);
+    UnloadTextureSafe(rightArrow);
 
     // Destroy font if valid
     if (lineID >= 0) {
