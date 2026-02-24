@@ -13,6 +13,86 @@ static AEGfxVertexList* squareMesh;
 static AEGfxTexture* frames_arr[10] = { nullptr };
 std::array<std::array<int, 11>, 10> lightingMatrix;
 
+static float singleLightTimer = 0.0f;
+static bool singleLightIsOn = true;
+
+void Update_StandaloneLight(float dt, float lightX, float lightY)
+{
+    singleLightTimer -= dt;
+
+    if (singleLightTimer <= 0.0f)
+    {
+        // Toggle visibility
+        singleLightIsOn = !singleLightIsOn;
+
+        // Spawn 8 sparks right at the light's source!
+        // We trigger this every time it "pops" and changes state.
+        Particles_Spawn(lightX, lightY, 8);
+
+        // Randomize the next timer
+        if (singleLightIsOn) {
+            singleLightTimer = (float)((rand() % 140) + 10) / 100.0f;
+        }
+        else {
+            singleLightTimer = (float)((rand() % 25) + 5) / 100.0f;
+        }
+    }
+}
+
+void Draw_StandaloneConeLight(float x, float y)
+{
+    // 1. Check if the light is currently "Off" from our update logic
+    if (!singleLightIsOn) return;
+
+    int numRays = 300;
+    float coneAngle = 1.2f;
+    float maxDist = 1500.0f;
+    float floorLevel = -700.0f;
+
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    float brightness = 0.15f;
+    AEGfxSetBlendMode(AE_GFX_BM_ADD);
+    AEGfxSetColorToMultiply(1.0f, 0.9f, 0.6f, brightness);
+    AEGfxSetTransparency(brightness);
+
+    for (int i = 0; i < numRays; i++)
+    {
+        float progress = (float)i / (float)(numRays - 1);
+        float angle = -coneAngle / 2.0f + (progress * coneAngle);
+        float dirX = sinf(angle);
+        float dirY = -cosf(angle);
+
+        float currentDist = 0.0f;
+        float step = 2.0f; // Slightly increased step for performance
+
+        // Simplified Raymarching: Only stop when hitting the floor
+        while (currentDist < maxDist) {
+            currentDist += step;
+            float checkY = y + (dirY * currentDist);
+
+            if (checkY < floorLevel) break; // Hit the floor!
+        }
+
+        AEMtx33 scale, rot, trans, pivot, finalMtx;
+        AEMtx33Scale(&scale, 15.0f, currentDist);
+        AEMtx33Trans(&pivot, 0.0f, -currentDist / 2.0f);
+        AEMtx33Rot(&rot, -angle);
+        AEMtx33Trans(&trans, x, y);
+
+        AEMtx33Concat(&finalMtx, &pivot, &scale);
+        AEMtx33Concat(&finalMtx, &rot, &finalMtx);
+        AEMtx33Concat(&finalMtx, &trans, &finalMtx);
+
+        AEGfxSetTransform(finalMtx.m);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // Reset AlphaEngine state
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetTransparency(1.0f);
+}
+
 void Lighting_Load() {
     // Load textures if needed
 }

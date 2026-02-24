@@ -7,6 +7,7 @@ static f64 splash_screen_timer{};
 static f64 title_screen_timer{};
 static f64 wait_timer{};
 
+
 void Startup_Load()
 {
 	// Load resources for the main menu
@@ -20,7 +21,7 @@ void Startup_Initialize()
 	splashMesh = CreateSquareMesh(0xFFFFFFFF);
 	wait_timer = 0.5f;
 	splash_screen_timer = 3.0f;
-	title_screen_timer = 2.4f;
+	title_screen_timer = 0.0f;
 
 	std::cout << "Timer: " << splash_screen_timer << "\n";
 	std::cout << "Startup: Initialize\n";
