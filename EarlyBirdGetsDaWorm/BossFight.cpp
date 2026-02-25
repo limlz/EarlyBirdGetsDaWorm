@@ -170,6 +170,7 @@ void Boss_Fight_Free() {
     // Freeing handled in Unload
 }
 void Boss_Fight_Unload() {
-    if (squareMesh) { AEGfxMeshFree(squareMesh); squareMesh = nullptr; }
-    if (circleMesh) { AEGfxMeshFree(circleMesh); circleMesh = nullptr; }
+    FreeMeshSafe(squareMesh);
+    FreeMeshSafe(circleMesh);
+    Bullets_Free();
 }

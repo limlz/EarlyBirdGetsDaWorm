@@ -7,14 +7,11 @@ static f64 splash_screen_timer{};
 static f64 title_screen_timer{};
 static f64 wait_timer{};
 
+
 void Startup_Load()
 {
 	// Load resources for the main menu
-	digipenLogo = AEGfxTextureLoad("Assets/digipen_white.png");
-	if(digipenLogo == nullptr)
-	{
-		std::cout << "Failed to load DigiPen logo texture!\n";
-	}
+	digipenLogo = LoadTextureChecked("Assets/digipen_white.png");
 	std::cout << "Startup: Load\n";
 }
 
@@ -24,7 +21,7 @@ void Startup_Initialize()
 	splashMesh = CreateSquareMesh(0xFFFFFFFF);
 	wait_timer = 0.5f;
 	splash_screen_timer = 3.0f;
-	title_screen_timer = 2.4f;
+	title_screen_timer = 0.0f;
 
 	std::cout << "Timer: " << splash_screen_timer << "\n";
 	std::cout << "Startup: Initialize\n";
@@ -94,7 +91,7 @@ void Startup_Free()
 
 void Startup_Unload()
 {
-	AEGfxMeshFree(splashMesh);
-	AEGfxTextureUnload(digipenLogo);
+	FreeMeshSafe(splashMesh);
+	UnloadTextureSafe(digipenLogo);
 	std::cout << "Startup: Unload\n";
 }

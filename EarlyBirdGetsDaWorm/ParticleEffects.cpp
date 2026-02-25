@@ -121,5 +121,5 @@ void Particles_Draw(AEGfxVertexList* mesh, float camX)
 
 void Particles_Free()
 {
-    particleList.clear();
+    std::vector<Particle>().swap(particleList);
 }
