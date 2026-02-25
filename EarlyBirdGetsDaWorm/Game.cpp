@@ -303,7 +303,7 @@ void Game_Draw()
 	// Dynamic UI Notifications
 	s8 targetFloor, targetDoor;
 	Player_GetTargetRoom(targetFloor, targetDoor);
-	Notifications_Draw(targetDoor, targetFloor);
+	//Notifications_Draw(targetDoor, targetFloor);
 
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);

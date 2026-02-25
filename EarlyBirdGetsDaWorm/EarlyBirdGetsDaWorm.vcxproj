@@ -100,8 +100,6 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="audio_manager.cpp" />
-    <ClCompile Include="audio_manager.hpp" />
     <ClCompile Include="Boss.cpp" />
     <ClCompile Include="BossFight.cpp" />
     <ClCompile Include="Bullets.cpp" />
