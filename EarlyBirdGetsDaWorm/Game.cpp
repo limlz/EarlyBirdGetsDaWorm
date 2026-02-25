@@ -84,6 +84,7 @@ void Game_Initialize()
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 
+	Notifications_Initialize();
 	AllAnomalies_Initialize();
 	//Frames_Initialize();		//moved to central_pool.cpp
 	//Lighting_Initialize(7);
@@ -303,7 +304,7 @@ void Game_Draw()
 	// Dynamic UI Notifications
 	s8 targetFloor, targetDoor;
 	Player_GetTargetRoom(targetFloor, targetDoor);
-	//Notifications_Draw(targetDoor, targetFloor);
+	Notifications_Draw(targetDoor, targetFloor);
 
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
