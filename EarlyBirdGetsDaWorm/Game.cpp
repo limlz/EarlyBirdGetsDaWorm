@@ -210,8 +210,6 @@ void Game_Update()
     Lift_HandleInput(floorNum);
 
     Lighting_Update(floorNum, camX, dementia);
-
-    Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
 
 	/************************************ INTERACTION HANDLING *******************************/
@@ -359,6 +357,11 @@ void Game_Draw()
 		DrawSquareMesh(squareMesh, 0.0f, 100.0f, 300.0f, 60.0f, COLOR_WHITE);
 		DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 60.0f, COLOR_WHITE);
 	}
+	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxSetTransparency(1.0f);
 }
 
 void Game_Free()

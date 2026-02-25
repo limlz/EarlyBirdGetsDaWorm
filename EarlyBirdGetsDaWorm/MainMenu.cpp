@@ -52,8 +52,7 @@ void MainMenu_Load()
 	title_bg = LoadTextureChecked("Assets/Main_Menu/title_bg.png");
 	for (int i = 0; i < NUM_TITLE_FRAMES; i++)
 	{
-		// This builds the string: "Assets/Main_Menu/title_1.PNG", "title_2.PNG", etc.
-		// We do (i + 1) because the array starts at 0, but your files start at 1.
+		// Load each frame of the title animation
 		std::string filePath = "Assets/Main_Menu/title_sheets/title_" + std::to_string(i + 1) + ".PNG";
 
 		title_frames[i] = LoadTextureChecked(filePath.c_str());
@@ -109,7 +108,7 @@ void MainMenu_Update()
 			titleAnimTimer = 0.0f; // Reset timer
 			currentTitleFrame++;   // Go to the next drawing step
 
-			// Optional: Play a short scratching sound effect here!
+			
 		}
 	}
 
