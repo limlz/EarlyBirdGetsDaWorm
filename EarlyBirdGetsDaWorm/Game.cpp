@@ -84,6 +84,7 @@ void Game_Initialize()
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 
+	Notifications_Initialize();
 	AllAnomalies_Initialize();
 	//Frames_Initialize();		//moved to central_pool.cpp
 	//Lighting_Initialize(7);
