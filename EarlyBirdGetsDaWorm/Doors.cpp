@@ -326,7 +326,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float camX)
     {
     case 0: TriggerHandprintSlam(doorNearPlayer);       break;
     case 1: TriggerEyesBlink(doorNearPlayer);           break;
-    case 2: TriggerShadowWalk(doorNearPlayer, camX);    break;
+    //case 2: TriggerShadowWalk(doorNearPlayer, camX);    break;
     }
 }
 
