@@ -266,8 +266,11 @@ void Game_Draw()
 	// Start Lift
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
-		if (floorNum != 0) DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
+		if (floorNum != 0)
+		{
+			DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		}
 	}
 
 	// End Lift
@@ -275,8 +278,11 @@ void Game_Draw()
 		float endOffset		= (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
 		float liftOffset	= (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
-		if (floorNum != 0) DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
+		if (floorNum != 0)
+		{
+			DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		}
 	}
 
 	// Player setup
@@ -309,7 +315,6 @@ void Game_Draw()
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
 	Lift_Draw(squareMesh);
-
 
 	// Debug Overlay
 	DebugInfo info;

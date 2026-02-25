@@ -20,6 +20,7 @@ const float DOOR_Y = ComputeDoorY();
 
 // ==================================================
 // WINDOW PLACEMENT (normalized in door space)
+// ============================================================
 // u = 0.5 means centered horizontally
 // v = 0.5 means centered vertically
 // v > 0.5 moves it UP, v < 0.5 moves it DOWN
@@ -279,27 +280,6 @@ void Doors_Animate(float dt, int doorNearPlayer, float camX)
         return; // do not start another event while one is active
     }
 
-    // --- C) Red glowing eyes (no PNG) ---
-    //if (s.event == DoorEvent::EyesBlink && s.eyes.active)
-    //{
-    //    s.eyes.t += dt;
-
-    //    // blink toggles (on/off) every ~0.12 sec
-    //    s.eyes.blinkTimer += dt;
-    //    if (s.eyes.blinkTimer >= 0.25f)
-    //    {
-    //        s.eyes.blinkTimer = 0.0f;
-    //        s.eyes.eyesOn = !s.eyes.eyesOn;
-    //    }
-
-    //    if (s.eyes.t >= s.eyes.duration)
-    //    {
-    //        ClearDoorEvent(doorNearPlayer);
-    //        s.eventCooldown = 1.5f; // after an event ends, wait a bit
-    //    }
-    //    return; // do not start another event while one is active
-    //}
-
     // --------------------------------------------------
     // 2) If no event active: attempt to roll a new one
     // --------------------------------------------------
@@ -418,30 +398,6 @@ void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia
                 WINDOW_W * 0.95f, WINDOW_H * 0.95f, 0.85f);
         }
 
-        // --- C) Red glowing eyes (no PNG) ---
-    //    if (s.event == DoorEvent::EyesBlink && s.eyes.active)
-    //    {
-    //        if (s.eyes.eyesOn)
-    //        {
-    //            // Eyes position relative to window (normalized)
-    //            const float eyeY = winY + WINDOW_H * 0.10f; // slightly above window center
-    //            const float eyeOffsetX = WINDOW_W * 0.18f;
-
-				//// Eye size 
-    //            const float eyeW = WINDOW_W * 0.14f;
-    //            const float eyeH = WINDOW_H * 0.18f;
-
-    //            // Glow layers: center bright + outer softer
-    //            // Note: using ARGB colors (0xAARRGGBB)
-    //            DrawSquareMesh(gQuadMesh, winX - eyeOffsetX, eyeY, eyeW, eyeH, 0xFFFF0000); 
-    //            DrawSquareMesh(gQuadMesh, winX + eyeOffsetX, eyeY, eyeW, eyeH, 0xFFFF0000);
-
-    //            // Glow layer (bigger + transparent)
-    //            DrawSquareMesh(gQuadMesh, winX - eyeOffsetX, eyeY, eyeW * 2.2f, eyeH * 2.0f, 0x66FF0000);
-    //            DrawSquareMesh(gQuadMesh, winX + eyeOffsetX, eyeY, eyeW * 2.2f, eyeH * 2.0f, 0x66FF0000);
-    //        }
-    //    }
-
         // --------------------------------------------
         // 5) DOOR NUMBER TEXT (unchanged)
         // --------------------------------------------
@@ -457,7 +413,10 @@ void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia
             const float textNDC_X = (doorX / SCREEN_WIDTH_HALF) - textXoffset;
             const float textNDC_Y = textY / SCREEN_HEIGHT_HALF;
 
-            AEGfxPrint(doorFontId, textBuffer, textNDC_X, textNDC_Y, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+            AEGfxPrint(doorFontId, textBuffer, 
+                textNDC_X, textNDC_Y, 
+                1.0f, 1.0f, 
+                0.0f, 0.0f, 1.0f);
         }
     }
 }
