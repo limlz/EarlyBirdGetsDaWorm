@@ -8,6 +8,7 @@ enum class Timer_EndChoice
 };
 
 void Timer_Load();
+void Timer_Unload();
 void Timer_Update(float dt);
 void Timer_Draw(float ndcX, float ndcY);
 

@@ -10,6 +10,7 @@
 #include <random>    // Required for std::default_random_engine
 #include "AEEngine.h"
 
+#include "audio_manager.hpp"
 #include "debug.hpp"
 #include "prompts.hpp"
 #include "boss.hpp"
@@ -34,6 +35,8 @@
 #include "timer.hpp"
 #include "others_menu.hpp"
 #include "Lift.hpp"
+#include "central_pool.hpp"
+#include "assets_catalog.hpp"
 
 // --- MACROS --- //
 // Colors

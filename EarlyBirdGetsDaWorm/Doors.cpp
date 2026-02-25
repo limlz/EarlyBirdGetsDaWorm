@@ -122,7 +122,7 @@ static DoorEventState gDoorState[NUM_DOORS];
 
 static int ClampFloor(int f)
 {
-    // you already use MAX_FLOORS in other files; doors doesn’t really need it for events
+    // you already use MAX_FLOORS in other files; doors doesnâ€™t really need it for events
     // but keep this if you later want floor-based behavior.
     if (f < 0) return 0;
     if (f >= 10) return 9;
@@ -199,10 +199,10 @@ void Doors_Load()
 {
     doorFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 
-    gDoorTex = AEGfxTextureLoad("Assets/Background/Door_bg.png");
-    gWindowBaseTex = AEGfxTextureLoad("Assets/Door_Anomaly/Window_0.png");  // Window base always drawn
-    gHandprintTex = AEGfxTextureLoad("Assets/Door_Anomaly/Handprint.png");  // Handprint overlay (transparent PNG)
-    gShadowTex = AEGfxTextureLoad("Assets/Door_Anomaly/Shadow.png");        // Shadow silhouette overlay (transparent PNG)
+    gDoorTex = LoadTextureChecked("Assets/Background/Door_bg.png");
+    gWindowBaseTex = LoadTextureChecked("Assets/Door_Anomaly/Window_0.png");  // Window base always drawn
+    gHandprintTex = LoadTextureChecked("Assets/Door_Anomaly/Handprint.png");  // Handprint overlay (transparent PNG)
+    gShadowTex = LoadTextureChecked("Assets/Door_Anomaly/Shadow.png");        // Shadow silhouette overlay (transparent PNG)
 }
 
 void Doors_Initialize()
@@ -464,13 +464,13 @@ void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia
 
 void Doors_Unload()
 {
-    if (gQuadMesh) { AEGfxMeshFree(gQuadMesh); gQuadMesh = nullptr; }
+    FreeMeshSafe(gQuadMesh);
 
-    if (gDoorTex) { AEGfxTextureUnload(gDoorTex); gDoorTex = nullptr; }
-    if (gWindowBaseTex) { AEGfxTextureUnload(gWindowBaseTex); gWindowBaseTex = nullptr; }
+    UnloadTextureSafe(gDoorTex);
+    UnloadTextureSafe(gWindowBaseTex);
 
-    if (gHandprintTex) { AEGfxTextureUnload(gHandprintTex); gHandprintTex = nullptr; }
-    if (gShadowTex) { AEGfxTextureUnload(gShadowTex); gShadowTex = nullptr; }
+    UnloadTextureSafe(gHandprintTex);
+    UnloadTextureSafe(gShadowTex);
 
     if (doorFontId >= 0)
     {

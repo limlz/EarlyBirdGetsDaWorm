@@ -14,6 +14,7 @@ std::vector<Bullet> bullets(MAX_BULLETS);
 
 void Bullets_Initialize() {
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
+    bullets.assign(MAX_BULLETS, Bullet{});
     for (int i = 0; i < MAX_BULLETS; i++) {
         bullets[i].active = false;
     }
@@ -88,4 +89,9 @@ void Bullets_Draw(float camX) {
             DrawSquareMesh(squareMesh, bullets[i].x, bullets[i].y, w, h, 0xFFFFFFFF);
         }
     }
+}
+
+void Bullets_Free() {
+    FreeMeshSafe(squareMesh);
+    std::vector<Bullet>().swap(bullets);
 }

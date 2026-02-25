@@ -1,5 +1,6 @@
 #include "pch.hpp"
 
+/*************************************** VARIABLES ***************************************/
 const f32 FRAME_WIDTH		= 100.0f;
 const f32 FRAME_HEIGHT		= 130.0f;
 
@@ -16,7 +17,7 @@ static AEGfxTexture* framedesign_3[FRAME_STATES];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
-
+/************************************* HELPERS *******************************************/
 int GetRandomStateByIllness(ILLNESSES illness) {
     static const int paranoiaPool[] = { 5, 6 };
     static const int maniaPool[] = { 1, 2, 3, 4 };
@@ -34,6 +35,7 @@ int GetRandomStateByIllness(ILLNESSES illness) {
     }
 }
 
+/***************************************** LOAD ******************************************/
 void Frames_Load() {
 	Frames_Unload(); // Ensure previous assets are cleared
 
@@ -44,19 +46,21 @@ void Frames_Load() {
 
         // Load Design 1 (Recovery is a journey...)
         std::string path1 = "Assets/Frame_Anomaly/Frame_1" + suffix;
-        framedesign_1[i] = AEGfxTextureLoad(path1.c_str());
+        framedesign_1[i] = LoadTextureChecked(path1.c_str());
 
         // Load Design 2 (Every day is a step forward...)
         std::string path2 = "Assets/Frame_Anomaly/Frame_2" + suffix;
-        framedesign_2[i] = AEGfxTextureLoad(path2.c_str());
+        framedesign_2[i] = LoadTextureChecked(path2.c_str());
 
         // Load Design 3 (Hope is stronger than fear...)
         std::string path3 = "Assets/Frame_Anomaly/Frame_3" + suffix;
-        framedesign_3[i] = AEGfxTextureLoad(path3.c_str());
+        framedesign_3[i] = LoadTextureChecked(path3.c_str());
     }
 }
 
+/************************************** INITIALIZE ***************************************/
 void Frames_Initialize() {
+
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
@@ -77,7 +81,7 @@ void Frames_Initialize() {
             currentFrame.posY = 0.0f;
 			currentFrame.width = FRAME_WIDTH;
 			currentFrame.height = FRAME_HEIGHT;
-			currentFrame.designID = (frame % 3) + 1; // Cycle through design IDs 1, 2, 3
+            currentFrame.designID = ((frame + level) % 3) + 1;
 
             currentFrame.currentState = 0;
 		}
@@ -87,11 +91,23 @@ void Frames_Initialize() {
     }
 }
 
+/***************************************** UPDATE ****************************************/
 void Frames_Update(float dt) {
+
+    if (!Player_HasPatient()) {
+        // Reset all frames to normal if no one is being carried
+        for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+            for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
+                levelMap[level][frame].currentState = 0;
+            }
+        }
+        return;
+    }
+
     static bool  isFlickering = false;
     static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
     static float flickerDuration = 4.0f;
-    
+
     if (!isFlickering) {
         flickerInterval -= dt;
     }
@@ -137,6 +153,7 @@ void Frames_Update(float dt) {
     }
 }
 
+/***************************************** DRAW ******************************************/
 void Frames_Draw(int currentLevel, f32 camX) {
     // 1. Safety check for level bounds
     if (currentLevel < 0 || currentLevel >= NUM_OF_FLOOR) return;
@@ -166,17 +183,17 @@ void Frames_Draw(int currentLevel, f32 camX) {
     }
 }
 
+/**************************************** UNLOAD *****************************************/
 void Frames_Unload() {
 
     if (frameMesh) {
-        AEGfxMeshFree(frameMesh);
-        frameMesh = nullptr; // Crucial!
+        FreeMeshSafe(frameMesh); // Crucial!
     }
 
     for (int i = 0; i < FRAME_STATES; i++) {
-        if (framedesign_1[i]) AEGfxTextureUnload(framedesign_1[i]);
-        if (framedesign_2[i])  AEGfxTextureUnload(framedesign_2[i]);
-        if (framedesign_3[i])  AEGfxTextureUnload(framedesign_3[i]);
+        UnloadTextureSafe(framedesign_1[i]);
+        UnloadTextureSafe(framedesign_2[i]);
+        UnloadTextureSafe(framedesign_3[i]);
 
         framedesign_1[i] = nullptr;
         framedesign_2[i] = nullptr;
@@ -184,6 +201,7 @@ void Frames_Unload() {
     }
 }
 
+/*****************************************************************************************/
 
 //to later attach this to after pick up of !human && not delivery floor
 //if (currentFrame.entity == GHOST ) {

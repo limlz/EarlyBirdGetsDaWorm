@@ -34,14 +34,31 @@ static constexpr float DAY_FADE_SPEED   = 1.0f;  // alpha per sec (1/2 sec fade)
 void Timer_Load()
 {
     // load digital clock font
-    gFontId = AEGfxCreateFont("Assets/Fonts/DS-DIGI.ttf", 32);
-    bFontId = AEGfxCreateFont("Assets/Fonts/buggy-font.ttf", 30);
+    gFontId = AEGfxCreateFont(Assets::Fonts::DigitalClock, 32);
+    bFontId = AEGfxCreateFont(Assets::Fonts::BuggyInFontsDir, 30);
     Timer_Reset();
 }
 
 // @brief: 
 // The game clock is stored as a floating-point value in minutes.
-// Each frame, we advance it by minutesPerSecond × deltaTime.
+
+
+void Timer_Unload()
+{
+    if (gFontId >= 0)
+    {
+        AEGfxDestroyFont(gFontId);
+        gFontId = -1;
+    }
+
+    if (bFontId >= 0)
+    {
+        AEGfxDestroyFont(bFontId);
+        bFontId = -1;
+    }
+}
+
+// Each frame, we advance it by minutesPerSecond Ã— deltaTime.
 // Time will move at an accelerated rate.
 void Timer_Update(float dt)
 {

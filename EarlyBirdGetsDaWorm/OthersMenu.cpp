@@ -4,7 +4,7 @@ static s8 gFont = -1;
 
 void OthersMenu_Load()
 {
-    gFont = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    gFont = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 }
 
 void OthersMenu_Initialize() 
@@ -42,5 +42,9 @@ void OthersMenu_Free()
 
 void OthersMenu_Unload() 
 {
-    // blabla
+    if (gFont >= 0)
+    {
+        AEGfxDestroyFont(gFont);
+        gFont = -1;
+    }
 }

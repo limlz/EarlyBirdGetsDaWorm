@@ -37,24 +37,20 @@ static s32 random[MAX_FLOORS], randomX[MAX_FLOORS], randomY[MAX_FLOORS];
 static f32 wallX, wallY, camX;
 
 void Wall_Load() {
-	wallBgTexture = AEGfxTextureLoad("Assets/Background/WALL_BG.png");
+	wallBgTexture = LoadTextureChecked("Assets/Background/WALL_BG.png");
 
-	if (!wallBgTexture)
-	{
-		std::cout << "FAILED TO LOAD Wall_bg.png\n";
-	}
 
-	crack1Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png");
-	crack2Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png");
-	crack3Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png");
-	crack4Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK4.png");
+	crack1Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png");
+	crack2Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png");
+	crack3Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png");
+	crack4Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK4.png");
 
-	drawing1Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING1.png");
-	drawing2Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING2.png");
-	drawing3Texture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png");
+	drawing1Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING1.png");
+	drawing2Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING2.png");
+	drawing3Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png");
 
-	leftHandTexture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png");
-	rightHandTexture = AEGfxTextureLoad("Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png");
+	leftHandTexture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png");
+	rightHandTexture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png");
 
 	return;
 }
@@ -167,32 +163,32 @@ void Wall_Draw(f32 camX, s8 floorNum) {
 
 void Wall_Unload() {
     // Free meshes
-	if (wallBgMesh) { AEGfxMeshFree(wallBgMesh); wallBgMesh = nullptr; }
+	FreeMeshSafe(wallBgMesh);
 
-    if (crack1Mesh) { AEGfxMeshFree(crack1Mesh); crack1Mesh = nullptr; }
-    if (crack2Mesh) { AEGfxMeshFree(crack2Mesh); crack2Mesh = nullptr; }
-    if (crack3Mesh) { AEGfxMeshFree(crack3Mesh); crack3Mesh = nullptr; }
-    if (crack4Mesh) { AEGfxMeshFree(crack4Mesh); crack4Mesh = nullptr; }
+    FreeMeshSafe(crack1Mesh);
+    FreeMeshSafe(crack2Mesh);
+    FreeMeshSafe(crack3Mesh);
+    FreeMeshSafe(crack4Mesh);
 
-    if (drawing1Mesh) { AEGfxMeshFree(drawing1Mesh); drawing1Mesh = nullptr; }
-    if (drawing2Mesh) { AEGfxMeshFree(drawing2Mesh); drawing2Mesh = nullptr; }
-    if (drawing3Mesh) { AEGfxMeshFree(drawing3Mesh); drawing3Mesh = nullptr; }
+    FreeMeshSafe(drawing1Mesh);
+    FreeMeshSafe(drawing2Mesh);
+    FreeMeshSafe(drawing3Mesh);
 
-    if (leftHandMesh) { AEGfxMeshFree(leftHandMesh); leftHandMesh = nullptr; }
-    if (rightHandMesh) { AEGfxMeshFree(rightHandMesh); rightHandMesh = nullptr; }
+    FreeMeshSafe(leftHandMesh);
+    FreeMeshSafe(rightHandMesh);
 
     // Free textures
-	if (wallBgTexture) { AEGfxTextureUnload(wallBgTexture); wallBgTexture = nullptr; }
+	UnloadTextureSafe(wallBgTexture);
 
-    if (crack1Texture) { AEGfxTextureUnload(crack1Texture); crack1Texture = nullptr; }
-    if (crack2Texture) { AEGfxTextureUnload(crack2Texture); crack2Texture = nullptr; }
-    if (crack3Texture) { AEGfxTextureUnload(crack3Texture); crack3Texture = nullptr; }
-    if (crack4Texture) { AEGfxTextureUnload(crack4Texture); crack4Texture = nullptr; }
+    UnloadTextureSafe(crack1Texture);
+    UnloadTextureSafe(crack2Texture);
+    UnloadTextureSafe(crack3Texture);
+    UnloadTextureSafe(crack4Texture);
 
-    if (drawing1Texture) { AEGfxTextureUnload(drawing1Texture); drawing1Texture = nullptr; }
-    if (drawing2Texture) { AEGfxTextureUnload(drawing2Texture); drawing2Texture = nullptr; }
-    if (drawing3Texture) { AEGfxTextureUnload(drawing3Texture); drawing3Texture = nullptr; }
+    UnloadTextureSafe(drawing1Texture);
+    UnloadTextureSafe(drawing2Texture);
+    UnloadTextureSafe(drawing3Texture);
 
-    if (leftHandTexture) { AEGfxTextureUnload(leftHandTexture); leftHandTexture = nullptr; }
-    if (rightHandTexture) { AEGfxTextureUnload(rightHandTexture); rightHandTexture = nullptr; }
+    UnloadTextureSafe(leftHandTexture);
+    UnloadTextureSafe(rightHandTexture);
 }

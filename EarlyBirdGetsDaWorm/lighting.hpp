@@ -9,3 +9,7 @@ void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
 void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia = false);
 
 void Lighting_Unload();
+
+void Draw_StandaloneConeLight(float x, float y);
+
+void Update_StandaloneLight(float dt, float lightX, float lightY);

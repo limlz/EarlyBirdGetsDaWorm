@@ -4,6 +4,7 @@
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 static AEGfxTexture* lightingtest = nullptr;
+static AEGfxTexture* pauseblood = nullptr;
 static f32 camX{}, playerY{}, playerX{};
 
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
@@ -14,6 +15,7 @@ s8 doorNumAtPlayer{ -1 };   // Door number the player is currently in front of
 
 bool liftActive{}, left_right{ 1 };
 bool dementia{ false };
+bool gamePaused{};
 
 // Day counter
 static int CurrentDay = 1;
@@ -22,6 +24,12 @@ static bool gSessionStarted = false;
 // player's spawn position
 static float gSpawnX = 50.0f;
 static float gSpawnY = 0.0f;
+
+// pause menu
+static float pauseAlpha = 0.0f;
+const float FADE_SPEED = 3.0f; // How fast it fades (Higher = faster)
+static float bloodY = 900.0f;         // Starts off-screen at the top
+const float BLOOD_DROP_SPEED = 2000.0f; // Pixels per second (adjust for faster/slower flow)
 
 static float ComputeSpawnYFromBorder()
 {
@@ -34,16 +42,20 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
+	pauseblood = LoadTextureChecked("Assets/pause_menu_blood.PNG");
 
 	Debug_Load();
 	Timer_Load();
-	Wall_Load();
-	Doors_Load();
 	Lift_Load();
-	Frames_Load();
+	Doors_Load();
+
 	Player_Load();
 	Prompts_Load();
 	Notifications_Load();
+
+	AllAnomalies_Load();
+	//Wall_Load();			//moved to central_pool.cpp
+	//Frames_Load();
 
 	// Day 1 setup
 	if (!gSessionStarted)
@@ -65,16 +77,17 @@ void Game_Initialize()
 
 	Doors_Initialize();
 	Lift_Initialize();
-	Frames_Initialize();
-	Lighting_Initialize(7);
+
 
 	// Initialize the Randomized Balancing Pool and Mission
 	Player_ResetPatientCounter(CurrentDay);
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 
-	Notifications_Initialize();
-	Wall_Initialize();
+	AllAnomalies_Initialize();
+	//Frames_Initialize();		//moved to central_pool.cpp
+	//Lighting_Initialize(7);
+	//Wall_Initialize();
 }
 
 void Game_Update()
@@ -85,6 +98,37 @@ void Game_Update()
 	// 1) Update overlay + Freeze
 	Timer_UpdateDayOverlay(dt);
 	if (Timer_IsDayOverlayActive()) { return; }
+
+	if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+		gamePaused = !gamePaused;
+	}
+
+	if (gamePaused) {
+		pauseAlpha += FADE_SPEED * dt;
+		if (pauseAlpha > 0.8f) pauseAlpha = 0.8f; // Max 80% darkness
+
+		// Drop blood
+		bloodY -= BLOOD_DROP_SPEED * dt;
+		if (bloodY < 0.0f) bloodY = 0.0f; // Stop at center screen
+	}
+	else {
+		// Lighten background
+		pauseAlpha -= FADE_SPEED * dt;
+		if (pauseAlpha < 0.0f) pauseAlpha = 0.0f; // Min 0% darkness
+
+		// Raise blood
+		bloodY += BLOOD_DROP_SPEED * dt;
+		if (bloodY > 900.0f) bloodY = 900.0f; // Stop when fully off-screen
+	}
+	if (gamePaused) {
+		if (IsAreaClicked(0.0f, 100.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			gamePaused = false;
+		}
+		if (IsAreaClicked(0.0f, 0.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			next = GS_QUIT;
+		}
+		return;
+	}
 
 	// 2) Update timer
 	Timer_Update(dt);
@@ -136,10 +180,6 @@ void Game_Update()
 		Timer_DebugSetTime(5 * 60 + 58);
 	}
 
-	if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-		next = OTHERS_MENU;
-		return;
-	}
 
 	/************************************ MOVEMENT & ANIMATION *******************************/
 	bool moveRight = AEInputCheckCurr(AEVK_D);
@@ -168,8 +208,6 @@ void Game_Update()
     
     Lift_Update(dt, camX, maxDist);
     Lift_HandleInput(floorNum);
-
-    Lighting_Update(floorNum, camX, dementia);
 
     Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
@@ -223,7 +261,7 @@ void Game_Draw()
 
     // Draw Doors
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
-
+	AEGfxSetTransparency(1.0f);
 	// Start Lift
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
@@ -281,6 +319,49 @@ void Game_Draw()
 	info.patientDoorNum = targetDoor;
 	info.patientFloorNum = targetFloor;
 	Debug_Draw(info);
+
+	// LAYER 1: The Darkening Overlay
+	if (pauseAlpha > 0.0f)
+	{
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+
+		AEGfxSetTransparency(pauseAlpha);
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black
+
+		AEMtx33 scale, trans, transform;
+		AEMtx33Scale(&scale, 1600.0f, 900.0f);
+		AEMtx33Trans(&trans, 0.0f, 0.0f);
+		AEMtx33Concat(&transform, &trans, &scale);
+
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+	}
+
+	// LAYER 2: The Flowing Blood Texture
+	if (bloodY < 900.0f)
+	{
+		DrawTextureMesh(squareMesh, pauseblood, -550.0f, bloodY, 500.0f, 900.0f, 1.0f);
+		DrawTextureMesh(squareMesh, pauseblood, 0.0f, bloodY, 500.0f, 900.0f, 1.0f);
+		DrawTextureMesh(squareMesh, pauseblood, 550.0f, bloodY, 500.0f, 900.0f, 1.0f);
+	}
+
+	// LAYER 3: The UI Buttons
+	// Only draw when the pause menu is mostly settled on the screen
+	if (gamePaused && pauseAlpha > 0.5f && bloodY < 100.0f)
+	{
+		// Reset to color mode for standard drawing
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetTransparency(1.0f); // Solid buttons
+
+		DrawSquareMesh(squareMesh, 0.0f, 100.0f, 300.0f, 60.0f, COLOR_WHITE);
+		DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 60.0f, COLOR_WHITE);
+	}
+	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxSetTransparency(1.0f);
 }
 
 void Game_Free()
@@ -299,11 +380,13 @@ void Game_Unload()
 	Doors_Unload();
 	Debug_Unload();
 	Notifications_Free();
+	Timer_Unload();
 	Wall_Unload();
 	Lift_Unload();
 
-	if (squareMesh) AEGfxMeshFree(squareMesh);
-	if (circleMesh) AEGfxMeshFree(circleMesh);
+	FreeMeshSafe(squareMesh);
+	FreeMeshSafe(circleMesh);
+	UnloadTextureSafe(pauseblood);
 
 	std::cout << "Startup: Unload\n";
 }
