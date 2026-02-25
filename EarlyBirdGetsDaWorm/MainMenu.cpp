@@ -58,6 +58,8 @@ void MainMenu_Load()
 		title_frames[i] = LoadTextureChecked(filePath.c_str());
 	}
 
+	AudioManager::LoadMainMenuSounds();
+
 	std::cout << "MainMenu: Load\n";
 	menuFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 }
@@ -107,7 +109,7 @@ void MainMenu_Update()
 		{
 			titleAnimTimer = 0.0f; // Reset timer
 			currentTitleFrame++;   // Go to the next drawing step
-
+			AudioManager::PlayRandomScratch();
 			
 		}
 	}
@@ -197,7 +199,6 @@ void MainMenu_Free()
 	std::cout << "MainMenu: Free\n";
 }
 
-
 void MainMenu_Unload()
 {
     FreeMeshSafe(squareMesh);
@@ -217,4 +218,5 @@ void MainMenu_Unload()
     }
 	Particles_Free();
     std::cout << "MainMenu: Unload\n";
+	AudioManager::UnloadMainMenuSounds();
 }
