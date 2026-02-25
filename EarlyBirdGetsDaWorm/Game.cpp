@@ -37,12 +37,14 @@ void Game_Load()
 
 	Debug_Load();
 	Timer_Load();
-	Wall_Load();
 	Doors_Load();
-	Frames_Load();
 	Player_Load();
 	Prompts_Load();
 	Notifications_Load();
+
+	AllAnomalies_Load();
+	//Wall_Load();			//moved to central_pool.cpp
+	//Frames_Load();
 
 	// Day 1 setup
 	if (!gSessionStarted)
@@ -63,16 +65,17 @@ void Game_Initialize()
 	circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 
 	Doors_Initialize();
-	Frames_Initialize();
-	Lighting_Initialize(7);
+	Notifications_Initialize();
 
 	// Initialize the Randomized Balancing Pool and Mission
 	Player_ResetPatientCounter(CurrentDay);
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 
-	Notifications_Initialize();
-	Wall_Initialize();
+	AllAnomalies_Initialize();
+	//Frames_Initialize();		//moved to central_pool.cpp
+	//Lighting_Initialize(7);
+	//Wall_Initialize();
 }
 
 void Game_Update()

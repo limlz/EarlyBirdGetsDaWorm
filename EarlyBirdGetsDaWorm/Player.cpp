@@ -10,6 +10,7 @@ static AEGfxTexture* gNoPatientTex[2]{};
 
 static bool     gIsScary = false;
 static bool     Patient_PickedUp = false;
+static bool     gVisualIsScary = false;
 
 static int      gFacing = 1;     // 1 right, -1 left
 static int      gFrame = 0;
@@ -52,6 +53,7 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
             Patient_PickedUp = true;
             // ROLL FOR GHOST: The walk to delivery is now haunted
             Player_SetScaryByDay(day);
+            gVisualIsScary = (std::rand() % 2 == 0);
             return true;
         }
     }
@@ -162,7 +164,7 @@ static AEGfxTexture* GetActiveFrameTex()
     }
 
     // If a patient is picked up, choose between Human and Scary sets
-    return gIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
+    return gVisualIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
 }
 
 // Getters for Notifications.cpp

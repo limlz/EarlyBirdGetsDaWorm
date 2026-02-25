@@ -1,5 +1,6 @@
 #include "pch.hpp"
 
+/*************************************** VARIABLES ***************************************/
 const f32 FRAME_WIDTH		= 100.0f;
 const f32 FRAME_HEIGHT		= 130.0f;
 
@@ -16,7 +17,7 @@ static AEGfxTexture* framedesign_3[FRAME_STATES];
 static AEGfxVertexList* frameMesh;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL];
 
-
+/************************************* HELPERS *******************************************/
 int GetRandomStateByIllness(ILLNESSES illness) {
     static const int paranoiaPool[] = { 5, 6 };
     static const int maniaPool[] = { 1, 2, 3, 4 };
@@ -34,6 +35,7 @@ int GetRandomStateByIllness(ILLNESSES illness) {
     }
 }
 
+/***************************************** LOAD ******************************************/
 void Frames_Load() {
 	Frames_Unload(); // Ensure previous assets are cleared
 
@@ -56,7 +58,9 @@ void Frames_Load() {
     }
 }
 
+/************************************** INITIALIZE ***************************************/
 void Frames_Initialize() {
+
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
@@ -77,7 +81,7 @@ void Frames_Initialize() {
             currentFrame.posY = 0.0f;
 			currentFrame.width = FRAME_WIDTH;
 			currentFrame.height = FRAME_HEIGHT;
-			currentFrame.designID = (frame % 3) + 1; // Cycle through design IDs 1, 2, 3
+            currentFrame.designID = ((frame + level) % 3) + 1;
 
             currentFrame.currentState = 0;
 		}
@@ -87,11 +91,23 @@ void Frames_Initialize() {
     }
 }
 
+/***************************************** UPDATE ****************************************/
 void Frames_Update(float dt) {
+
+    if (!Player_HasPatient()) {
+        // Reset all frames to normal if no one is being carried
+        for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+            for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
+                levelMap[level][frame].currentState = 0;
+            }
+        }
+        return;
+    }
+
     static bool  isFlickering = false;
     static float flickerInterval = (float)(rand() % 4001 + 4000) / 1000.0f;
     static float flickerDuration = 4.0f;
-    
+
     if (!isFlickering) {
         flickerInterval -= dt;
     }
@@ -137,6 +153,7 @@ void Frames_Update(float dt) {
     }
 }
 
+/***************************************** DRAW ******************************************/
 void Frames_Draw(int currentLevel, f32 camX) {
     // 1. Safety check for level bounds
     if (currentLevel < 0 || currentLevel >= NUM_OF_FLOOR) return;
@@ -166,6 +183,7 @@ void Frames_Draw(int currentLevel, f32 camX) {
     }
 }
 
+/**************************************** UNLOAD *****************************************/
 void Frames_Unload() {
 
     if (frameMesh) {
@@ -184,6 +202,7 @@ void Frames_Unload() {
     }
 }
 
+/*****************************************************************************************/
 
 //to later attach this to after pick up of !human && not delivery floor
 //if (currentFrame.entity == GHOST ) {
