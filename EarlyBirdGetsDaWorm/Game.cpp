@@ -77,12 +77,12 @@ void Game_Initialize()
 	Doors_Initialize();
 	Lift_Initialize();
 
+
 	// Initialize the Randomized Balancing Pool and Mission
 	Player_ResetPatientCounter(CurrentDay);
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 	Notifications_Initialize();
-
 	AllAnomalies_Initialize();
 	//Frames_Initialize();		//moved to central_pool.cpp
 	//Lighting_Initialize(7);
@@ -188,25 +188,25 @@ void Game_Update()
 	if (moveRight) Player_SetFacing(1);
 	else if (moveLeft) Player_SetFacing(-1);
 
-	// Update player + compute doorNumAtPlayer first
-	Player_Update(dt, isWalking);
+    // Update player + compute doorNumAtPlayer first
+    Player_Update(dt, isWalking);
 
-	// Camera/World Bounds
-	// Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
-	float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+    // Camera/World Bounds
+    // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
+    float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 
-	if (camX > 0) {
-		camX = 0;
-	}
-	else if ((camX < -maxDist) && !dementia) {
-		camX = -maxDist;
-	}
+    if (camX > 0) {
+        camX = 0;
+    }
+    else if ((camX < -maxDist) && !dementia) {
+        camX = -maxDist;
+    }
 
-	doorNumAtPlayer = Doors_Update(camX);       	// Door Detection (must be after player update to get correct position)
+    doorNumAtPlayer = Doors_Update(camX);       	// Door Detection (must be after player update to get correct position)
 	Doors_Animate(dt, doorNumAtPlayer, camX);       // Door Animation (based on player position and internal timers)
-
-	Lift_Update(dt, camX, maxDist);
-	Lift_HandleInput(floorNum);
+    
+    Lift_Update(dt, camX, maxDist);
+    Lift_HandleInput(floorNum);
 
 	Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
@@ -264,8 +264,11 @@ void Game_Draw()
 	// Start Lift
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
-		if (floorNum != 0) DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
+		if (floorNum != 0)
+		{
+			DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		}
 	}
 
 	// End Lift
@@ -273,8 +276,11 @@ void Game_Draw()
 		float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
 		float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
-		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT);
-		if (floorNum != 0) DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
+		if (floorNum != 0)
+		{
+			DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
+		}
 	}
 
 	// Player setup
@@ -307,7 +313,6 @@ void Game_Draw()
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
 	Lift_Draw(squareMesh);
-
 
 	// Debug Overlay
 	DebugInfo info;
