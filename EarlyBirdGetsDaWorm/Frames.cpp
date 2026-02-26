@@ -35,6 +35,15 @@ int GetRandomStateByIllness(ILLNESSES illness) {
     }
 }
 
+/*************************************** ACCESSORS ***************************************/
+std::vector<AEGfxTexture*> Frames_GetAnomalies() {
+    std::vector<AEGfxTexture*> list;
+    for (int i = 0; i < FRAME_STATES; ++i) {
+        if (framedesign_1[i]) list.push_back(framedesign_1[i]);
+    }
+    return list;
+}
+
 /***************************************** LOAD ******************************************/
 void Frames_Load() {
 	Frames_Unload(); // Ensure previous assets are cleared
@@ -81,7 +90,15 @@ void Frames_Initialize() {
             currentFrame.posY = 0.0f;
 			currentFrame.width = FRAME_WIDTH;
 			currentFrame.height = FRAME_HEIGHT;
-            currentFrame.designID = ((frame + level) % 3) + 1;
+
+            if (level % 2 == 0) {
+                // Normal sequence for Even floors
+                currentFrame.designID = ((frame + level) % 3) + 1;
+            }
+            else {
+                // Reversed sequence for Odd floors
+                currentFrame.designID = 3 - ((frame + level) % 3);
+            }
 
             currentFrame.currentState = 0;
 		}

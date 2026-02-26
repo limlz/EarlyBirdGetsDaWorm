@@ -192,3 +192,11 @@ void Wall_Unload() {
     UnloadTextureSafe(leftHandTexture);
     UnloadTextureSafe(rightHandTexture);
 }
+
+std::vector<AEGfxTexture*> Wall_GetAnomalies() {
+	return {
+		crack1Texture, crack2Texture, crack3Texture, crack4Texture,
+		drawing1Texture, drawing2Texture, drawing3Texture,
+		leftHandTexture, rightHandTexture
+	};
+}

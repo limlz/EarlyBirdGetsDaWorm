@@ -10,3 +10,4 @@ void AllAnomalies_Initialize() {
 	Lighting_Initialize(7);
 	Wall_Initialize();
 }
+
