@@ -32,11 +32,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         // We do this at the start to ensure fpLoad/fpInit match 'current'
         GSM_Update();
 
-        // 2. Load Resources
-        fpLoad();
-
-        // 3. Initialize Variables
-        fpInitialize();
+        // 2. Load Resources / Initialize Variables
+        if (GSM_ShouldRunLoadAndInitialize()) {
+            fpLoad();
+            fpInitialize();
+        }
 
         // 4. Inner Game Loop (Runs every frame)
         while (current == next)
@@ -56,7 +56,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         }
 
         // 5. Free Session Data (Variables, Vectors, etc.)
-        fpFree();
+        if (!GSM_ShouldPreserveCurrentStateOnExit()) {
+            fpFree();
+        }
 
         // 6. Handle State Transitions
         if (next == GS_QUIT) {
@@ -71,9 +73,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             next = current;
         }
         else {
-            fpUnload(); // Unload Menu assets
+            if (!GSM_ShouldPreserveCurrentStateOnExit()) {
+                fpUnload(); // Unload current state assets
+            }
+
             previous = current;
-            current = next; // Switch to Game
+            current = next;
+            GSM_OnStateTransition();
         }
     }
 
