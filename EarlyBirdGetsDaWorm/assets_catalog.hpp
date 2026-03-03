@@ -9,4 +9,3 @@ namespace Assets
         constexpr const char* DigitalClock = "Assets/Fonts/DS-DIGI.ttf";
     }
 }
-
