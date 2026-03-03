@@ -21,11 +21,11 @@ static constexpr float LIFT_TIMER = 2.0f;   // seconds for the lift overlay door
 static s8 liftFontId = -1;                 // font handle used by AEGfxPrint
 static AEGfxVertexList* gQuadMesh = nullptr; // quad mesh used by DrawTextureMesh
 
-// World lift texture (the "lift box" you see in the corridor)
-static AEGfxTexture* gLiftTex = nullptr;
+    gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
+    gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
 
-// Overlay textures
-static AEGfxTexture* gLiftDoorTex = nullptr; // overlay sliding doors texture
+    UnloadTextureSafe(gLiftDoorTex);
+    UnloadTextureSafe(gLiftPanelTex);
 static AEGfxTexture* gLiftPanelTex = nullptr; // overlay level button panel texture
 
 
