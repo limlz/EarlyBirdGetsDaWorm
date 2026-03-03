@@ -169,13 +169,19 @@ static AEGfxTexture* GetActiveFrameTex()
 
 // Getters for Notifications.cpp
 bool Player_HasPatient() { return Patient_PickedUp; }
-void Player_GetTargetRoom(s8& floor, s8& door) {
-    if (!Patient_PickedUp) {
+void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
+    patientFloor = PickupFloor;
+    patientDoor = PickupDoor;
+
+    destFloor = DestFloor;
+    destDoor = DestDoor;
+
+    /*if (!Patient_PickedUp) {
         floor = PickupFloor; door = PickupDoor;
     }
     else {
         floor = DestFloor; door = DestDoor;
-    }
+    }*/
 }
 
 float Player_GetWidth()  { return PLAYER_WIDTH; }

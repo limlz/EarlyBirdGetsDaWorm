@@ -38,4 +38,5 @@ enum class MissionPhase { PICKUP, DELIVERY };
 void Player_GenerateMission();
 bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day);
 bool Player_HasPatient();
-void Player_GetTargetRoom(s8& floor, s8& door);
+void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor);
+//void Player_GetTargetRoom(s8& floor, s8& door);

@@ -3,14 +3,10 @@
 // Mesh
 static AEGfxVertexList* iconMesh;
 static AEGfxVertexList* pagerMesh;
-static AEGfxVertexList* leftArrowMesh;
-static AEGfxVertexList* rightArrowMesh;
 
 // Textures
 static AEGfxTexture* iconTexture;
 static AEGfxTexture* pagerTexture;
-static AEGfxTexture* leftArrow;
-static AEGfxTexture* rightArrow;
 
 // Variables
 static s32 initialX, initialY, mouseX, mouseY;
@@ -23,13 +19,22 @@ static s8 currentPage;
 static bool isPagerOpen;		// controls big notif
 static bool openPagerAfterDoor;	// request to open pager from room
 
+static bool popUpShown{ false };
+static bool prevHadPatient{ false };
+static bool taskPopUpShown{ false };
+static bool waitTaskPopUp{ false };
+static f32 popupTimer{ 0.0f };
+static f32 taskTimer{ 0.0f };
+
+// Pager animation
+static bool pagerVibrating{ false };
+static f32 vibrateTimer{ 0.0f };
+static f32 vibrateDuration{ 0.0f };
+
 void Notifications_Load()
 {
-	iconTexture = LoadTextureChecked("Assets/Pager/pager.png");
-	pagerTexture = LoadTextureChecked("Assets/Pager/pager.png");
-	leftArrow = LoadTextureChecked("Assets/Pager/pager-arrow-left.png");
-	rightArrow = LoadTextureChecked("Assets/Pager/pager-arrow-right.png");
-
+	iconTexture = LoadTextureChecked("Assets/pager.png");
+	pagerTexture = LoadTextureChecked("Assets/pager.png");
 	lineID = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 
 	return;
@@ -37,6 +42,14 @@ void Notifications_Load()
 
 void Notifications_Initialize()
 {
+	// Pop Up
+	popupTimer = 0.0f;
+	taskTimer = 0.0f;
+	popUpShown = false;
+	waitTaskPopUp = false;
+	prevHadPatient = false;
+	taskPopUpShown = false;
+
 	// Pager Positions and Size
 	pagerX = AEGfxGetWinMinX() + 100.0f;
 	pagerY = AEGfxGetWinMinY() + 750.0f;
@@ -45,6 +58,10 @@ void Notifications_Initialize()
 
 	// Misc
 	smallClicked = false;
+	pagerVibrating = false;
+	vibrateDuration = 0.0f;
+	vibrateTimer = 0.0f;
+
 	currentPage = 0;
 	mouseX = static_cast<s32>(0.0f);
 	mouseY = static_cast <s32>(0.0f);
@@ -53,11 +70,9 @@ void Notifications_Initialize()
 	// Mesh
 	iconMesh = CreateSquareMesh(0xFFFFFFFF);
 	pagerMesh = CreateSquareMesh(0xFFFFFFFF);
-	leftArrowMesh = CreateSquareMesh(0xFFFFFFFF);
-	rightArrowMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Open pager after completing objective
-	isPagerOpen = false;		
+	isPagerOpen = false;
 	if (openPagerAfterDoor)
 	{
 		isPagerOpen = true;			// open big pager immediately
@@ -76,11 +91,56 @@ std::pair<f32, f32> textPosition(float adjustX, float adjustY)
 {
 	f32 textX = (-500.0f + adjustX) / (AEGfxGetWindowWidth() * 0.5f);
 	f32 textY = (317.5f + adjustY) / (AEGfxGetWindowWidth() * 0.5f);
-	return {textX, textY};
+	return { textX, textY };
 }
 
-void Notifications_Update(bool liftActive)
+void Notifications_Update(bool liftActive, f32 dt)
 {
+	// Game start delayed pop up
+	if (!popUpShown) {
+		popupTimer += dt;
+
+		if (popupTimer >= 0.5f) {
+			isPagerOpen = true;
+			pagerVibrating = true;
+			vibrateTimer = 0.0f;
+			vibrateDuration = 0.5f;
+			popUpShown = true;
+		}
+	}
+
+	// Pop Up after task complete
+	bool currHasPatient{ Player_HasPatient() };
+
+	if (prevHadPatient && !currHasPatient) {
+		waitTaskPopUp = true;
+		taskTimer = 0.0f;
+	}
+	prevHadPatient = currHasPatient;
+
+	if (waitTaskPopUp) {
+		taskTimer += dt;
+
+		if (taskTimer >= 0.5f) {
+			isPagerOpen = true;
+			pagerVibrating = true;
+			vibrateTimer = 0.0f;
+			vibrateDuration = 0.5f;
+			waitTaskPopUp = false;
+		}
+	}
+
+	// Animation
+	if (pagerVibrating)
+	{
+		vibrateTimer += dt;
+
+		if (vibrateTimer >= vibrateDuration)
+		{
+			pagerVibrating = false;
+		}
+	}
+
 	// Gets the current x and y position of mouse
 	AEInputGetCursorPosition(&initialX, &initialY);
 	mouseX = static_cast<s32>(initialX - (AEGfxGetWindowWidth() / 2.0f));
@@ -92,128 +152,63 @@ void Notifications_Update(bool liftActive)
 	{
 		isPagerOpen = !isPagerOpen;
 	}
-
-	// Resets popup state when player moves to a new floor
-	/*if (floorNum != prevFloor)
-	{
-		popUp = false;
-		prevFloor = floorNum;
-	}*/
-
-	//switch (floorNum)
-	//{
-	//	// If user is in the basement, pop up will display and the
-	//	// page with the objective will be displayed. The page where the
-	//	// next objective will be displayed so user does not need to toggle
-	//	case 5:
-	//		if (!popUp)
-	//		{
-	//			currentPage = 2;
-	//			smallClicked = true;
-	//			popUp = true;
-	//		}
-	//		break;
-	//	case 3:
-	//		if (!popUp)
-	//		{
-	//			currentPage = 1;
-	//			smallClicked = true;
-	//			popUp = true;
-	//		}
-	//		break;
-	//	case 7:
-	//		if (!popUp)
-	//		{
-	//			currentPage = 0;
-	//			smallClicked = true;
-	//			popUp = true;
-	//		}
-	//		break;
-	//}
-
-	// Diplayer pager if Q is pressed
-	/*if (smallClicked)
-	{
-		Notifications_Draw();
-	}*/
-
-
 	return;
 }
 
 
-void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum)
+void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8 desFloorNum)
 {
 	// Draws the icon pager in the corner
 	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
 
 	if (isPagerOpen)
 	{
+		f32 drawX{ 0.0f }, drawY{ 0.0f },
+			collectTextX{ textPosition(140.0f, -40.0f).first }, collectTextY{ textPosition(140.0f, -40.0f).second },
+			bringTextX{ textPosition(140.0f, -100.0f).first }, bringTextY{ textPosition(140.0f, -100.0f).second };
+
+		if (pagerVibrating)
+		{
+			f32 intensity{ 4.0f },      // how strong pager shakes
+				speed{ 100.0f };        // how fast pager shakes
+
+			f32 offsetX{ sinf(vibrateTimer * speed) * intensity },
+				offsetY{ cosf(vibrateTimer * speed) * intensity };
+
+			drawX += offsetX;
+			drawY += offsetY;
+
+			collectTextX += offsetX;
+			collectTextY += offsetY;
+
+			bringTextX += offsetX;
+			bringTextY += offsetY;
+		}
+
 		// Draws Pager
-		DrawTextureMesh(pagerMesh, pagerTexture, 0.0f, 0.0f, 1000.0f, 635.0f, 1.0f);
+		DrawTextureMesh(pagerMesh, pagerTexture, drawX, drawY, 1000.0f, 635.0f, 1.0f);
 
 		// Text
-		char pagetextBuffer[32], textBuffer[32];
-		sprintf_s(pagetextBuffer, "%02d/03", currentPage + 1);
-
-		AEGfxPrint(lineID, pagetextBuffer, textPosition(140.0f, -40.0f).first, textPosition(140.0f, -40.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-		switch (currentPage + 1)
-		{
-		case 1:
-			sprintf_s(textBuffer, "Bring patient to room #%02d-%02d", patientFloorNum, patientDoorNum);
-			break;
-		case 2:
-			sprintf_s(textBuffer, "Bring patient to room #05-06");
-			break;
-		case 3:
-			sprintf_s(textBuffer, "Bring patient to room #07-03");
-			break;
-		}
-		AEGfxPrint(lineID, textBuffer, textPosition(140.0f, -100.0f).first, textPosition(140.0f, -100.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-
-		// Arrows
-		DrawTextureMesh(leftArrowMesh, leftArrow, -100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
-		DrawTextureMesh(rightArrowMesh, rightArrow, 100.0f, -245.0f, 100.0f, 95.0f, 1.0f);
-
-
-		// Clicking of left arrow
-		if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
-		{
-			if (currentPage > 0)
-			{
-				--currentPage;
-			}
-		}
-
-		// Clicking of Right arrow
-		if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(100.0f, -245.0f, 100.0f, 95.0f, static_cast<float>(mouseX), static_cast<float>(mouseY)))
-		{
-			if (currentPage < 2)
-			{
-				++currentPage;
-			}
-		}
+		char collecttextBuffer[40], bringBuffer[40];
+		sprintf_s(collecttextBuffer, "Collect patient from room #%02d-%02d", patientFloorNum, patientDoorNum);
+		sprintf_s(bringBuffer, "Bring patient to room #%02d-%02d", desDoorNum, desFloorNum);
+		AEGfxPrint(lineID, collecttextBuffer, collectTextX, collectTextY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		AEGfxPrint(lineID, bringBuffer, bringTextX, bringTextY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 }
 
 void Notifications_Free()
 {
-    FreeMeshSafe(iconMesh);
-    FreeMeshSafe(pagerMesh);
-    FreeMeshSafe(leftArrowMesh);
-    FreeMeshSafe(rightArrowMesh);
+	FreeMeshSafe(iconMesh);
+	FreeMeshSafe(pagerMesh);
 
-    UnloadTextureSafe(iconTexture);
-    UnloadTextureSafe(pagerTexture);
-    UnloadTextureSafe(leftArrow);
-    UnloadTextureSafe(rightArrow);
+	UnloadTextureSafe(iconTexture);
+	UnloadTextureSafe(pagerTexture);
 
-    // Destroy font if valid
-    if (lineID >= 0) {
-        AEGfxDestroyFont(lineID);
-        lineID = -1;
-    }
+	// Destroy font if valid
+	if (lineID >= 0) {
+		AEGfxDestroyFont(lineID);
+		lineID = -1;
+	}
 }

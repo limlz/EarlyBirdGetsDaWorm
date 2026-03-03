@@ -213,7 +213,7 @@ void Game_Update()
 		}
 	}
 
-	Notifications_Update(liftActive);
+	Notifications_Update(liftActive, dt);
 	Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
 }
 
@@ -278,9 +278,9 @@ void Game_Draw()
 	Prompts_Draw();
 
 	// Dynamic UI Notifications
-	s8 targetFloor, targetDoor;
-	Player_GetTargetRoom(targetFloor, targetDoor);
-	Notifications_Draw(targetDoor, targetFloor);
+	s8 targetFloor, targetDoor, destFloor, destDoor;
+	Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
+	Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
 
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
