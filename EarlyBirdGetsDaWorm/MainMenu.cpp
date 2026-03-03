@@ -39,6 +39,12 @@ static int currentTitleFrame = 0;
 static float titleAnimTimer = 0.0f;
 const float TITLE_ANIM_SPEED = 0.2f;
 
+// --- OPTIONS OVERLAY VARIABLES ---
+static bool isOptionsOpen = false;
+static float optionsOverlayAlpha = 0.0f;
+static float masterVolume = 1.0f; // 0.0f to 1.0f
+static bool isDraggingVolume = false;
+
 void MainMenu_Load()
 {
 	// Load resources for the main menu
@@ -115,6 +121,47 @@ void MainMenu_Update()
 	Particles_Update();
 	Update_StandaloneLight(dt, menuLightX, menuLightY);
 
+	if (isOptionsOpen)
+	{
+		optionsOverlayAlpha += FADE_OUT_SPEED * dt;
+		if (optionsOverlayAlpha > 0.8f) optionsOverlayAlpha = 0.8f;
+
+		if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+			isOptionsOpen = false;
+		}
+
+		// Start Dragging
+		if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-160.0f, 15.0f, 320.0f, 30.0f, Input_GetMouseX(), Input_GetMouseY())) {
+			isDraggingVolume = true;
+		}
+
+		// Stop Dragging
+		if (AEInputCheckReleased(AEVK_LBUTTON)) {
+			isDraggingVolume = false;
+		}
+
+		// Update Volume if Dragging
+		if (isDraggingVolume) {
+			// Map mouse X (-150 to +150) to Volume (0.0 to 1.0)
+			masterVolume = (Input_GetMouseX() + 150.0f) / 300.0f;
+
+			// Clamp values
+			if (masterVolume < 0.0f) masterVolume = 0.0f;
+			if (masterVolume > 1.0f) masterVolume = 1.0f;
+
+			// NOTE: Apply this to your audio engine here!
+			// AudioManager::SetMasterVolume(masterVolume);
+		}
+
+		return; // BLOCK MAIN MENU CLICKS WHILE OPTIONS ARE OPEN
+	}
+	else
+	{
+		// Fade out options background
+		optionsOverlayAlpha -= FADE_OUT_SPEED * dt;
+		if (optionsOverlayAlpha < 0.0f) optionsOverlayAlpha = 0.0f;
+	}
+
 	bool hoverAdmit = IsAreaClicked(510.0f, 270.0f, 490.0f, 290.0f, Input_GetMouseX(), Input_GetMouseY());
 	bool hoverOptions = IsAreaClicked(530.0f, 15.0f, 500.0f, 200.0f, Input_GetMouseX(), Input_GetMouseY());
 	bool hoverQuit = IsAreaClicked(520.0f, -210.0f, 490.0f, 190.0f, Input_GetMouseX(), Input_GetMouseY());
@@ -131,8 +178,7 @@ void MainMenu_Update()
 			isFadingOut = true; // Start the fade 
 		}
 		else if (hoverOptions) {
-			pendingNextState = GS_QUIT;
-			isFadingOut = true; // Start the fade
+			isOptionsOpen = true; // OPEN THE OVERLAY INSTEAD OF QUITTING
 		}
 		else if (hoverQuit) {
 			pendingNextState = GS_QUIT;
@@ -189,6 +235,44 @@ void MainMenu_Draw()
 
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+	}
+
+	if (optionsOverlayAlpha > 0.0f)
+	{
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+
+
+		// 1. Darken Screen
+		AEGfxSetTransparency(optionsOverlayAlpha);
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+
+		AEMtx33 scale, trans, transform;
+		AEMtx33Scale(&scale, 1600.0f, 900.0f);
+		AEMtx33Trans(&trans, 0.0f, 0.0f);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+		// 2. Draw Options UI (Only if fully faded in)
+		if (optionsOverlayAlpha >= 0.5f)
+		{
+			AEGfxSetTransparency(1.0f); // Solid colors for UI
+
+			// Slider Background (Grey)
+			DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 20.0f, 0xFF444444);
+
+			// Slider Fill (White)
+			float fillWidth = 300.0f * masterVolume;
+			float fillStartX = -150.0f + (fillWidth / 2.0f); // Center X based on width
+			DrawSquareMesh(squareMesh, fillStartX, 0.0f, fillWidth, 20.0f, COLOR_WHITE);
+
+			// Slider Handle (Red)
+			float handleX = -150.0f + (300.0f * masterVolume);
+			DrawSquareMesh(squareMesh, handleX, 0.0f, 15.0f, 40.0f, 0xFF0000FF); // Red Handle
+
+			// Note: Add AEGfxPrint here to render the text "MASTER VOLUME" above it!
+		}
 	}
 }
 

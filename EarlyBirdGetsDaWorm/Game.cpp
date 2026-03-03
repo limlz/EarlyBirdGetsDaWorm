@@ -4,7 +4,6 @@
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 static AEGfxTexture* lightingtest = nullptr;
-static AEGfxTexture* pauseblood = nullptr;
 static f32 camX{}, playerY{}, playerX{};
 
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
@@ -28,8 +27,23 @@ static float gSpawnY = 0.0f;
 // pause menu
 static float pauseAlpha = 0.0f;
 const float FADE_SPEED = 3.0f; // How fast it fades (Higher = faster)
-static float bloodY = 900.0f;         // Starts off-screen at the top
-const float BLOOD_DROP_SPEED = 2000.0f; // Pixels per second (adjust for faster/slower flow)
+
+
+// --- Procedural Blood Splatter ---
+struct BloodDrop {
+	float x, y;
+	float velX, velY;    // Directional speed
+	float friction;      // How quickly it stops sliding
+	float targetScaleX, targetScaleY; // Separate X and Y targets for STRETCHING
+	float currentScaleX, currentScaleY;
+	float delayTimer;    // Wait this long before spawning (creates bursts)
+	float flyTimer;      // Wait this long before hitting the screen and splattering
+	bool isActive;       // Has it started flying yet?
+};
+
+const int MAX_BLOOD_DROPS = 5000; // MASSIVE increase for a fine mist/spray
+static BloodDrop bloodDrops[MAX_BLOOD_DROPS];
+
 
 static float ComputeSpawnYFromBorder()
 {
@@ -42,7 +56,6 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
-	pauseblood = LoadTextureChecked("Assets/pause_menu_blood.PNG");
 
 	Debug_Load();
 	Timer_Load();
@@ -77,7 +90,6 @@ void Game_Initialize()
 	Doors_Initialize();
 	Lift_Initialize();
 
-
 	// Initialize the Randomized Balancing Pool and Mission
 	Player_ResetPatientCounter(CurrentDay);
 	Player_GenerateMission();
@@ -98,35 +110,102 @@ void Game_Update()
 	Timer_UpdateDayOverlay(dt);
 	if (Timer_IsDayOverlayActive()) { return; }
 
+	// ... inside Game_Update ...
+
 	if (AEInputCheckTriggered(AEVK_ESCAPE)) {
 		gamePaused = !gamePaused;
+
+		// --- Generate Directional Splatter ---
+		if (gamePaused) {
+			for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
+				// Start completely off-screen to the left, with a wider spread
+				bloodDrops[i].x = -1000.0f - (rand() % 400);
+				bloodDrops[i].y = (rand() % 1100) - 550.0f; // Wider vertical screen coverage
+
+				// High horizontal velocity, wider vertical spray arc
+				bloodDrops[i].velX = (float)((rand() % 3000) + 2000);
+				bloodDrops[i].velY = (float)((rand() % 1400) - 700);
+
+				// Friction: Lowered for longer streaks
+				bloodDrops[i].friction = (float)((rand() % 8) + 15);
+
+				// Target Scale: Randomized for variety, with a bias towards smaller drops
+				float baseScale = (float)((rand() % 5) + 5);
+
+				// Stretch Scales: X stretches long (up to 4x), Y stays 1x
+				bloodDrops[i].targetScaleX = baseScale * ((rand() % 4) + 1.0f);
+				bloodDrops[i].targetScaleY = baseScale * 1.0f;
+
+				bloodDrops[i].currentScaleX = 0.0f;
+				bloodDrops[i].currentScaleY = 0.0f;
+
+				// Timers: Split into 4 burst groups for a more sustained spray
+				int burstGroup = rand() % 4;
+				bloodDrops[i].delayTimer = burstGroup * 0.10f;
+				bloodDrops[i].flyTimer = (float)((rand() % 20) + 5) / 100.0f;
+				bloodDrops[i].isActive = false;
+			}
+		}
 	}
 
 	if (gamePaused) {
 		pauseAlpha += FADE_SPEED * dt;
 		if (pauseAlpha > 0.8f) pauseAlpha = 0.8f; // Max 80% darkness
 
-		// Drop blood
-		bloodY -= BLOOD_DROP_SPEED * dt;
-		if (bloodY < 0.0f) bloodY = 0.0f; // Stop at center screen
-	}
-	else {
-		// Lighten background
-		pauseAlpha -= FADE_SPEED * dt;
-		if (pauseAlpha < 0.0f) pauseAlpha = 0.0f; // Min 0% darkness
+		// --- Directional Splatter Physics ---
+		for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
 
-		// Raise blood
-		bloodY += BLOOD_DROP_SPEED * dt;
-		if (bloodY > 900.0f) bloodY = 900.0f; // Stop when fully off-screen
-	}
-	if (gamePaused) {
+			// 1. Wait for burst timer
+			if (!bloodDrops[i].isActive) {
+				bloodDrops[i].delayTimer -= dt;
+				if (bloodDrops[i].delayTimer <= 0.0f) {
+					bloodDrops[i].isActive = true;
+				}
+				continue;
+			}
+
+			// 2. PHASE 1: FLYING (No friction, stays micro-small)
+			if (bloodDrops[i].flyTimer > 0.0f) {
+				bloodDrops[i].flyTimer -= dt;
+
+				// Fly at full speed
+				bloodDrops[i].x += bloodDrops[i].velX * dt;
+				bloodDrops[i].y += bloodDrops[i].velY * dt;
+
+				// Keep it as a tiny 2x2 dot while flying in the air
+				bloodDrops[i].currentScaleX = 2.0f;
+				bloodDrops[i].currentScaleY = 2.0f;
+			}
+			// 3. PHASE 2: HITTING THE LENS (Friction applies, aggressive stretch)
+			else {
+				// Move with remaining velocity
+				bloodDrops[i].x += bloodDrops[i].velX * dt;
+				bloodDrops[i].y += bloodDrops[i].velY * dt;
+
+				// Apply Friction to slide to a halt
+				bloodDrops[i].velX -= bloodDrops[i].velX * bloodDrops[i].friction * dt;
+				bloodDrops[i].velY -= bloodDrops[i].velY * bloodDrops[i].friction * dt;
+
+				// Stretch horizontally and squish vertically!
+				float growSpeed = 30.0f;
+				bloodDrops[i].currentScaleX += (bloodDrops[i].targetScaleX - bloodDrops[i].currentScaleX) * growSpeed * dt;
+				bloodDrops[i].currentScaleY += (bloodDrops[i].targetScaleY - bloodDrops[i].currentScaleY) * growSpeed * dt;
+			}
+		}
+
+		// Check for unpause clicks
 		if (IsAreaClicked(0.0f, 100.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
 			gamePaused = false;
 		}
 		if (IsAreaClicked(0.0f, 0.0f, 300.0f, 60.0f, Input_GetMouseX(), Input_GetMouseY()) && AEInputCheckTriggered(AEVK_LBUTTON)) {
 			next = GS_QUIT;
 		}
-		return;
+		return; // Stop updating game while paused
+	}
+	else {
+		// Lighten background when unpaused
+		pauseAlpha -= FADE_SPEED * dt;
+		if (pauseAlpha < 0.0f) pauseAlpha = 0.0f;
 	}
 
 	// 2) Update timer
@@ -188,25 +267,24 @@ void Game_Update()
 	if (moveRight) Player_SetFacing(1);
 	else if (moveLeft) Player_SetFacing(-1);
 
-    // Update player + compute doorNumAtPlayer first
-    Player_Update(dt, isWalking);
+	// Update player + compute doorNumAtPlayer first
+	Player_Update(dt, isWalking);
 
-    // Camera/World Bounds
-    // Right bound calculation: (NUM_DOORS + 1) accounts for the extra space for the right lift
-    float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+	// Camera/World Bounds
+	float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 
-    if (camX > 0) {
-        camX = 0;
-    }
-    else if ((camX < -maxDist) && !dementia) {
-        camX = -maxDist;
-    }
+	if (camX > 0) {
+		camX = 0;
+	}
+	else if ((camX < -maxDist) && !dementia) {
+		camX = -maxDist;
+	}
 
-    doorNumAtPlayer = Doors_Update(camX);       	// Door Detection (must be after player update to get correct position)
-	Doors_Animate(dt, doorNumAtPlayer, camX);       // Door Animation (based on player position and internal timers)
-    
-    Lift_Update(dt, camX, maxDist);
-    Lift_HandleInput(floorNum);
+	doorNumAtPlayer = Doors_Update(camX);
+	Doors_Animate(dt, doorNumAtPlayer, camX);
+
+	Lift_Update(dt, camX, maxDist);
+	Lift_HandleInput(floorNum);
 
 	Lighting_Update(floorNum, camX, dementia);
 	Frames_Update(dt);
@@ -227,12 +305,9 @@ void Game_Update()
 
 		if (success)
 		{
-			// Reset position only if a full delivery just finished
 			if (!Player_HasPatient())
 			{
 				liftActive = false;
-
-				// Roll for the next mission's ghost status
 				Player_SetScaryByDay(CurrentDay);
 			}
 		}
@@ -261,6 +336,7 @@ void Game_Draw()
 	// Draw Doors
 	Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
 	AEGfxSetTransparency(1.0f);
+
 	// Start Lift
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
@@ -324,7 +400,9 @@ void Game_Draw()
 	info.patientFloorNum = targetFloor;
 	Debug_Draw(info);
 
+	// ==========================================
 	// LAYER 1: The Darkening Overlay
+	// ==========================================
 	if (pauseAlpha > 0.0f)
 	{
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -342,17 +420,47 @@ void Game_Draw()
 		AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 	}
 
-	// LAYER 2: The Flowing Blood Texture
-	if (bloodY < 900.0f)
+	// ==========================================
+	// LAYER 2: PIXELATED Procedural Blood Splatter
+	// ==========================================
+	if (gamePaused)
 	{
-		DrawTextureMesh(squareMesh, pauseblood, -550.0f, bloodY, 500.0f, 900.0f, 1.0f);
-		DrawTextureMesh(squareMesh, pauseblood, 0.0f, bloodY, 500.0f, 900.0f, 1.0f);
-		DrawTextureMesh(squareMesh, pauseblood, 550.0f, bloodY, 500.0f, 900.0f, 1.0f);
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
+		// Deep Dark Red
+		AEGfxSetColorToMultiply(0.6f, 0.0f, 0.0f, 1.0f);
+		AEGfxSetTransparency(pauseAlpha);
+
+		for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
+			AEMtx33 scale, trans, finalTransform;
+
+			// PIXEL SNAP: Cast floats to ints so they snap rigidly to a grid
+			int pixelScaleX = (int)bloodDrops[i].currentScaleX;
+			int pixelScaleY = (int)bloodDrops[i].currentScaleY;
+			int pixelPosX = (int)bloodDrops[i].x;
+			int pixelPosY = (int)bloodDrops[i].y;
+
+			// Prevent size 0 meshes from trying to draw
+			if (pixelScaleX <= 0) pixelScaleX = 1;
+			if (pixelScaleY <= 0) pixelScaleY = 1;
+
+			// Use the snapped integer values
+			AEMtx33Scale(&scale, (float)pixelScaleX, (float)pixelScaleY);
+			AEMtx33Trans(&trans, (float)pixelPosX, (float)pixelPosY);
+
+			AEMtx33Concat(&finalTransform, &trans, &scale);
+			AEGfxSetTransform(finalTransform.m);
+
+			// PIXEL STYLE: SquareMesh
+			AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+		}
 	}
 
+	// ==========================================
 	// LAYER 3: The UI Buttons
-	// Only draw when the pause menu is mostly settled on the screen
-	if (gamePaused && pauseAlpha > 0.5f && bloodY < 100.0f)
+	// ==========================================
+	if (gamePaused && pauseAlpha > 0.5f)
 	{
 		// Reset to color mode for standard drawing
 		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -361,6 +469,8 @@ void Game_Draw()
 		DrawSquareMesh(squareMesh, 0.0f, 100.0f, 300.0f, 60.0f, COLOR_WHITE);
 		DrawSquareMesh(squareMesh, 0.0f, 0.0f, 300.0f, 60.0f, COLOR_WHITE);
 	}
+
+	// Reset Global Engine State
 	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 	AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -390,7 +500,6 @@ void Game_Unload()
 
 	FreeMeshSafe(squareMesh);
 	FreeMeshSafe(circleMesh);
-	UnloadTextureSafe(pauseblood);
 
 	std::cout << "Startup: Unload\n";
 }

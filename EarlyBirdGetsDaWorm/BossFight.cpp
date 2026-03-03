@@ -79,13 +79,41 @@ void Boss_Fight_Update()
     }
 
     // --- SHOOT & BOSS DODGE TRIGGER ---
-    if (AEInputCheckTriggered(AEVK_LBUTTON) || AEInputCheckTriggered(AEVK_J)) {
-        Fire_Bullet(playerX, playerY + 15.0f, facingRight);
+    if (AEInputCheckTriggered(AEVK_LBUTTON)) {
+
+        // 1. Get screen mouse coordinates
+        s32 cursorX, cursorY;
+        AEInputGetCursorPosition(&cursorX, &cursorY);
+
+        // 2. Convert to World Coordinates (Assuming camera is at 0,0)
+        float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth() / 2.0f);
+        float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
+
+        // 3. Calculate starting position of the bullet
+        float startX = playerX;
+        float startY = playerY + 15.0f;
+
+        // 4. Calculate the Vector (Distance between mouse and player)
+        float dirX = worldMouseX - startX;
+        float dirY = worldMouseY - startY;
+
+        // 5. Normalize the Vector (Make its total length equal to 1)
+        float length = sqrtf((dirX * dirX) + (dirY * dirY));
+        if (length > 0.0001f) {
+            dirX /= length;
+            dirY /= length;
+        }
+        else {
+            // Fallback just in case the mouse is exactly on the player
+            dirX = facingRight ? 1.0f : -1.0f;
+            dirY = 0.0f;
+        }
+
+        // 6. Fire the bullet using the exact directional vector!
+        Fire_Bullet(startX, startY, dirX, dirY);
 
         // Interaction: If player shoots, 30% chance Boss dodges
-        // We modify the boss's properties directly
         if (myBoss.active && (rand() % 100 < 30)) {
-            // Swap between high and low positions
             if (myBoss.baseY > 0) myBoss.baseY = -200.0f;
             else myBoss.baseY = 200.0f;
         }

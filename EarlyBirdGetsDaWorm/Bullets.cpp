@@ -1,10 +1,11 @@
 #include "pch.hpp"
+#include <cmath> // Required for atan2f (rotation math)
 
 struct Bullet {
     float x, y;
+    float dirX, dirY; // The normalized direction vector
     float speed;
     bool active;
-    bool direction; // 0 = Left, 1 = Right
 };
 
 static AEGfxVertexList* squareMesh;
@@ -20,21 +21,22 @@ void Bullets_Initialize() {
     }
 }
 
-void Fire_Bullet(float startX, float startY, bool facingRight) {
+// Updated to take dirX and dirY instead of facingRight
+void Fire_Bullet(float startX, float startY, float dirX, float dirY) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].active) {
             bullets[i].active = true;
             bullets[i].x = startX;
             bullets[i].y = startY;
-            bullets[i].direction = facingRight;
-            bullets[i].speed = 800.0f; // Adjust speed as needed
-            break; // Fire only one bullet per key press
+            bullets[i].dirX = dirX; // Save the exact angle vector
+            bullets[i].dirY = dirY;
+            bullets[i].speed = 1200.0f; // Increased speed for mouse aiming (feels better!)
+            break; // Fire only one bullet per click
         }
     }
 }
 
-// Update this function signature to accept the Boss pointer (or use global)
-void Bullets_Update(float dt, float camX, Boss &myBoss)
+void Bullets_Update(float dt, float camX, Boss& myBoss)
 {
     float bulletW = 20.0f;
     float bulletH = 10.0f;
@@ -42,34 +44,35 @@ void Bullets_Update(float dt, float camX, Boss &myBoss)
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
 
-            // 1. Move Bullet
-            if (bullets[i].direction) bullets[i].x += bullets[i].speed * dt;
-            else bullets[i].x -= bullets[i].speed * dt;
+            // 1. Move Bullet along the vector
+            bullets[i].x += bullets[i].dirX * bullets[i].speed * dt;
+            bullets[i].y += bullets[i].dirY * bullets[i].speed * dt;
 
             // 2. Culling (Off-screen)
-            float screenPos = bullets[i].x + camX;
-            if (screenPos < -900.0f || screenPos > 900.0f) {
+            // Adjusted to check both X and Y axis since we can shoot up/down now
+            float screenPosX = bullets[i].x + camX;
+            float screenPosY = bullets[i].y;
+
+            if (screenPosX < -1000.0f || screenPosX > 1000.0f ||
+                screenPosY < -1000.0f || screenPosY > 1000.0f)
+            {
                 bullets[i].active = false;
-                continue; // Skip collision if killed
+                continue;
             }
 
             // 3. COLLISION CHECK (Damage)
-            // Only check if Boss is alive
             if (myBoss.active) {
                 if (IsColliding(bullets[i].x, bullets[i].y, bulletW, bulletH,
                     myBoss.x, myBoss.y, myBoss.w, myBoss.h))
                 {
-                    // HIT CONFIRMED!
-                    myBoss.health -= 20;       // Deal Damage
-                    bullets[i].active = false; // Destroy Bullet
+                    myBoss.health -= 20;
+                    bullets[i].active = false;
 
                     std::cout << "Boss Hit! HP: " << myBoss.health << "\n";
 
-                    // Check Boss Death
                     if (myBoss.health <= 0) {
                         myBoss.active = false;
                         std::cout << "BOSS DEFEATED!\n";
-                        // Play sound or transition state here
                     }
                 }
             }
@@ -78,17 +81,40 @@ void Bullets_Update(float dt, float camX, Boss &myBoss)
 }
 
 void Bullets_Draw(float camX) {
-    // Define bullet size
     float w = 20.0f;
     float h = 10.0f;
 
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
-            // Draw bullet (Yellow)
-            // Note: Pass coordinates relative to the world
-            DrawSquareMesh(squareMesh, bullets[i].x, bullets[i].y, w, h, 0xFFFFFFFF);
+
+            // Calculate the rotation angle based on the direction vector
+            // atan2f(y, x) returns the angle in radians exactly pointing to the target
+            float angle = atan2f(bullets[i].dirY, bullets[i].dirX);
+
+            // Build TRS matrix to draw the rotated bullet
+            AEMtx33 scale, rot, trans, rotScale, finalTransform;
+            AEMtx33Scale(&scale, w, h);
+            AEMtx33Rot(&rot, angle);
+            AEMtx33Trans(&trans, bullets[i].x, bullets[i].y);
+
+            AEMtx33Concat(&rotScale, &rot, &scale);
+            AEMtx33Concat(&finalTransform, &trans, &rotScale);
+
+            AEGfxSetTransform(finalTransform.m);
+
+            // Draw the rotated bullet (White)
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
         }
     }
+
+    // Reset transform when done drawing bullets
+    AEMtx33 finalTransform;
+    AEMtx33Identity(&finalTransform);
+    AEGfxSetTransform(finalTransform.m);
 }
 
 void Bullets_Free() {
