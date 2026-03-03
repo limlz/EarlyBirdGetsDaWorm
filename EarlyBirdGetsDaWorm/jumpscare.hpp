@@ -1,11 +1,19 @@
-void Jumpscare_Load();
+// ============================================================
+// JUMPSCARE SYSTEM
+// - Press J to test trigger (in JumpScare_Update)
+// - Screen shake offsets you can apply to ALL draws
+// - Draw overlay last (JumpScare_Draw)
+// ============================================================
 
-void Jumpscare_Initialize();
+#pragma once
+#include "pch.hpp"
 
-void Jumpscare_Update();
+void JumpScare_Init();
+void JumpScare_Load();
+void JumpScare_Initialize();
+void JumpScare_Unload();
 
-void Jumpscare_Draw();
-
-void Jumpscare_Free();
-
-void Jumpscare_Unload();
+void JumpScare_Start();
+bool JumpScare_Update(float dt);
+void JumpScare_GetShakeOffset(float& outX, float& outY);
+void JumpScare_Draw();

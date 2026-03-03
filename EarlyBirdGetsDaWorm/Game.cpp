@@ -43,6 +43,8 @@ void Game_Load()
 	Player_Load();
 	Prompts_Load();
 	Notifications_Load();
+	JumpScare_Init();
+	JumpScare_Load();
 
 	AllAnomalies_Load();
 	//Wall_Load();			//moved to central_pool.cpp
@@ -68,6 +70,7 @@ void Game_Initialize()
 
 	Doors_Initialize();
 	Lift_Initialize();
+	JumpScare_Initialize();
 
 	// --- Initialize the new Pause Menu ---
 	PauseMenu_Initialize();
@@ -84,6 +87,9 @@ void Game_Update()
 {
 	float dt = (f32)AEFrameRateControllerGetFrameTime();
 	Debug_Update();
+
+	bool freeze = JumpScare_Update(dt);
+	if (freeze) return;
 
 	// 1) Update overlay + Freeze
 	Timer_UpdateDayOverlay(dt);
@@ -289,7 +295,10 @@ void Game_Draw()
 	info.patientDoorNum = targetDoor;
 	info.patientFloorNum = targetFloor;
 
-	// --- Draw the new Pause Menu at the very end! ---
+	// Jumpscare
+	JumpScare_Draw();
+
+	// Pause Menu (drawn last to be on top layer)
 	PauseMenu_Draw(squareMesh);
 
 	Debug_Draw(info);
@@ -315,6 +324,7 @@ void Game_Unload()
 	Wall_Unload();
 	Lift_Unload();
 	PauseMenu_Unload();
+	JumpScare_Unload();
 
 	FreeMeshSafe(squareMesh);
 	FreeMeshSafe(circleMesh);

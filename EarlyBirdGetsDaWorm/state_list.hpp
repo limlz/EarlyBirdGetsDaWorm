@@ -1,3 +1,4 @@
+#pragma once
 enum GS_STATES
 {
 	START_UP = 0,

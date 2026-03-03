@@ -1,4 +1,5 @@
 #include "AEEngine.h"
+#pragma once
 
 void Doors_Load();
 

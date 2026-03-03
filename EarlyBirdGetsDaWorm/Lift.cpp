@@ -1,5 +1,3 @@
-#include "pch.hpp"
-
 // ============================================================
 // LIFT MODULE
 // - Draws lift(s) in the hallway (world)
@@ -7,6 +5,7 @@
 // - Handles lift interaction + floor selection input
 // ============================================================
 
+#include "pch.hpp"
 
 // ============================================================
 // CONFIG

@@ -1,3 +1,5 @@
+#pragma once
+
 // --- INCLUDES --- //
 #include <iostream>
 #include <fstream>
@@ -36,6 +38,7 @@
 #include "central_pool.hpp"
 #include "assets_catalog.hpp"
 #include "pause_menu.hpp"
+#include "jumpscare.hpp"
 
 // --- MACROS --- //
 // Colors
@@ -51,6 +54,9 @@
 
 // --- MACROS --- //
 // Dimensions & Settings
+#define SCREEN_W 1600
+#define SCREEN_H 900
+
 #define PLAYER_SPEED        400.0f
 #define PLAYER_WIDTH        220.0f
 #define PLAYER_HEIGHT       200.0f
@@ -70,6 +76,3 @@
 #define SCREEN_HEIGHT_HALF  450.0f
 #define FLOOR_CENTER_Y		650.0f
 #define FLOOR_HEIGHT		800.0f
-
-const int SCREEN_W = 1600;
-const int SCREEN_H = 900;

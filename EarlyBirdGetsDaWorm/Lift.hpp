@@ -1,6 +1,5 @@
 #pragma once
 
-
 void Lift_Load();          // Load textures
 
 void Lift_Initialize();    // Create meshes + reset state

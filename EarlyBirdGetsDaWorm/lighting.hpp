@@ -1,3 +1,5 @@
+#pragma once
+
 void Lighting_Load();
 
 void Lighting_Initialize(int fucked_floor);
