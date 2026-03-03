@@ -1,5 +1,4 @@
 #pragma once
-
 namespace Assets
 {
     namespace Fonts
@@ -29,5 +28,56 @@ namespace Assets
         constexpr const char* TitleBg = "Assets/Main_Menu/title_bg.png";
         constexpr const char* TitleFramePrefix = "Assets/Main_Menu/title_sheets/title_";
         constexpr const char* TitleFrameSuffix = ".png";
+    }
+    namespace Wall_Anomaly
+    {
+        constexpr const char* Crack1 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png";
+        constexpr const char* Crack2 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png";
+        constexpr const char* Crack3 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png";
+        constexpr const char* Crack4 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK4.png";
+        constexpr const char* Drawing1 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING1.png";
+        constexpr const char* Drawing2 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING2.png";
+        constexpr const char* Drawing3 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png";
+        constexpr const char* LeftHand = "Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png";
+        constexpr const char* RightHand = "Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png";
+    }
+    namespace Background
+    {
+        constexpr const char* WallBg = "Assets/Background/WALL_BG.png";
+        constexpr const char* DoorBg = "Assets/Background/Door_bg.png";
+        constexpr const char* LiftBg = "Assets/Background/Lift_bg.png";
+        constexpr const char* LiftDoor = "Assets/Background/LiftDoor_bg.png";
+        constexpr const char* LiftPanel = "Assets/Background/LiftPanel_buttons.png";
+    }
+    namespace Door_Anomaly
+    {
+        constexpr const char* WindowBase = "Assets/Door_Anomaly/Window_0.png";
+        constexpr const char* Handprint = "Assets/Door_Anomaly/Handprint.png";
+        constexpr const char* Shadow = "Assets/Door_Anomaly/Shadow.png";
+    }
+    namespace Pause_Menu
+    {
+        constexpr const char* Title = "Assets/Pause_Menu/pause_title.png";
+        constexpr const char* ResumeButton = "Assets/Pause_Menu/resume_button.png";
+        constexpr const char* OptionsButton = "Assets/Pause_Menu/options_button.png";
+        constexpr const char* QuitButton = "Assets/Pause_Menu/quit_button.png";
+    }
+    namespace Player
+    {
+        constexpr const char* Human1 = "Assets/Player/human player_1.png";
+        constexpr const char* Human2 = "Assets/Player/human player_2.png";
+        constexpr const char* Scary1 = "Assets/Player/scary player_1.png";
+        constexpr const char* Scary2 = "Assets/Player/scary player_2.png";
+        constexpr const char* Nurse1 = "Assets/Player/nurse_1.png";
+        constexpr const char* Nurse2 = "Assets/Player/nurse_2.png";
+    }
+    namespace Splash
+    {
+        constexpr const char* DigipenLogo = "Assets/digipen_white.png";
+    }
+    namespace Tutorial
+    {
+        constexpr const char* YesButton = "Assets/Tutorial/yes-placeholder.jpg";
+        constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.jpg";
     }
 }

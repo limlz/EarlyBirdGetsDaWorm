@@ -130,7 +130,7 @@ void MainMenu_Load()
     }
 
     std::cout << "MainMenu: Load\n";
-    menuFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    menuFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 }
 
 void MainMenu_Initialize()

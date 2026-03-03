@@ -199,14 +199,12 @@ void Player_Load()
     gSpriteMesh = AEGfxMeshEnd();
 
     // load BOTH sets
-    gHumanTex[0] = LoadTextureChecked("Assets/Player/human player_1.png");
-    gHumanTex[1] = LoadTextureChecked("Assets/Player/human player_2.png");
-
-    gScaryTex[0] = LoadTextureChecked("Assets/Player/scary player_1.png");
-    gScaryTex[1] = LoadTextureChecked("Assets/Player/scary player_2.png");
-
-    gNoPatientTex[0] = LoadTextureChecked("Assets/Player/nurse_1.png");
-    gNoPatientTex[1] = LoadTextureChecked("Assets/Player/nurse_2.png");
+    gHumanTex[0] = LoadTextureChecked(Assets::Player::Human1);
+    gHumanTex[1] = LoadTextureChecked(Assets::Player::Human2);
+    gScaryTex[0] = LoadTextureChecked(Assets::Player::Scary1);
+    gScaryTex[1] = LoadTextureChecked(Assets::Player::Scary2);
+    gNoPatientTex[0] = LoadTextureChecked(Assets::Player::Nurse1);
+    gNoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
 /***************************************** UPDATE ****************************************/

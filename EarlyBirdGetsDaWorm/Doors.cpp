@@ -198,12 +198,11 @@ static void TriggerShadowWalk(int doorIdx, float /*camX*/)
 
 void Doors_Load()
 {
-    doorFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
-
-    gDoorTex = LoadTextureChecked("Assets/Background/Door_bg.png");
-    gWindowBaseTex = LoadTextureChecked("Assets/Door_Anomaly/Window_0.png");  // Window base always drawn
-    gHandprintTex = LoadTextureChecked("Assets/Door_Anomaly/Handprint.png");  // Handprint overlay (transparent PNG)
-    gShadowTex = LoadTextureChecked("Assets/Door_Anomaly/Shadow.png");        // Shadow silhouette overlay (transparent PNG)
+    doorFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    gDoorTex = LoadTextureChecked(Assets::Background::DoorBg);
+    gWindowBaseTex = LoadTextureChecked(Assets::Door_Anomaly::WindowBase);
+    gHandprintTex = LoadTextureChecked(Assets::Door_Anomaly::Handprint);
+    gShadowTex = LoadTextureChecked(Assets::Door_Anomaly::Shadow);   // Shadow silhouette overlay (transparent PNG)
 }
 
 void Doors_Initialize()

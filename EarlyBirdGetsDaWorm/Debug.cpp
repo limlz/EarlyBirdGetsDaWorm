@@ -9,7 +9,7 @@ static char gDebugBuffer[256];
 void Debug_Load()
 {
     // Load your font here
-    gDebugFont = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    gDebugFont = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 }
 
 void Debug_Update()

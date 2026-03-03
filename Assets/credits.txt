@@ -9,12 +9,12 @@
 <p>Gerald</p>
 <p>Dr. Soroor</p>
 <p>Tommy</p>
-<h1>SPECIAL THANKS</h1>
+<h2>SPECIAL THANKS</h2>
 <p>AlphaEngine Documentation</p>
 <p>DigiPen Institute of Technology</p>
-<p>Everyone who helped test, splash, and scrub during development</p>
+<p>Everyone who helped test during development</p>
 
-<h1>EXECUTIVES</h1>
+<h2>EXECUTIVES</h2>
 <h2>President</h2>
 <p>Claude COMAIR</p>
 <h2>Chief Operating Officer</h2>

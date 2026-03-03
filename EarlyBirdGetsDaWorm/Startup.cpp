@@ -11,7 +11,7 @@ static f64 wait_timer{};
 void Startup_Load()
 {
 	// Load resources for the main menu
-	digipenLogo = LoadTextureChecked("Assets/digipen_white.png");
+	digipenLogo = LoadTextureChecked(Assets::Splash::DigipenLogo);
 	std::cout << "Startup: Load\n";
 }
 

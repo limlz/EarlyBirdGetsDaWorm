@@ -44,15 +44,10 @@ static float gLiftAnimTimer = 0.0f;     // counts down from LIFT_TIMER to 0
 
 void Lift_Load()
 {
-    // Font used for the lift floor label (world)
-    liftFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
-
-    // World lift texture (used in Lift_DrawWorld)
-    gLiftTex = LoadTextureChecked("Assets/Background/Lift_bg.png");
-
-    // Overlay textures (used in Lift_Draw)
-    gLiftDoorTex = AEGfxTextureLoad("Assets/Background/LiftDoor_bg.png");
-    gLiftPanelTex = AEGfxTextureLoad("Assets/Background/LiftPanel_buttons.png");
+    liftFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
+    gLiftDoorTex = AEGfxTextureLoad(Assets::Background::LiftDoor);
+    gLiftPanelTex = AEGfxTextureLoad(Assets::Background::LiftPanel);
 }
 
 void Lift_Initialize()

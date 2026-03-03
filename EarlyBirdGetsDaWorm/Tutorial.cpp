@@ -34,9 +34,9 @@ static f32 fadeSpeed{ 2.5f };
 static f32 promptAlpha{ 0.0f };
 
 void Tutorial_Load() {
-	promptFontID = AEGfxCreateFont("Assets/Fonts/buggy-font.ttf", 20);
-	yesButtonTexture = LoadTextureChecked("Assets/Tutorial/yes-placeholder.jpg");
-	noButtonTexture = LoadTextureChecked("Assets/Tutorial/no-placeholder.jpg");
+	promptFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
+	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
 }
 
 void Tutorial_Initialize() {

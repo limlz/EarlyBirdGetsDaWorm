@@ -37,20 +37,16 @@ static s32 random[MAX_FLOORS], randomX[MAX_FLOORS], randomY[MAX_FLOORS];
 static f32 wallX, wallY, camX;
 
 void Wall_Load() {
-	wallBgTexture = LoadTextureChecked("Assets/Background/WALL_BG.png");
-
-
-	crack1Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png");
-	crack2Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png");
-	crack3Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png");
-	crack4Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_CRACK4.png");
-
-	drawing1Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING1.png");
-	drawing2Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING2.png");
-	drawing3Texture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png");
-
-	leftHandTexture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png");
-	rightHandTexture = LoadTextureChecked("Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png");
+	wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
+	crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
+	crack2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack2);
+	crack3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack3);
+	crack4Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack4);
+	drawing1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing1);
+	drawing2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing2);
+	drawing3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
+	leftHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
+	rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
 
 	return;
 }
