@@ -151,6 +151,14 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
                 // Toggle visibility
                 flickerMem[floorNum][i].isVisible = !flickerMem[floorNum][i].isVisible;
 
+                if (Player_HasPatient()) {
+                    ILLNESSES ill = Player_IsScaryPatient() ? ALL : Player_GetCurrentIllness();
+
+					if (ill == PARANOIA || ill == SCOTOPHOBIA) {
+                        Frames_SyncToLight(floorNum, i, flickerMem[floorNum][i].isVisible);
+                    }
+                }
+
                 // --- SPARK SPAWN LOGIC FIX ---
                 // Whenever the light switches state, spawn sparks.
 
