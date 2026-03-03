@@ -1,48 +1,46 @@
 #include "pch.hpp"
 #include "Boss.hpp"
-#include <cmath> // Required for sinf(), cosf(), sqrtf(), atan2f()
+#include <cmath> // Required for sinf(), cosf(), sqrtf(), atan2f(), fabsf()
 
 // --- Boss Textures ---
+static AEGfxTexture* bossTex = nullptr;
 static AEGfxTexture* bossBulletFrames[2] = { nullptr, nullptr };
 
 // --- Bullet Animation Variables ---
 static int currentBulletFrame = 0;
 static float bulletAnimTimer = 0.0f;
-const float BULLET_ANIM_SPEED = 0.1f; // How fast it swaps frames (0.1s is very rapid!)
+const float BULLET_ANIM_SPEED = 0.1f;
 
 // --- Define Max Health ---
 const int BOSS_MAX_HEALTH = 500;
 
 void Boss_Load()
 {
-    // Load the two frames of the bullet animation
+    bossTex = LoadTextureChecked("Assets/Boss/boss.png");
     bossBulletFrames[0] = LoadTextureChecked("Assets/Boss/boss_bullet.png");
     bossBulletFrames[1] = LoadTextureChecked("Assets/Boss/boss_bullet2.png");
 }
 
 void Boss_Initialize(Boss& boss)
 {
-    // 1. Setup Basic Stats
     boss.active = true;
-    boss.health = BOSS_MAX_HEALTH; // Changed to 10 hits max
-    boss.w = 100.0f;
-    boss.h = 100.0f;
+    boss.health = BOSS_MAX_HEALTH;
 
-    // 2. Position
+    // Overall bounds (used mainly for drawing the shield and fallback square)
+    boss.w = 240.0f;
+    boss.h = 480.0f;
+
     boss.x = 600.0f;
-    boss.y = 100.0f;
-    boss.baseY = 100.0f;
+    boss.y = 0.0f;
+    boss.baseY = 0.0f;
 
-    // 3. AI Timers & States
     boss.moveTimer = 0.0f;
     boss.shootTimer = 2.0f;
 
-    // NEW: Initialize AI States
     boss.currentState = 0;
-    boss.stateTimer = 4.0f; // Start with 4 seconds of normal attacks
+    boss.stateTimer = 4.0f;
     boss.shieldActive = false;
 
-    // 4. Clear Ammo
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         boss.bullets[i].active = false;
     }
@@ -52,63 +50,66 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
     if (!boss.active) {
         PauseMenu_SetPaused(false);
-        next = GAME_STATE; // End boss fight
+        next = GAME_STATE;
     }
 
-    // --- BULLET ANIMATION UPDATE ---
     bulletAnimTimer += dt;
     if (bulletAnimTimer >= BULLET_ANIM_SPEED) {
         bulletAnimTimer = 0.0f;
         currentBulletFrame = (currentBulletFrame == 0) ? 1 : 0;
     }
 
-    // --- HOVER MOVEMENT (Sine Wave) ---
     boss.moveTimer += dt * 2.0f;
-    // Move faster when shielded
     float hoverSpeed = boss.shieldActive ? 4.0f : 2.0f;
-    float hoverOffset = sinf(boss.moveTimer * hoverSpeed) * 150.0f;
+    float hoverOffset = sinf(boss.moveTimer * hoverSpeed) * 100.0f;
 
     float targetY = boss.baseY + hoverOffset;
     boss.y += (targetY - boss.y) * 4.0f * dt;
 
-    // --- AI STATE MACHINE ---
+    // Prevent clipping: Ceiling is 350, Floor is -350. Boss half-height is 240.
+    if (boss.y > 110.0f) boss.y = 110.0f;
+    if (boss.y < -110.0f) boss.y = -110.0f;
+
     boss.stateTimer -= dt;
 
-    // Switch to a new random state when the timer runs out
     if (boss.stateTimer <= 0.0f) {
-        boss.currentState = rand() % 3; // Randomly pick state 0, 1, or 2
+        boss.currentState = rand() % 3;
 
         if (boss.currentState == 0) {
-            boss.stateTimer = 4.0f; // 4s of Normal Attack
+            boss.stateTimer = 4.0f;
             boss.shieldActive = false;
         }
         else if (boss.currentState == 1) {
-            boss.stateTimer = 3.0f; // 3s of Spread Attack
+            boss.stateTimer = 3.0f;
             boss.shieldActive = false;
         }
         else if (boss.currentState == 2) {
-            boss.stateTimer = 3.5f; // 3.5s of Shield Defense
+            boss.stateTimer = 3.5f;
             boss.shieldActive = true;
-            boss.shootTimer = 0.5f; // Reuse shoot timer to track healing!
+            boss.shootTimer = 0.5f;
         }
     }
 
-    // --- SHOOTING & HEALING LOGIC (Depends on current state) ---
+    // --- NEW: CALCULATE HAND POSITION ---
+    // This targets the left arm stretching out towards the player
+    float handX = boss.x - 120.0f;
+    float handY = boss.y + 20.0f;
+
     boss.shootTimer -= dt;
 
-    // State 0: Normal Targeted Shot
+    // State 0: Normal Targeted Shot (From the Hand!)
     if (boss.currentState == 0 && boss.shootTimer <= 0.0f) {
-        boss.shootTimer = 1.0f; // Shoot every 1.0s
+        boss.shootTimer = 1.0f;
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
                 boss.bullets[i].active = true;
                 boss.bullets[i].hp = 10;
-                boss.bullets[i].x = boss.x;
-                boss.bullets[i].y = boss.y;
+                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].y = handY;
 
-                float diffX = playerX - boss.x;
-                float diffY = playerY - boss.y;
+                float diffX = playerX - handX;
+                float diffY = playerY - handY;
                 float length = sqrtf(diffX * diffX + diffY * diffY);
 
                 if (length != 0) {
@@ -119,25 +120,22 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
             }
         }
     }
-    // State 1: Spread Attack (Shotgun)
+    // State 1: Spread Attack (From the Hand!)
     else if (boss.currentState == 1 && boss.shootTimer <= 0.0f) {
-        boss.shootTimer = 1.5f; // Shoot every 1.5s
+        boss.shootTimer = 1.5f;
 
-        // Find base angle to player
-        float diffX = playerX - boss.x;
-        float diffY = playerY - boss.y;
+        float diffX = playerX - handX;
+        float diffY = playerY - handY;
         float baseAngle = atan2f(diffY, diffX);
 
         int bulletsFired = 0;
-        // Fire 5 bullets in an arc (-2, -1, 0, 1, 2)
         for (int i = 0; i < MAX_BOSS_BULLETS && bulletsFired < 5; i++) {
             if (!boss.bullets[i].active) {
                 boss.bullets[i].active = true;
                 boss.bullets[i].hp = 5;
-                boss.bullets[i].x = boss.x;
-                boss.bullets[i].y = boss.y;
+                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].y = handY;
 
-                // Offset the angle by 0.2 radians for each bullet
                 float spreadAngle = baseAngle + ((bulletsFired - 2) * 0.2f);
 
                 boss.bullets[i].dirX = cosf(spreadAngle) * 500.0f;
@@ -147,11 +145,11 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
             }
         }
     }
-    // State 2: Shield Phase (Healing over time)
+    // State 2: Shield Phase
     else if (boss.currentState == 2 && boss.shootTimer <= 0.0f) {
-        boss.shootTimer = 0.5f; // Heal 1 HP every 0.5 seconds
+        boss.shootTimer = 0.5f;
         if (boss.health < BOSS_MAX_HEALTH) {
-            boss.health += 1; // Regenerate health!
+            boss.health += 1;
         }
     }
 
@@ -161,7 +159,6 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
             boss.bullets[i].x += boss.bullets[i].dirX * dt;
             boss.bullets[i].y += boss.bullets[i].dirY * dt;
 
-            // Despawn if off screen to save processing
             if (boss.bullets[i].x < -1000 || boss.bullets[i].x > 1000 || boss.bullets[i].y < -1000 || boss.bullets[i].y > 1000) {
                 boss.bullets[i].active = false;
             }
@@ -169,37 +166,30 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     }
 }
 
-// --- NEW UI FUNCTION: Boss Health Bar ---
 void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
 {
     if (!boss.active) return;
 
-    // Calculate health percentage
     float hpPercent = (float)boss.health / (float)BOSS_MAX_HEALTH;
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
-    // Bar dimensions and location (Top Right)
     float barWidth = 400.0f;
-    float barHeight = 25.0f; 
-    float startX = 500.0f; // Shifted right
-    float startY = 400.0f; // Near top of the screen
+    float barHeight = 25.0f;
+    float startX = 500.0f;
+    float startY = 400.0f;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    // 1. Draw Background (Dark Red / Black)
     DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF4400FF);
 
-    // 2. Draw Foreground (Bright Red) based on current health
     if (boss.health > 0) {
         float currentWidth = barWidth * hpPercent;
-        // Adjust X so the bar empties from right to left properly
         float fillX = startX - (barWidth / 2.0f) + (currentWidth / 2.0f);
         DrawSquareMesh(mesh, fillX, startY, currentWidth, barHeight, 0xFFFF00FF);
     }
 
-    // Optional: If shielded, draw a subtle blue glow over the health bar to indicate healing
     if (boss.shieldActive) {
         AEGfxSetTransparency(0.3f);
         DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF0088FF);
@@ -213,24 +203,42 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 
     // --- DRAW DEFENSE SHIELD ---
     if (boss.shieldActive) {
-        // Draw a larger, semi-transparent blue box behind the boss
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetTransparency(0.5f); // 50% opacity
+        AEGfxSetTransparency(0.5f);
 
-        // Slightly bigger than the boss (140x140)
-        DrawSquareMesh(mesh, boss.x, boss.y, 140.0f, 140.0f, 0xFF0088FF);
-        AEGfxSetTransparency(1.0f); // Reset transparency
+        DrawSquareMesh(mesh, boss.x, boss.y, boss.w + 60.0f, boss.h + 60.0f, 0xFF0088FF);
+        AEGfxSetTransparency(1.0f);
     }
 
-    // Draw Boss (Magenta Square)
+    // --- DRAW BOSS ---
+    if (bossTex) {
+        DrawTextureMesh(mesh, bossTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
+    }
+    else {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        DrawSquareMesh(mesh, boss.x, boss.y, boss.w, boss.h, 0xFFFF00FF);
+    }
+
+    // =================================================================
+    // DEBUG: UNCOMMENT THIS BLOCK TO SEE THE COMPOUND HITBOXES!
+    // Feel free to tweak the numbers in Boss_CheckCollision to fit perfectly
+    // =================================================================
+    
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    DrawSquareMesh(mesh, boss.x, boss.y, boss.w, boss.h, 0xFFFF00FF);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetTransparency(0.4f);
+    DrawSquareMesh(mesh, boss.x + 20.0f, boss.y + 110.0f, 100.0f, 180.0f, 0xFF00FFFF); // Head/Torso
+    DrawSquareMesh(mesh, boss.x - 70.0f, boss.y - 30.0f, 140.0f,  50.0f, 0xFF00FFFF); // Reaching Arm
+    DrawSquareMesh(mesh, boss.x + 70.0f, boss.y - 60.0f, 60.0f, 150.0f, 0xFF00FFFF); // Skirt/Legs
+    DrawSquareMesh(mesh, boss.x + 90.0f, boss.y - 120.0f, 50.0f, 240.0f, 0xFF00FFFF); // Dangling Arm
+    AEGfxSetTransparency(1.0f);
+    
 
     // Get the current frame texture
     AEGfxTexture* currentTex = bossBulletFrames[currentBulletFrame];
 
-    // Draw Boss Bullets (Textured & Rotated)
+    // Draw Boss Bullets
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         if (boss.bullets[i].active) {
             if (currentTex) {
@@ -239,7 +247,7 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
                 AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-                AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f); // Prevents white-box bug
+                AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
                 AEGfxSetTransparency(1.0f);
                 AEGfxTextureSet(currentTex, 0.0f, 0.0f);
 
@@ -255,7 +263,6 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
                 AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
             }
             else {
-                // Fallback square 
                 AEGfxSetRenderMode(AE_GFX_RM_COLOR);
                 DrawSquareMesh(mesh, boss.bullets[i].x, boss.bullets[i].y, 50.0f, 50.0f, 0xFFFFFFFF);
             }
@@ -263,9 +270,37 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     }
 }
 
+// --- NEW: COMPOUND COLLISION MESH CHECK ---
+bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float objH)
+{
+    if (!boss.active) return false;
+
+    // Define the 4 custom hitboxes that wrap tightly around the monster's drawing
+    // 1. Head & Torso
+    float h1X = boss.x + 20.0f, h1Y = boss.y + 80.0f, h1W = 100.0f, h1H = 240.0f;
+    // 2. Reaching Arm (Left)
+    float h2X = boss.x - 70.0f, h2Y = boss.y + 20.0f, h2W = 140.0f, h2H = 50.0f;
+    // 3. Lower Body / Skirt
+    float h3X = boss.x + 60.0f, h3Y = boss.y - 80.0f, h3W = 120.0f, h3H = 160.0f;
+    // 4. Dangling Arm (Right)
+    float h4X = boss.x + 90.0f, h4Y = boss.y - 120.0f, h4W = 50.0f, h4H = 240.0f;
+
+    // AABB collision logic function
+    auto checkAABB = [&](float x1, float y1, float w1, float h1) {
+        return (fabsf(x1 - objX) < (w1 + objW) / 2.0f) &&
+            (fabsf(y1 - objY) < (h1 + objH) / 2.0f);
+        };
+
+    // If the bullet touches ANY of these 4 boxes, it's a hit!
+    return checkAABB(h1X, h1Y, h1W, h1H) ||
+        checkAABB(h2X, h2Y, h2W, h2H) ||
+        checkAABB(h3X, h3Y, h3W, h3H) ||
+        checkAABB(h4X, h4Y, h4W, h4H);
+}
+
 void Boss_Unload()
 {
-    // Clean up textures to prevent memory leaks
+    UnloadTextureSafe(bossTex);
     UnloadTextureSafe(bossBulletFrames[0]);
     UnloadTextureSafe(bossBulletFrames[1]);
 }
