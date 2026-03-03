@@ -25,10 +25,10 @@ static bool openPagerAfterDoor;	// request to open pager from room
 
 void Notifications_Load()
 {
-	iconTexture = LoadTextureChecked("Assets/pager.png");
-	pagerTexture = LoadTextureChecked("Assets/pager.png");
-	leftArrow = LoadTextureChecked("Assets/pager-arrow-left.png");
-	rightArrow = LoadTextureChecked("Assets/pager-arrow-right.png");
+	iconTexture = LoadTextureChecked("Assets/Pager/pager.png");
+	pagerTexture = LoadTextureChecked("Assets/Pager/pager.png");
+	leftArrow = LoadTextureChecked("Assets/Pager/pager-arrow-left.png");
+	rightArrow = LoadTextureChecked("Assets/Pager/pager-arrow-right.png");
 
 	lineID = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
 

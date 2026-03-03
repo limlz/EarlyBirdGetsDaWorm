@@ -224,7 +224,7 @@ void PauseMenu_Update(float dt)
 				// Options Logic
 			}
 			if (hoverQuit && AEInputCheckTriggered(AEVK_LBUTTON)) {
-				next = GS_QUIT;
+				next = MAIN_MENU;
 			}
 		}
 	}
