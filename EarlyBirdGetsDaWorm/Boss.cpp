@@ -51,6 +51,7 @@ void Boss_Initialize(Boss& boss)
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
     if (!boss.active) {
+        PauseMenu_SetPaused(false);
         next = GAME_STATE; // End boss fight
     }
 

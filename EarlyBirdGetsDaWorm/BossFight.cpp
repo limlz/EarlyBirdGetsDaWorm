@@ -100,6 +100,7 @@ void Boss_Fight_Update()
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         Player_NewPatientRandom();
         Timer_SetPaused(false);
+        PauseMenu_SetPaused(false);
         Notifications_Trigger();
         next = GAME_STATE;
         return;
