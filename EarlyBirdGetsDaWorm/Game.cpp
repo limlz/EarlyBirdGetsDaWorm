@@ -287,10 +287,11 @@ void Game_Draw()
 	info.doorNumAtPlayer = doorNumAtPlayer;
 	info.patientDoorNum = targetDoor;
 	info.patientFloorNum = targetFloor;
-	Debug_Draw(info);
 
 	// --- Draw the new Pause Menu at the very end! ---
 	PauseMenu_Draw(squareMesh);
+
+	Debug_Draw(info);
 }
 
 void Game_Free()
