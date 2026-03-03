@@ -123,9 +123,7 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
 
             // 4. COLLISION CHECK (Player Bullet vs Boss)
             if (myBoss.active) {
-                if (IsColliding(bullets[i].x, bullets[i].y, bulletW, bulletH,
-                    myBoss.x, myBoss.y, myBoss.w, myBoss.h))
-                {
+                if (Boss_CheckCollision(myBoss, bullets[i].x, bullets[i].y, bulletW, bulletH)) {
                     if (myBoss.shieldActive) {
                         // Ricochet Logic
                         float bounceX = bullets[i].x - myBoss.x;
