@@ -52,6 +52,11 @@ bool IsAreaClicked(float area_center_x, float area_center_y, float area_width, f
 	}
 }
 
+bool IsAreaClickedByMouse(float area_center_x, float area_center_y, float area_width, float area_height)
+{
+	return IsAreaClicked(area_center_x, area_center_y, area_width, area_height, Input_GetMouseX(), Input_GetMouseY());
+}
+
 void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float y, float scale, float r, float g, float b, float a, float offset)
 {
 	// ESTIMATION: Assume average character width is roughly 0.03 NDC units at scale 1.0
@@ -65,6 +70,27 @@ void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float
 
 	// Use .c_str() to convert the C++ string back to the C-style pointer the engine needs
 	AEGfxPrint(fontId, text.c_str(), startX, y, scale, r, g, b, a);
+}
+
+void AEGfxPrintWithGlow(s8 fontId, const char* text, float x, float y, float scale,
+	float textR, float textG, float textB, float textA,
+	float glowR, float glowG, float glowB, float glowA,
+	float glowOffset, bool includeDiagonals)
+{
+	AEGfxPrint(fontId, text, x - glowOffset, y, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x + glowOffset, y, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+
+	if (includeDiagonals)
+	{
+		AEGfxPrint(fontId, text, x - glowOffset, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x + glowOffset, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x - glowOffset, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x + glowOffset, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+	}
+
+	AEGfxPrint(fontId, text, x, y, scale, textR, textG, textB, textA);
 }
 
 bool IsColliding(float r1x, float r1y, float r1w, float r1h,

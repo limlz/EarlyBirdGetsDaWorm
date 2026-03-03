@@ -21,7 +21,7 @@ static constexpr float LIFT_TIMER = 2.0f;   // seconds for the lift overlay door
 static s8 liftFontId = -1;                 // font handle used by AEGfxPrint
 static AEGfxVertexList* gQuadMesh = nullptr; // quad mesh used by DrawTextureMesh
 
-// World lift texture (the “lift box” you see in the corridor)
+// World lift texture (the "lift box" you see in the corridor)
 static AEGfxTexture* gLiftTex = nullptr;
 
 // Overlay textures
@@ -46,8 +46,8 @@ void Lift_Load()
 {
     liftFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
-    gLiftDoorTex = AEGfxTextureLoad(Assets::Background::LiftDoor);
-    gLiftPanelTex = AEGfxTextureLoad(Assets::Background::LiftPanel);
+    gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
+    gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
 }
 
 void Lift_Initialize()
@@ -68,8 +68,8 @@ void Lift_Unload()
     FreeMeshSafe(gQuadMesh);
 
     // Unload overlay textures
-    if (gLiftDoorTex) { AEGfxTextureUnload(gLiftDoorTex);  gLiftDoorTex = nullptr; }
-    if (gLiftPanelTex) { AEGfxTextureUnload(gLiftPanelTex); gLiftPanelTex = nullptr; }
+    UnloadTextureSafe(gLiftDoorTex);
+    UnloadTextureSafe(gLiftPanelTex);
 
     // Optional: free font (only if your engine provides it)
     // AEGfxDestroyFont(liftFontId);
@@ -220,24 +220,11 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh,
         const float glowB = 0.0f;
         const float glowA = 0.75f;
 
-        // 4 directions
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-
-        // (optional diagonals for stronger glow)
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-
-        // -----------------------------
-        // Main Text (Bright Red)
-        // -----------------------------
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y,
+        AEGfxPrintWithGlow(liftFontId, textBuffer, textNDC_X, textNDC_Y,
             SCALE,
-            1.0f, 0.1f, 0.1f, 1.0f);
+            1.0f, 0.1f, 0.1f, 1.0f,
+            glowR, glowG, glowB, glowA,
+            GLOW_O);
     }
 }
 
