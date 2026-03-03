@@ -5,7 +5,7 @@
 // CONFIG
 // ------------------------------
 static constexpr int    START_MIN = 0;                      // start at 00:00 AM
-static constexpr int    END_MIN = START_MIN + (60 * 3);     // 60 mins * 3 hours
+static constexpr int    END_MIN = START_MIN + (60 * 6);     // 60 mins * 6 hours
 static constexpr float  MIN_PER_SEC = 3.0f;                 // 3 in-game minutes per 1 real second
 static float gGameMinutes = START_MIN;
 
