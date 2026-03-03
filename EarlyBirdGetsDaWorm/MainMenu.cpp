@@ -1,7 +1,4 @@
 #include "pch.hpp"
-#include <fstream>  // Needed to read the text file
-#include <string>   // Needed for text manipulation
-#include <vector>   // Needed to store the credits list
 
 static AEGfxVertexList* squareMesh;
 
@@ -230,9 +227,9 @@ void MainMenu_Update()
     }
 
     // --- MENU BUTTON HOVER LOGIC ---
-    bool hoverAdmit = IsAreaClickedByMouse(510.0f, 270.0f, 490.0f, 290.0f);
-    bool hoverOptions = IsAreaClickedByMouse(530.0f, 15.0f, 500.0f, 200.0f);
-    bool hoverQuit = IsAreaClickedByMouse(520.0f, -210.0f, 490.0f, 190.0f);
+    bool hoverAdmit = IsAreaClickedByMouse(480.0f, 270.0f, 490.0f, 290.0f);
+    bool hoverOptions = IsAreaClickedByMouse(500.0f, 15.0f, 500.0f, 200.0f);
+    bool hoverQuit = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
 
     // Bottom Left placement for Credits
     bool hoverCredits = IsAreaClickedByMouse(-600.0f, -350.0f, 300.0f, 100.0f);
@@ -275,14 +272,14 @@ void MainMenu_Draw()
     Draw_StandaloneConeLight(menuLightX, menuLightY);
     Particles_Draw(squareMesh, 0.0f);
 
-    DrawTextureMesh(squareMesh, admit_patient_tag, 520.0f, 280.0f, 500.0f * admit_scale, 300.0f * admit_scale, 1.0f);
-    DrawTextureMesh(squareMesh, admit_patient_text, 500.0f, 280.0f, 400.0f * admit_scale, 200.0f * admit_scale, 1.0f);
+    DrawTextureMesh(squareMesh, admit_patient_tag, 490.0f, 280.0f, 500.0f * admit_scale, 300.0f * admit_scale, 1.0f);
+    DrawTextureMesh(squareMesh, admit_patient_text, 470.0f, 280.0f, 400.0f * admit_scale, 200.0f * admit_scale, 1.0f);
 
-    DrawTextureMesh(squareMesh, options_tag, 530.0f, 15.0f, 500.0f * options_scale, 200.0f * options_scale, 1.0f);
-    DrawTextureMesh(squareMesh, options_text, 530.0f, 15.0f, 400.0f * options_scale, 150.0f * options_scale, 1.0f);
+    DrawTextureMesh(squareMesh, options_tag, 500.0f, 15.0f, 500.0f * options_scale, 200.0f * options_scale, 1.0f);
+    DrawTextureMesh(squareMesh, options_text, 500.0f, 15.0f, 400.0f * options_scale, 150.0f * options_scale, 1.0f);
 
-    DrawTextureMesh(squareMesh, quit_tag, 530.0f, -220.0f, 500.0f * quit_scale, 200.0f * quit_scale, 1.0f);
-    DrawTextureMesh(squareMesh, quit_text, 545.0f, -220.0f, 400.0f * quit_scale, 150.0f * quit_scale, 1.0f);
+    DrawTextureMesh(squareMesh, quit_tag, 500.0f, -220.0f, 500.0f * quit_scale, 200.0f * quit_scale, 1.0f);
+    DrawTextureMesh(squareMesh, quit_text, 515.0f, -220.0f, 400.0f * quit_scale, 150.0f * quit_scale, 1.0f);
 
     // --- DRAW CREDITS BUTTON ---
     DrawTextureMesh(squareMesh, quit_tag, -600.0f, -350.0f, 300.0f * credits_scale, 100.0f * credits_scale, 1.0f);

@@ -46,8 +46,8 @@ void Lift_Load()
 {
     liftFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
-    gLiftDoorTex = AEGfxTextureLoad(Assets::Background::LiftDoor);
-    gLiftPanelTex = AEGfxTextureLoad(Assets::Background::LiftPanel);
+    gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
+    gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
 }
 
 void Lift_Initialize()
@@ -219,25 +219,7 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh,
         const float glowG = 0.0f;
         const float glowB = 0.0f;
         const float glowA = 0.75f;
-
-        // 4 directions
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-
-        // (optional diagonals for stronger glow)
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-
-        // -----------------------------
-        // Main Text (Bright Red)
-        // -----------------------------
-        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y,
-            SCALE,
-            1.0f, 0.1f, 0.1f, 1.0f);
+        AEGfxPrintWithGlow(liftFontId, textBuffer, textNDC_X, textNDC_Y, SCALE, 1.0f, 0.1f, 0.1f, 1.0f, glowR, glowG, glowB, glowA, GLOW_O);
     }
 }
 
