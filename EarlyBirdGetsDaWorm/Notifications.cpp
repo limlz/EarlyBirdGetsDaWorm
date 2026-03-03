@@ -97,7 +97,9 @@ std::pair<f32, f32> textPosition(float adjustX, float adjustY)
 void Notifications_Update(bool liftActive, f32 dt)
 {
 	// Game start delayed pop up
-	if (!popUpShown) {
+	bool wantTutorial{ Doing_Tutorial() };
+	bool answeredTutorial{ Tutorial_Prompt_Answered() };
+	if (answeredTutorial && !wantTutorial && !popUpShown) {
 		popupTimer += dt;
 
 		if (popupTimer >= 0.5f) {

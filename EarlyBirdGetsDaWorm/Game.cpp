@@ -43,6 +43,7 @@ void Game_Load()
 	Player_Load();
 	Prompts_Load();
 	Notifications_Load();
+	Tutorial_Load();
 	JumpScare_Init();
 	JumpScare_Load();
 
@@ -80,6 +81,7 @@ void Game_Initialize()
 	Player_GenerateMission();
 	Player_SetScaryByDay(CurrentDay);
 	Notifications_Initialize();
+	Tutorial_Initialize();
 	AllAnomalies_Initialize();
 }
 
@@ -103,6 +105,15 @@ void Game_Update()
 		return;
 	}
 
+	// --------------------- TUTORIAL POPUP CHECK ---------------------
+	if (Tutorial_Prompt_Answered() == false && IsTutorialActive()) {
+		// Only update the tutorial (buttons, fade, etc.)
+		Tutorial_Update(dt);
+
+		// Skip all gameplay input
+		return;
+	}
+	
 	// 3) Update timer
 	Timer_Update(dt);
 
@@ -215,6 +226,9 @@ void Game_Update()
 
 	Notifications_Update(liftActive, dt);
 	Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
+
+	// Tutorial
+	Tutorial_Update(dt);
 }
 
 void Game_Draw()
@@ -282,6 +296,9 @@ void Game_Draw()
 	Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 	Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
 
+	// Tutorial
+	Tutorial_Draw();
+
 	Timer_Draw(0.0f, 0.85f);
 	Timer_DrawDayOverlay(squareMesh);
 	Lift_Draw(squareMesh);
@@ -297,6 +314,7 @@ void Game_Draw()
 
 	// Jumpscare
 	JumpScare_Draw();
+
 
 	// Pause Menu (drawn last to be on top layer)
 	PauseMenu_Draw(squareMesh);
@@ -325,6 +343,7 @@ void Game_Unload()
 	Lift_Unload();
 	PauseMenu_Unload();
 	JumpScare_Unload();
+	Tutorial_Free();
 
 	FreeMeshSafe(squareMesh);
 	FreeMeshSafe(circleMesh);
