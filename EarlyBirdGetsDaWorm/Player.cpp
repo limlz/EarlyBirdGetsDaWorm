@@ -51,12 +51,13 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
     if (!Patient_PickedUp) {
         if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
             Patient_PickedUp = true;
-            // ROLL FOR GHOST: The walk to delivery is now haunted
+            // ROLL FOR GHOST
             Player_SetScaryByDay(day);
             gVisualIsScary = (std::rand() % 2 == 0);
             return true;
         }
     }
+
     // PHASE 2: DELIVERY
     else {
         if (currentFloor == DestFloor && doorNumAtPlayer == DestDoor) {
@@ -87,15 +88,14 @@ void Player_ResetPatientCounter(int day) {
 
 void Player_NewPatientRandom()
 {
-    // 1. Reset animation/timers so the new patient starts clean
     gFrame = 0;
     gTimer = 0.0f;
 
-    // 2. Assign Illness based on the Scary status already set by the Brain
+    // Assign Illness based on the Scary status already set by the Brain
     if (!gIsScary) {
-        // Randomly pick 1 of the 4 standard illnesses (0 to 3)
-        // PARANOIA, MANIA, DEPRESSION, DEMENTIA
-        gCurrentIllness = (ILLNESSES)(std::rand() % 4);
+        std::vector<ILLNESSES> runPool = AllAnomalies_CurrentRun();
+        int randomIndex = rand() % runPool.size();
+        gCurrentIllness = runPool[randomIndex];
     }
     else {
         // Ghosts always use the special ALL state for the Mania animation
