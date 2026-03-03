@@ -46,8 +46,8 @@ void Lift_Load()
 {
     liftFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
-    gLiftDoorTex = AEGfxTextureLoad(Assets::Background::LiftDoor);
-    gLiftPanelTex = AEGfxTextureLoad(Assets::Background::LiftPanel);
+    gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
+    gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
 }
 
 void Lift_Initialize()
@@ -68,8 +68,8 @@ void Lift_Unload()
     FreeMeshSafe(gQuadMesh);
 
     // Unload overlay textures
-    if (gLiftDoorTex) { AEGfxTextureUnload(gLiftDoorTex);  gLiftDoorTex = nullptr; }
-    if (gLiftPanelTex) { AEGfxTextureUnload(gLiftPanelTex); gLiftPanelTex = nullptr; }
+    UnloadTextureSafe(gLiftDoorTex);
+    UnloadTextureSafe(gLiftPanelTex);
 
     // Optional: free font (only if your engine provides it)
     // AEGfxDestroyFont(liftFontId);
