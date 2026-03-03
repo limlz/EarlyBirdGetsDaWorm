@@ -118,6 +118,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Notifications.cpp" />
     <ClCompile Include="OthersMenu.cpp" />
     <ClCompile Include="ParticleEffects.cpp" />
+    <ClCompile Include="PauseMenu.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -146,6 +147,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="notifications.hpp" />
     <ClInclude Include="others_menu.hpp" />
     <ClInclude Include="particle_effects.hpp" />
+    <ClInclude Include="pause_menu.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="prompts.hpp" />
     <ClInclude Include="quit.hpp" />

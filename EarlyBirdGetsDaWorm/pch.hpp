@@ -36,6 +36,7 @@
 #include "Lift.hpp"
 #include "central_pool.hpp"
 #include "assets_catalog.hpp"
+#include "pause_menu.hpp"
 
 // --- MACROS --- //
 // Colors
