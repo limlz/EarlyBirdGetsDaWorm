@@ -210,7 +210,7 @@ void MainMenu_Update()
 
         if (AEInputCheckTriggered(AEVK_ESCAPE)) isOptionsOpen = false;
 
-        if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClicked(-160.0f, 15.0f, 320.0f, 30.0f, Input_GetMouseX(), Input_GetMouseY())) {
+        if (AEInputCheckTriggered(AEVK_LBUTTON) && IsAreaClickedByMouse(-160.0f, 15.0f, 320.0f, 30.0f)) {
             isDraggingVolume = true;
         }
         if (AEInputCheckReleased(AEVK_LBUTTON)) isDraggingVolume = false;
@@ -230,12 +230,12 @@ void MainMenu_Update()
     }
 
     // --- MENU BUTTON HOVER LOGIC ---
-    bool hoverAdmit = IsAreaClicked(510.0f, 270.0f, 490.0f, 290.0f, Input_GetMouseX(), Input_GetMouseY());
-    bool hoverOptions = IsAreaClicked(530.0f, 15.0f, 500.0f, 200.0f, Input_GetMouseX(), Input_GetMouseY());
-    bool hoverQuit = IsAreaClicked(520.0f, -210.0f, 490.0f, 190.0f, Input_GetMouseX(), Input_GetMouseY());
+    bool hoverAdmit = IsAreaClickedByMouse(510.0f, 270.0f, 490.0f, 290.0f);
+    bool hoverOptions = IsAreaClickedByMouse(530.0f, 15.0f, 500.0f, 200.0f);
+    bool hoverQuit = IsAreaClickedByMouse(520.0f, -210.0f, 490.0f, 190.0f);
 
     // Bottom Left placement for Credits
-    bool hoverCredits = IsAreaClicked(-600.0f, -350.0f, 300.0f, 100.0f, Input_GetMouseX(), Input_GetMouseY());
+    bool hoverCredits = IsAreaClickedByMouse(-600.0f, -350.0f, 300.0f, 100.0f);
 
     float animationSpeed = 15.0f;
     admit_scale += ((hoverAdmit ? 1.15f : 1.0f) - admit_scale) * animationSpeed * dt;

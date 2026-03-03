@@ -77,7 +77,7 @@ void JumpScare_Initialize()
 
 void JumpScare_Load()
 {
-    gJumpScareTex = AEGfxTextureLoad("Assets/Background/Jumpscare.png");
+    gJumpScareTex = LoadTextureChecked("Assets/Background/Jumpscare.png");
 }
 
 void JumpScare_Unload()
