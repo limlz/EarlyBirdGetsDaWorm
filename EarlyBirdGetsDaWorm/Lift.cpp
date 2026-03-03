@@ -213,30 +213,30 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh,
 
         const float SCALE = 1.0f;
 
-        //// -----------------------------
-        //// Glow (Darker Red)
-        //// -----------------------------
+        // -----------------------------
+        // Glow (Darker Red)
+        // -----------------------------
         //AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-        //const float GLOW_O = 0.006f;
+        const float GLOW_O = 0.006f;
 
-        //// Dark red glow (outer)
-        //const float glowR = 0.45f;
-        //const float glowG = 0.0f;
-        //const float glowB = 0.0f;
-        //const float glowA = 0.75f;
+        // Dark red glow (outer)
+        const float glowR = 0.45f;
+        const float glowG = 0.0f;
+        const float glowB = 0.0f;
+        const float glowA = 0.75f;
 
-        //// 4 directions
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        // 4 directions
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
 
-        //// (optional diagonals for stronger glow)
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
-        //AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        // (optional diagonals for stronger glow)
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y - GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X - GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
+        AEGfxPrint(liftFontId, textBuffer, textNDC_X + GLOW_O, textNDC_Y + GLOW_O, SCALE, glowR, glowG, glowB, glowA);
 
         // -----------------------------
         // Main Text (Bright Red)
