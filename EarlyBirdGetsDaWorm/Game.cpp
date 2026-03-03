@@ -184,7 +184,8 @@ void Game_Update()
 		// 1. Boss Room Special Case
 		if (doorNumAtPlayer == demonRoomNum - 1 && floorNum == demonFloorNum)
 		{
-			PauseMenu_SetPaused(true); // <-- Trigger the pause menu via function!
+			// Keep pause state cleared when entering boss fight; GAME_STATE is now preserved.
+			PauseMenu_SetPaused(false);
 			next = BOSS_FIGHT_STATE;
 			return;
 		}

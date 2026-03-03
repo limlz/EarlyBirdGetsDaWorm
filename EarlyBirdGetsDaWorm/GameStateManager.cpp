@@ -1,6 +1,8 @@
 #include "pch.hpp"
 
 int current = 0, previous = 0, next = 0;
+bool gameStateSuspendedForBoss = false;
+bool resumeGameStateFromBoss = false;
 
 // -----------------------------------------------------------------------------
 // Function pointers used to call the appropriate state functions
@@ -16,8 +18,42 @@ FP fpLoad = nullptr, fpInitialize = nullptr, fpUpdate = nullptr, fpDraw = nullpt
 void GSM_Initialize(int startingState)
 {
 	current = previous = next = startingState;
+	gameStateSuspendedForBoss = false;
+	resumeGameStateFromBoss = false;
 	std::cout << "GSM:Initialize\n";
 	// some additional code
+}
+
+bool GSM_ShouldPreserveCurrentStateOnExit()
+{
+	return current == GAME_STATE && next == BOSS_FIGHT_STATE;
+}
+
+bool GSM_ShouldRunLoadAndInitialize()
+{
+	if (resumeGameStateFromBoss && current == GAME_STATE && previous == BOSS_FIGHT_STATE) {
+		resumeGameStateFromBoss = false;
+		return false;
+	}
+
+	return true;
+}
+
+void GSM_OnStateTransition()
+{
+	if (previous == GAME_STATE && current == BOSS_FIGHT_STATE) {
+		gameStateSuspendedForBoss = true;
+	}
+	else if (previous == BOSS_FIGHT_STATE && current == GAME_STATE) {
+		if (gameStateSuspendedForBoss) {
+			resumeGameStateFromBoss = true;
+		}
+		gameStateSuspendedForBoss = false;
+	}
+	else if (current != GAME_STATE) {
+		gameStateSuspendedForBoss = false;
+		resumeGameStateFromBoss = false;
+	}
 }
 
 // -----------------------------------------------------------------------------
