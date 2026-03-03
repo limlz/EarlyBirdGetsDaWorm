@@ -16,9 +16,9 @@ const int BOSS_MAX_HEALTH = 500;
 
 void Boss_Load()
 {
-    bossTex = LoadTextureChecked("Assets/Boss/boss.png");
-    bossBulletFrames[0] = LoadTextureChecked("Assets/Boss/boss_bullet.png");
-    bossBulletFrames[1] = LoadTextureChecked("Assets/Boss/boss_bullet2.png");
+    bossTex = LoadTextureChecked(Assets::Boss_Fight::Boss);
+    bossBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
+    bossBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
 }
 
 void Boss_Initialize(Boss& boss)

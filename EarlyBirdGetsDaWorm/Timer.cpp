@@ -42,10 +42,9 @@ static constexpr float DAY_FADE_SPEED = 1.0f; // alpha decrease per second (1.0 
 // ============================================================================
 void Timer_Load()
 {
-    // Load fonts used by the timer UI
+    // load digital clock font
+    gOverlayFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 32);
     gClockFontId = AEGfxCreateFont(Assets::Fonts::DigitalClock, 32);
-    gOverlayFontId = AEGfxCreateFont(Assets::Fonts::BuggyInFontsDir, 30);
-
     Timer_Reset();
 }
 

@@ -33,9 +33,9 @@ static f32 vibrateDuration{ 0.0f };
 
 void Notifications_Load()
 {
-	iconTexture = LoadTextureChecked("Assets/Pager/pager.png");
-	pagerTexture = LoadTextureChecked("Assets/Pager/pager.png");
-	lineID = AEGfxCreateFont("Assets/Fonts/buggy-font.ttf", 20);
+	iconTexture = LoadTextureChecked(Assets::Pager::Pager);
+	pagerTexture = LoadTextureChecked(Assets::Pager::Pager);
+	lineID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
 	return;
 }
