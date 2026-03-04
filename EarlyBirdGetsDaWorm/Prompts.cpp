@@ -17,7 +17,7 @@ static float messageTimer = 0.0f;
 const float MESSAGE_DURATION = 1.0f; // Message stays for 2 seconds
 
 void Prompts_Load() {
-    promptFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    promptFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 }
 
 // Function called by Game.cpp when logic fails

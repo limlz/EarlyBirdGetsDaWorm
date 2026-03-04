@@ -8,7 +8,6 @@
 #pragma once
 #include "pch.hpp"
 
-void JumpScare_Init();
 void JumpScare_Load();
 void JumpScare_Initialize();
 void JumpScare_Unload();

@@ -93,10 +93,17 @@
     <ClCompile Include="PauseMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Jumpscare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AudioManager.cpp">
+    <ClCompile Include="Tutorial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Endgame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -182,10 +189,16 @@
     <ClInclude Include="pause_menu.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="audio_manager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="jumpscare.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="audio_manager.hpp">
+    <ClInclude Include="tutorial.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="endgame.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

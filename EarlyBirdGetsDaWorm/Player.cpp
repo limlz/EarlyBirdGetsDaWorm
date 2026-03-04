@@ -169,13 +169,19 @@ static AEGfxTexture* GetActiveFrameTex()
 
 // Getters for Notifications.cpp
 bool Player_HasPatient() { return Patient_PickedUp; }
-void Player_GetTargetRoom(s8& floor, s8& door) {
-    if (!Patient_PickedUp) {
+void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
+    patientFloor = PickupFloor;
+    patientDoor = PickupDoor;
+
+    destFloor = DestFloor;
+    destDoor = DestDoor;
+
+    /*if (!Patient_PickedUp) {
         floor = PickupFloor; door = PickupDoor;
     }
     else {
         floor = DestFloor; door = DestDoor;
-    }
+    }*/
 }
 
 float Player_GetWidth()  { return PLAYER_WIDTH; }
@@ -193,14 +199,12 @@ void Player_Load()
     gSpriteMesh = AEGfxMeshEnd();
 
     // load BOTH sets
-    gHumanTex[0] = LoadTextureChecked("Assets/Player/human player_1.png");
-    gHumanTex[1] = LoadTextureChecked("Assets/Player/human player_2.png");
-
-    gScaryTex[0] = LoadTextureChecked("Assets/Player/scary player_1.png");
-    gScaryTex[1] = LoadTextureChecked("Assets/Player/scary player_2.png");
-
-    gNoPatientTex[0] = LoadTextureChecked("Assets/Player/nurse_1.png");
-    gNoPatientTex[1] = LoadTextureChecked("Assets/Player/nurse_2.png");
+    gHumanTex[0] = LoadTextureChecked(Assets::Player::Human1);
+    gHumanTex[1] = LoadTextureChecked(Assets::Player::Human2);
+    gScaryTex[0] = LoadTextureChecked(Assets::Player::Scary1);
+    gScaryTex[1] = LoadTextureChecked(Assets::Player::Scary2);
+    gNoPatientTex[0] = LoadTextureChecked(Assets::Player::Nurse1);
+    gNoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
 /***************************************** UPDATE ****************************************/

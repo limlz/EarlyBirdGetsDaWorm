@@ -9,7 +9,7 @@ static char gDebugBuffer[256];
 void Debug_Load()
 {
     // Load your font here
-    gDebugFont = AEGfxCreateFont("Assets/buggy-font.ttf", 20);
+    gDebugFont = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 }
 
 void Debug_Update()
@@ -73,7 +73,7 @@ void Debug_Draw(const DebugInfo& info)
     sprintf_s(gDebugBuffer, "STATE: Day %d | Floor: %d | Dementia: %s | Current Illness: %s", info.day, info.floorNum, info.dementia ? "ON" : "OFF", illness);
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 2), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
-    sprintf_s(gDebugBuffer, "DOOR: At: %d | Patient Target: Rm %d (Flr %d)", info.doorNumAtPlayer, info.patientDoorNum, info.patientFloorNum);
+    sprintf_s(gDebugBuffer, "DOOR: At: %d | Patient Target: Rm %d (Flr %d) | Scary: %s", info.doorNumAtPlayer, info.patientDoorNum, info.patientFloorNum, Player_IsScaryPatient() ? "GHOST" : "HUMAN");
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 3), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
     // --- BOSS INFO ---

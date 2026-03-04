@@ -52,6 +52,11 @@ bool IsAreaClicked(float area_center_x, float area_center_y, float area_width, f
 	}
 }
 
+bool IsAreaClickedByMouse(float area_center_x, float area_center_y, float area_width, float area_height)
+{
+	return IsAreaClicked(area_center_x, area_center_y, area_width, area_height, Input_GetMouseX(), Input_GetMouseY());
+}
+
 void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float y, float scale, float r, float g, float b, float a, float offset)
 {
 	// ESTIMATION: Assume average character width is roughly 0.03 NDC units at scale 1.0
@@ -67,6 +72,27 @@ void AEGfxPrintCentered(s8 fontId, const std::string& text, float centerX, float
 	AEGfxPrint(fontId, text.c_str(), startX, y, scale, r, g, b, a);
 }
 
+void AEGfxPrintWithGlow(s8 fontId, const char* text, float x, float y, float scale,
+	float textR, float textG, float textB, float textA,
+	float glowR, float glowG, float glowB, float glowA,
+	float glowOffset, bool includeDiagonals)
+{
+	AEGfxPrint(fontId, text, x - glowOffset, y, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x + glowOffset, y, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+	AEGfxPrint(fontId, text, x, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+
+	if (includeDiagonals)
+	{
+		AEGfxPrint(fontId, text, x - glowOffset, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x + glowOffset, y - glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x - glowOffset, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+		AEGfxPrint(fontId, text, x + glowOffset, y + glowOffset, scale, glowR, glowG, glowB, glowA);
+	}
+
+	AEGfxPrint(fontId, text, x, y, scale, textR, textG, textB, textA);
+}
+
 bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 	float r2x, float r2y, float r2w, float r2h)
 {
@@ -78,4 +104,15 @@ bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 	if (r1y + r1h / 2 < r2y - r2h / 2) return false; // R1 is below R2
 
 	return true; // None were true, so they must be touching
+}
+
+// Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
+// Basically put both ur XY values in the parameters.
+// To get X value: textPosition(X, Y).first
+// To get Y value: textPosition(X, Y).second
+std::pair<f32, f32> textPosition(float adjustX, float adjustY)
+{
+	f32 textX = adjustX / (AEGfxGetWindowWidth() * 0.5f);
+	f32 textY = adjustY / (AEGfxGetWindowHeight() * 0.5f);
+	return { textX, textY };
 }

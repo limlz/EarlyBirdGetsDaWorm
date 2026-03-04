@@ -157,7 +157,6 @@ void Frames_Initialize() {
 	for (int level = 0; level < NUM_OF_FLOOR; ++level) {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-			ILLNESSES illness;
 			FrameAnomaly& currentFrame = levelMap[level][frame];
             ENTITIES entity = Player_IsScaryPatient() ? GHOST : HUMAN;
 

@@ -45,10 +45,10 @@ static BloodDrop bloodDrops[MAX_BLOOD_DROPS];
 // ==========================================
 void PauseMenu_Load()
 {
-	pauseTitleTex = LoadTextureChecked("Assets/Pause_Menu/pause_title.png");
-	btnResumeTex = LoadTextureChecked("Assets/Pause_Menu/resume_button.png");
-	btnOptionsTex = LoadTextureChecked("Assets/Pause_Menu/options_button.png");
-	btnQuitTex = LoadTextureChecked("Assets/Pause_Menu/quit_button.png");
+	pauseTitleTex = LoadTextureChecked(Assets::Pause_Menu::Title);
+	btnResumeTex = LoadTextureChecked(Assets::Pause_Menu::ResumeButton);
+	btnOptionsTex = LoadTextureChecked(Assets::Pause_Menu::OptionsButton);
+	btnQuitTex = LoadTextureChecked(Assets::Pause_Menu::QuitButton);
 }
 
 void PauseMenu_Initialize()

@@ -1,0 +1,31 @@
+<h1>Team Name:EarlyBirdGetsDaWorm</h1>
+
+<h2>Developers:</h2>
+<p>Nur Nadia Natasya Binte Mohd Taha</p>
+<p>Aracel Joy Balbaira ABELLERA</p>
+<p>Lim Liang Zhou</p>
+<p>Syadeeya Syadeeya</p>
+<h2>Instructors:</h2>
+<p>Gerald</p>
+<p>Dr. Soroor</p>
+<p>Tommy</p>
+<h2>SPECIAL THANKS</h2>
+<p>AlphaEngine Documentation</p>
+<p>DigiPen Institute of Technology</p>
+<p>Everyone who helped test during development</p>
+
+<h2>EXECUTIVES</h2>
+<h2>President</h2>
+<p>Claude COMAIR</p>
+<h2>Chief Operating Officer</h2>
+<p>CHU Jason Yeu Tat</p>
+<h2>Chief Financial Officer</h2>
+<p>Michael GATS</p>
+<h2>Managing Director, Singapore Campus</h2>
+<p>TAN Chek Ming</p>
+<h2>Provost and Acting Department Chair</h2>
+<p>Prasanna Kumar GHALI</p>
+<h2>VP of Compliance & Regulatory Affairs</h2>
+<p>Mandy WONG</p>
+<h2>Vice President of IT and Computer Systems</h2>
+<p>Johnny DEEK</p>
