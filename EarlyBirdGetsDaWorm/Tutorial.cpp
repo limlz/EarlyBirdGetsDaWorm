@@ -125,7 +125,7 @@ void Tutorial_Initialize() {
 	tutPatientDelivered = false;
 
 	// Tutorial Dialogue Box
-	tutStartedBox = { 500.0f, 100.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, 0.0f, "Great!\nPress [Q] to open your pager."};
+	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, 0.0f, "Great!\nPress [Q] to open your pager."};
 	tutSpacePress = false;
 }
 
@@ -237,12 +237,9 @@ bool Doing_Tutorial() { return doTutorial; }
 bool Tutorial_Prompt_Answered() { return promptAnswered; }
 bool IsTutorialActive() { return tutPopUpShown; }
 
-void Tutorial_Text_Draw(char const* str) {
+void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY) {
 	f32 winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-
-	f32 tutTextX{ tutStartedBox.tutBGX + 280.0f }, tutTextY{ tutStartedBox.tutBGY - 260.0f};
 	f32 lineHeight{ 100.0f / winH};
-
 	s8 lineNum{};
 	const char* lineStart{ str };
 
@@ -271,7 +268,9 @@ void Tutorial_Draw() {
 		DrawSquareMesh(tutPromptMesh, 0.0f, 0.0f, winW, winH, black);
 
 		// Draws prompt text
-		AEGfxPrint(promptFontID, "Do you need a tutorial?", 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, promptAlpha);
+		f32 midX{ winW / 2.0f },
+			midY{ winH / 2.0f };
+		AEGfxPrint(promptFontID, "Do you need a tutorial?", textPosition(0.0f, 0.0f).first, textPosition(0.0f, 0.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, promptAlpha);
 
 		// Draws the buttons
 		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -100.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
@@ -281,7 +280,7 @@ void Tutorial_Draw() {
 	if (tutStarted) {
 		//Tutorial_DialogueBox_Draw("const char* str");
 		DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeInAlpha);
-		Tutorial_Text_Draw(tutStartedBox.tutFullText);
+		Tutorial_Text_Draw(tutStartedBox.tutFullText, -230.0f + tutStartedBox.tutBGX, 10.0f + tutStartedBox.tutBGY);
 		
 	}
 
