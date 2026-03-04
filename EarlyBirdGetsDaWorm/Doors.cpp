@@ -125,6 +125,50 @@ struct DoorEventState
 static DoorEventState gDoorState[NUM_DOORS]{};
 
 // ============================================================
+
+// Basement door array
+
+struct BasementCheck
+{
+    bool lockedThisDay = false;
+};
+
+static BasementCheck basementDoors [10];
+
+void Doors_ResetAllLocks()
+{
+    for (int d = 0; d < NUM_DOORS; ++d) {
+        basementDoors[d].lockedThisDay = false;
+    }
+
+}
+
+bool Doors_TryDisposal(int floorNum, int doorIdx)
+{
+    // Safety check for bounds
+    if (doorIdx < 0 || doorIdx >= NUM_DOORS) return false;
+    BasementCheck& s = basementDoors[doorIdx];
+
+    // 1. Is it already locked?
+    if (s.lockedThisDay) {
+        // You could trigger a 'jammed' sound here
+        return false;
+    }
+
+    if ((rand() % 100) < 30) { // 30% Chance
+        // Trigger your existing JumpScare logic
+        //jumpscare
+        s.lockedThisDay = true; // Lock the door even if it was just a scare
+        return false;
+    }
+
+    // 3. If we got here, no jumpscare happened. 
+    // Return true to tell Game.cpp to check the Patient Identity.
+    s.lockedThisDay = true; // Lock the door for the day
+    return true;
+}
+
+// ==================================================
 // HELPERS
 // ============================================================
 

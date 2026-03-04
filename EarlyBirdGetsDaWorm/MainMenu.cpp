@@ -1,4 +1,8 @@
 #include "pch.hpp"
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cstdlib> // Needed for rand()
 
 static AEGfxVertexList* squareMesh;
 
@@ -34,7 +38,14 @@ float menuLightY = 500.0f;
 static float admit_scale = 1.0f;
 static float options_scale = 1.0f;
 static float quit_scale = 1.0f;
-static float credits_scale = 1.0f;
+
+// --- CREDITS JITTER VARIABLES ---
+static bool isHoveringCredits = false;
+static float credits_jitter_x = 0.0f;
+static float credits_jitter_y = 0.0f;
+static float credits_twitch_duration = 0.0f;
+static float credits_idle_timer = 2.0f;
+static float jitter_update_timer = 0.0f;
 
 //title ani
 const int NUM_TITLE_FRAMES = 13;
@@ -53,7 +64,7 @@ static bool isDraggingVolume = false;
 struct CreditLine {
     std::string text;
     float scale;
-    bool isHeader; // NEW: Track if it's an H1/H2 to add spacing!
+    bool isHeader; // Track if it's an H1/H2 to add spacing
 };
 static std::vector<CreditLine> parsedCredits;
 static bool isCreditsOpen = false;
@@ -117,6 +128,9 @@ void MainMenu_Load()
     quit_text = LoadTextureChecked(Assets::Main_Menu::QuitText);
     title_bg = LoadTextureChecked(Assets::Main_Menu::TitleBg);
 
+    credits_guy = LoadTextureChecked(Assets::Main_Menu::CreditsDown);
+    credits_guy2 = LoadTextureChecked(Assets::Main_Menu::CreditsUp);
+
     // Load the text file immediately
     LoadCreditsFile();
 
@@ -143,6 +157,13 @@ void MainMenu_Initialize()
     isCreditsOpen = false;
     creditsOverlayAlpha = 0.0f;
     creditsScrollY = -500.0f;
+
+    // Reset Jitter variables
+    isHoveringCredits = false;
+    credits_jitter_x = 0.0f;
+    credits_jitter_y = 0.0f;
+    credits_twitch_duration = 0.0f;
+    credits_idle_timer = 2.0f;
 
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
     std::cout << "MainMenu: Initialize\n";
@@ -231,14 +252,49 @@ void MainMenu_Update()
     bool hoverOptions = IsAreaClickedByMouse(500.0f, 15.0f, 500.0f, 200.0f);
     bool hoverQuit = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
 
-    // Bottom Left placement for Credits
-    bool hoverCredits = IsAreaClickedByMouse(-600.0f, -350.0f, 300.0f, 100.0f);
-
     float animationSpeed = 15.0f;
     admit_scale += ((hoverAdmit ? 1.15f : 1.0f) - admit_scale) * animationSpeed * dt;
     options_scale += ((hoverOptions ? 1.15f : 1.0f) - options_scale) * animationSpeed * dt;
     quit_scale += ((hoverQuit ? 1.15f : 1.0f) - quit_scale) * animationSpeed * dt;
-    credits_scale += ((hoverCredits ? 1.15f : 1.0f) - credits_scale) * animationSpeed * dt;
+
+    // --- NEW: CREDITS JITTER LOGIC ---
+    isHoveringCredits = IsAreaClickedByMouse(-600.0f, -350.0f, 300.0f, 100.0f);
+    jitter_update_timer -= dt;
+
+    if (isHoveringCredits) {
+        // Intense, constant horizontal jitter while hovered
+        if (jitter_update_timer <= 0.0f) {
+            credits_jitter_x = ((rand() % 200 - 100) / 100.0f) * 12.0f; // +/- 12 pixels left/right
+            credits_jitter_y = 0.0f; // CHANGED: Locked Y to 0
+            jitter_update_timer = 0.03f; // Update super fast (30x a second)
+        }
+    }
+    else {
+        // Idle random twitch logic
+        if (credits_idle_timer > 0.0f) {
+            credits_idle_timer -= dt;
+            credits_jitter_x = 0.0f;
+            credits_jitter_y = 0.0f;
+        }
+        else {
+            // Trigger a small twitch
+            credits_twitch_duration = 0.3f; // Twitch lasts 0.3 seconds
+            credits_idle_timer = ((rand() % 300) / 100.0f) + 1.5f; // Wait 1.5 to 4.5 seconds for next twitch
+        }
+
+        if (credits_twitch_duration > 0.0f) {
+            credits_twitch_duration -= dt;
+            if (jitter_update_timer <= 0.0f) {
+                credits_jitter_x = ((rand() % 200 - 100) / 100.0f) * 5.0f; // Smaller +/- 5 pixel jitter left/right
+                credits_jitter_y = 0.0f; // CHANGED: Locked Y to 0
+                jitter_update_timer = 0.05f; // Slower twitch rate
+            }
+        }
+        else {
+            credits_jitter_x = 0.0f;
+            credits_jitter_y = 0.0f;
+        }
+    }
 
     if (AEInputCheckTriggered(AEVK_LBUTTON))
     {
@@ -253,7 +309,7 @@ void MainMenu_Update()
             pendingNextState = GS_QUIT;
             isFadingOut = true;
         }
-        else if (hoverCredits) {
+        else if (isHoveringCredits) {
             isCreditsOpen = true;
             creditsScrollY = -600.0f;
         }
@@ -269,6 +325,17 @@ void MainMenu_Draw()
         DrawTextureMesh(squareMesh, title_frames[currentTitleFrame], 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
     }
 
+    // --- DRAW CREDITS BUTTON (TEXTURE SWAP & JITTER) ---
+    AEGfxTexture* currentCreditTex = isHoveringCredits ? credits_guy2 : credits_guy;
+
+    float base_credit_x = -680.0f;
+    float base_credit_y = -250.0f;
+
+    if (currentCreditTex) {
+        // Draw the texture using the base coordinates plus our dynamic jitter logic
+        DrawTextureMesh(squareMesh, currentCreditTex, base_credit_x + credits_jitter_x, base_credit_y + credits_jitter_y, 400.0f, 600.0f, 1.0f);
+    }
+
     Draw_StandaloneConeLight(menuLightX, menuLightY);
     Particles_Draw(squareMesh, 0.0f);
 
@@ -281,8 +348,6 @@ void MainMenu_Draw()
     DrawTextureMesh(squareMesh, quit_tag, 500.0f, -220.0f, 500.0f * quit_scale, 200.0f * quit_scale, 1.0f);
     DrawTextureMesh(squareMesh, quit_text, 515.0f, -220.0f, 400.0f * quit_scale, 150.0f * quit_scale, 1.0f);
 
-    // --- DRAW CREDITS BUTTON ---
-    DrawTextureMesh(squareMesh, quit_tag, -600.0f, -350.0f, 300.0f * credits_scale, 100.0f * credits_scale, 1.0f);
 
     float currentBlackAlpha = 0.0f;
     if (fade_in_timer > 0.0f) currentBlackAlpha = fade_in_timer / FADE_IN_DURATION;
@@ -368,8 +433,11 @@ void MainMenu_Draw()
                 float ndcY = currentY / 450.0f;
 
                 if (!line.text.empty()) {
+
                     // C-Style cast to fix the string format specifically for this engine
+
                     AEGfxPrint(menuFontId, line.text.c_str(), ndcX, ndcY, line.scale, 1.0f, 1.0f, 1.0f, 1.0f);
+
                 }
 
                 currentY -= (40.0f * line.scale);

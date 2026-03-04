@@ -26,6 +26,8 @@ namespace Assets
         constexpr const char* QuitTag = "Assets/Main_Menu/discharge_tag.png";
         constexpr const char* QuitText = "Assets/Main_Menu/discharge_text.png";
         constexpr const char* TitleBg = "Assets/Main_Menu/title_bg.png";
+        constexpr const char* CreditsUp = "Assets/Main_Menu/credits_up.png";
+        constexpr const char* CreditsDown = "Assets/Main_Menu/credits_down.png";
         constexpr const char* TitleFramePrefix = "Assets/Main_Menu/title_sheets/title_";
         constexpr const char* TitleFrameSuffix = ".png";
     }

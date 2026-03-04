@@ -119,6 +119,15 @@ void GSM_Update()
 		fpUnload = Quit_Unload;
 		break;
 
+	case ENDGAME_STATE:
+		fpLoad = Endgame_Load;
+		fpInitialize = Endgame_Initialize;
+		fpUpdate = Endgame_Update;
+		fpDraw = Endgame_Draw;
+		fpFree = Endgame_Free;
+		fpUnload = Endgame_Unload;
+		break; // DO NOT FORGET THE BREAK!
+
 	default:
 		// Invalid state, no action taken
 		break;
