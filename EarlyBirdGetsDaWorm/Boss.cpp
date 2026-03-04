@@ -14,6 +14,7 @@ const float BULLET_ANIM_SPEED = 0.1f;
 // --- Define Max Health ---
 const int BOSS_MAX_HEALTH = 500;
 
+
 void Boss_Load()
 {
     bossTex = LoadTextureChecked(Assets::Boss_Fight::Boss);
@@ -48,10 +49,6 @@ void Boss_Initialize(Boss& boss)
 
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
-    if (!boss.active) {
-        PauseMenu_SetPaused(false);
-        next = GAME_STATE;
-    }
 
     bulletAnimTimer += dt;
     if (bulletAnimTimer >= BULLET_ANIM_SPEED) {
@@ -225,14 +222,14 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     // Feel free to tweak the numbers in Boss_CheckCollision to fit perfectly
     // =================================================================
     
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetTransparency(0.4f);
-    DrawSquareMesh(mesh, boss.x + 20.0f, boss.y + 110.0f, 100.0f, 180.0f, 0xFF00FFFF); // Head/Torso
-    DrawSquareMesh(mesh, boss.x - 70.0f, boss.y - 30.0f, 140.0f,  50.0f, 0xFF00FFFF); // Reaching Arm
-    DrawSquareMesh(mesh, boss.x + 70.0f, boss.y - 60.0f, 60.0f, 150.0f, 0xFF00FFFF); // Skirt/Legs
-    DrawSquareMesh(mesh, boss.x + 90.0f, boss.y - 120.0f, 50.0f, 240.0f, 0xFF00FFFF); // Dangling Arm
-    AEGfxSetTransparency(1.0f);
+    //AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    //AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    //AEGfxSetTransparency(0.4f);
+    //DrawSquareMesh(mesh, boss.x + 20.0f, boss.y + 110.0f, 100.0f, 180.0f, 0xFF00FFFF); // Head/Torso
+    //DrawSquareMesh(mesh, boss.x - 70.0f, boss.y - 30.0f, 140.0f,  50.0f, 0xFF00FFFF); // Reaching Arm
+    //DrawSquareMesh(mesh, boss.x + 70.0f, boss.y - 60.0f, 60.0f, 150.0f, 0xFF00FFFF); // Skirt/Legs
+    //DrawSquareMesh(mesh, boss.x + 90.0f, boss.y - 120.0f, 50.0f, 240.0f, 0xFF00FFFF); // Dangling Arm
+    //AEGfxSetTransparency(1.0f);
     
 
     // Get the current frame texture

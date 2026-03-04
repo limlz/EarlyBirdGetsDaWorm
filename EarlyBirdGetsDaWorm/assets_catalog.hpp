@@ -26,6 +26,8 @@ namespace Assets
         constexpr const char* QuitTag = "Assets/Main_Menu/discharge_tag.png";
         constexpr const char* QuitText = "Assets/Main_Menu/discharge_text.png";
         constexpr const char* TitleBg = "Assets/Main_Menu/title_bg.png";
+        constexpr const char* CreditsUp = "Assets/Main_Menu/credits_up.png";
+        constexpr const char* CreditsDown = "Assets/Main_Menu/credits_down.png";
         constexpr const char* TitleFramePrefix = "Assets/Main_Menu/title_sheets/title_";
         constexpr const char* TitleFrameSuffix = ".png";
     }
@@ -48,6 +50,20 @@ namespace Assets
         constexpr const char* LiftBg = "Assets/Background/Lift_bg.png";
         constexpr const char* LiftDoor = "Assets/Background/LiftDoor_bg.png";
         constexpr const char* LiftPanel = "Assets/Background/LiftPanel_buttons.png";
+        constexpr const char* LiftWalls[] =
+        {
+            "Assets/Background/LiftWall_0.png",
+            "Assets/Background/LiftWall_1.png",
+            "Assets/Background/LiftWall_2.png",
+            "Assets/Background/LiftWall_3.png",
+            "Assets/Background/LiftWall_4.png",
+            "Assets/Background/LiftWall_5.png",
+            "Assets/Background/LiftWall_6.png",
+            "Assets/Background/LiftWall_7.png",
+            "Assets/Background/LiftWall_8.png",
+            "Assets/Background/LiftWall_9.png"
+        };
+        constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
     }
     namespace Door_Anomaly
     {

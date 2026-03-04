@@ -1,8 +1,12 @@
 // ============================================================
 // LIFT MODULE
-// - Draws lift(s) in the hallway (world)
-// - Handles lift overlay (sliding doors + panel buttons)
-// - Handles lift interaction + floor selection input
+// Handles all lift-related systems in the hallway:
+//
+// - Renders lift structures in the world
+// - Draws floor-specific lift background environments
+// - Manages lift overlay UI (sliding doors + floor panel)
+// - Processes player interaction and floor selection
+// - Controls lift activation and floor transitions
 // ============================================================
 
 #include "pch.hpp"
@@ -12,31 +16,53 @@
 // ============================================================
 
 static constexpr float LIFT_TIMER = 2.0f;   // seconds for the lift overlay door animation
-
+static constexpr int MAX_FLOORS = 10;
+static AEGfxTexture* gLiftWallTex[MAX_FLOORS]{};
 
 // ============================================================
 // RENDER DATA (Texture + Mesh)
 // ============================================================
 
-static s8 liftFontId = -1;                 // font handle used by AEGfxPrint
-static AEGfxVertexList* gQuadMesh = nullptr; // quad mesh used by DrawTextureMesh
+static s8 liftFontId = -1;                      // font handle used by AEGfxPrint
+static AEGfxVertexList* gQuadMesh = nullptr;    // quad mesh used by DrawTextureMesh
 
 // World lift texture (the “lift box” you see in the corridor)
 static AEGfxTexture* gLiftTex = nullptr;
 
 // Overlay textures
-static AEGfxTexture* gLiftDoorTex = nullptr; // overlay sliding doors texture
-static AEGfxTexture* gLiftPanelTex = nullptr; // overlay level button panel texture
+static AEGfxTexture* gLiftDoorTex = nullptr;    // overlay sliding doors texture
+static AEGfxTexture* gLiftPanelTex = nullptr;   // overlay level button panel texture
 
 
 // ============================================================
 // STATE
 // ============================================================
 
-static bool  gLiftActive = false;    // true when lift overlay is open
-static bool  gNearLift = false;    // true when player is near a lift entrance
+static bool  gLiftActive = false;       // true when lift overlay is open
+static bool  gNearLift = false;         // true when player is near a lift entrance
 static float gLiftAnimTimer = 0.0f;     // counts down from LIFT_TIMER to 0
 
+// ============================================================
+// HELPERS
+// ============================================================
+
+// Draws the lift background inside the overlay 
+void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor)
+{
+    if (floor < 0) floor = 0;
+    if (floor >= MAX_FLOORS) floor = MAX_FLOORS - 1;
+
+    AEGfxTexture* tex = gLiftWallTex[floor];        // eg. if floor == 0, this becomes gLiftWallTex[0]
+
+    if (mesh && tex)
+    {
+        DrawTextureMesh(mesh, tex, x, y, w, h, 1.0f);
+    }
+    else
+    {
+        DrawSquareMesh(mesh, x, y, w, h, COLOR_NIGHT_BLUE);
+    }
+}
 
 // ============================================================
 // LOAD / INIT / UNLOAD
@@ -48,6 +74,10 @@ void Lift_Load()
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
     gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
     gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
+    for (int i = 0; i < 10; i++)
+    {
+        gLiftWallTex[i] = AEGfxTextureLoad(Assets::Background::LiftWalls[i]);
+    }
 }
 
 void Lift_Initialize()
@@ -71,9 +101,19 @@ void Lift_Unload()
     if (gLiftDoorTex) { AEGfxTextureUnload(gLiftDoorTex);  gLiftDoorTex = nullptr; }
     if (gLiftPanelTex) { AEGfxTextureUnload(gLiftPanelTex); gLiftPanelTex = nullptr; }
 
-    // Optional: free font (only if your engine provides it)
-    // AEGfxDestroyFont(liftFontId);
-    // liftFontId = -1;
+    // Free font
+    AEGfxDestroyFont(liftFontId);
+    liftFontId = -1;
+    
+	// Unload lift wall textures
+    for (int i = 0; i < MAX_FLOORS; i++)
+    {
+        if (gLiftWallTex[i])
+        {
+            AEGfxTextureUnload(gLiftWallTex[i]);
+            gLiftWallTex[i] = nullptr;
+        }
+    }
 }
 
 
@@ -141,8 +181,7 @@ void Lift_HandleInput(s8& floorNum)
 // ============================================================
 // DRAW (WORLD LIFT + FLOOR LABEL)
 // ------------------------------------------------------------
-// This draws the lift box in the hallway itself (the one you
-// replaced from grey rectangles in Game_Draw).
+// This draws the lift box in the hallway
 //
 // Pass in x/y/w/h as the world lift placement (already includes camX).
 // ============================================================

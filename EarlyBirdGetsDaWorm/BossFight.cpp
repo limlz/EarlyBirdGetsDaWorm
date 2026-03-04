@@ -35,9 +35,17 @@ static float bossDodgeCooldown = 0.0f;
 // --- BOSS INSTANCE ---
 static Boss myBoss;
 
-// ---------------------------------------------------------
-// NEW UI FUNCTION: Player Health Bar
-// ---------------------------------------------------------
+// --- Boss Fight Fade-In Variables ---
+static bool isFadingIn = true;
+static float fadeInAlpha = 1.0f; // Start completely black (1.0)
+const float FADE_IN_SPEED = 1.0f; // Takes 1 second to fade in
+
+// --- Victory Sequence Variables ---
+static bool isVictorySequence = false;
+static float victoryAlpha = 0.0f;
+static float victoryHoldTimer = 0.0f;
+static s8 victoryFontId = -1;
+
 void Player_DrawHealthBar(AEGfxVertexList* mesh)
 {
     float hpPercent = (float)playerHP / (float)MAX_PLAYER_HP;
@@ -67,6 +75,8 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
 
 void Boss_Fight_Load()
 {
+    // Load the font for the victory text (We use size 35 here)
+    victoryFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 35);
     wallBgTexture = LoadTextureChecked("Assets/Background/WALL_BG.png");
     Boss_Load();
     squareMesh = CreateSquareMesh(COLOR_WHITE);
@@ -88,6 +98,14 @@ void Boss_Fight_Initialize()
     playerHP = MAX_PLAYER_HP;
     isPlayerHit = false;
 
+    // Reset the victory sequence
+    isVictorySequence = false;
+    victoryAlpha = 0.0f;
+    victoryHoldTimer = 0.0f;
+
+    isFadingIn = true;
+    fadeInAlpha = 1.0f;
+
     fireCooldown = 0.0f;
     bossDodgeCooldown = 0.0f;
 }
@@ -95,6 +113,33 @@ void Boss_Fight_Initialize()
 void Boss_Fight_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
+
+    if (myBoss.health <= 0 && !isVictorySequence) {
+        isVictorySequence = true;
+    }
+
+    // Run the victory animation and block all gameplay
+    if (isVictorySequence) {
+        victoryAlpha += 1.0f * dt; // Fade to black over 1 second
+        if (victoryAlpha >= 1.0f) {
+            victoryAlpha = 1.0f;
+            victoryHoldTimer += dt;
+
+            // Show the text for 3 seconds, then return to the main game
+            if (victoryHoldTimer > 3.0f) {
+                next = GAME_STATE;
+            }
+        }
+        return;
+    }
+
+    if (isFadingIn) {
+        fadeInAlpha -= FADE_IN_SPEED * dt;
+        if (fadeInAlpha <= 0.0f) {
+            fadeInAlpha = 0.0f;
+            isFadingIn = false; // Fade complete!
+        }
+    }
 
     // --- EXIT LOGIC ---
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
@@ -217,7 +262,8 @@ void Boss_Fight_Update()
                     hitTimer = 0.2f;
 
                     if (playerHP <= 0) {
-                        Boss_Fight_Initialize();
+                        currentEndReason = REASON_DIED_TO_BOSS;
+                        next = ENDGAME_STATE;
                     }
                 }
             }
@@ -247,6 +293,48 @@ void Boss_Fight_Draw()
     Player_DrawHealthBar(squareMesh);
     Bullets_DrawAmmoUI();
     Boss_DrawHealthBar(myBoss, squareMesh);
+
+    if (fadeInAlpha > 0.0f)
+    {
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetTransparency(fadeInAlpha);
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Pure Black
+
+        AEMtx33 scale, trans, transform;
+        AEMtx33Scale(&scale, 1600.0f, 900.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    }
+
+
+    // --- DRAW VICTORY SEQUENCE ---
+    if (isVictorySequence) {
+        // 1. Draw Black Screen
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetTransparency(victoryAlpha);
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+
+        AEMtx33 scale, trans, transform;
+        AEMtx33Scale(&scale, 1600.0f, 900.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+        // 2. Draw Text when fully black
+        if (victoryAlpha >= 1.0f && victoryFontId >= 0) {
+            AEGfxSetTransparency(1.0f);
+
+            // X: -0.4f roughly centers standard length text. Adjust if it's off-center!
+            AEGfxPrint(victoryFontId, "Patient Successfully Subdued", -0.4f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
+    AEGfxSetTransparency(1.0f);
 }
 
 void Boss_Fight_Free() {
@@ -256,4 +344,8 @@ void Boss_Fight_Unload() {
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
     Bullets_Free();
+    if (victoryFontId >= 0) {
+        AEGfxDestroyFont(victoryFontId);
+        victoryFontId = -1;
+    }
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor);
+
 void Lift_Load();          // Load textures
 
 void Lift_Initialize();    // Create meshes + reset state

@@ -31,6 +31,7 @@
 #include "main_menu.hpp"
 #include "game.hpp"
 #include "boss_fight.hpp"
+#include "endgame.hpp"
 #include "quit.hpp"
 #include "player.hpp"
 #include "timer.hpp"
@@ -40,6 +41,18 @@
 #include "pause_menu.hpp"
 #include "jumpscare.hpp"
 #include "tutorial.hpp"
+
+
+// --- ENDGAME FLAGS ---
+enum EndGameReason {
+    REASON_SURVIVED_5_DAYS,
+    REASON_DIED_TO_BOSS,
+    REASON_WRONG_BASEMENT_DELIVERY
+};
+
+// Declare it as extern so every file shares the EXACT same variable
+extern EndGameReason currentEndReason;
+
 
 // --- MACROS --- //
 // Colors
