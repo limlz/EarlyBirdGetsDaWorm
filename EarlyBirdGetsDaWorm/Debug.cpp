@@ -31,23 +31,38 @@ void Debug_Draw(const DebugInfo& info)
     const char* illness = "";
 
     switch (Player_GetCurrentIllness()) {
-    case 0:
+    case PARANOIA:
         illness = "PARANOIA";
         break;
-    case 1:
+    case MANIA:
         illness = "MANIA";
         break;
-    case 2:
+    case DEPRESSION:
         illness = "DEPRESSION";
         break;
-    case 3:
+    case DEMENTIA:
         illness = "DEMENTIA";
         break;
-    case 4:
+    case SCHIZOPHRENIA:
+        illness = "SCHIZOPHRENIA";
+        break;
+    case AIW_SYNDROME:
+        illness = "AIW SYNDROME";
+        break;
+    case INSOMNIA:
+        illness = "INSOMNIA";
+        break;
+    case OCD:
+        illness = "OCD";
+        break;
+    case SCOTOPHOBIA:
+        illness = "SCOTOPHOBIA";
+        break;
+    case ALL:
         illness = "ALL/GHOST";
         break;
     default:
-        illness = "UNKNOWN"; // Good practice to handle unexpected values
+        illness = "UNKNOWN";
         break;
     }
     // Calculate World Mouse using info struct

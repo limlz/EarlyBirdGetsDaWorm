@@ -32,6 +32,7 @@
 #include "game.hpp"
 #include "boss_fight.hpp"
 #include "endgame.hpp"
+#include "audio_manager.hpp"
 #include "quit.hpp"
 #include "player.hpp"
 #include "timer.hpp"

@@ -305,7 +305,7 @@ int Doors_Update(f32 camX)
         const float doorX = DoorWorldX(i, camX);
 
         // Player is at screen center x=0; detect door centered near screen
-        if (doorX > -detectionRange && doorX < detectionRange)
+        if (doorX > -detectionRange + 50 && doorX < detectionRange + 50)
             return i;
     }
     return -1;
