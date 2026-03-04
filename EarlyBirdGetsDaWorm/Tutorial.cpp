@@ -18,6 +18,7 @@ static bool tutLiftOpened{ false };
 static bool tutLiftFloorSelected{ false };
 static bool tutPatientCollected{ false };
 static bool tutPatientDelivered{ false };
+static bool tutFinished{ false };
 
 // Tutorial Variables
 struct DialogueBox {
@@ -122,14 +123,19 @@ void Tutorial_Initialize() {
 	tutLiftFloorSelected = false;
 	tutPatientCollected = false;
 	tutPatientDelivered = false;
+	tutFinished = false;
 
 	// Tutorial Dialogue Box
 	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 10.0f };
-	tutPagerOpenedBox = { 580.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
+	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
 		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 10.0f};
-	tutPagerClosedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 10.0f };
-	tutLiftOpenedBox = { 580.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"This lift can travel from Basement 1 (0) to Level 9.\nTo go to a level, press the number on your keyboard.\nTo exit the lift, press[L] again.\n", 10.0f };
+	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 10.0f };
+	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
+		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 10.0f };
+	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 10.0f };
+	tutPatientCollectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
+		"There are two types of patients:\nNormal and Ghost\nGhosts must be delivered to B1-03,\nNormal patients must be delivered\nto the room shown on your pager.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 10.0f };
+	tutPatientDeliveredBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 10.0f };
 
 	tutSpacePress = false;
 }
@@ -253,21 +259,39 @@ void Tutorial_Update(f32 dt) {
 			}
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				tutLiftOpened = true;
-				DialogueBox_Update(tutLiftOpenedBox, dt, 350.0f);
-				if (AEInputCheckTriggered(AEVK_Q)) {
+				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
+				if (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
+					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9)) {
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
 					tutLiftOpened = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
-				/*tutLiftOpened = true;
-				DialogueBox_Update(tutLiftOpenedBox, dt, 350.0f);
-				if (AEInputCheckTriggered(AEVK_Q)) {
-					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
-					tutLiftOpened = false;
+				tutLiftFloorSelected = true;
+				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
+				if (Player_HasPatient()) {
+					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
+					tutLiftFloorSelected = false;
 				}
-				break;*/
+				break;
+			}
+			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
+				tutPatientCollected = true;
+				DialogueBox_Update(tutPatientCollectedBox, dt, 400.0f);
+				if (!Player_HasPatient()) {
+					curTutStage = TUTORIAL_END;
+					tutPatientCollected = false;
+				}
+				break;
+			}
+			case TUTORIAL_END: {
+				tutPatientDelivered = true;
+				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
+				if (AEInputCheckTriggered(AEVK_Q)) {
+					tutFinished = true;
+				}
+				break;
 			}
 
 		}
@@ -321,40 +345,66 @@ void Tutorial_Draw() {
 		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
-	if (tutStarted) {
-		//Tutorial_DialogueBox_Draw("const char* str");
-		DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
-		std::string visibleText(
-			tutStartedBox.tutFullText,
-			(size_t)tutStartedBox.tutVisibleCharCount
-		);
-		Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 10.0f + tutStartedBox.tutBGY);
-	}
-	if (tutPagerOpened) {
-		DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
-		std::string visibleText(
-			tutPagerOpenedBox.tutFullText,
-			(size_t)tutPagerOpenedBox.tutVisibleCharCount
-		);
-		Tutorial_Text_Draw(visibleText.c_str(), -260.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY);
-	}
-	if (tutPagerClosed) {
-		DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
-		std::string visibleText(
-			tutPagerClosedBox.tutFullText,
-			(size_t)tutPagerClosedBox.tutVisibleCharCount
-		);
-		Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutPagerClosedBox.tutBGX, 10.0f + tutPagerClosedBox.tutBGY);
-	}
-	if (tutLiftOpened) {
-		DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
-		std::string visibleText(
-			tutLiftOpenedBox.tutFullText,
-			(size_t)tutLiftOpenedBox.tutVisibleCharCount
-		);
-		Tutorial_Text_Draw(visibleText.c_str(), -260.0f + tutLiftOpenedBox.tutBGX, 95.0f + tutLiftOpenedBox.tutBGY);
-	}
+	if (!tutFinished) {
 
+		if (tutStarted) {
+			//Tutorial_DialogueBox_Draw("const char* str");
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutStartedBox.tutFullText,
+				(size_t)tutStartedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY);
+		}
+		if (tutPagerOpened) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutPagerOpenedBox.tutFullText,
+				(size_t)tutPagerOpenedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY);
+		}
+		if (tutPagerClosed) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutPagerClosedBox.tutFullText,
+				(size_t)tutPagerClosedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY);
+		}
+		if (tutLiftOpened) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutLiftOpenedBox.tutFullText,
+				(size_t)tutLiftOpenedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY);
+		}
+		if (tutLiftFloorSelected) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutLiftFloorSelectedBox.tutFullText,
+				(size_t)tutLiftFloorSelectedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY);
+		}
+		if (tutPatientCollected) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutPatientCollectedBox.tutFullText,
+				(size_t)tutPatientCollectedBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutPatientCollectedBox.tutBGX, 45.0f + tutPatientCollectedBox.tutBGY);
+		}
+		if (tutPatientDelivered) {
+			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
+			std::string visibleText(
+				tutPatientDeliveredBox.tutFullText,
+				(size_t)tutPatientDeliveredBox.tutVisibleCharCount
+			);
+			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutPatientDeliveredBox.tutBGX, 45.0f + tutPatientDeliveredBox.tutBGY);
+		}
+	}
 }
 
 void Tutorial_Free() {

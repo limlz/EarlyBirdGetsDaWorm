@@ -88,6 +88,12 @@ void Notifications_Trigger()
 
 void Notifications_Update(bool liftActive, f32 dt)
 {
+	// Toggles the pager when user press Q, pager will not be displayed if lift is active
+	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
+	{
+		isPagerOpen = !isPagerOpen;
+	}
+
 	// Game start delayed pop up
 	bool wantTutorial{ Doing_Tutorial() };
 	bool answeredTutorial{ Tutorial_Prompt_Answered() };
@@ -141,11 +147,7 @@ void Notifications_Update(bool liftActive, f32 dt)
 	mouseY = static_cast<s32>((AEGfxGetWindowHeight() / 2.0f) - initialY);
 
 
-	// Toggles the pager when user press Q, pager will not be displayed if lift is active
-	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
-	{
-		isPagerOpen = !isPagerOpen;
-	}
+	
 	return;
 }
 
