@@ -157,7 +157,7 @@ bool Doors_TryDisposal(int floorNum, int doorIdx)
 
     if ((rand() % 100) < 30) { // 30% Chance
         // Trigger your existing JumpScare logic
-        //jumpscare
+        JumpScare_Start();
         s.lockedThisDay = true; // Lock the door even if it was just a scare
         return false;
     }
