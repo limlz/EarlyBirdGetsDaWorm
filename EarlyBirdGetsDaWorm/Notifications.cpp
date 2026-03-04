@@ -158,8 +158,8 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8
 	if (isPagerOpen)
 	{
 		f32 drawX{ 0.0f }, drawY{ 0.0f },
-			collectTextX{ textPosition(-500.0f + 140.0f, 317.5f -160.0f).first }, collectTextY{ textPosition(-500.0f + 140.0f, 317.5f -160.0f).second },
-			bringTextX{ textPosition(-500.0f + 140.0f, 317.5f -220.0f).first }, bringTextY{ textPosition(-500.0f + 140.0f, 317.5f -220.0f).second };
+			collectTextX{ textPosition(-360.0f, 157.5f).first }, collectTextY{ textPosition(-360.0f, 157.5f).second },
+			bringTextX{ textPosition(-360.0f, 97.5f).first }, bringTextY{ textPosition(-360.0f, 97.5f).second };
 
 		if (pagerVibrating)
 		{
