@@ -34,7 +34,6 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
-
 	PauseMenu_Load();
 	Debug_Load();
 	Timer_Load();
@@ -312,6 +311,7 @@ void Game_Free()
 
 void Game_Unload()
 {
+	AudioManager_Unload();
 	Frames_Unload();
 	Player_Unload();
 	Prompts_Unload();

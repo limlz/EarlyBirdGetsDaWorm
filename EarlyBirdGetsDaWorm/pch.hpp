@@ -39,6 +39,7 @@
 #include "assets_catalog.hpp"
 #include "pause_menu.hpp"
 #include "jumpscare.hpp"
+#include "audio_manager.hpp"
 
 // --- MACROS --- //
 // Colors

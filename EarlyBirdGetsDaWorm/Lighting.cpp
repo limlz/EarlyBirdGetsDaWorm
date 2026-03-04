@@ -22,6 +22,7 @@ void Update_StandaloneLight(float dt, float lightX, float lightY)
 
     if (singleLightTimer <= 0.0f)
     {
+        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 0.15f, 1.0f, -1);
         // Toggle visibility
         singleLightIsOn = !singleLightIsOn;
 

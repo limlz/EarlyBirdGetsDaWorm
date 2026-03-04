@@ -70,7 +70,9 @@ void MainMenu_Load()
 }
 
 void MainMenu_Initialize()
-{
+{	
+	AudioManager_PlayBGM(BGM_MAIN_MENU, 0.05f);
+	AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.05f);
 	Lighting_Initialize(0);
 	Particles_Initialize();
 
@@ -114,7 +116,6 @@ void MainMenu_Update()
 		{
 			titleAnimTimer = 0.0f; // Reset timer
 			currentTitleFrame++;   // Go to the next drawing step
-			
 		}
 	}
 
