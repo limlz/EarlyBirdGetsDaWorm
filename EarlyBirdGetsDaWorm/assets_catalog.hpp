@@ -79,5 +79,6 @@ namespace Assets
     {
         constexpr const char* YesButton = "Assets/Tutorial/yes-placeholder.jpg";
         constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.jpg";
+        constexpr const char* tutBG = "Assets/Tutorial/textbg-placeholder.jpg";
     }
 }

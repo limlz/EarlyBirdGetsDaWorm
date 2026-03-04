@@ -12,6 +12,7 @@ void AEGfxPrintWithGlow(s8 fontId, const char* text, float x, float y, float sca
 	float textR, float textG, float textB, float textA,
 	float glowR, float glowG, float glowB, float glowA,
 	float glowOffset, bool includeDiagonals = true);
+std::pair<f32, f32> textPosition(float adjustX, float adjustY);
 
 AEGfxTexture* LoadTextureChecked(const char* path);
 void UnloadTextureSafe(AEGfxTexture*& texture);

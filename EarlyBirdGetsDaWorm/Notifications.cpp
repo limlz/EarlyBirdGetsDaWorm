@@ -86,14 +86,6 @@ void Notifications_Trigger()
 	openPagerAfterDoor = true;   // request open on next state enter
 }
 
-// Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
-std::pair<f32, f32> textPosition(float adjustX, float adjustY)
-{
-	f32 textX = (-500.0f + adjustX) / (AEGfxGetWindowWidth() * 0.5f);
-	f32 textY = (317.5f + adjustY) / (AEGfxGetWindowWidth() * 0.5f);
-	return { textX, textY };
-}
-
 void Notifications_Update(bool liftActive, f32 dt)
 {
 	// Game start delayed pop up
