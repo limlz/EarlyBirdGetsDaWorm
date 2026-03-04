@@ -127,15 +127,15 @@ void Tutorial_Initialize() {
 
 	// Tutorial Dialogue Box
 	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 10.0f };
-	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
+	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
 		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 10.0f};
 	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 10.0f };
 	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
 		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 10.0f };
 	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 10.0f };
-	tutPatientCollectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
+	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
 		"There are two types of patients:\nNormal and Ghost\nGhosts must be delivered to B1-03,\nNormal patients must be delivered\nto the room shown on your pager.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 10.0f };
-	tutPatientDeliveredBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 10.0f };
+	tutPatientDeliveredBox = { 440.0f, 220.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 10.0f };
 
 	tutSpacePress = false;
 }
@@ -168,8 +168,8 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 
 		// Text typing effect
 		dialogue.tutVisibleCharCount += dialogue.tutTypingSpeed * dt;
-		if (dialogue.tutVisibleCharCount >= strlen(dialogue.tutFullText)) {
-			dialogue.tutVisibleCharCount = strlen(dialogue.tutFullText);
+		if (dialogue.tutVisibleCharCount >= static_cast<f32>(strlen(dialogue.tutFullText))) {
+			dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
 			dialogue.finishedTyping = true;
 		}
 
@@ -178,7 +178,7 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 		// Spacebar Logic
 		if (tutSpacePress) {
 			if (!dialogue.finishedTyping) {
-				dialogue.tutVisibleCharCount = strlen(dialogue.tutFullText);
+				dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
 				dialogue.finishedTyping = true;
 			}
 		}
@@ -278,7 +278,7 @@ void Tutorial_Update(f32 dt) {
 			}
 			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
 				tutPatientCollected = true;
-				DialogueBox_Update(tutPatientCollectedBox, dt, 400.0f);
+				DialogueBox_Update(tutPatientCollectedBox, dt, 500.0f);
 				if (!Player_HasPatient()) {
 					curTutStage = TUTORIAL_END;
 					tutPatientCollected = false;
@@ -394,7 +394,7 @@ void Tutorial_Draw() {
 				tutPatientCollectedBox.tutFullText,
 				(size_t)tutPatientCollectedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutPatientCollectedBox.tutBGX, 45.0f + tutPatientCollectedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY);
 		}
 		if (tutPatientDelivered) {
 			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
@@ -402,7 +402,7 @@ void Tutorial_Draw() {
 				tutPatientDeliveredBox.tutFullText,
 				(size_t)tutPatientDeliveredBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutPatientDeliveredBox.tutBGX, 45.0f + tutPatientDeliveredBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -190.0f + tutPatientDeliveredBox.tutBGX, 70.0f + tutPatientDeliveredBox.tutBGY);
 		}
 	}
 }

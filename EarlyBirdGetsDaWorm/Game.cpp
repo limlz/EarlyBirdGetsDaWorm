@@ -48,6 +48,7 @@ void Game_Load()
 	Prompts_Load();
 	Notifications_Load();
 	Tutorial_Load();
+    Guide_Load();
 	JumpScare_Load();
 
 	AllAnomalies_Load();
@@ -83,6 +84,7 @@ void Game_Initialize()
     Player_SetScaryByDay(CurrentDay);
     Notifications_Initialize();
     Tutorial_Initialize();
+    Guide_Initialize();
     AllAnomalies_Initialize();
 }
 
@@ -122,12 +124,18 @@ void Game_Update()
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
 
+    if (IsGuideActive()) {
+        Guide_Update(liftActive, dt, IsPagerActive());
+        return;
+    }
+
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive()) {
         Tutorial_Update(dt);
 
 		// Skip all gameplay input
         return;
     }
+
 
     Timer_Update(dt);
 
@@ -200,6 +208,7 @@ void Game_Update()
     }
 
     Notifications_Update(liftActive, dt);
+    Guide_Update(liftActive, dt, IsPagerActive());
     Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
     Tutorial_Update(dt);
 }
@@ -254,6 +263,7 @@ void Game_Draw()
     s8 targetFloor, targetDoor, destFloor, destDoor;
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
     Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
+    Guide_Draw();
 
     Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
@@ -307,6 +317,7 @@ void Game_Unload()
 	PauseMenu_Unload();
 	JumpScare_Unload();
     Tutorial_Free();
+    Guide_Free();
 
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
