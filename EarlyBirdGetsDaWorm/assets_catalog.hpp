@@ -48,6 +48,20 @@ namespace Assets
         constexpr const char* LiftBg = "Assets/Background/Lift_bg.png";
         constexpr const char* LiftDoor = "Assets/Background/LiftDoor_bg.png";
         constexpr const char* LiftPanel = "Assets/Background/LiftPanel_buttons.png";
+        constexpr const char* LiftWalls[] =
+        {
+            "Assets/Background/LiftWall_0.png",
+            "Assets/Background/LiftWall_1.png",
+            "Assets/Background/LiftWall_2.png",
+            "Assets/Background/LiftWall_3.png",
+            "Assets/Background/LiftWall_4.png",
+            "Assets/Background/LiftWall_5.png",
+            "Assets/Background/LiftWall_6.png",
+            "Assets/Background/LiftWall_7.png",
+            "Assets/Background/LiftWall_8.png",
+            "Assets/Background/LiftWall_9.png"
+        };
+        constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
     }
     namespace Door_Anomaly
     {

@@ -44,7 +44,6 @@ void Game_Load()
 	Prompts_Load();
 	Notifications_Load();
 	Tutorial_Load();
-	JumpScare_Init();
 	JumpScare_Load();
 
 	AllAnomalies_Load();
@@ -251,10 +250,7 @@ void Game_Draw()
 	if (camX > -(2 * DIST_BETWEEN_DOORS)) {
 		DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
 		Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
-		if (floorNum != 0)
-		{
-			DrawSquareMesh(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
-		}
+		Lift_DrawBackground(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, floorNum);
 	}
 
 	// End Lift
@@ -263,10 +259,7 @@ void Game_Draw()
 		float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
 		DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
 		Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
-		if (floorNum != 0)
-		{
-			DrawSquareMesh(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, COLOR_NIGHT_BLUE);
-		}
+		Lift_DrawBackground(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, floorNum);
 	}
 
 	// Player setup
@@ -312,10 +305,8 @@ void Game_Draw()
 	info.patientDoorNum = targetDoor;
 	info.patientFloorNum = targetFloor;
 
-	// Jumpscare
+	// JumpScare
 	JumpScare_Draw();
-
-
 	// Pause Menu (drawn last to be on top layer)
 	PauseMenu_Draw(squareMesh);
 
