@@ -41,7 +41,8 @@ void AudioManager_LoadAll() {
 }
 
 void AudioManager_Unload() {
-    
+    AEAudioStopGroup(groupSFX);
+    AEAudioStopGroup(groupBGM);
     for (int i = 0; i < SND_COUNT; ++i) {
         AEAudioUnloadAudio(soundBank[i]);
     }
@@ -79,4 +80,14 @@ void AudioManager_SetBGMVolume(float volume) {
 
 void AudioManager_SetSFXVolume(float volume) {
     AEAudioSetGroupVolume(groupSFX, volume);
+}
+
+void AudioManager_StopBGM()
+{
+    AEAudioStopGroup(groupBGM);
+}
+
+void AudioManager_StopSFX()
+{
+    AEAudioStopGroup(groupSFX);
 }

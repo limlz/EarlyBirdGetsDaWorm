@@ -45,3 +45,6 @@ void AudioManager_PlaySpatialSound(SoundID id, float anomalyX, float playerX);
 
 void AudioManager_SetBGMVolume(float volume);
 void AudioManager_SetSFXVolume(float volume);
+
+void AudioManager_StopBGM();
+void AudioManager_StopSFX();
