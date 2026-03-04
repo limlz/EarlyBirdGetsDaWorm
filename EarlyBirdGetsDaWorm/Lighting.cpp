@@ -1,27 +1,99 @@
 #include "pch.hpp"
+#include <cmath>
 
-// 1. Define a struct to hold the memory for each light
+// ============================================================
+//  TYPES & CONSTANTS
+// ============================================================
+
 struct FlickerData {
-    float timer;      // How much longer to stay in the current state
-    bool isVisible;   // Is it currently ON or OFF?
+    float timer;
+    bool  isVisible;
 };
 
-// 2. Create a grid of these structs (Parallel to your lightingMatrix)
-static std::array<std::array<FlickerData, 11>, 10> flickerMem;
+// Per-illness ON/OFF flicker durations (min, range) in 1/100 s
+struct FlickerTimes {
+    int onMin, onRange;   // light turning ON
+    int offMin, offRange;  // light turning OFF
+};
 
+static constexpr FlickerTimes kFlickerTable[] = {
+    /* PARANOIA      */ { 10,  50,   5,  25 },
+    /* MANIA         */ {  5,  30,   2,  15 },
+    /* DEPRESSION    */ {100, 200,  50, 150 },
+    /* DEMENTIA      */ { 20, 300,   5,  25 },
+    /* SCHIZOPHRENIA */ {  5, 150,   5, 100 },
+    /* AIW_SYNDROME  */ { 10, 140,   5,  25 },  // default behaviour
+    /* INSOMNIA      */ {200, 400,   5,   1 },  // off is near-instant
+    /* OCD           */ {100,   1, 100,   1 },  // fixed 1 s both ways
+    /* SCOTOPHOBIA   */ { 10, 140, 100, 200 },
+    /* ALL           */ { 10, 140,   5,  25 },  // resolved before use
+};
+
+static const ILLNESSES kAllRollTable[] = {
+    MANIA, PARANOIA, DEPRESSION, SCHIZOPHRENIA,
+    DEMENTIA, INSOMNIA, OCD, AIW_SYNDROME
+};
+static constexpr int kAllRollCount = static_cast<int>(sizeof(kAllRollTable) / sizeof(kAllRollTable[0]));
+
+// ============================================================
+//  STATE
+// ============================================================
+
+static std::array<std::array<FlickerData, 11>, 10> flickerMem;
 static AEGfxVertexList* squareMesh;
 static AEGfxTexture* frames_arr[10] = { nullptr };
 std::array<std::array<int, 11>, 10> lightingMatrix;
 
 static float singleLightTimer = 0.0f;
-static bool singleLightIsOn = true;
+static bool  singleLightIsOn = true;
+static float g_TotalTime = 0.0f;
+static ILLNESSES s_RandomAllIllness = PARANOIA;
+
+// ============================================================
+//  HELPERS
+// ============================================================
+
+// Resolve ALL to the day's chosen illness everywhere in one place
+static inline ILLNESSES ResolveIllness(ILLNESSES illness) {
+    return (illness == ALL) ? s_RandomAllIllness : illness;
+}
+
+// Generate a flicker duration from the table (in seconds)
+static inline float FlickerDuration(ILLNESSES illness, bool isOn) {
+    const FlickerTimes& t = kFlickerTable[static_cast<int>(illness)];
+    if (isOn) return static_cast<float>((rand() % t.onRange) + t.onMin) / 100.0f;
+    else      return static_cast<float>((rand() % t.offRange) + t.offMin) / 100.0f;
+}
+
+// Build a cone-light transform matrix and draw one ray
+static void DrawRay(float screenLightX, float lightY,
+    float angle, float dist,
+    AEGfxVertexList* mesh)
+{
+    AEMtx33 scale, rot, trans, pivot, final;
+    AEMtx33Scale(&scale, 15.0f, dist);
+    AEMtx33Trans(&pivot, 0.0f, -dist / 2.0f);
+    AEMtx33Rot(&rot, -angle);
+    AEMtx33Trans(&trans, screenLightX, lightY);
+    AEMtx33Concat(&final, &pivot, &scale);
+    AEMtx33Concat(&final, &rot, &final);
+    AEMtx33Concat(&final, &trans, &final);
+    AEGfxSetTransform(final.m);
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}
+
+// ============================================================
+//  STANDALONE LIGHT
+// ============================================================
 
 void Update_StandaloneLight(float dt, float lightX, float lightY)
 {
     singleLightTimer -= dt;
+    if (singleLightTimer > 0.0f) return;
 
     if (singleLightTimer <= 0.0f)
     {
+        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 0.15f, 1.0f, -1);
         // Toggle visibility
         singleLightIsOn = !singleLightIsOn;
 
@@ -41,312 +113,246 @@ void Update_StandaloneLight(float dt, float lightX, float lightY)
 
 void Draw_StandaloneConeLight(float x, float y)
 {
-    // 1. Check if the light is currently "Off" from our update logic
     if (!singleLightIsOn) return;
 
-    int numRays = 300;
-    float coneAngle = 1.2f;
-    float maxDist = 1500.0f;
-    float floorLevel = -700.0f;
+    static constexpr int   numRays = 300;
+    static constexpr float coneAngle = 1.2f;
+    static constexpr float maxDist = 1500.0f;
+    static constexpr float floorLevel = -700.0f;
+    static constexpr float brightness = 0.15f;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    float brightness = 0.15f;
     AEGfxSetBlendMode(AE_GFX_BM_ADD);
     AEGfxSetColorToMultiply(1.0f, 0.9f, 0.6f, brightness);
     AEGfxSetTransparency(brightness);
 
-    for (int i = 0; i < numRays; i++)
-    {
-        float progress = (float)i / (float)(numRays - 1);
+    for (int i = 0; i < numRays; i++) {
+        float progress = static_cast<float>(i) / static_cast<float>(numRays - 1);
         float angle = -coneAngle / 2.0f + (progress * coneAngle);
         float dirX = sinf(angle);
         float dirY = -cosf(angle);
 
-        float currentDist = 0.0f;
-        float step = 2.0f; // Slightly increased step for performance
-
-        // Simplified Raymarching: Only stop when hitting the floor
-        while (currentDist < maxDist) {
-            currentDist += step;
-            float checkY = y + (dirY * currentDist);
-
-            if (checkY < floorLevel) break; // Hit the floor!
+        float dist = 0.0f;
+        while (dist < maxDist) {
+            dist += 2.0f;
+            if (y + (dirY * dist) < floorLevel) break;
         }
-
-        AEMtx33 scale, rot, trans, pivot, finalMtx;
-        AEMtx33Scale(&scale, 15.0f, currentDist);
-        AEMtx33Trans(&pivot, 0.0f, -currentDist / 2.0f);
-        AEMtx33Rot(&rot, -angle);
-        AEMtx33Trans(&trans, x, y);
-
-        AEMtx33Concat(&finalMtx, &pivot, &scale);
-        AEMtx33Concat(&finalMtx, &rot, &finalMtx);
-        AEMtx33Concat(&finalMtx, &trans, &finalMtx);
-
-        AEGfxSetTransform(finalMtx.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+        DrawRay(x, y, angle, dist, squareMesh);
     }
 
-    // Reset AlphaEngine state
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     AEGfxSetTransparency(1.0f);
 }
 
-void Lighting_Load() {
-    // Load textures if needed
-}
+// ============================================================
+//  LOAD / INITIALIZE / UNLOAD
+// ============================================================
 
-void Lighting_Initialize(int fucked_floor) {
+void Lighting_Load() {}
+
+void Lighting_Initialize(int fucked_floor)
+{
     Particles_Initialize();
 
-    // Loop through every floor
+    // Roll the random illness for ALL patients once per day
+    s_RandomAllIllness = kAllRollTable[rand() % kAllRollCount];
+
     for (int f = 0; f < 10; f++) {
-        // Loop through every light
         for (int l = 0; l < 11; l++) {
             if (f == 0) {
-                lightingMatrix[f][l] = 2; // Floor 0 starts with flickering lights
-                continue;
-            }
-            if (f == fucked_floor) {
-                if ((rand() % 100) > 60) {
-                    lightingMatrix[f][l] = 2;
-                }
-                else {
-                    lightingMatrix[f][l] = 1;
-                }
-                continue;
-            }
-            if ((rand() % 100) > 70) {
                 lightingMatrix[f][l] = 2;
+                continue;
             }
-            else {
-                lightingMatrix[f][l] = 1;
-            }
-            continue;
+            int threshold = (f == fucked_floor) ? 60 : 70;
+            lightingMatrix[f][l] = ((rand() % 100) > threshold) ? 2 : 1;
         }
     }
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
-// Change logic to accept Camera Position and Dementia Flag
-void Lighting_Update(s8 floorNum, float camX, bool dementia)
+void Lighting_Unload()
 {
+    FreeMeshSafe(squareMesh);
+    Particles_Free();
+}
+
+// ============================================================
+//  UPDATE
+// ============================================================
+
+void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNESSES illness)
+{
+    illness = ResolveIllness(illness);
     Particles_Update();
 
-    float dt = (float)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
+    g_TotalTime += dt;
 
-    // Loop through the BASE 11 lights (the memory templates)
     for (int i = 0; i < 11; i++) {
+        if (lightingMatrix[floorNum][i] != 2) continue;
 
-        // Only calculate logic if this light is set to mode '2' (Flickering)
-        if (lightingMatrix[floorNum][i] == 2)
-        {
-            // Count down the timer
-            flickerMem[floorNum][i].timer -= dt;
+        FlickerData& fd = flickerMem[floorNum][i];
+        fd.timer -= dt;
+        if (fd.timer > 0.0f) continue;
 
-            // If timer runs out, Switch States!
-            if (flickerMem[floorNum][i].timer <= 0.0f)
-            {
-                // Toggle visibility
-                flickerMem[floorNum][i].isVisible = !flickerMem[floorNum][i].isVisible;
+        fd.isVisible = !fd.isVisible;
 
-                if (Player_HasPatient()) {
-                    ILLNESSES ill = Player_IsScaryPatient() ? ALL : Player_GetCurrentIllness();
+        if (illness == PARANOIA || illness == SCOTOPHOBIA)
+            Frames_SyncToLight(floorNum, i, fd.isVisible);
 
-					if (ill == PARANOIA || ill == SCOTOPHOBIA) {
-                        Frames_SyncToLight(floorNum, i, flickerMem[floorNum][i].isVisible);
-                    }
-                }
-
-                // --- SPARK SPAWN LOGIC FIX ---
-                // Whenever the light switches state, spawn sparks.
-
-                float lightWx = i * 600.0f + 300.0f; // Base position (0-10)
-                float lightWy = 250.0f;
-
-                if (dementia) {
-                    // FIX: If we are in the infinite hallway, the player might be at x=50,000.
-                    // We need to spawn the spark at the "Copy" of this light closest to the camera.
-
-                    // The pattern repeats every 10 lights (Indices 0-9 repeat). 
-                    // Distance = 10 lights * 600 spacing = 6000.0f.
-                    float repeatDist = 10 * 600.0f;
-
-                    // Calculate the offset 'k' to bring the light close to -camX (Camera Center)
-                    // roundf finds the nearest integer multiple of 6000.
-                    float k = roundf((-camX - lightWx) / repeatDist);
-
-                    // Apply the offset so the spark spawns on screen
-                    lightWx += k * repeatDist;
-                }
-
-                // Spawn sparks at the calculated position
-                Particles_Spawn(lightWx, lightWy, 8);
-                // -----------------------------
-
-                // Set a NEW random duration based on state
-                if (flickerMem[floorNum][i].isVisible) {
-                    flickerMem[floorNum][i].timer = (float)((rand() % 140) + 10) / 100.0f;
-                }
-                else {
-                    flickerMem[floorNum][i].timer = (float)((rand() % 25) + 5) / 100.0f;
-                }
-            }
+        float lightWx = i * 600.0f + 300.0f;
+        if (dementia) {
+            float repeatDist = 10 * 600.0f;
+            float k = roundf((-camX - lightWx) / repeatDist);
+            lightWx += k * repeatDist;
         }
+        Particles_Spawn(lightWx, 250.0f, 8);
+
+        fd.timer = FlickerDuration(illness, fd.isVisible);
     }
 }
 
-void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left)
+// ============================================================
+//  DRAW CONE LIGHT
+// ============================================================
+
+void DrawConeLight(float lightWorldX, float lightY, float camX,
+    bool right_left, bool isGhost, ILLNESSES illness)
 {
-    // ... Settings ...
-    int numRays = 300;
-    float coneAngle = 1.2f;
-    float maxDist = 1000.0f;
-    float floorLevel = -400.0f;
+    illness = ResolveIllness(illness);
+
+    static constexpr int   numRays = 300;
+    static constexpr float maxDist = 1000.0f;
+    static constexpr float floorLevel = -400.0f;
+
     float screenLightX = lightWorldX - camX;
+    if (screenLightX < -1800.0f || screenLightX > 1800.0f) return;
 
-    if (screenLightX < -1800 || screenLightX > 1800) return;
+    float time = g_TotalTime;
 
-    float pHeadLeft{};
-    float pHeadRight{};
+    // Defaults
+    float coneAngle = 1.2f, brightness = 0.1f;
+    float r = 0.95f, g = 0.92f, b = 0.85f;
 
-    float pBodyLeft{};
-    float pBodyRight{};
+    switch (illness) {
+    case MANIA:
+        coneAngle = 1.2f + 0.02f * sinf(time * 3.0f);
+        brightness = 0.11f + 0.01f * sinf(time * 10.0f);
+        r = 1.0f; g = 0.90f - 0.02f * sinf(time * 2.0f); b = 0.75f;
+        break;
+    case DEPRESSION:
+        coneAngle = 1.18f - 0.01f * sinf(time * 0.5f);
+        brightness = 0.08f + 0.01f * sinf(time * 0.8f);
+        r = 0.85f; g = 0.88f; b = 0.98f + 0.02f * sinf(time * 0.3f);
+        break;
+    case DEMENTIA:
+        coneAngle = 1.2f + 0.02f * sinf(time * 0.2f);
+        brightness = 0.09f - 0.01f * sinf(time * 0.4f);
+        r = 0.98f; g = 0.90f - 0.02f * sinf(time * 0.3f); b = 0.80f;
+        break;
+    case SCHIZOPHRENIA:
+        coneAngle = 1.2f + 0.01f * sinf(time * 15.0f) * sinf(time * 1.5f);
+        brightness = 0.1f + 0.01f * sinf(time * 12.0f);
+        r = 0.90f; g = 0.95f; b = 0.92f;
+        break;
+    case AIW_SYNDROME:
+        coneAngle = 1.3f + 0.05f * sinf(time * 0.6f);
+        r = 0.95f; g = 0.95f; b = 1.0f;
+        break;
+    case INSOMNIA:
+        brightness = 0.1f + (sinf(time * 20.0f) > 0.98f ? 0.015f : 0.0f);
+        r = 0.98f; g = 0.98f; b = 1.0f;
+        break;
+    case OCD:
+        coneAngle = 1.15f; brightness = 0.11f;
+        r = 0.95f; g = 0.95f; b = 0.95f;
+        break;
+    case PARANOIA:
+        coneAngle = 0.9f + 0.01f * sinf(time * 15.0f);
+        brightness = 0.09f;
+        r = 0.95f; g = 0.90f; b = 0.80f;
+        break;
+    default: break;
+    }
 
-
-    float bedLeft{};
-    float bedRight{};
-    float bedTop{};
-    float bedBot = -200.0f;
-
-    // Keep vertical bounds accurate to the sprite size
-    float pHeadTop = -60.0f;
-    float pHeadBot = -105.0f;
+    // Shadow culling bounds
+    float pHeadLeft{}, pHeadRight{};
+    float pBodyLeft{}, pBodyRight{};
+    float bedLeft{}, bedRight{}, bedTop{};
+    static constexpr float bedBot = -200.0f;
+    static constexpr float pHeadTop = -60.0f;
+    static constexpr float pHeadBot = -105.0f;
 
     if (!Player_HasPatient()) {
-        pHeadLeft = 30.0f;
-        pHeadRight = 70.0f;
-        pBodyLeft = 35.0f;
-        pBodyRight = 65.0f;
+        pHeadLeft = 30.0f;  pHeadRight = 70.0f;
+        pBodyLeft = 35.0f;  pBodyRight = 65.0f;
     }
     else if (right_left) {
-        pHeadLeft = -45.0f;
-        pHeadRight = 5.0f;
-        pBodyLeft = -35.0f;
-        pBodyRight = -5.0f;
-        bedLeft = 30.0f;
-        bedRight = 135.0f;
-        bedTop = -150.0f;
+        pHeadLeft = -45.0f; pHeadRight = 5.0f;
+        pBodyLeft = -35.0f; pBodyRight = -5.0f;
+        bedLeft = 30.0f; bedRight = 135.0f; bedTop = -150.0f;
     }
     else {
-        pHeadLeft = 95.0f;
-        pHeadRight = 145.0f;
-        pBodyLeft = 105.0f;
-        pBodyRight = 135.0f;
-        bedLeft = -30.0f;
-        bedRight = 70.0f;
-        bedTop = -150.0f;
+        pHeadLeft = 95.0f; pHeadRight = 145.0f;
+        pBodyLeft = 105.0f; pBodyRight = 135.0f;
+        bedLeft = -30.0f; bedRight = 70.0f; bedTop = -150.0f;
     }
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-
-    float brightness = 0.1f;
-
     AEGfxSetBlendMode(AE_GFX_BM_ADD);
-    AEGfxSetColorToMultiply(1.0f, 0.9f, 0.6f, brightness);
+    AEGfxSetColorToMultiply(r, g, b, brightness);
     AEGfxSetTransparency(brightness);
 
-    for (int i = 0; i < numRays; i++)
-    {
-        float progress = (float)i / (float)(numRays - 1);
+    for (int i = 0; i < numRays; i++) {
+        float progress = static_cast<float>(i) / static_cast<float>(numRays - 1);
         float angle = -coneAngle / 2.0f + (progress * coneAngle);
         float dirX = sinf(angle);
         float dirY = -cosf(angle);
 
-        float currentDist = 0.0f;
-        float step = 1.0f;
-
-        while (currentDist < maxDist) {
-            currentDist += step;
-            float checkX = screenLightX - (dirX * currentDist);
-            float checkY = lightY + (dirY * currentDist);
-            if (checkY < floorLevel) break;
-            if (checkX > pHeadLeft && checkX < pHeadRight && checkY < pHeadTop && checkY > pHeadBot) break;
-            if (checkX > pBodyLeft && checkX < pBodyRight && checkY < pHeadTop && checkY > bedBot) break;
-            if (checkX > bedLeft && checkX < bedRight && checkY < bedTop && checkY > bedBot) break;
+        float dist = 0.0f;
+        while (dist < maxDist) {
+            dist += 1.0f;
+            float cx = screenLightX - (dirX * dist);
+            float cy = lightY + (dirY * dist);
+            if (cy < floorLevel)                                            break;
+            if (cx > pHeadLeft && cx < pHeadRight && cy < pHeadTop && cy > pHeadBot) break;
+            if (cx > pBodyLeft && cx < pBodyRight && cy < pHeadTop && cy > bedBot)   break;
+            if (cx > bedLeft && cx < bedRight && cy < bedTop && cy > bedBot)   break;
         }
-
-        AEMtx33 scale, rot, trans, pivot, finalMtx;
-        AEMtx33Scale(&scale, 15.0f, currentDist);
-        AEMtx33Trans(&pivot, 0.0f, -currentDist / 2.0f);
-        AEMtx33Rot(&rot, -angle);
-        AEMtx33Trans(&trans, screenLightX, lightY);
-
-        AEMtx33Concat(&finalMtx, &pivot, &scale);
-        AEMtx33Concat(&finalMtx, &rot, &finalMtx);
-        AEMtx33Concat(&finalMtx, &trans, &finalMtx);
-
-        AEGfxSetTransform(finalMtx.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+        DrawRay(screenLightX, lightY, angle, dist, squareMesh);
     }
 
-    // --- RESET STATE ---
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     AEGfxSetTransparency(1.0f);
 }
 
-void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
+// ============================================================
+//  DRAW & FLICKER
+// ============================================================
+
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum,
+    bool dementia, bool isGhost, ILLNESSES illness)
 {
+    illness = ResolveIllness(illness);
+
     if (floorNum < 0 || floorNum >= 10) return;
 
-    int max_floor = dementia ? 1000 : 11;
+    int max_iter = dementia ? 1000 : 11;
 
-    for (int i = 0; i < max_floor; i++)
-    {
+    for (int i = 0; i < max_iter; i++) {
         float lightWx = i * 600.0f + 300.0f;
-
-        // --- CULLING FIX ---
-        // Convert World Position to Screen Position.
-        // Since camX is a negative offset (e.g., -1000), we ADD it.
         float screenPos = lightWx + camX;
+        if (screenPos < -1200.0f || screenPos > 1200.0f) continue;
 
-        // Check if the light is within the screen bounds (plus some padding)
-        if (screenPos < -1200.0f || screenPos > 1200.0f) {
-            continue;
-        }
+        int  idx = dementia ? (i % 10) : i;
+        int  state = lightingMatrix[floorNum][idx];
+        bool shouldDraw = (state == 1) || (state == 2 && flickerMem[floorNum][idx].isVisible);
 
-        // --- STATE & VISIBILITY ---
-        int state = 0;
-        bool shouldDraw = false;
-
-        if (dementia) {
-            state = lightingMatrix[floorNum][i % 10];
-
-            if (state == 1) shouldDraw = true;
-            else if (state == 2) shouldDraw = flickerMem[floorNum][i % 10].isVisible;
-
-        }
-        else {
-            state = lightingMatrix[floorNum][i];
-
-            if (state == 1) shouldDraw = true;
-            else if (state == 2) shouldDraw = flickerMem[floorNum][i].isVisible;
-        }
-
-        // --- DRAW ---
-        if (state != 0 && shouldDraw) {
-            // Note: We still pass -camX here because DrawConeLight likely expects 
-            // the positive Camera Position to perform the subtraction internally.
-            DrawConeLight(lightWx, 250.0f, -camX, left_right);
-        }
+        if (state != 0 && shouldDraw)
+            DrawConeLight(lightWx, 250.0f, -camX, left_right, isGhost, illness);
     }
 
     Particles_Draw(squareMesh, -camX);
-}
-
-void Lighting_Unload() {
-    FreeMeshSafe(squareMesh);
-    Particles_Free();
 }

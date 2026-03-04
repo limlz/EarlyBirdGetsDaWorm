@@ -93,6 +93,10 @@
     <ClCompile Include="PauseMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Jumpscare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,6 +187,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pause_menu.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="audio_manager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="jumpscare.hpp">

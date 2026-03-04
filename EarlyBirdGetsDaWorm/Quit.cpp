@@ -35,6 +35,7 @@ void Quit_Free()
 
 void Quit_Unload()
 {
+	AudioManager_Unload();
 	// Unload main menu resources
 	std::cout << "Quit: Unload\n";
 }

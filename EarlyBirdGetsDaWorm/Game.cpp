@@ -39,7 +39,6 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
-
 	PauseMenu_Load();
 	Debug_Load();
 	Timer_Load();
@@ -173,7 +172,7 @@ void Game_Update()
     Doors_Animate(dt, doorNumAtPlayer, camX);
     Lift_Update(dt, camX, maxDist);
     Lift_HandleInput(floorNum);
-    Lighting_Update(floorNum, camX, dementia);
+    Lighting_Update(floorNum, camX, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
     Frames_Update(dt);
 
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) {
@@ -246,7 +245,7 @@ void Game_Draw()
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
     Player_Draw(50.0f, playerY);
-    Draw_and_Flicker(camX, left_right, floorNum, dementia);
+    Draw_and_Flicker(camX, left_right, floorNum, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
 
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
@@ -295,18 +294,18 @@ void Game_Free() {}
 void Game_Unload()
 {
     Frames_Unload();
-    Player_Unload();
-    Prompts_Unload();
-    Boss_Fight_Unload();
-    Lighting_Unload();
-    Doors_Unload();
-    Debug_Unload();
-    Notifications_Free();
-    Timer_Unload();
-    Wall_Unload();
-    Lift_Unload();
-    PauseMenu_Unload();
-    JumpScare_Unload();
+	Player_Unload();
+	Prompts_Unload();
+	Boss_Fight_Unload();
+	Lighting_Unload();
+	Doors_Unload();
+	Debug_Unload();
+	Notifications_Free();
+	Timer_Unload();
+	Wall_Unload();
+	Lift_Unload();
+	PauseMenu_Unload();
+	JumpScare_Unload();
     Tutorial_Free();
 
     FreeMeshSafe(squareMesh);
