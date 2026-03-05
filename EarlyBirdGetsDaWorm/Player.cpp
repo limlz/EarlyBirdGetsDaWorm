@@ -1,4 +1,8 @@
 #include "pch.hpp"
+#include <algorithm> // shuffle
+#include <random>    // default_random_engine
+#include <ctime>     // time
+#include <vector>    // (optional, not used now but safe)
 
 /*************************************** VARIABLES ***************************************/
 static constexpr float FRAME_TIME = 0.4f;  // walking speed (time per frame)
@@ -16,7 +20,7 @@ static int      gFacing = 1;     // 1 right, -1 left
 static int      gFrame = 0;
 static int      CurrentDayPool[5];
 static int      PatientsHandled = 0;
-static int      PlayerPool[6][5] = 
+static int      PlayerPool[6][5] =
 {
     {0,0,0,0,0}, // Day 0 (Unused)
     {0,1,0,0,0}, // Day 1: 1 Ghost (20%)
@@ -34,21 +38,44 @@ static s8 DestDoor, DestFloor;
 ILLNESSES gCurrentIllness{};
 
 /************************************* HELPERS *******************************************/
+
+// Pick a REAL illness (no ALL / no NONE).
+// IMPORTANT: We rely on Player_HasPatient() to decide whether systems should apply illness effects.
+// If you want "no illness" state, do NOT use ILLNESSES::NONE (not defined) — just gate by Player_HasPatient().
+static ILLNESSES Player_RandomRealIllness()
+{
+    static ILLNESSES illnessPool[] =
+    {
+        ILLNESSES::PARANOIA,
+        ILLNESSES::MANIA,
+        ILLNESSES::DEPRESSION,
+        ILLNESSES::DEMENTIA,
+        ILLNESSES::SCHIZOPHRENIA,
+        ILLNESSES::AIW_SYNDROME,
+        ILLNESSES::INSOMNIA,
+        ILLNESSES::OCD,
+        ILLNESSES::SCOTOPHOBIA
+    };
+
+    const int n = (int)(sizeof(illnessPool) / sizeof(illnessPool[0]));
+    return illnessPool[rand() % n];
+}
+
 void Player_GenerateMission() {
     Patient_PickedUp = false;
 
     // Clear evidence for next patient (so old anomalies don't carry over)
     Journal_Clear();
 
+    // Reset "truth" state for next patient
     Player_SetScary(false);
-    gCurrentIllness = ILLNESSES::NONE; // Player starts with NO patient and NO anomalies
 
     PickupDoor = (s8)(rand() % 10) + 1;
     PickupFloor = (s8)(rand() % 9) + 1;
 
     do {
         DestDoor = (s8)(rand() % 10) + 1;
-        DestFloor = (s8)(rand() % 9) + 1;
+        DestFloor = (s8)(rand() % 9) + 1;   // floors 1-9 ONLY (no 00)
     } while (DestDoor == PickupDoor && DestFloor == PickupFloor);
 }
 
@@ -59,28 +86,14 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
         if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
             Patient_PickedUp = true;
 
-            // Decide based on journal evidence (exact match = human, no match = ghost)
-            ILLNESSES deduced = Journal_DeduceIllnessOrGhost();
+            // ROLL FOR GHOST (truth state)
+            // Ghost logic should NOT depend on PNG. PNG stays random bluff.
+            Player_SetScaryByDay(day);
 
-            if (deduced == ILLNESSES::ALL)
-            {
-                // GHOST -> abort notifs by forcing destination to basement
-                Player_SetScary(true);
-                gCurrentIllness = ILLNESSES::ALL;
-
-                // IMPORTANT: DO NOT send to basement in the pager.
-                // Pager stays misleading; correct play is to ignore pager and go disposal.
-                do {
-                    DestDoor = (s8)(rand() % 10) + 1;
-                    DestFloor = (s8)(rand() % 9) + 1;   // floors 1-9 ONLY (no 00)
-                } while (DestDoor == PickupDoor && DestFloor == PickupFloor);
-            } 
-            else
-            {
-                // HUMAN -> carry on and send to correct mission room
-                Player_SetScary(false);
-                gCurrentIllness = deduced;
-            }
+            // Always assign a REAL illness (ghost mimics a real illness).
+            // Extra anomaly that makes it "ghost" should be handled by your anomaly system,
+            // not by setting illness to ALL.
+            gCurrentIllness = Player_RandomRealIllness();
 
             // KEEP PNG RANDOM BLUFF (do NOT change this)
             gVisualIsScary = (std::rand() % 2 == 0);
@@ -116,22 +129,15 @@ void Player_ResetPatientCounter(int day) {
     std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
 }
 
-
 void Player_NewPatientRandom()
 {
     gFrame = 0;
     gTimer = 0.0f;
 
     // Assign Illness based on the Scary status already set by the Brain
-    if (!gIsScary) {
-        std::vector<ILLNESSES> runPool = AllAnomalies_CurrentRun();
-        int randomIndex = rand() % runPool.size();
-        gCurrentIllness = runPool[randomIndex];
-    }
-    else {
-        // Ghosts always use the special ALL state for the Mania animation
-        gCurrentIllness = ILLNESSES::ALL;
-    }
+    // NOTE: We no longer use AllAnomalies_CurrentRun() and we do NOT use ALL.
+    // Ghost still gets a REAL illness (mimic), and the "extra anomaly" clue is handled elsewhere.
+    gCurrentIllness = Player_RandomRealIllness();
 }
 
 void Player_SetScaryByDay(int day) {
@@ -157,6 +163,7 @@ void Player_SetScaryByDay(int day) {
     // 3. Increment for the next call
     PatientsHandled++;
 }
+
 /*************************************** MODIFIERS ***************************************/
 void Player_SetScary(bool scary)
 {
@@ -260,12 +267,10 @@ void Player_Update(float dt, bool walkKey)
 /***************************************** DRAW ******************************************/
 void Player_Draw(float x, float y)
 {
-
     AEMtx33 scale, trans, transform;
     float widthMultiplier = Patient_PickedUp ? 1.0f : 0.3f;
     float sx = (PLAYER_WIDTH * widthMultiplier) * (float)gFacing;   // // 1 = normal, -1 = flipped
     float sy = PLAYER_HEIGHT;
-
 
     // build transform matrix
     AEMtx33Scale(&scale, sx, sy);

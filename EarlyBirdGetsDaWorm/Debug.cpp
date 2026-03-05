@@ -58,9 +58,6 @@ void Debug_Draw(const DebugInfo& info)
     case ILLNESSES::SCOTOPHOBIA:
         illness = "SCOTOPHOBIA";
         break;
-    case ILLNESSES::ALL:
-        illness = "ALL/GHOST";
-        break;
     case ILLNESSES::NONE:
         illness = "NO PATIENT YET";
         break;

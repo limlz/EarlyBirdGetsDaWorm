@@ -353,18 +353,24 @@ void Game_Update()
 
         // --------------------------------------------------------
         // Rule:
-        // - If carrying a GHOST and trying to deliver to a NON-basement room:
+        // - If carrying a GHOST and delivering to the mission destination
+        //   (which is a NON-basement room because pager is a throw-off):
         //     -> JUMPSCARE, then ENDGAME
-        //
-        // (If your Player.cpp forces ghost destination to basement, this is a
-        // safety net only; it prevents weird edge cases.)
         // --------------------------------------------------------
-        if (Player_HasPatient() && Player_IsScaryPatient() && floorNum != 0)
+
+        // If player is at the destination door for the pager mission
+        if (Player_HasPatient() &&
+            floorNum == destFloor &&
+            doorAtPlayer1Based == destDoor)
         {
-            currentEndReason = REASON_WRONG_BASEMENT_DELIVERY; // make a new reason later if you want
-            JumpScare_Start();
-            gPendingGhostDeliveryDeath = true;
-            return;
+            // If it's a ghost, delivering it like a human = failure
+            if (Player_IsScaryPatient())
+            {
+                currentEndReason = REASON_WRONG_BASEMENT_DELIVERY; // rename later if you want
+                JumpScare_Start();
+                gPendingGhostDeliveryDeath = true;
+                return;
+            }
         }
 
         // --------------------------------------------------------

@@ -32,15 +32,7 @@ static constexpr FlickerTimes kFlickerTable[] = {
     /* INSOMNIA      */ {200, 400,   5,   1 },  // barely ever turns off
     /* OCD           */ {100,   1, 100,   1 },  // exactly 1 second on, 1 second off
     /* SCOTOPHOBIA   */ { 10, 140, 100, 200 },
-    /* ALL           */ { 10, 140,   5,  25 },  // gets replaced with a real illness at runtime
 };
-
-// When the illness is set to ALL, we randomly pick one of these at the start of each day
-static const ILLNESSES kAllRollTable[] = {
-    ILLNESSES:: MANIA, ILLNESSES::PARANOIA, ILLNESSES::DEPRESSION, ILLNESSES::SCHIZOPHRENIA,
-    ILLNESSES::DEMENTIA, ILLNESSES::INSOMNIA, ILLNESSES::OCD, ILLNESSES::AIW_SYNDROME
-};
-static constexpr int kAllRollCount = static_cast<int>(sizeof(kAllRollTable) / sizeof(kAllRollTable[0]));
 
 // ============================================================
 //  STATE
@@ -59,24 +51,31 @@ static float singleLightTimer = 0.0f;
 static bool  singleLightIsOn = true;
 
 static float g_TotalTime = 0.0f;             // used to drive animated lighting effects (sin waves, etc.)
-static ILLNESSES s_RandomAllIllness = ILLNESSES::PARANOIA; // the illness picked when ALL is active today
 
 // ============================================================
 //  HELPERS
 // ============================================================
 
-// If the illness is ALL, swap it out for today's randomly chosen one.
-// Call this at the top of any function that needs to act on a real illness.
-static inline ILLNESSES ResolveIllness(ILLNESSES illness) {
-    return (illness == ILLNESSES::ALL) ? s_RandomAllIllness : illness;
-}
-
 // Rolls a random flicker duration for a given illness, in seconds.
 // Pass isOn=true to get the "light on" duration, false for "light off".
-static inline float FlickerDuration(ILLNESSES illness, bool isOn) {
-    const FlickerTimes& t = kFlickerTable[static_cast<int>(illness)];
-    if (isOn) return static_cast<float>((rand() % t.onRange) + t.onMin) / 100.0f;
-    else      return static_cast<float>((rand() % t.offRange) + t.offMin) / 100.0f;
+static inline float FlickerDuration(ILLNESSES illness, bool isOn)
+{
+    // Convert illness -> safe index (clamp)
+    int idx = (int)illness;
+    const int maxIdx = (int)(sizeof(kFlickerTable) / sizeof(kFlickerTable[0])) - 1;
+
+    if (idx < 0 || idx > maxIdx)
+        idx = 0; // fallback to PARANOIA settings
+
+    const FlickerTimes& t = kFlickerTable[idx];
+
+    // Prevent rand()%0 crashes
+    int range = isOn ? t.onRange : t.offRange;
+    int minv = isOn ? t.onMin : t.offMin;
+
+    if (range <= 0) range = 1;
+
+    return (float)((rand() % range) + minv) / 100.0f;
 }
 
 // Draws a single light ray as a thin, rotated quad stretching down from the light source.
@@ -178,9 +177,6 @@ void Lighting_Initialize(int fucked_floor)
 {
     Particles_Initialize();
 
-    // Lock in which illness ALL maps to for the rest of the day
-    s_RandomAllIllness = kAllRollTable[rand() % kAllRollCount];
-
     for (int f = 0; f < 10; f++) {
         for (int l = 0; l < 11; l++) {
             // Ground floor is always fully lit
@@ -231,9 +227,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
 
     prevHasPatient = hasPatient;
 
-    // If the illness is ALL, swap it out for today's randomly chosen one.
-    // Call this at the top of any function that needs to act on a real illness.
-    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
+    ILLNESSES illness = Player_GetCurrentIllness();
 
     Particles_Update();
 
@@ -281,8 +275,6 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
 // Each ray is individually ray-marched and stops early if it hits the player, bed, or floor.
 static void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left, ILLNESSES illness)
 {
-    illness = ResolveIllness(illness);
-
     static constexpr int   numRays = 300;
     static constexpr float maxDist = 1000.0f;
     static constexpr float floorLevel = -400.0f;
@@ -434,8 +426,7 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
 void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
-
-    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
+    ILLNESSES illness = Player_GetCurrentIllness();
 
     // Dementia loops the corridor endlessly, more iterations to fill the screen
     int max_iter = dementia ? 1000 : 11;

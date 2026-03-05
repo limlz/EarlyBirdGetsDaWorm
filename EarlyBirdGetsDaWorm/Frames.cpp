@@ -219,16 +219,14 @@ void Frames_Update(float dt) {
                 }
 
                 if (currentIllness == ILLNESSES::MANIA) {
-                    float speed = (currentIllness == ILLNESSES::ALL) ? 30.0f : 20.0f;
+                    float speed = 20.0f;
                     f.currentState = (int)(fmodf(animTime * speed, (float)(FRAME_STATES - 1))) + 1;
                 }
 
                 float baseX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
                 float baseY = 0.0f;
 
-                switch (currentIllness) {
-                case ILLNESSES::NONE:
-                    return;   
+                switch (currentIllness) {  
                 case ILLNESSES::DEMENTIA:
                 case ILLNESSES::MANIA:
                     f.posX = baseX + ((rand() % 60) - 30);

@@ -122,7 +122,28 @@ static bool Journal_ExactMatchIllness(ILLNESSES illness)
     return a == b;
 }
 
-// [ADDED] Returns true if evidence matches any illness, and outputs that illness
+// [ADDED] Ghost rule:
+// If observed anomalies match ANY illness BUT with exactly +1 extra anomaly -> ghost evidence.
+static bool Journal_MatchIllnessPlusOneExtra(ILLNESSES illness)
+{
+    const auto* expected = GetAnomaliesForIllness(illness);
+    if (!expected) return false;
+
+    if (gObserved.empty()) return false;
+
+    // Must be exactly ONE extra anomaly beyond the illness set
+    if (gObserved.size() != expected->size() + 1) return false;
+
+    // Check expected is subset of observed
+    for (ANOMALYID need : *expected)
+    {
+        if (std::find(gObserved.begin(), gObserved.end(), need) == gObserved.end())
+            return false;
+    }
+    return true;
+}
+
+// [ADDED] Returns true if evidence matches any illness exactly, and outputs that illness (HUMAN)
 bool Journal_TryDeduceHumanIllness(ILLNESSES& outIllness)
 {
     for (ILLNESSES ill : gIllnessList)
@@ -133,17 +154,18 @@ bool Journal_TryDeduceHumanIllness(ILLNESSES& outIllness)
             return true; // HUMAN
         }
     }
-    return false; // not matching any -> GHOST
+    return false;
 }
 
-// [ADDED] Convenience: returns ALL if ghost (no match)
-ILLNESSES Journal_DeduceIllnessOrGhost()
+// [ADDED] Returns true if evidence is "illness + 1 extra anomaly" (GHOST)
+bool Journal_IsGhostEvidence()
 {
-    ILLNESSES matched{};
-    if (Journal_TryDeduceHumanIllness(matched))
-        return matched;
-
-    return ILLNESSES::ALL; // GHOST
+    for (ILLNESSES ill : gIllnessList)
+    {
+        if (Journal_MatchIllnessPlusOneExtra(ill))
+            return true; // GHOST evidence
+    }
+    return false;
 }
 
 static const char* IllnessText(ILLNESSES i)
@@ -159,8 +181,6 @@ static const char* IllnessText(ILLNESSES i)
     case ILLNESSES::INSOMNIA:       return "Insomnia";
     case ILLNESSES::OCD:            return "OCD";
     case ILLNESSES::SCOTOPHOBIA:    return "Scotophobia";
-    case ILLNESSES::NONE:           return "None";
-    case ILLNESSES::ALL:            return "Ghost";
     default:                        return "Unknown";
     }
 }

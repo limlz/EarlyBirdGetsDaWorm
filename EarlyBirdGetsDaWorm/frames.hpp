@@ -3,7 +3,7 @@
 enum class ILLNESSES
 {
     NONE,           // no patient / no evidence yet
-	ALL,			// ghost (matches no illness exactly)
+	//ALL,			// ghost (matches no illness exactly)
     PARANOIA,
     MANIA,
     DEPRESSION,
