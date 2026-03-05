@@ -1,17 +1,18 @@
 #pragma once
 
-enum ILLNESSES {
-	PARANOIA,			//to use in light
-	MANIA,
-	DEPRESSION,
-	DEMENTIA,
-	SCHIZOPHRENIA,
-	AIW_SYNDROME,		//Alice in Wonderland Syndrome
-	INSOMNIA,
-	OCD,
-	SCOTOPHOBIA,		//Fear of darkness //to use in light
-	ALL
-
+enum class ILLNESSES
+{
+    NONE,           // no patient / no evidence yet
+	ALL,			// ghost (matches no illness exactly)
+    PARANOIA,
+    MANIA,
+    DEPRESSION,
+    DEMENTIA,
+    SCHIZOPHRENIA,
+    AIW_SYNDROME,
+    INSOMNIA,
+    OCD,
+    SCOTOPHOBIA,
 };
 
 enum ENTITIES {

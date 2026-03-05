@@ -31,35 +31,38 @@ void Debug_Draw(const DebugInfo& info)
     const char* illness = "";
 
     switch (Player_GetCurrentIllness()) {
-    case PARANOIA:
+    case ILLNESSES::PARANOIA:
         illness = "PARANOIA";
         break;
-    case MANIA:
+    case ILLNESSES::MANIA:
         illness = "MANIA";
         break;
-    case DEPRESSION:
+    case ILLNESSES::DEPRESSION:
         illness = "DEPRESSION";
         break;
-    case DEMENTIA:
+    case ILLNESSES::DEMENTIA:
         illness = "DEMENTIA";
         break;
-    case SCHIZOPHRENIA:
+    case ILLNESSES::SCHIZOPHRENIA:
         illness = "SCHIZOPHRENIA";
         break;
-    case AIW_SYNDROME:
+    case ILLNESSES::AIW_SYNDROME:
         illness = "AIW SYNDROME";
         break;
-    case INSOMNIA:
+    case ILLNESSES::INSOMNIA:
         illness = "INSOMNIA";
         break;
-    case OCD:
+    case ILLNESSES::OCD:
         illness = "OCD";
         break;
-    case SCOTOPHOBIA:
+    case ILLNESSES::SCOTOPHOBIA:
         illness = "SCOTOPHOBIA";
         break;
-    case ALL:
+    case ILLNESSES::ALL:
         illness = "ALL/GHOST";
+        break;
+    case ILLNESSES::NONE:
+        illness = "NO PATIENT YET";
         break;
     default:
         illness = "UNKNOWN";

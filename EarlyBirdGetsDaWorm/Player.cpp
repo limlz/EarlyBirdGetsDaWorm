@@ -16,7 +16,8 @@ static int      gFacing = 1;     // 1 right, -1 left
 static int      gFrame = 0;
 static int      CurrentDayPool[5];
 static int      PatientsHandled = 0;
-static int      PlayerPool[6][5] = {
+static int      PlayerPool[6][5] = 
+{
     {0,0,0,0,0}, // Day 0 (Unused)
     {0,1,0,0,0}, // Day 1: 1 Ghost (20%)
     {0,1,0,0,1}, // Day 2: 2 Ghosts (40%)
@@ -31,10 +32,16 @@ static s8 PickupDoor, PickupFloor;
 static s8 DestDoor, DestFloor;
 
 ILLNESSES gCurrentIllness{};
-    
+
 /************************************* HELPERS *******************************************/
 void Player_GenerateMission() {
     Patient_PickedUp = false;
+
+    // Clear evidence for next patient (so old anomalies don't carry over)
+    Journal_Clear();
+
+    Player_SetScary(false);
+    gCurrentIllness = ILLNESSES::NONE; // Player starts with NO patient and NO anomalies
 
     PickupDoor = (s8)(rand() % 10) + 1;
     PickupFloor = (s8)(rand() % 9) + 1;
@@ -51,9 +58,33 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
     if (!Patient_PickedUp) {
         if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
             Patient_PickedUp = true;
-            // ROLL FOR GHOST
-            Player_SetScaryByDay(day);
+
+            // Decide based on journal evidence (exact match = human, no match = ghost)
+            ILLNESSES deduced = Journal_DeduceIllnessOrGhost();
+
+            if (deduced == ILLNESSES::ALL)
+            {
+                // GHOST -> abort notifs by forcing destination to basement
+                Player_SetScary(true);
+                gCurrentIllness = ILLNESSES::ALL;
+
+                // IMPORTANT: DO NOT send to basement in the pager.
+                // Pager stays misleading; correct play is to ignore pager and go disposal.
+                do {
+                    DestDoor = (s8)(rand() % 10) + 1;
+                    DestFloor = (s8)(rand() % 9) + 1;   // floors 1-9 ONLY (no 00)
+                } while (DestDoor == PickupDoor && DestFloor == PickupFloor);
+            } 
+            else
+            {
+                // HUMAN -> carry on and send to correct mission room
+                Player_SetScary(false);
+                gCurrentIllness = deduced;
+            }
+
+            // KEEP PNG RANDOM BLUFF (do NOT change this)
             gVisualIsScary = (std::rand() % 2 == 0);
+
             return true;
         }
     }
@@ -99,7 +130,7 @@ void Player_NewPatientRandom()
     }
     else {
         // Ghosts always use the special ALL state for the Mania animation
-        gCurrentIllness = ALL;
+        gCurrentIllness = ILLNESSES::ALL;
     }
 }
 
@@ -184,7 +215,7 @@ void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& 
     }*/
 }
 
-float Player_GetWidth()  { return PLAYER_WIDTH; }
+float Player_GetWidth() { return PLAYER_WIDTH; }
 float Player_GetHeight() { return PLAYER_HEIGHT; }
 
 /***************************************** LOAD ******************************************/
@@ -232,11 +263,11 @@ void Player_Draw(float x, float y)
 
     AEMtx33 scale, trans, transform;
     float widthMultiplier = Patient_PickedUp ? 1.0f : 0.3f;
-    float sx = (PLAYER_WIDTH * widthMultiplier)*(float)gFacing;   // // 1 = normal, -1 = flipped
+    float sx = (PLAYER_WIDTH * widthMultiplier) * (float)gFacing;   // // 1 = normal, -1 = flipped
     float sy = PLAYER_HEIGHT;
-    
 
-	// build transform matrix
+
+    // build transform matrix
     AEMtx33Scale(&scale, sx, sy);
     AEMtx33Trans(&trans, x, y);
     AEMtx33Concat(&transform, &trans, &scale);

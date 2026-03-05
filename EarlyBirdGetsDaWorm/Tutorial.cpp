@@ -134,7 +134,7 @@ void Tutorial_Initialize() {
 		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f };
 	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f };
 	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"There are two types of patients:\nNormal and Ghost\nGhosts must be delivered to B1-03,\nNormal patients must be delivered\nto the room shown on your pager.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 25.0f };
+		"There are two types of patients:\nNormal and Ghost\nYou must deliver ghosts to the basement,\nNormal patients must be delivered\nto the room shown on your pager.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 25.0f };
 	tutPatientDeliveredBox = { 440.0f, 220.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 25.0f };
 
 	tutSpacePress = false;

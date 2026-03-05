@@ -228,15 +228,15 @@ static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
 {
     switch (illness)
     {
-    case PARANOIA:      return (rand() % 2) ? DoorEvent::ShadowWalk : DoorEvent::Knock;
-    case MANIA:         return DoorEvent::HandprintSlam;
-    case DEPRESSION:    return DoorEvent::Knock;
-    case DEMENTIA:      return DoorEvent::ShadowWalk;
-    case SCHIZOPHRENIA: return (rand() % 2) ? DoorEvent::ShadowWalk : DoorEvent::HandprintSlam;
-    case AIW_SYNDROME:  return DoorEvent::Knock;
-    case INSOMNIA:      return DoorEvent::Knock;
-    case OCD:           return DoorEvent::HandprintSlam;
-    case SCOTOPHOBIA:   return DoorEvent::ShadowWalk;
+    case ILLNESSES::PARANOIA:      return (rand() % 2) ? DoorEvent::ShadowWalk : DoorEvent::Knock;
+    case ILLNESSES::MANIA:         return DoorEvent::HandprintSlam;
+    case ILLNESSES::DEPRESSION:    return DoorEvent::Knock;
+    case ILLNESSES::DEMENTIA:      return DoorEvent::ShadowWalk;
+    case ILLNESSES::SCHIZOPHRENIA: return (rand() % 2) ? DoorEvent::ShadowWalk : DoorEvent::HandprintSlam;
+    case ILLNESSES::AIW_SYNDROME:  return DoorEvent::Knock;
+    case ILLNESSES::INSOMNIA:      return DoorEvent::Knock;
+    case ILLNESSES::OCD:           return DoorEvent::HandprintSlam;
+    case ILLNESSES::SCOTOPHOBIA:   return DoorEvent::ShadowWalk;
     default:            return DoorEvent::None;
     }
 }

@@ -37,8 +37,8 @@ static constexpr FlickerTimes kFlickerTable[] = {
 
 // When the illness is set to ALL, we randomly pick one of these at the start of each day
 static const ILLNESSES kAllRollTable[] = {
-    MANIA, PARANOIA, DEPRESSION, SCHIZOPHRENIA,
-    DEMENTIA, INSOMNIA, OCD, AIW_SYNDROME
+    ILLNESSES:: MANIA, ILLNESSES::PARANOIA, ILLNESSES::DEPRESSION, ILLNESSES::SCHIZOPHRENIA,
+    ILLNESSES::DEMENTIA, ILLNESSES::INSOMNIA, ILLNESSES::OCD, ILLNESSES::AIW_SYNDROME
 };
 static constexpr int kAllRollCount = static_cast<int>(sizeof(kAllRollTable) / sizeof(kAllRollTable[0]));
 
@@ -59,7 +59,7 @@ static float singleLightTimer = 0.0f;
 static bool  singleLightIsOn = true;
 
 static float g_TotalTime = 0.0f;             // used to drive animated lighting effects (sin waves, etc.)
-static ILLNESSES s_RandomAllIllness = PARANOIA; // the illness picked when ALL is active today
+static ILLNESSES s_RandomAllIllness = ILLNESSES::PARANOIA; // the illness picked when ALL is active today
 
 // ============================================================
 //  HELPERS
@@ -68,7 +68,7 @@ static ILLNESSES s_RandomAllIllness = PARANOIA; // the illness picked when ALL i
 // If the illness is ALL, swap it out for today's randomly chosen one.
 // Call this at the top of any function that needs to act on a real illness.
 static inline ILLNESSES ResolveIllness(ILLNESSES illness) {
-    return (illness == ALL) ? s_RandomAllIllness : illness;
+    return (illness == ILLNESSES::ALL) ? s_RandomAllIllness : illness;
 }
 
 // Rolls a random flicker duration for a given illness, in seconds.
@@ -208,37 +208,67 @@ void Lighting_Unload()
 
 // Ticks all flickering lights on the current floor and fires sparks whenever one toggles.
 // Also syncs animation frames to light state for PARANOIA/SCOTOPHOBIA (their visuals depend on it).
-void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNESSES illness)
+void Lighting_Update(s8 floorNum, float camX, bool dementia)
 {
-    illness = ResolveIllness(illness);
+	// FADE IN EFFECT: 
+    // When the player first enters a floor, the lights gradually 
+    // ramp up from darkness instead of flickering on all at once.
+    const float dt = (float)AEFrameRateControllerGetFrameTime();
+
+    static bool  prevHasPatient = false;
+    static float ramp = 0.0f;
+
+    bool hasPatient = Player_HasPatient();
+
+    if (hasPatient && !prevHasPatient)
+        ramp = 0.0f;
+
+    if (!hasPatient)
+        ramp = 0.0f;
+
+    ramp += 2.0f * dt;          // tweak speed
+    if (ramp > 1.0f) ramp = 1.0f;
+
+    prevHasPatient = hasPatient;
+
+    // If the illness is ALL, swap it out for today's randomly chosen one.
+    // Call this at the top of any function that needs to act on a real illness.
+    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
+
     Particles_Update();
 
-    float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
     g_TotalTime += dt;
 
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 11; i++)
+    {
         if (lightingMatrix[floorNum][i] != 2) continue; // only tick flickering lights
 
         FlickerData& fd = flickerMem[floorNum][i];
         fd.timer -= dt;
+
         if (fd.timer > 0.0f) continue; // not time to toggle yet
 
+        // Toggle visibility
         fd.isVisible = !fd.isVisible;
 
         // These illnesses need their sprite frames to match the light state
-        if (illness == PARANOIA || illness == SCOTOPHOBIA)
+        if (illness == ILLNESSES::PARANOIA || illness == ILLNESSES::SCOTOPHOBIA)
             Frames_SyncToLight(floorNum, i, fd.isVisible);
 
         // Figure out where the light bulb actually is in world space
         // (dementia warps the layout, so we snap to the nearest repeat)
         float lightWx = i * 600.0f + 300.0f;
-        if (dementia) {
+        if (dementia)
+        {
             float repeatDist = 10 * 600.0f;
             float k = roundf((-camX - lightWx) / repeatDist);
             lightWx += k * repeatDist;
         }
-        Particles_Spawn(lightWx, 250.0f, 8); // spark burst at the bulb position
 
+        // Spark burst when it pops
+        Particles_Spawn(lightWx, 250.0f, 8);
+
+        // How long until the next flicker? Varies by illness and ON/OFF state
         fd.timer = FlickerDuration(illness, fd.isVisible);
     }
 }
@@ -249,8 +279,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNE
 
 // Draws one ceiling light's cone, with per-illness visual tweaks (color, brightness, cone width).
 // Each ray is individually ray-marched and stops early if it hits the player, bed, or floor.
-void DrawConeLight(float lightWorldX, float lightY, float camX,
-    bool right_left, bool isGhost, ILLNESSES illness)
+static void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left, ILLNESSES illness)
 {
     illness = ResolveIllness(illness);
 
@@ -271,49 +300,59 @@ void DrawConeLight(float lightWorldX, float lightY, float camX,
     // Each illness subtly warps the lighting to reinforce the mood:
     // MANIA pulses fast and bright, DEPRESSION is dim and cold,
     // SCHIZOPHRENIA twitches unpredictably, OCD is unnervingly perfect, etc.
-    switch (illness) {
-    case MANIA:
+    switch (illness)
+    {
+    case ILLNESSES::MANIA:
         coneAngle = 1.2f + 0.02f * sinf(time * 3.0f);
         brightness = 0.11f + 0.01f * sinf(time * 10.0f);
         r = 1.0f; g = 0.90f - 0.02f * sinf(time * 2.0f); b = 0.75f;
         break;
-    case DEPRESSION:
+
+    case ILLNESSES::DEPRESSION:
         coneAngle = 1.18f - 0.01f * sinf(time * 0.5f);
         brightness = 0.08f + 0.01f * sinf(time * 0.8f);
         r = 0.85f; g = 0.88f; b = 0.98f + 0.02f * sinf(time * 0.3f);
         break;
-    case DEMENTIA:
+
+    case ILLNESSES::DEMENTIA:
         coneAngle = 1.2f + 0.02f * sinf(time * 0.2f);
         brightness = 0.09f - 0.01f * sinf(time * 0.4f);
         r = 0.98f; g = 0.90f - 0.02f * sinf(time * 0.3f); b = 0.80f;
         break;
-    case SCHIZOPHRENIA:
+
+    case ILLNESSES::SCHIZOPHRENIA:
         // Two interfering sine waves create an irregular, unsettling twitch
         coneAngle = 1.2f + 0.01f * sinf(time * 15.0f) * sinf(time * 1.5f);
         brightness = 0.1f + 0.01f * sinf(time * 12.0f);
         r = 0.90f; g = 0.95f; b = 0.92f;
         break;
-    case AIW_SYNDROME:
+
+    case ILLNESSES::AIW_SYNDROME:
         coneAngle = 1.3f + 0.05f * sinf(time * 0.6f); // slowly breathes in and out
         r = 0.95f; g = 0.95f; b = 1.0f;
         break;
-    case INSOMNIA:
+
+    case ILLNESSES::INSOMNIA:
         // Mostly steady, with a rare sharp spike — like a light about to die
         brightness = 0.1f + (sinf(time * 20.0f) > 0.98f ? 0.015f : 0.0f);
         r = 0.98f; g = 0.98f; b = 1.0f;
         break;
-    case OCD:
+
+    case ILLNESSES::OCD:
         // Perfectly stable — no variation at all, which feels eerie in context
         coneAngle = 1.15f; brightness = 0.11f;
         r = 0.95f; g = 0.95f; b = 0.95f;
         break;
-    case PARANOIA:
+
+    case ILLNESSES::PARANOIA:
         // Narrow cone that twitches slightly, like something always watching
         coneAngle = 0.9f + 0.01f * sinf(time * 15.0f);
         brightness = 0.09f;
         r = 0.95f; g = 0.90f; b = 0.80f;
         break;
-    default: break;
+
+    default:
+        break;
     }
 
     // Shadow-casting bounds for the player's head, body, and bed.
@@ -326,18 +365,23 @@ void DrawConeLight(float lightWorldX, float lightY, float camX,
     static constexpr float pHeadBot = -105.0f;
 
     // Shadow box positions differ depending on which side the patient is on
-    if (!Player_HasPatient()) {
+    if (!Player_HasPatient())
+    {
         pHeadLeft = 30.0f;  pHeadRight = 70.0f;
         pBodyLeft = 35.0f;  pBodyRight = 65.0f;
     }
-    else if (right_left) {
+    else if (right_left)
+    {
         pHeadLeft = -45.0f; pHeadRight = 5.0f;
         pBodyLeft = -35.0f; pBodyRight = -5.0f;
+
         bedLeft = 30.0f; bedRight = 135.0f; bedTop = -150.0f;
     }
-    else {
-        pHeadLeft = 95.0f; pHeadRight = 145.0f;
+    else
+    {
+        pHeadLeft = 95.0f;  pHeadRight = 145.0f;
         pBodyLeft = 105.0f; pBodyRight = 135.0f;
+
         bedLeft = -30.0f; bedRight = 70.0f; bedTop = -150.0f;
     }
 
@@ -346,24 +390,31 @@ void DrawConeLight(float lightWorldX, float lightY, float camX,
     AEGfxSetColorToMultiply(r, g, b, brightness);
     AEGfxSetTransparency(brightness);
 
-    for (int i = 0; i < numRays; i++) {
+    for (int i = 0; i < numRays; i++)
+    {
         float progress = static_cast<float>(i) / static_cast<float>(numRays - 1);
         float angle = -coneAngle / 2.0f + (progress * coneAngle);
+
         float dirX = sinf(angle);
         float dirY = -cosf(angle);
 
         // Step along the ray, stopping early if it hits the floor, the patient's body, or the bed
         float dist = 0.0f;
-        while (dist < maxDist) {
+        while (dist < maxDist)
+        {
             dist += 1.0f;
+
             float cx = screenLightX - (dirX * dist);
             float cy = lightY + (dirY * dist);
-            if (cy < floorLevel)                                            break;
+
+            if (cy < floorLevel) break;
+
             if (cx > pHeadLeft && cx < pHeadRight && cy < pHeadTop && cy > pHeadBot) break;
             if (cx > pBodyLeft && cx < pBodyRight && cy < pHeadTop && cy > bedBot)   break;
-            if (cx > bedLeft && cx < bedRight && cy < bedTop && cy > bedBot)         break;
+            if (cx > bedLeft && cx < bedRight && cy < bedTop && cy > bedBot)     break;
         }
-		// Draw the ray, which will be clipped at dist
+
+        // Draw the ray, which will be clipped at dist
         DrawRay(screenLightX, lightY, angle, dist, squareMesh);
     }
 
@@ -380,30 +431,29 @@ void DrawConeLight(float lightWorldX, float lightY, float camX,
 // Master draw call for all lights on the current floor.
 // Skips offscreen lights, respects their on/flicker/off state, and handles
 // the dementia "infinite corridor" effect by tiling the light layout.
-void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum,
-    bool dementia, bool isGhost, ILLNESSES illness)
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
-    illness = ResolveIllness(illness);
-
     if (floorNum < 0 || floorNum >= 10) return;
+
+    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
 
     // Dementia loops the corridor endlessly, more iterations to fill the screen
     int max_iter = dementia ? 1000 : 11;
 
-    for (int i = 0; i < max_iter; i++) {
+    for (int i = 0; i < max_iter; i++)
+    {
         float lightWx = i * 600.0f + 300.0f;
         float screenPos = lightWx + camX;
-        if (screenPos < -1200.0f || screenPos > 1200.0f) continue; // offscreen, skip
 
-        // In dementia mode, wrap the index so the 11-light pattern tiles seamlessly
+        if (screenPos < -1200.0f || screenPos > 1200.0f)
+            continue; // offscreen, skip
+
         int  idx = dementia ? (i % 10) : i;
         int  state = lightingMatrix[floorNum][idx];
-
-        // state 1 = always on, state 2 = flickering (check current visibility)
         bool shouldDraw = (state == 1) || (state == 2 && flickerMem[floorNum][idx].isVisible);
 
         if (state != 0 && shouldDraw)
-            DrawConeLight(lightWx, 250.0f, -camX, left_right, isGhost, illness);
+            DrawConeLight(lightWx, 250.0f, -camX, left_right, illness);
     }
 
     Particles_Draw(squareMesh, -camX);

@@ -52,15 +52,15 @@ void AllAnomalies_GenerateRun()
     // Pool of all illnesses
     std::vector<ILLNESSES> illnessPool =
     {
-        PARANOIA,
-        MANIA,
-        DEPRESSION,
-        DEMENTIA,
-        SCHIZOPHRENIA,
-        AIW_SYNDROME,   // Alice in Wonderland Syndrome
-        INSOMNIA,
-        OCD,
-        SCOTOPHOBIA     // Fear of darkness
+        ILLNESSES::PARANOIA,
+        ILLNESSES::MANIA,
+        ILLNESSES::DEPRESSION,
+        ILLNESSES::DEMENTIA,
+        ILLNESSES::SCHIZOPHRENIA,
+        ILLNESSES::AIW_SYNDROME,   // Alice in Wonderland Syndrome
+        ILLNESSES::INSOMNIA,
+        ILLNESSES::OCD,
+        ILLNESSES::SCOTOPHOBIA     // Fear of darkness
     };
 
     // Shuffle pool

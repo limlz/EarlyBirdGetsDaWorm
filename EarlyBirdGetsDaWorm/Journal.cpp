@@ -96,20 +96,72 @@ static const std::vector<ANOMALYID>* GetAnomaliesForIllness(ILLNESSES illness)
     return nullptr;
 }
 
+// ============================================================
+// MATCHING LOGIC: observed anomalies -> illness OR ghost
+// ============================================================
+
+// [ADDED] Exact match helper: observed must equal the illness anomaly list (order doesn't matter)
+static bool Journal_ExactMatchIllness(ILLNESSES illness)
+{
+    const auto* expected = GetAnomaliesForIllness(illness);
+    if (!expected) return false;
+
+    // If no evidence, we cannot conclude anything
+    if (gObserved.empty()) return false;
+
+    // Must match exact count (this is what makes "extra anomaly" => ghost)
+    if (gObserved.size() != expected->size()) return false;
+
+    // Compare as sets (sort copies)
+    std::vector<ANOMALYID> a = gObserved;
+    std::vector<ANOMALYID> b = *expected;
+
+    std::sort(a.begin(), a.end());
+    std::sort(b.begin(), b.end());
+
+    return a == b;
+}
+
+// [ADDED] Returns true if evidence matches any illness, and outputs that illness
+bool Journal_TryDeduceHumanIllness(ILLNESSES& outIllness)
+{
+    for (ILLNESSES ill : gIllnessList)
+    {
+        if (Journal_ExactMatchIllness(ill))
+        {
+            outIllness = ill;
+            return true; // HUMAN
+        }
+    }
+    return false; // not matching any -> GHOST
+}
+
+// [ADDED] Convenience: returns ALL if ghost (no match)
+ILLNESSES Journal_DeduceIllnessOrGhost()
+{
+    ILLNESSES matched{};
+    if (Journal_TryDeduceHumanIllness(matched))
+        return matched;
+
+    return ILLNESSES::ALL; // GHOST
+}
+
 static const char* IllnessText(ILLNESSES i)
 {
     switch (i)
     {
-    case ILLNESSES::PARANOIA:      return "Paranoia";
-    case ILLNESSES::MANIA:         return "Mania";
-    case ILLNESSES::DEPRESSION:    return "Depression";
-    case ILLNESSES::DEMENTIA:      return "Dementia";
-    case ILLNESSES::SCHIZOPHRENIA: return "Schizophrenia";
-    case ILLNESSES::AIW_SYNDROME:  return "AIW Syndrome";
-    case ILLNESSES::INSOMNIA:      return "Insomnia";
-    case ILLNESSES::OCD:           return "OCD";
-    case ILLNESSES::SCOTOPHOBIA:   return "Scotophobia";
-    default:                       return "Unknown";
+    case ILLNESSES::PARANOIA:       return "Paranoia";
+    case ILLNESSES::MANIA:          return "Mania";
+    case ILLNESSES::DEPRESSION:     return "Depression";
+    case ILLNESSES::DEMENTIA:       return "Dementia";
+    case ILLNESSES::SCHIZOPHRENIA:  return "Schizophrenia";
+    case ILLNESSES::AIW_SYNDROME:   return "AIW Syndrome";
+    case ILLNESSES::INSOMNIA:       return "Insomnia";
+    case ILLNESSES::OCD:            return "OCD";
+    case ILLNESSES::SCOTOPHOBIA:    return "Scotophobia";
+    case ILLNESSES::NONE:           return "None";
+    case ILLNESSES::ALL:            return "Ghost";
+    default:                        return "Unknown";
     }
 }
 

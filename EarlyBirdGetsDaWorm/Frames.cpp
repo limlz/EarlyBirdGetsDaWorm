@@ -227,6 +227,8 @@ void Frames_Update(float dt) {
                 float baseY = 0.0f;
 
                 switch (currentIllness) {
+                case ILLNESSES::NONE:
+                    return;   
                 case ILLNESSES::DEMENTIA:
                 case ILLNESSES::MANIA:
                     f.posX = baseX + ((rand() % 60) - 30);

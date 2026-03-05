@@ -95,16 +95,16 @@ static ANOMALYID GetWallPickByIllness(ILLNESSES illness)
 
     switch (illness)
     {
-    case PARANOIA:       return PickFromPool(paranoiaPool);
-    case MANIA:          return PickFromPool(maniaPool);
-    case DEPRESSION:     return PickFromPool(depressionPool);
-    case DEMENTIA:       return PickFromPool(dementiaPool);
+    case ILLNESSES::PARANOIA:       return PickFromPool(paranoiaPool);
+    case ILLNESSES::MANIA:          return PickFromPool(maniaPool);
+    case ILLNESSES::DEPRESSION:     return PickFromPool(depressionPool);
+    case ILLNESSES::DEMENTIA:       return PickFromPool(dementiaPool);
 
-    case SCHIZOPHRENIA:  return PickFromPool(schizophreniaPool);
-    case AIW_SYNDROME:   return PickFromPool(aiwPool);
-    case INSOMNIA:       return PickFromPool(insomniaPool);
-    case OCD:            return PickFromPool(ocdPool);
-    case SCOTOPHOBIA:    return PickFromPool(scotophobiaPool);
+    case ILLNESSES::SCHIZOPHRENIA:  return PickFromPool(schizophreniaPool);
+    case ILLNESSES::AIW_SYNDROME:   return PickFromPool(aiwPool);
+    case ILLNESSES::INSOMNIA:       return PickFromPool(insomniaPool);
+    case ILLNESSES::OCD:            return PickFromPool(ocdPool);
+    case ILLNESSES::SCOTOPHOBIA:    return PickFromPool(scotophobiaPool);
 
     default:             return ANOMALYID::None;
     }
