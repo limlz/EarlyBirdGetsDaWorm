@@ -107,7 +107,10 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	}
 
 	if (!isGuideOpen) {
-		guideAlpha = 0.0f;
+		guideAlpha -= fadeSpeed * dt;
+		if (guideAlpha < 0.0f) {
+			guideAlpha = 0.0f;
+		}
 		cat1Alpha = 0.5;
 		cat1Selected = true;
 		cat2Selected = false;
@@ -170,13 +173,23 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 
 bool IsGuideActive() { return isGuideOpen; }
 
-void Guide_Draw() {
+void Guide_DrawSmallIcon() {
 	// Position
 	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Draws the guide icon in the corner
 	DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
+
+}
+
+void Guide_Draw() {
+	// Position
+	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
+		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+
+	// Draws the guide icon in the corner
+	//DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
 
 	if (isGuideOpen) {
 		// Black BG

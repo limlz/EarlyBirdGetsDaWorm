@@ -23,6 +23,7 @@ void AudioManager_LoadAll() {
     soundBank[SFX_LIFT] = AEAudioLoadSound("Assets/Audio/SFX_LIFT.wav");
     soundBank[SFX_LIGHT_FLICKER] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
     soundBank[SFX_PLANT_THUD] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
+    soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
 
     // Characters
     soundBank[SFX_BOSS_FIGHT] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");

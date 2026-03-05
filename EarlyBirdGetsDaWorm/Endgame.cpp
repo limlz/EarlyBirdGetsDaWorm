@@ -1,8 +1,4 @@
 #include "pch.hpp"
-#include "Endgame.hpp"
-
-// Define the actual global variable here so the linker can find it
-EndGameReason currentEndReason = REASON_SURVIVED_5_DAYS;
 
 static s8 endgameFontId = -1;
 static s8 subFontId = -1;

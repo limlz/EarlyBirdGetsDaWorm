@@ -7,10 +7,10 @@ void Doors_Initialize();
 
 void Doors_Animate(float dt, int doorNearPlayer, float camX);
 
-int  Doors_Update(f32 camX);
+int Doors_Update(float camX);
 
-void Doors_Draw(f32 camX, s8 floorNum, f32 textXoffset, f32 textY, bool dementia = false);
+void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool dementia);
 
 void Doors_Unload();
 
-bool Doors_TryDisposal(int floorNum, int doorIdx);
+bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare);

@@ -13,7 +13,8 @@ enum SoundID {
     SFX_DOOR_KNOCKING,              // SFX_DOOR_KNOCKING.wav
     SFX_LIFT,                       // SFX_LIFT.wav
     SFX_LIGHT_FLICKER,              // SFX_LIGHT_BUZZING.wav
-    SFX_PLANT_THUD,           // SFX_PLANT_DROP_THONK.wav
+    SFX_PLANT_THUD,                 // SFX_PLANT_DROP_THONK.wav
+	SFX_DOOR_KNOCK,                 // SFX_DOOR_KNOCK.wav
 
     /*************  3. PLAYER & CHARACTER SFX   *************/
 

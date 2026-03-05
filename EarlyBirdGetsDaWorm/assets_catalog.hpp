@@ -28,6 +28,7 @@ namespace Assets
         constexpr const char* TitleBg = "Assets/Main_Menu/title_bg.png";
         constexpr const char* CreditsUp = "Assets/Main_Menu/credits_up.png";
         constexpr const char* CreditsDown = "Assets/Main_Menu/credits_down.png";
+        constexpr const char* CloseButton = "Assets/Main_Menu/cross.png";
         constexpr const char* TitleFramePrefix = "Assets/Main_Menu/title_sheets/title_";
         constexpr const char* TitleFrameSuffix = ".png";
     }
@@ -64,6 +65,7 @@ namespace Assets
             "Assets/Background/LiftWall_9.png"
         };
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
+        constexpr const char* JournalBook = "Assets/Background/Journalbook.png";
     }
     namespace Door_Anomaly
     {

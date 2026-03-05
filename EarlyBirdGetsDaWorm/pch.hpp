@@ -7,12 +7,13 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include <cstdlib> // For rand()
-#include <algorithm> // Required for std::shuffle
-#include <random>    // Required for std::default_random_engine
+#include <cstdlib>      // For rand()
+#include <algorithm>    // Required for std::shuffle
+#include <random>       // Required for std::default_random_engine
 #include "AEEngine.h"
 
 #include "debug.hpp"
+#include "settings.hpp"
 #include "prompts.hpp"
 #include "boss.hpp"
 #include "bullets.hpp"
@@ -43,6 +44,7 @@
 #include "jumpscare.hpp"
 #include "tutorial.hpp"
 #include "guide.hpp"
+#include "journal.hpp"
 
 // --- ENDGAME FLAGS ---
 enum EndGameReason {
@@ -59,6 +61,7 @@ extern EndGameReason currentEndReason;
 // Colors
 #define COLOR_WHITE         0xFFFFFFFF
 #define COLOR_BLACK         0x000000FF
+#define COLOR_RED           0xFFFF0000
 #define COLOR_LIGHT_GREY    0x696969FF
 #define COLOR_DARK_GREY		0x333333FF
 #define COLOR_NIGHT_BLUE    0x191970FF
