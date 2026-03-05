@@ -13,6 +13,7 @@
 #include "AEEngine.h"
 
 #include "debug.hpp"
+#include "settings.hpp"
 #include "prompts.hpp"
 #include "boss.hpp"
 #include "bullets.hpp"
