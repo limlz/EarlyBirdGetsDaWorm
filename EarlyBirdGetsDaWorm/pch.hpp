@@ -7,13 +7,16 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include <cstdlib>      // For rand()
-#include <algorithm>    // Required for std::shuffle
-#include <random>       // Required for std::default_random_engine
+#include <ctime>
+#include <cstdlib>   // For rand()
+#include <algorithm> // Required for std::shuffle
+#include <random>    // Required for std::default_random_engine
 #include "AEEngine.h"
 
+#include "analytics.hpp"
 #include "debug.hpp"
 #include "settings.hpp"
+#include "config.hpp"
 #include "prompts.hpp"
 #include "boss.hpp"
 #include "bullets.hpp"

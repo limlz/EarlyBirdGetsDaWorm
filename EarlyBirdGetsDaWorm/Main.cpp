@@ -19,7 +19,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     // Initialize Game State Manager (Start at Menu or Game)
     GSM_Initialize(START_UP);
-    AESysSetFullScreen(1);
+    AESysSetFullScreen(0);
 
     // --- SAFE MAIN LOOP ---
     while (gGameRunning)

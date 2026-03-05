@@ -77,6 +77,7 @@ void GSM_Update()
 		break;
 
 	case MAIN_MENU:
+		Game_ResetSession();
 		// Assign Main Menu state functions
 		fpLoad = MainMenu_Load;
 		fpInitialize = MainMenu_Initialize;
@@ -120,6 +121,7 @@ void GSM_Update()
 		break;
 
 	case ENDGAME_STATE:
+		Game_ResetSession();
 		fpLoad = Endgame_Load;
 		fpInitialize = Endgame_Initialize;
 		fpUpdate = Endgame_Update;

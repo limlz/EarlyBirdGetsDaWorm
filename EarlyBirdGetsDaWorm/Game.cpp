@@ -1,26 +1,25 @@
 #include "pch.hpp"
+#include "Analytics.hpp"
 
 // ============================================================
-// RENDER DATA / MESHES
+//  RENDER DATA / MESHES
 // ============================================================
 
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 
-// (unused?) keep since it was already here
 static AEGfxTexture* lightingtest = nullptr;
 
 // ============================================================
-// CAMERA / PLAYER POS
+//  CAMERA / PLAYER POS
 // ============================================================
 
 static f32 camX{}, playerY{}, playerX{};
 
-// UI text offset
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 
 // ============================================================
-// FLOOR / DOOR STATE
+//  FLOOR / DOOR STATE
 // ============================================================
 
 s8 floorNum{ 1 };
@@ -29,30 +28,31 @@ s8 demonRoomNum{ 3 };
 s8 doorNumAtPlayer{ -1 };
 
 // ============================================================
-// GAMEPLAY FLAGS
+//  GAMEPLAY FLAGS
 // ============================================================
 
 bool liftActive{}, left_right{ 1 };
 bool dementia{ false };
 
 // ============================================================
-// DAY / SESSION STATE
+//  DAY / SESSION STATE
 // ============================================================
 
 static int  CurrentDay = 1;
-static bool gSessionStarted = false;
+static bool gSessionStarted = false; // Guards Game_Load so day/timer only reset on a fresh session, not a reload
 
 // ============================================================
-// SPAWN (unused in this file right now, keeping)
+//  SPAWN
 // ============================================================
 
 static float gSpawnX = 50.0f;
 static float gSpawnY = 0.0f;
 
 // ============================================================
-// BOSS TRANSITION FADE
+//  BOSS TRANSITION FADE
 // ============================================================
 
+// Two separate fades: one going into the boss fight, one returning from it
 static bool  isFadingToBoss = false;
 static float bossFadeAlpha = 0.0f;
 
@@ -62,21 +62,21 @@ static float returnFadeAlpha = 1.0f;
 const float BOSS_FADE_SPEED = 2.0f;
 
 // ============================================================
-// JUMPSCARE -> ENDGAME HANDOFF
+//  JUMPSCARE -> ENDGAME HANDOFF
 // ============================================================
 
+// Endgame can't trigger mid-jumpscare; these flags defer the state transition until the jumpscare finishes
 static bool gPendingEndgameAfterJumpscare = false;
 EndGameReason currentEndReason = REASON_SURVIVED_5_DAYS;
 static EndGameReason gPendingEndReason = REASON_SURVIVED_5_DAYS;
 
-// forward decls if not in pch.hpp
 void JumpScare_Start();
 bool JumpScare_IsActive();
 
-// If we trigger a jumpscare due to GHOST delivered to NON-basement,
-// we end the game AFTER the jumpscare finishes.
-static bool gPendingGhostDeliveryDeath = false;
+static bool  gPendingGhostDeliveryDeath = false;
+static float totalTimeSurvived = 0.0f;
 
+// Computes the player's Y so they spawn flush with the top of the border collider, not clipped into it
 static float ComputeSpawnYFromBorder()
 {
     float borderCenterY = -650.0f;
@@ -85,9 +85,8 @@ static float ComputeSpawnYFromBorder()
     return borderTopY + (Player_GetHeight() * 0.5f);
 }
 
-
 // ============================================================
-// LOAD
+//  LOAD
 // ============================================================
 
 void Game_Load()
@@ -106,12 +105,9 @@ void Game_Load()
     Tutorial_Load();
     Guide_Load();
     JumpScare_Load();
-
     AllAnomalies_Load();
-    //Wall_Load();			//moved to central_pool.cpp
-    //Frames_Load();
 
-    // One-time session setup
+    // gSessionStarted prevents this block from re-running on floor transitions or reloads mid-session
     if (!gSessionStarted)
     {
         CurrentDay = 1;
@@ -123,7 +119,7 @@ void Game_Load()
 }
 
 // ============================================================
-// INITIALIZE (per-state enter)
+//  INITIALIZE
 // ============================================================
 
 void Game_Initialize()
@@ -131,13 +127,12 @@ void Game_Initialize()
     squareMesh = CreateSquareMesh(COLOR_WHITE);
     circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 
-    // Fade states
+    // Always enter a new floor with a fade-in; boss fade-out starts clean
     isFadingToBoss = false;
     bossFadeAlpha = 0.0f;
     isFadingFromBoss = true;
     returnFadeAlpha = 1.0f;
 
-    // Init sub-systems
     Doors_Initialize();
     Lift_Initialize();
     JumpScare_Initialize();
@@ -147,18 +142,16 @@ void Game_Initialize()
     Guide_Initialize();
     AllAnomalies_Initialize();
 
-    // Start first mission of the day
-    // NOTE: With your new logic, ghost/human is decided from JOURNAL evidence,
-    // so we do NOT roll ghost here.
     Player_ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
 
-    // Reset handoff flag
     gPendingGhostDeliveryDeath = false;
+    Config::Load();
+    totalTimeSurvived = 0.0f;
 }
 
 // ============================================================
-// UPDATE
+//  UPDATE
 // ============================================================
 
 void Game_Update()
@@ -166,18 +159,20 @@ void Game_Update()
     float dt = (f32)AEFrameRateControllerGetFrameTime();
     Debug_Update();
 
+    if (AEInputCheckTriggered(AEVK_F5)) {
+        Config::Load();
+    }
+
     // ------------------------------------------------------------
-    // If a jumpscare-triggered death is pending, wait for jumpscare to finish
+    // PHASE 1: JUMPSCARE & DEATH HANDOFF
     // ------------------------------------------------------------
+    // Spin here until the jumpscare animation finishes, then flush the pending end reason and transition
     if (gPendingEndgameAfterJumpscare)
     {
-        // Replace this check with what you actually have:
-        // - JumpScare_IsActive()
-        // - JumpScare_IsPlaying()
-        // - or a bool you store inside JumpScare.cpp
         if (!JumpScare_IsActive())
         {
             currentEndReason = gPendingEndReason;
+            Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
         }
@@ -185,12 +180,13 @@ void Game_Update()
     }
 
     // ------------------------------------------------------------
-    // 1) Fade transition TO boss fight
+    // PHASE 2: BOSS FIGHT TRANSITIONS
     // ------------------------------------------------------------
     if (isFadingToBoss)
     {
         bossFadeAlpha += BOSS_FADE_SPEED * dt;
 
+        // Switch to BOSS_FIGHT_STATE only once the screen is fully black
         if (bossFadeAlpha >= 1.0f)
         {
             bossFadeAlpha = 1.0f;
@@ -202,13 +198,9 @@ void Game_Update()
     }
     else if (bossFadeAlpha > 0.0f)
     {
-        // fade back down if we are not actively transitioning
         bossFadeAlpha -= BOSS_FADE_SPEED * dt;
     }
 
-    // ------------------------------------------------------------
-    // 2) Fade transition FROM boss fight back to hallway
-    // ------------------------------------------------------------
     if (isFadingFromBoss)
     {
         returnFadeAlpha -= BOSS_FADE_SPEED * dt;
@@ -220,75 +212,58 @@ void Game_Update()
     }
 
     // ------------------------------------------------------------
-    // 3) Jumpscare update (freezes gameplay)
+    // PHASE 3: INTERRUPTIONS & OVERLAYS
     // ------------------------------------------------------------
     bool freeze = JumpScare_Update(dt);
     if (freeze) return;
 
-    // After jumpscare ends, go endgame (if we triggered it)
+    // Ghost wrong-room death is also deferred until its jumpscare completes
     if (gPendingGhostDeliveryDeath && !JumpScare_IsActive())
     {
+        Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Room Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
         gPendingGhostDeliveryDeath = false;
         next = ENDGAME_STATE;
         return;
     }
 
-    // ------------------------------------------------------------
-    // 4) Day overlay (freezes gameplay)
-    // ------------------------------------------------------------
     Timer_UpdateDayOverlay(dt);
     if (Timer_IsDayOverlayActive()) return;
 
-    // ------------------------------------------------------------
-    // 5) Pause menu (freezes gameplay)
-    // ------------------------------------------------------------
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
 
-    // ------------------------------------------------------------
-    // 6) Guide overlay (freezes gameplay)
-    // ------------------------------------------------------------
     if (IsGuideActive())
     {
         Guide_Update(liftActive, dt, IsPagerActive());
         return;
     }
 
-    // ------------------------------------------------------------
-    // 7) Tutorial overlay (freezes gameplay)
-    // ------------------------------------------------------------
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive())
     {
         Tutorial_Update(dt);
-
-        // Skip all gameplay input
         return;
     }
 
-    // ------------------------------------------------------------
-    // 8) Journal update (and freeze if open)
-    // ------------------------------------------------------------
     Journal_Update();
-
-    if (Journal_IsOpen())
-    {
-        return; // freeze gameplay while journal open
-    }
+    if (Journal_IsOpen()) return;
 
     // ------------------------------------------------------------
-    // 9) Timer main update + day advance
+    // PHASE 4: TIME TRACKING & DAY ADVANCEMENT
     // ------------------------------------------------------------
     Timer_Update(dt);
+    totalTimeSurvived += dt;
 
     if (Timer_IsTimeUp())
     {
         if (CurrentDay >= 5)
         {
             currentEndReason = REASON_SURVIVED_5_DAYS;
+            Analytics::LogRun(CurrentDay, "Victory - Survived 5 Days", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
             next = ENDGAME_STATE;
             return;
         }
 
+        // Advance the day: reset camera, floor, lift, and regenerate the patient mission
         CurrentDay++;
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
@@ -297,39 +272,37 @@ void Game_Update()
         floorNum = 1;
         liftActive = false;
 
-        // Start next day mission
         Player_ResetPatientCounter(CurrentDay);
         Player_GenerateMission();
-
         return;
     }
 
     // ------------------------------------------------------------
-    // 10) Movement input / debugging toggles
+    // PHASE 5: INPUT & MOVEMENT
     // ------------------------------------------------------------
-    if (AEInputCheckCurr(AEVK_A)) { camX += PLAYER_SPEED * dt; left_right = false; }
-    if (AEInputCheckCurr(AEVK_D)) { camX -= PLAYER_SPEED * dt; left_right = true; }
+    if (AEInputCheckCurr(AEVK_A)) { camX += Config::playerSpeed * dt; left_right = false; }
+    if (AEInputCheckCurr(AEVK_D)) { camX -= Config::playerSpeed * dt; left_right = true; }
 
     if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
     if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
-    if (AEInputCheckTriggered(AEVK_K)) Timer_DebugSetTime(5 * 60 + 58);
+    if (AEInputCheckTriggered(AEVK_K))   Timer_DebugSetTime(5 * 60 + 58);
 
     bool moveRight = AEInputCheckCurr(AEVK_D);
     bool moveLeft = AEInputCheckCurr(AEVK_A);
     bool isWalking = moveRight || moveLeft;
 
-    if (moveRight) Player_SetFacing(1);
-    else if (moveLeft) Player_SetFacing(-1);
+    if (moveRight)      Player_SetFacing(1);
+    else if (moveLeft)  Player_SetFacing(-1);
 
     Player_Update(dt, isWalking);
 
-    // Clamp cam
+    // Clamp camera so the player can't scroll past either end of the corridor
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
-    if (camX > 0) camX = 0;
+    if (camX > 0)                        camX = 0;
     else if ((camX < -maxDist) && !dementia) camX = -maxDist;
 
     // ------------------------------------------------------------
-    // 11) Update world systems
+    // PHASE 6: WORLD UPDATES
     // ------------------------------------------------------------
     doorNumAtPlayer = Doors_Update(camX);
     Doors_Animate(dt, doorNumAtPlayer, camX);
@@ -341,87 +314,80 @@ void Game_Update()
     Frames_Update(dt);
 
     // ------------------------------------------------------------
-    // 12) Interactions (E key)
+    // PHASE 7: DOOR INTERACTION LOGIC (E key)
     // ------------------------------------------------------------
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1)
     {
         const s8 doorAtPlayer1Based = (s8)doorNumAtPlayer + 1;
 
-        // Pull current mission targets
         s8 targetFloor, targetDoor, destFloor, destDoor;
         Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
-        // Cache "truth" checks (IMPORTANT: do NOT use Player_IsScaryPatient for truth)
         const bool hasPatient = Player_HasPatient();
         const bool isGhostTruth = (Player_GetCurrentIllness() == ILLNESSES::GHOST);
 
         // ========================================================
-        // RULE A: BASEMENT DISPOSAL (floor 0)
-        // - HUMAN -> GAME OVER (even if disposal got blocked / jumpscared)
-        // - GHOST -> BOSS FIGHT (only if disposal succeeds)
+        // RULE A: BASEMENT DISPOSAL (Floor 0)
         // ========================================================
         if (hasPatient && floorNum == 0)
         {
-            // Your Doors_TryDisposal() sometimes plays a jumpscare and returns false.
-            // So we must call it, but NOT rely on its return to decide endgame for humans.
             bool didJumpscare = false;
             const bool disposalSuccess = Doors_TryDisposal(floorNum, doorNumAtPlayer, didJumpscare);
 
+            if (!disposalSuccess && !didJumpscare) return;
+
             if (!isGhostTruth)
             {
-                // HUMAN sent to basement -> instant fail
-                currentEndReason = REASON_WRONG_BASEMENT_DELIVERY;
-                next = ENDGAME_STATE;
+                if (didJumpscare)
+                {
+                    // Jumpscare plays first; endgame triggers once it finishes in Phase 1
+                    gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    gPendingEndgameAfterJumpscare = true;
+                }
+                else
+                {
+                    currentEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    Analytics::LogRun(CurrentDay, "Murder - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+                    next = ENDGAME_STATE;
+                }
                 return;
             }
 
-            // GHOST in basement: only start boss if disposal actually succeeded
+            // Only a genuine GHOST patient should reach the basement disposal; trigger boss fight
             if (disposalSuccess)
             {
                 isFadingToBoss = true;
                 return;
             }
-
-            // Disposal was blocked (maybe jumpscare happened). Stop here.
             return;
         }
 
         // ========================================================
-        // RULE B: GHOST delivered to pager destination (floors 1-9)
-        // -> JUMPSCARE, then ENDGAME
-        //
-        // IMPORTANT:
-        // This must happen BEFORE Player_HandleInteraction(), otherwise your
-        // Player code will complete delivery and clear the patient first.
+        // RULE B: WRONG DELIVERY (Delivering a Ghost to a normal ward)
         // ========================================================
-        if (hasPatient &&
-            floorNum == destFloor &&
-            doorAtPlayer1Based == destDoor)
+        if (hasPatient && floorNum == destFloor && doorAtPlayer1Based == destDoor)
         {
             if (isGhostTruth)
             {
                 JumpScare_Start();
-
                 gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
-                gPendingEndgameAfterJumpscare = true;
 
+                // Death is deferred to Phase 3 so the jumpscare can fully play out
+                gPendingGhostDeliveryDeath = true;
                 return;
             }
         }
 
         // ========================================================
-        // Normal pickup / delivery flow
+        // RULE C: NORMAL DELIVERY / PICKUP
         // ========================================================
         bool success = Player_HandleInteraction(floorNum, doorAtPlayer1Based, CurrentDay);
 
         if (success)
         {
-            // If we just completed delivery (no longer holding patient),
-            // we can close lift UI etc.
+            // Disable lift when the player drops off their last patient
             if (!Player_HasPatient())
-            {
                 liftActive = false;
-            }
         }
         else
         {
@@ -430,7 +396,7 @@ void Game_Update()
     }
 
     // ------------------------------------------------------------
-    // 13) UI / prompts updates
+    // PHASE 8: UI UPDATES
     // ------------------------------------------------------------
     Notifications_Update(liftActive, dt);
     Guide_Update(liftActive, dt, IsPagerActive());
@@ -439,7 +405,7 @@ void Game_Update()
 }
 
 // ============================================================
-// DRAW
+//  DRAW
 // ============================================================
 
 void Game_Draw()
@@ -449,13 +415,14 @@ void Game_Draw()
 
     if (floorNum >= 1) AEGfxSetBackgroundColor(1.0f, 1.0f, 1.0f);
 
+    // Black bars mask the top and bottom of the play area
     DrawSquareMesh(squareMesh, 0.0f, FLOOR_CENTER_Y, 1600.0f, FLOOR_HEIGHT, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -FLOOR_CENTER_Y, 1600.0f, FLOOR_HEIGHT, COLOR_BLACK);
 
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
     AEGfxSetTransparency(1.0f);
 
-    // Start Lift
+    // Left lift only renders when the camera is close enough to the left end of the corridor
     if (camX > -(2 * DIST_BETWEEN_DOORS))
     {
         DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
@@ -463,75 +430,61 @@ void Game_Draw()
         Lift_DrawBackground(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, floorNum);
     }
 
-    // End Lift
+    // Right lift only renders near the right end; suppressed entirely in dementia mode where the corridor is infinite
     if ((camX < -((NUM_DOORS - 2) * DIST_BETWEEN_DOORS)) && !dementia)
     {
         float endOffset = (NUM_DOORS + 2) * DIST_BETWEEN_DOORS;
         float liftOffset = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
+
         DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
         Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, floorNum);
     }
 
-    float playerY = -650.0f + (800.0f * 0.5f) + (Player_GetHeight() * 0.5f);
-
     AEMtx33 scale;
 
-    // Global Darkness Overlay
+    // Full-screen dark overlay that sits between the world and the lights, giving the corridor its shadowed feel
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetTransparency(0.7f);
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+
     AEMtx33Scale(&scale, 2000.0f, 2000.0f);
     AEGfxSetTransform(scale.m);
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-    // Morgue ambience overlay (basement only)
-    if (floorNum == 0)
-    {
-        static float t = 0.0f;
-        t += (float)AEFrameRateControllerGetFrameTime();
+    // Basement (floor 0) gets an extra red tint overlay with a slow sin pulse and rare random brightness spikes
+    //if (floorNum == 0)
+    //{
+    //    static float t = 0.0f;
+    //    t += (float)AEFrameRateControllerGetFrameTime();
 
-        AEMtx33 scale;
-        AEMtx33Scale(&scale, 2000.0f, 2000.0f);
+    //    AEMtx33Scale(&scale, 2000.0f, 2000.0f);
 
-        // --------------------------------------------------
-        // 1) BASE DARKNESS (constant black hue)
-        // --------------------------------------------------
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    //    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    //    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    //    AEGfxSetColorToMultiply(0.5f, 0.1f, 0.1f, 1.0f);
+    //    AEGfxSetTransform(scale.m);
+    //    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-        AEGfxSetColorToMultiply(0.5f, 0.1f, 0.1f, 1.0f);
-        AEGfxSetTransform(scale.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    //    float pulse = 0.10f + 0.12f * (0.5f + 0.5f * sinf(t * 2.5f));
+    //    if ((rand() % 100) < 2) pulse += 0.05f; // 2% chance per frame of a sudden red flash
 
-        // --------------------------------------------------
-        // 2) RED EMERGENCY PULSE
-        // --------------------------------------------------
+    //    AEGfxSetTransparency(pulse);
+    //    AEGfxSetColorToMultiply(0.6f, 0.15f, 0.15f, 1.0f);
+    //    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-        float pulse = 0.10f + 0.12f * (0.5f + 0.5f * sinf(t * 2.5f));
+    //    AEGfxSetTransparency(1.0f);
+    //    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    //}
 
-        // small random electrical spike
-        if ((rand() % 100) < 2)
-            pulse += 0.05f;
+    // Y is computed from the border collider so the player always sits flush on the floor regardless of sprite height
+    float computedPlayerY = -650.0f + (800.0f * 0.5f) + (Player_GetHeight() * 0.5f);
+    Player_Draw(50.0f, computedPlayerY);
 
-        AEGfxSetTransparency(pulse);
-        AEGfxSetColorToMultiply(0.6f, 0.15f, 0.15f, 1.0f);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-
-        // --------------------------------------------------
-        // RESET RENDER STATE
-        // --------------------------------------------------
-        AEGfxSetTransparency(1.0f);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-
-    Player_Draw(50.0f, playerY);
-
-    // (illness var currently unused here, keep if you plan to use it for lighting etc.)
-    ILLNESSES illness = Player_HasPatient() ? Player_GetCurrentIllness() : ILLNESSES::NONE;
     Draw_and_Flicker(camX, left_right, floorNum, dementia);
 
+    // Top and bottom black bars drawn last to crop anything that bleeds outside the play area
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
 
@@ -539,10 +492,9 @@ void Game_Draw()
 
     s8 targetFloor, targetDoor, destFloor, destDoor;
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
+
     Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
-
     Guide_DrawSmallIcon();
-
     Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
     Guide_Draw();
@@ -559,7 +511,7 @@ void Game_Draw()
 
     JumpScare_Draw();
 
-    // Boss fade overlay (to/from boss fight)
+    // Shared fade overlay used by both boss-entry and boss-return; whichever alpha is non-zero wins
     if (bossFadeAlpha > 0.0f || returnFadeAlpha > 0.0f)
     {
         float currentAlpha = (bossFadeAlpha > 0.0f) ? bossFadeAlpha : returnFadeAlpha;
@@ -577,23 +529,21 @@ void Game_Draw()
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
     }
 
-    // Reset render state so overlays don't cover the journal
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetTransparency(1.0f);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     Journal_Draw(squareMesh);
-
     PauseMenu_Draw(squareMesh);
     Debug_Draw(info);
 }
 
-void Game_Free() {}
+// ============================================================
+//  FREE & UNLOAD
+// ============================================================
 
-// ============================================================
-// UNLOAD
-// ============================================================
+void Game_Free() {}
 
 void Game_Unload()
 {
@@ -616,4 +566,14 @@ void Game_Unload()
 
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
+}
+
+// ============================================================
+//  SESSION MANAGEMENT
+// ============================================================
+
+// Called before a full game restart; clears the guard so Game_Load reinitialises day and timer
+void Game_ResetSession()
+{
+    gSessionStarted = false;
 }

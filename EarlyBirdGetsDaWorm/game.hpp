@@ -11,3 +11,5 @@ void Game_Draw();
 void Game_Free();
 
 void Game_Unload();
+
+void Game_ResetSession();
