@@ -105,3 +105,14 @@ bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 
 	return true; // None were true, so they must be touching
 }
+
+// Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
+// Basically put both ur XY values in the parameters.
+// To get X value: textPosition(X, Y).first
+// To get Y value: textPosition(X, Y).second
+std::pair<f32, f32> textPosition(float adjustX, float adjustY)
+{
+	f32 textX = adjustX / (AEGfxGetWindowWidth() * 0.5f);
+	f32 textY = adjustY / (AEGfxGetWindowHeight() * 0.5f);
+	return { textX, textY };
+}

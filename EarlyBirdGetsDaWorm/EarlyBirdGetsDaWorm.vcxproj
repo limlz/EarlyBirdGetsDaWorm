@@ -100,6 +100,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="Boss.cpp" />
     <ClCompile Include="BossFight.cpp" />
     <ClCompile Include="Bullets.cpp" />
@@ -110,6 +111,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Doors.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameStateManager.cpp" />
+    <ClCompile Include="Guide.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Jumpscare.cpp" />
     <ClCompile Include="Lift.cpp" />
@@ -135,6 +137,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets_catalog.hpp" />
+    <ClInclude Include="audio_manager.hpp" />
     <ClInclude Include="boss.hpp" />
     <ClInclude Include="boss_fight.hpp" />
     <ClInclude Include="bullets.hpp" />
@@ -144,6 +147,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="frames.hpp" />
     <ClInclude Include="doors.hpp" />
     <ClInclude Include="game.hpp" />
+    <ClInclude Include="guide.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="jumpscare.hpp" />
     <ClInclude Include="Lift.hpp" />

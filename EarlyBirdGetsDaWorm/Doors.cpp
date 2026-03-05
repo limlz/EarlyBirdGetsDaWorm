@@ -157,7 +157,7 @@ bool Doors_TryDisposal(int floorNum, int doorIdx)
 
     if ((rand() % 100) < 30) { // 30% Chance
         // Trigger your existing JumpScare logic
-        //jumpscare
+        JumpScare_Start();
         s.lockedThisDay = true; // Lock the door even if it was just a scare
         return false;
     }
@@ -305,7 +305,7 @@ int Doors_Update(f32 camX)
         const float doorX = DoorWorldX(i, camX);
 
         // Player is at screen center x=0; detect door centered near screen
-        if (doorX > -detectionRange && doorX < detectionRange)
+        if (doorX > -detectionRange + 50 && doorX < detectionRange + 50)
             return i;
     }
     return -1;

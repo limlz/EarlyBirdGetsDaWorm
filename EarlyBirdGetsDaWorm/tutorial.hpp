@@ -2,6 +2,8 @@ void Tutorial_Load();
 
 void Tutorial_Initialize();
 
+//void DialogueBox_Update(DialogueBox& dialogue, f32 dt);
+
 void Tutorial_Update(f32 dt);
 
 bool Doing_Tutorial();

@@ -86,16 +86,14 @@ void Notifications_Trigger()
 	openPagerAfterDoor = true;   // request open on next state enter
 }
 
-// Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
-std::pair<f32, f32> textPosition(float adjustX, float adjustY)
-{
-	f32 textX = (-500.0f + adjustX) / (AEGfxGetWindowWidth() * 0.5f);
-	f32 textY = (317.5f + adjustY) / (AEGfxGetWindowWidth() * 0.5f);
-	return { textX, textY };
-}
-
 void Notifications_Update(bool liftActive, f32 dt)
 {
+	// Toggles the pager when user press Q, pager will not be displayed if lift is active
+	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
+	{
+		isPagerOpen = !isPagerOpen;
+	}
+
 	// Game start delayed pop up
 	bool wantTutorial{ Doing_Tutorial() };
 	bool answeredTutorial{ Tutorial_Prompt_Answered() };
@@ -149,14 +147,11 @@ void Notifications_Update(bool liftActive, f32 dt)
 	mouseY = static_cast<s32>((AEGfxGetWindowHeight() / 2.0f) - initialY);
 
 
-	// Toggles the pager when user press Q, pager will not be displayed if lift is active
-	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
-	{
-		isPagerOpen = !isPagerOpen;
-	}
+	
 	return;
 }
 
+bool IsPagerActive() { return isPagerOpen; }
 
 void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8 desFloorNum)
 {
@@ -166,8 +161,8 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8
 	if (isPagerOpen)
 	{
 		f32 drawX{ 0.0f }, drawY{ 0.0f },
-			collectTextX{ textPosition(140.0f, -40.0f).first }, collectTextY{ textPosition(140.0f, -40.0f).second },
-			bringTextX{ textPosition(140.0f, -100.0f).first }, bringTextY{ textPosition(140.0f, -100.0f).second };
+			collectTextX{ textPosition(-360.0f, 157.5f).first }, collectTextY{ textPosition(-360.0f, 157.5f).second },
+			bringTextX{ textPosition(-360.0f, 97.5f).first }, bringTextY{ textPosition(-360.0f, 97.5f).second };
 
 		if (pagerVibrating)
 		{

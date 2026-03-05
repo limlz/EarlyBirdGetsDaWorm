@@ -39,7 +39,6 @@ static float ComputeSpawnYFromBorder()
 void Game_Load()
 {
 	std::cout << "Startup: Load\n";
-
 	PauseMenu_Load();
 	Debug_Load();
 	Timer_Load();
@@ -49,6 +48,7 @@ void Game_Load()
 	Prompts_Load();
 	Notifications_Load();
 	Tutorial_Load();
+    Guide_Load();
 	JumpScare_Load();
 
 	AllAnomalies_Load();
@@ -84,6 +84,7 @@ void Game_Initialize()
     Player_SetScaryByDay(CurrentDay);
     Notifications_Initialize();
     Tutorial_Initialize();
+    Guide_Initialize();
     AllAnomalies_Initialize();
 }
 
@@ -123,12 +124,18 @@ void Game_Update()
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
 
+    if (IsGuideActive()) {
+        Guide_Update(liftActive, dt, IsPagerActive());
+        return;
+    }
+
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive()) {
         Tutorial_Update(dt);
 
 		// Skip all gameplay input
         return;
     }
+
 
     Timer_Update(dt);
 
@@ -173,7 +180,7 @@ void Game_Update()
     Doors_Animate(dt, doorNumAtPlayer, camX);
     Lift_Update(dt, camX, maxDist);
     Lift_HandleInput(floorNum);
-    Lighting_Update(floorNum, camX, dementia);
+    Lighting_Update(floorNum, camX, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
     Frames_Update(dt);
 
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) {
@@ -201,6 +208,7 @@ void Game_Update()
     }
 
     Notifications_Update(liftActive, dt);
+    Guide_Update(liftActive, dt, IsPagerActive());
     Prompts_Update(dt, camX, doorNumAtPlayer, Lift_IsActive(), Lift_IsNear());
     Tutorial_Update(dt);
 }
@@ -288,7 +296,7 @@ void Game_Draw()
     }
 
     Player_Draw(50.0f, playerY);
-    Draw_and_Flicker(camX, left_right, floorNum, dementia);
+    Draw_and_Flicker(camX, left_right, floorNum, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
 
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
@@ -297,11 +305,12 @@ void Game_Draw()
     s8 targetFloor, targetDoor, destFloor, destDoor;
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
     Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
-    Tutorial_Draw();
+    Guide_Draw();
 
     Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
     Lift_Draw(squareMesh);
+    Tutorial_Draw();
 
     DebugInfo info;
     info.camX = camX;
@@ -337,19 +346,20 @@ void Game_Free() {}
 void Game_Unload()
 {
     Frames_Unload();
-    Player_Unload();
-    Prompts_Unload();
-    Boss_Fight_Unload();
-    Lighting_Unload();
-    Doors_Unload();
-    Debug_Unload();
-    Notifications_Free();
-    Timer_Unload();
-    Wall_Unload();
-    Lift_Unload();
-    PauseMenu_Unload();
-    JumpScare_Unload();
+	Player_Unload();
+	Prompts_Unload();
+	Boss_Fight_Unload();
+	Lighting_Unload();
+	Doors_Unload();
+	Debug_Unload();
+	Notifications_Free();
+	Timer_Unload();
+	Wall_Unload();
+	Lift_Unload();
+	PauseMenu_Unload();
+	JumpScare_Unload();
     Tutorial_Free();
+    Guide_Free();
 
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);

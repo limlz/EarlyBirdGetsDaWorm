@@ -65,7 +65,8 @@ static float RandMinus1To1()
 
 void JumpScare_Load()
 {
-    LoadTextureChecked(Assets::Background::JumpScare);
+    gJumpScareTex = LoadTextureChecked(Assets::Background::JumpScare);
+    gQuadMesh = CreateSquareMesh(0x00000000);
 }
 
 void JumpScare_Initialize()
