@@ -77,6 +77,8 @@ bool JumpScare_IsActive();
 // we end the game AFTER the jumpscare finishes.
 static bool gPendingGhostDeliveryDeath = false;
 
+static float totalTimeSurvived = 0.0f;
+
 static float ComputeSpawnYFromBorder()
 {
     float borderCenterY = -650.0f;
@@ -155,6 +157,9 @@ void Game_Initialize()
 
     // Reset handoff flag
     gPendingGhostDeliveryDeath = false;
+    Config::Load();
+
+    totalTimeSurvived = 0.0f;
 }
 
 // ============================================================
@@ -165,7 +170,10 @@ void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
     Debug_Update();
-
+    // LOAD CONFIG FILE
+    if (AEInputCheckTriggered(AEVK_F5)) {
+        Config::Load();
+    }
     // ------------------------------------------------------------
     // If a jumpscare-triggered death is pending, wait for jumpscare to finish
     // ------------------------------------------------------------
@@ -279,7 +287,7 @@ void Game_Update()
     // 9) Timer main update + day advance
     // ------------------------------------------------------------
     Timer_Update(dt);
-
+    totalTimeSurvived += dt;
     if (Timer_IsTimeUp())
     {
         if (CurrentDay >= 5)
@@ -307,8 +315,8 @@ void Game_Update()
     // ------------------------------------------------------------
     // 10) Movement input / debugging toggles
     // ------------------------------------------------------------
-    if (AEInputCheckCurr(AEVK_A)) { camX += PLAYER_SPEED * dt; left_right = false; }
-    if (AEInputCheckCurr(AEVK_D)) { camX -= PLAYER_SPEED * dt; left_right = true; }
+    if (AEInputCheckCurr(AEVK_A)) { camX += Config::playerSpeed * dt; left_right = false; }
+    if (AEInputCheckCurr(AEVK_D)) { camX -= Config::playerSpeed * dt; left_right = true; }
 
     if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
     if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }

@@ -100,11 +100,13 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Analytics.cpp" />
     <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="Boss.cpp" />
     <ClCompile Include="BossFight.cpp" />
     <ClCompile Include="Bullets.cpp" />
     <ClCompile Include="CentralPool.cpp" />
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Endgame.cpp" />
     <ClCompile Include="Frames.cpp" />
@@ -138,12 +140,14 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Wall.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="analytics.hpp" />
     <ClInclude Include="assets_catalog.hpp" />
     <ClInclude Include="audio_manager.hpp" />
     <ClInclude Include="boss.hpp" />
     <ClInclude Include="boss_fight.hpp" />
     <ClInclude Include="bullets.hpp" />
     <ClInclude Include="central_pool.hpp" />
+    <ClInclude Include="config.hpp" />
     <ClInclude Include="debug.hpp" />
     <ClInclude Include="endgame.hpp" />
     <ClInclude Include="frames.hpp" />

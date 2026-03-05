@@ -1,9 +1,10 @@
 #include "pch.hpp"
+#include "Config.hpp" // --- NEW: Pulls all variables from our master config!
 #include <cmath>
 #include <array>
 
 // ============================================================
-//  TYPES & CONSTANTS
+//  LOCAL STATE & CONSTANTS
 // ============================================================
 
 // Tracks whether a light is currently visible and how long until its next state change
@@ -50,9 +51,9 @@ static AEGfxVertexList* squareMesh = nullptr;
 // 0 = broken/off, 1 = always on, 2 = flickering
 std::array<std::array<int, 11>, 10> lightingMatrix;
 
-// State for the single standalone hallway light (used outside of the main grid)
-static float singleLightTimer = 0.0f;
-static bool  singleLightIsOn = true;
+// Per-light flicker state for every light on every floor (10 floors x 11 lights)
+static std::array<std::array<FlickerData, 11>, 10> flickerMem;
+std::array<std::array<int, 11>, 10> lightingMatrix; // 0 = off, 1 = on, 2 = flickering
 
 static float g_TotalTime = 0.0f; // used to drive animated lighting effects (sin waves, etc.)
 
@@ -163,7 +164,9 @@ void Draw_StandaloneConeLight(float x, float y)
     static constexpr float coneAngle = 1.2f;
     static constexpr float maxDist = 1500.0f;
     static constexpr float floorLevel = -700.0f;
-    static constexpr float brightness = 0.15f;
+
+    // --- HOT-RELOADED DATA FETCH ---
+    float brightness = Config::standaloneBrightness;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_ADD);
@@ -194,10 +197,7 @@ void Draw_StandaloneConeLight(float x, float y)
 }
 
 // ============================================================
-//  LOAD / INITIALIZE / UNLOAD
-// ============================================================
 
-void Lighting_Load() {}
 
 void Lighting_Initialize(int fucked_floor)
 {
@@ -298,6 +298,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
             float k = roundf((-camX - lightWx) / repeatDist);
             lightWx += k * repeatDist;
         }
+        Particles_Spawn(lightWx, 250.0f, 8); // spark burst at the bulb position
 
         // Sparks when toggling (scale a bit with ghost +1)
         Particles_Spawn(lightWx, 250.0f, (ghostExtra >= 1) ? 10 : 8);
@@ -343,42 +344,50 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
         coneAngle = 1.2f + 0.02f * sinf(time * 3.0f);
         brightness = 0.11f + 0.01f * sinf(time * 10.0f);
         r = 1.0f; g = 0.90f - 0.02f * sinf(time * 2.0f); b = 0.75f;
-        break;
+    // Each illness subtly warps the lighting to reinforce the mood:
 
     case ILLNESSES::DEPRESSION:
         coneAngle = 1.18f - 0.01f * sinf(time * 0.5f);
         brightness = 0.08f + 0.01f * sinf(time * 0.8f);
         r = 0.85f; g = 0.88f; b = 0.98f + 0.02f * sinf(time * 0.3f);
-        break;
+        coneAngle = 1.2f + 0.02f * sinf(time * 3.0f);
 
     case ILLNESSES::DEMENTIA:
         coneAngle = 1.2f + 0.02f * sinf(time * 0.2f);
         brightness = 0.09f - 0.01f * sinf(time * 0.4f);
         r = 0.98f; g = 0.90f - 0.02f * sinf(time * 0.3f); b = 0.80f;
-        break;
+        coneAngle = 1.18f - 0.01f * sinf(time * 0.5f);
 
     case ILLNESSES::SCHIZOPHRENIA:
         coneAngle = 1.2f + 0.01f * sinf(time * 15.0f) * sinf(time * 1.5f);
         brightness = 0.1f + 0.01f * sinf(time * 12.0f);
         r = 0.90f; g = 0.95f; b = 0.92f;
-        break;
+        brightness = 0.09f - 0.01f * sinf(time * 0.4f);
 
     case ILLNESSES::AIW_SYNDROME:
         coneAngle = 1.3f + 0.05f * sinf(time * 0.6f);
         r = 0.95f; g = 0.95f; b = 1.0f;
-        break;
+        // Two interfering sine waves create an irregular, unsettling twitch
 
     case ILLNESSES::INSOMNIA:
         brightness = 0.1f + (sinf(time * 20.0f) > 0.98f ? 0.015f : 0.0f);
         r = 0.98f; g = 0.98f; b = 1.0f;
-        break;
+    case AIW_SYNDROME:
 
     case ILLNESSES::OCD:
         coneAngle = 1.15f; brightness = 0.11f;
         r = 0.95f; g = 0.95f; b = 0.95f;
-        break;
+        // Mostly steady, with a rare sharp spike — like a light about to die
 
     case ILLNESSES::PARANOIA:
+        coneAngle = 0.9f + 0.01f * sinf(time * 15.0f);
+        brightness = 0.09f;
+        r = 0.95f; g = 0.90f; b = 0.80f;
+        coneAngle = 1.15f; brightness = 0.11f;
+        r = 0.95f; g = 0.95f; b = 0.95f;
+        break;
+    case PARANOIA:
+        // Narrow cone that twitches slightly, like something always watching
         coneAngle = 0.9f + 0.01f * sinf(time * 15.0f);
         brightness = 0.09f;
         r = 0.95f; g = 0.90f; b = 0.80f;
@@ -441,11 +450,10 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
         {
             dist += 1.0f;
 
+        // Draw the ray, which will be clipped at dist
             float cx = screenLightX - (dirX * dist);
             float cy = lightY + (dirY * dist);
-
-            if (cy < floorLevel) break;
-
+            if (cy < floorLevel)                                            break;
             if (cx > pHeadLeft && cx < pHeadRight && cy < pHeadTop && cy > pHeadBot) break;
             if (cx > pBodyLeft && cx < pBodyRight && cy < pHeadTop && cy > bedBot)   break;
             if (cx > bedLeft && cx < bedRight && cy < bedTop && cy > bedBot)        break;
@@ -464,6 +472,14 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
 // ============================================================
 
 void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
+//  DRAW & FLICKER
+// ============================================================
+
+// Master draw call for all lights on the current floor.
+// Skips offscreen lights, respects their on/flicker/off state, and handles
+// the dementia "infinite corridor" effect by tiling the light layout.
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum,
+    bool dementia, bool isGhost, ILLNESSES illness)
 {
     if (floorNum < 0 || floorNum >= 10) return;
 
@@ -473,8 +489,6 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
     // Dementia loops corridor endlessly
     int max_iter = dementia ? 1000 : 11;
 
-    for (int i = 0; i < max_iter; i++)
-    {
         float lightWx = i * 600.0f + 300.0f;
         float screenPos = lightWx + camX;
 
