@@ -105,7 +105,7 @@ void Tutorial_Initialize() {
 	yesButtonScale = 1.0f;
 	noButtonScale = 1.0f;
 	doTutorial = false;
-	//promptAnswered = false; removed so that user is only prompted tut once
+	promptAnswered = false;
 
 	// Prompt Pop Up
 	tutPopupTimer = 0.0f;

@@ -2,18 +2,20 @@
 
 namespace Analytics {
 
-    // Helper to convert the Illness enum into readable text for Excel
+    // Converts illness enum index to its name; default catches any unmapped future values
     static std::string GetIllnessName(int illness) {
         switch (illness) {
-        case 0: return "PARANOIA";
-        case 1: return "MANIA";
-        case 2: return "DEPRESSION";
-        case 3: return "DEMENTIA";
-        case 4: return "SCHIZOPHRENIA";
-        case 5: return "AIW_SYNDROME";
-        case 6: return "INSOMNIA";
-        case 7: return "OCD";
-        case 8: return "SCOTOPHOBIA";
+        case 0: return "NONE";
+        case 1: return "PARANOIA";
+        case 2: return "MANIA";
+        case 3: return "DEPRESSION";
+        case 4: return "DEMENTIA";
+        case 5: return "SCHIZOPHRENIA";
+        case 6: return "AIW_SYNDROME";
+        case 7: return "INSOMNIA";
+        case 8: return "OCD";
+        case 9: return "SCOTOPHOBIA";
+        case 10: return "GHOST";
         default: return "UNKNOWN";
         }
     }
@@ -21,14 +23,12 @@ namespace Analytics {
     void LogRun(int dayReached, const std::string& deathReason, int currentIllness, float timeSurvived) {
         std::string filename = "Assets/analytics.csv";
 
-        // 1. Check if the file already exists
-        // If it doesn't exist, we know we need to write the Header Row first.
+        // ifstream::good() returns false if the file is missing, so we use that to gate header writing
         std::ifstream checkFile(filename);
         bool needsHeader = !checkFile.good();
         checkFile.close();
 
-        // 2. Open the file in Append Mode (std::ios::app)
-        // This ensures we add to the bottom of the file instead of wiping it!
+        // ios::app moves the write cursor to EOF each time, preserving all previous run data
         std::ofstream outFile(filename, std::ios::app);
 
         if (!outFile.is_open()) {
@@ -36,20 +36,19 @@ namespace Analytics {
             return;
         }
 
-        // 3. Write the Header Row if this is a brand new file
+        // Only runs once on first launch — subsequent runs skip this and append directly
         if (needsHeader) {
             outFile << "Date_Time,Day_Reached,Death_Reason,Illness_Active,Time_Survived_Seconds\n";
         }
 
-        // 4. Generate a real-world timestamp safely for Visual Studio
+        // localtime_s is the MSVC-safe alternative to localtime; avoids C4996 deprecation warning
         std::time_t now = std::time(nullptr);
         struct tm timeinfo;
-        localtime_s(&timeinfo, &now); // MSVC safe version (2 arguments, no std::)
+        localtime_s(&timeinfo, &now);
 
         char timeStr[100];
         std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
 
-        // 5. Write the Data Row (Values separated by commas)
         outFile << timeStr << ","
             << dayReached << ","
             << deathReason << ","
