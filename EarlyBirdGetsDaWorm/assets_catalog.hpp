@@ -100,6 +100,11 @@ namespace Assets
     namespace Guide
     {
         constexpr const char* guideIcon = "Assets/Guide/icon-placeholder.png";
-        //constexpr const char* guideBG = "Assets/Guide/bg-placeholder.png";
+        constexpr const char* categoryText = "Assets/Guide/pcategory.jpg";
+        constexpr const char* image1 = "Assets/Guide/p1.jpg";
+        constexpr const char* image2 = "Assets/Guide/p2.jpg";
+        constexpr const char* image3 = "Assets/Guide/p3.jpg";
+        constexpr const char* image4 = "Assets/Guide/p4.jpg";
+        constexpr const char* image5 = "Assets/Guide/p5.jpg";
     }
 }

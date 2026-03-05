@@ -296,9 +296,6 @@ void Tutorial_Update(f32 dt) {
 
 		}
 	}
-
-	// -------------------------------- TUTORIAL STAGE: TUTORIAL_START --------------------------------
-	
 }
 
 bool Doing_Tutorial() { return doTutorial; }
