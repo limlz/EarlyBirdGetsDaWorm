@@ -42,6 +42,7 @@
 #include "pause_menu.hpp"
 #include "jumpscare.hpp"
 #include "tutorial.hpp"
+#include "guide.hpp"
 
 // --- ENDGAME FLAGS ---
 enum EndGameReason {

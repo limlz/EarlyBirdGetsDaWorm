@@ -97,4 +97,9 @@ namespace Assets
         constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.jpg";
         constexpr const char* tutBG = "Assets/Tutorial/textbg-placeholder.jpg";
     }
+    namespace Guide
+    {
+        constexpr const char* guideIcon = "Assets/Guide/icon-placeholder.png";
+        //constexpr const char* guideBG = "Assets/Guide/bg-placeholder.png";
+    }
 }
