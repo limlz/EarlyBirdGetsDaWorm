@@ -1,10 +1,5 @@
 #pragma once
 
-enum ENTITIES {
-	HUMAN,
-	GHOST
-};
-
 enum ILLNESSES {
 	PARANOIA,			//to use in light
 	MANIA,
@@ -16,7 +11,13 @@ enum ILLNESSES {
 	OCD,
 	SCOTOPHOBIA,		//Fear of darkness //to use in light
 	ALL
-};  
+
+};
+
+enum ENTITIES {
+	HUMAN,
+	GHOST
+};
 
 enum FRAME_TIMING_STATE {
 	STATE_NORMAL,       // 0: Perfectly normal painting

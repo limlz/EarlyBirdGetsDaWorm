@@ -64,6 +64,7 @@ namespace Assets
             "Assets/Background/LiftWall_9.png"
         };
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
+        constexpr const char* JournalBook = "Assets/Background/Journalbook.png";
     }
     namespace Door_Anomaly
     {

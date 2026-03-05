@@ -1,47 +1,89 @@
 #include "pch.hpp"
+#include <vector>
+#include <algorithm>
+#include <random>
+#include <ctime>
 
-static std::vector<ILLNESSES> RunIllnesses;
+// ============================================================
+// GLOBALS
+// ============================================================
 
-void AllAnomalies_Load() {
-	Wall_Load();
-	Frames_Load();
+// Illnesses selected for the current run
+static std::vector<ILLNESSES> gRunIllnesses;
+
+// Random generator
+static std::mt19937 gRng((unsigned)std::time(nullptr));
+
+// Maximum illnesses in a run
+static const int MAX_ILLNESSES_PER_RUN = 7;
+
+
+// ============================================================
+// LOAD
+// ============================================================
+
+void AllAnomalies_Load()
+{
+    Wall_Load();
+    Frames_Load();
 }
 
-void AllAnomalies_Initialize() {
-	Frames_Initialize();
-	Lighting_Initialize(7);
-	Wall_Initialize();
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+
+void AllAnomalies_Initialize()
+{
+    Frames_Initialize();
+    Lighting_Initialize(7);
+    Wall_Initialize();
 }
 
-void AllAnomalies_GenerateRun() {
-	RunIllnesses.clear();
 
-	std::vector<ILLNESSES> allAnomaliesPool = {
-		PARANOIA,
-		MANIA,
-		DEPRESSION,
-		DEMENTIA,
-		SCHIZOPHRENIA,
-		AIW_SYNDROME,		//Alice in Wonderland Syndrome
-		INSOMNIA,
-		OCD,
-		SCOTOPHOBIA,		//Fear of darkness
-		ALL
-	};
+// ============================================================
+// GENERATE RUN (random illnesses)
+// ============================================================
 
-	std::srand((unsigned)std::time(nullptr));
-	std::random_shuffle(allAnomaliesPool.begin(), allAnomaliesPool.end());
+void AllAnomalies_GenerateRun()
+{
+    gRunIllnesses.clear();
 
-	int maxIllnessesPerRun = 7;	
+    // Pool of all illnesses
+    std::vector<ILLNESSES> illnessPool =
+    {
+        PARANOIA,
+        MANIA,
+        DEPRESSION,
+        DEMENTIA,
+        SCHIZOPHRENIA,
+        AIW_SYNDROME,   // Alice in Wonderland Syndrome
+        INSOMNIA,
+        OCD,
+        SCOTOPHOBIA     // Fear of darkness
+    };
 
-	for (int i = 0; i < maxIllnessesPerRun && i < allAnomaliesPool.size(); ++i) {
-		RunIllnesses.push_back(allAnomaliesPool[i]);
-	}
+    // Shuffle pool
+    std::shuffle(illnessPool.begin(), illnessPool.end(), gRng);
+
+    // Pick the first 7
+    for (int i = 0; i < MAX_ILLNESSES_PER_RUN && i < (int)illnessPool.size(); ++i)
+    {
+        gRunIllnesses.push_back(illnessPool[i]);
+    }
 }
 
-std::vector<ILLNESSES> AllAnomalies_CurrentRun() {
-	if (RunIllnesses.empty()) {
-		AllAnomalies_GenerateRun();
-	}
-	return RunIllnesses;
+
+// ============================================================
+// GET CURRENT RUN
+// ============================================================
+
+const std::vector<ILLNESSES>& AllAnomalies_CurrentRun()
+{
+    if (gRunIllnesses.empty())
+    {
+        AllAnomalies_GenerateRun();
+    }
+
+    return gRunIllnesses;
 }

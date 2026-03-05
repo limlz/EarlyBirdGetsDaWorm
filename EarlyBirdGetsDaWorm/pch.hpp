@@ -7,9 +7,9 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include <cstdlib> // For rand()
-#include <algorithm> // Required for std::shuffle
-#include <random>    // Required for std::default_random_engine
+#include <cstdlib>      // For rand()
+#include <algorithm>    // Required for std::shuffle
+#include <random>       // Required for std::default_random_engine
 #include "AEEngine.h"
 
 #include "debug.hpp"
@@ -43,6 +43,7 @@
 #include "jumpscare.hpp"
 #include "tutorial.hpp"
 #include "guide.hpp"
+#include "journal.hpp"
 
 // --- ENDGAME FLAGS ---
 enum EndGameReason {
@@ -92,3 +93,35 @@ extern EndGameReason currentEndReason;
 #define SCREEN_HEIGHT_HALF  450.0f
 #define FLOOR_CENTER_Y		650.0f
 #define FLOOR_HEIGHT		800.0f
+
+// --- ANONMALY TYPES --- //
+enum class ANOMALYID : int
+{
+    // ---- WALL ----
+    Wall_Crack1,
+    Wall_Crack2,
+    Wall_Crack3,
+    Wall_Crack4,
+    Wall_Drawing1,
+    Wall_Drawing2,
+    Wall_Drawing3,
+    Wall_LeftHand,
+    Wall_RightHand,
+
+    // ---- DOOR ----
+    Door_HandSlam,
+    Door_ShadowMove,
+    Door_Knock,
+
+    // ---- LIGHTING ----
+    Light_Flicker,
+    Light_Dim,
+    Light_Off,
+
+    // ---- FRAMES ----
+    Frame_Glitch,
+    Frame_Shift,
+    Frame_Distort,
+
+    None,
+};

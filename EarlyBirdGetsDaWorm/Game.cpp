@@ -45,6 +45,7 @@ void Game_Load()
 	Doors_Load();
 	Lift_Load();
 	Player_Load();
+    Journal_Load();
 	Prompts_Load();
 	Notifications_Load();
 	Tutorial_Load();
@@ -136,6 +137,12 @@ void Game_Update()
         return;
     }
 
+    Journal_Update();
+
+if (Journal_IsOpen())
+{
+    return; // freeze gameplay while journal open
+}
 
     Timer_Update(dt);
 
@@ -180,7 +187,7 @@ void Game_Update()
     Doors_Animate(dt, doorNumAtPlayer, camX);
     Lift_Update(dt, camX, maxDist);
     Lift_HandleInput(floorNum);
-    Lighting_Update(floorNum, camX, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
+    ILLNESSES illness = Player_HasPatient() ? Player_GetCurrentIllness() : ILLNESSES::PARANOIA;    Lighting_Update(floorNum, camX, dementia);
     Frames_Update(dt);
 
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1) {
@@ -296,7 +303,8 @@ void Game_Draw()
     }
 
     Player_Draw(50.0f, playerY);
-    Draw_and_Flicker(camX, left_right, floorNum, dementia, Player_IsScaryPatient(), Player_GetCurrentIllness());
+    ILLNESSES illness = Player_HasPatient() ? Player_GetCurrentIllness() : ILLNESSES::PARANOIA;
+    Draw_and_Flicker(camX, left_right, floorNum, dementia);
 
     DrawSquareMesh(squareMesh, 0.0f, 650.0f, 1600.0f, 800.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, -650.0f, 1600.0f, 800.0f, COLOR_BLACK);
@@ -337,6 +345,14 @@ void Game_Draw()
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
     }
 
+    // Reset render state so overlays don't cover the journal
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetTransparency(1.0f);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Journal_Draw(squareMesh);
+
     PauseMenu_Draw(squareMesh);
     Debug_Draw(info);
 }
@@ -360,6 +376,7 @@ void Game_Unload()
 	JumpScare_Unload();
     Tutorial_Free();
     Guide_Free();
+    Journal_Unload();
 
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);

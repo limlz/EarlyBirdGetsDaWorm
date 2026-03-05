@@ -1,165 +1,248 @@
 #include "pch.hpp"
 #include <ctime>
+#include <cmath>
+#include <vector>
 
-// Mesh
+// ============================================================
+// MESHES
+// ============================================================
+
 static AEGfxVertexList* wallBgMesh = nullptr;
 
-static AEGfxVertexList* crack1Mesh;
-static AEGfxVertexList* crack2Mesh;
-static AEGfxVertexList* crack3Mesh;
-static AEGfxVertexList* crack4Mesh;
+static AEGfxVertexList* crack1Mesh = nullptr;
+static AEGfxVertexList* crack2Mesh = nullptr;
+static AEGfxVertexList* crack3Mesh = nullptr;
+static AEGfxVertexList* crack4Mesh = nullptr;
 
-static AEGfxVertexList* drawing1Mesh;
-static AEGfxVertexList* drawing2Mesh;
-static AEGfxVertexList* drawing3Mesh;
+static AEGfxVertexList* drawing1Mesh = nullptr;
+static AEGfxVertexList* drawing2Mesh = nullptr;
+static AEGfxVertexList* drawing3Mesh = nullptr;
 
-static AEGfxVertexList* leftHandMesh;
-static AEGfxVertexList* rightHandMesh;
+static AEGfxVertexList* leftHandMesh = nullptr;
+static AEGfxVertexList* rightHandMesh = nullptr;
 
-// Textures
+// ============================================================
+// TEXTURES
+// ============================================================
+
 static AEGfxTexture* wallBgTexture = nullptr;
 
-static AEGfxTexture* crack1Texture;
-static AEGfxTexture* crack2Texture;
-static AEGfxTexture* crack3Texture;
-static AEGfxTexture* crack4Texture;
+static AEGfxTexture* crack1Texture = nullptr;
+static AEGfxTexture* crack2Texture = nullptr;
+static AEGfxTexture* crack3Texture = nullptr;
+static AEGfxTexture* crack4Texture = nullptr;
 
-static AEGfxTexture* drawing1Texture;
-static AEGfxTexture* drawing2Texture;
-static AEGfxTexture* drawing3Texture;
+static AEGfxTexture* drawing1Texture = nullptr;
+static AEGfxTexture* drawing2Texture = nullptr;
+static AEGfxTexture* drawing3Texture = nullptr;
 
-static AEGfxTexture* leftHandTexture;
-static AEGfxTexture* rightHandTexture;
+static AEGfxTexture* leftHandTexture = nullptr;
+static AEGfxTexture* rightHandTexture = nullptr;
 
-// Variables
+// ============================================================
+// STATE / VARIABLES
+// ============================================================
+
 #define MAX_FLOORS 10
-static s32 random[MAX_FLOORS], randomX[MAX_FLOORS], randomY[MAX_FLOORS];
-static f32 wallX, wallY, camX;
 
-void Wall_Load() {
-	wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
-	crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
-	crack2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack2);
-	crack3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack3);
-	crack4Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack4);
-	drawing1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing1);
-	drawing2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing2);
-	drawing3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
-	leftHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
-	rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
+// Keep your placement randomness the same (DON'T TOUCH)
+static s32 randomX[MAX_FLOORS]{};
+static s32 randomY[MAX_FLOORS]{};
 
-	return;
+// Chosen wall anomaly per floor (picked once, consistent)
+static ANOMALYID gWallPick[MAX_FLOORS]{};
+static bool        gWallPicked[MAX_FLOORS]{};
+static ILLNESSES   gLastIllness[MAX_FLOORS]{};
+static bool        gWallEnabled = true;
+
+void Wall_SetEnabled(bool enabled)              
+{
+    gWallEnabled = enabled;
+
+    // optional: force repick when re-enabled
+    for (int i = 0; i < MAX_FLOORS; ++i)
+        gWallPicked[i] = false;
 }
 
-void Wall_Initialize() {
+// draw position
+static f32 wallX = 0.0f;
+static f32 wallY = 0.0f;
 
-	// Mesh
-	wallBgMesh = CreateSquareMesh(0xFFFFFFFF);
+// ============================================================
+// HELPERS: illness -> pool
+// ============================================================
 
-	crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
-	crack2Mesh = CreateSquareMesh(0xFFFFFFFF);
-	crack3Mesh = CreateSquareMesh(0xFFFFFFFF);
-	crack4Mesh = CreateSquareMesh(0xFFFFFFFF);
-
-	drawing1Mesh = CreateSquareMesh(0xFFFFFFFF);
-	drawing2Mesh = CreateSquareMesh(0xFFFFFFFF);
-	drawing3Mesh = CreateSquareMesh(0xFFFFFFFF);
-
-	leftHandMesh = CreateSquareMesh(0xFFFFFFFF);
-	rightHandMesh = CreateSquareMesh(0xFFFFFFFF);
-
-	// Generate random numbers using time
-	srand((unsigned)std::time(nullptr));
-
-	// Loop to change anomaly for every floor
-	for (int i{}; i < MAX_FLOORS; ++i) {
-		// 50% chance of seeing anomaly, if u want to see an anomaly
-		// for each refresh then change it to % 9
-		random[i] = rand() % 9; 
-
-		// Variables
-		randomX[i] = rand() % 6000;
-		randomY[i] = rand() % 200;
-
-	}
-	wallX = camX;
-	wallY = 0.0f;
+static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
+{
+    if (pool.empty()) return ANOMALYID::None;
+    int r = rand() % (int)pool.size();
+    return pool[r];
 }
 
-void Wall_Draw(f32 camX, s8 floorNum) {
-	// Clamp floor index (prevents out-of-bounds crash)
-	int idx = (int)floorNum;
-	if (idx < 0) idx = 0;
-	if (idx >= MAX_FLOORS) idx = MAX_FLOORS - 1;
+static ANOMALYID GetWallPickByIllness(ILLNESSES illness)
+{
+    // You can tweak these pools to match your “dictionary”
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Wall_Drawing2, ANOMALYID::Wall_LeftHand };
+    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Wall_Crack2,   ANOMALYID::Wall_Crack3 };
+    static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Drawing1, ANOMALYID::Wall_Crack1 };
+    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Crack4,   ANOMALYID::Wall_Drawing3 };
 
-	// ---- WALL BACKGROUND (world-anchored tiling) ----
-	if (wallBgTexture && wallBgMesh)
-	{
-		const float TILE_W = 1600.0f;
-		const float TILE_H = 900.0f;
+    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_Drawing3, ANOMALYID::Wall_RightHand };
+    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_Drawing1, ANOMALYID::Wall_Drawing2 };
+    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Crack1,   ANOMALYID::Wall_RightHand };
+    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_Crack2,   ANOMALYID::Wall_Crack4 };
+    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Wall_LeftHand, ANOMALYID::Wall_Crack3 };
 
-		// Your visible width looks like 1600 in world units
-		const float VIEW_W = 1600.0f;
-		const float HALF_W = VIEW_W * 0.5f;
+    switch (illness)
+    {
+    case PARANOIA:       return PickFromPool(paranoiaPool);
+    case MANIA:          return PickFromPool(maniaPool);
+    case DEPRESSION:     return PickFromPool(depressionPool);
+    case DEMENTIA:       return PickFromPool(dementiaPool);
 
-		// Convert screen edges to WORLD coordinates
-		// screenX = worldX + camX  =>  worldX = screenX - camX
-		const float worldLeft = (-HALF_W) - camX;
-		const float worldRight = (HALF_W)-camX;
+    case SCHIZOPHRENIA:  return PickFromPool(schizophreniaPool);
+    case AIW_SYNDROME:   return PickFromPool(aiwPool);
+    case INSOMNIA:       return PickFromPool(insomniaPool);
+    case OCD:            return PickFromPool(ocdPool);
+    case SCOTOPHOBIA:    return PickFromPool(scotophobiaPool);
 
-		// Find the first tile that covers worldLeft
-		float firstTileWorldX = std::floor(worldLeft / TILE_W) * TILE_W;
-
-		// Draw tiles across the visible world range
-		for (float wx = firstTileWorldX; wx <= worldRight + TILE_W; wx += TILE_W)
-		{
-			// Convert world position back to screen position
-			float sx = wx + camX;
-			DrawTextureMesh(wallBgMesh, wallBgTexture, sx, 0.0f, TILE_W, TILE_H, 1.0f);
-		}
-	}
-
-	// Position of anomalies
-	wallX = camX + (f32)randomX[idx];
-	wallY = (f32)randomY[idx];
-
-	// Draws the anomaly
-	switch (random[idx]) {
-	case 0:
-		DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
-		break;
-	case 1:
-		DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
-		break;
-	case 2:
-		DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
-		break;
-	case 3:
-		DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
-		break;
-	case 4:
-		DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
-		break;
-	case 5:
-		DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
-		break;
-	case 6:
-		DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
-		break;
-	case 7:
-		DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
-		break;
-	case 8:
-		DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
-		break;
-	default:
-		break;
-	}
+    default:             return ANOMALYID::None;
+    }
 }
 
-void Wall_Unload() {
-    // Free meshes
-	FreeMeshSafe(wallBgMesh);
+// ============================================================
+// PUBLIC API
+// ============================================================
+
+void Wall_Load()
+{
+    wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
+
+    crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
+    crack2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack2);
+    crack3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack3);
+    crack4Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack4);
+
+    drawing1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing1);
+    drawing2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing2);
+    drawing3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
+
+    leftHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
+    rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
+}
+
+void Wall_Initialize()
+{
+    wallBgMesh = CreateSquareMesh(0xFFFFFFFF);
+
+    crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
+    crack2Mesh = CreateSquareMesh(0xFFFFFFFF);
+    crack3Mesh = CreateSquareMesh(0xFFFFFFFF);
+    crack4Mesh = CreateSquareMesh(0xFFFFFFFF);
+
+    drawing1Mesh = CreateSquareMesh(0xFFFFFFFF);
+    drawing2Mesh = CreateSquareMesh(0xFFFFFFFF);
+    drawing3Mesh = CreateSquareMesh(0xFFFFFFFF);
+
+    leftHandMesh = CreateSquareMesh(0xFFFFFFFF);
+    rightHandMesh = CreateSquareMesh(0xFFFFFFFF);
+
+    srand((unsigned)std::time(nullptr));
+
+    // placement randomness (KEEP SAME)
+    for (int i = 0; i < MAX_FLOORS; ++i)
+    {
+        randomX[i] = rand() % 6000;
+        randomY[i] = rand() % 200;
+
+        gWallPick[i] = ANOMALYID::None;
+        gWallPicked[i] = false;
+    }
+}
+
+void Wall_Draw(f32 camX, s8 floorNum)
+{
+    int idx = (int)floorNum;
+    if (idx < 0) idx = 0;
+    if (idx >= MAX_FLOORS) idx = MAX_FLOORS - 1;
+
+    // ---- WALL BACKGROUND (world-anchored tiling) ----
+    if (wallBgTexture && wallBgMesh)
+    {
+        const float TILE_W = 1600.0f;
+        const float TILE_H = 900.0f;
+
+        const float VIEW_W = 1600.0f;
+        const float HALF_W = VIEW_W * 0.5f;
+
+        const float worldLeft = (-HALF_W) - camX;
+        const float worldRight = (HALF_W)-camX;
+
+        float firstTileWorldX = std::floor(worldLeft / TILE_W) * TILE_W;
+
+        for (float wx = firstTileWorldX; wx <= worldRight + TILE_W; wx += TILE_W)
+        {
+            float sx = wx + camX;
+            DrawTextureMesh(wallBgMesh, wallBgTexture, sx, 0.0f, TILE_W, TILE_H, 1.0f);
+        }
+    }
+
+    if (!gWallEnabled) return;
+    if (!Player_HasPatient()) return;
+
+    ILLNESSES currentIllness = Player_GetCurrentIllness();
+
+    // Position of anomalies (KEEP SAME)
+    wallX = camX + (f32)randomX[idx];
+    wallY = (f32)randomY[idx];
+
+    // Pick once per floor based on current illness
+    if (!gWallPicked[idx] || gLastIllness[idx] != currentIllness)
+    {
+        gWallPick[idx] = GetWallPickByIllness(currentIllness); 
+        gWallPicked[idx] = true;
+        gLastIllness[idx] = currentIllness;
+    }
+
+    switch (gWallPick[idx])
+    {
+    case ANOMALYID::Wall_Crack1:
+        DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Crack2:
+        DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Crack3:
+        DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Crack4:
+        DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Drawing1:
+        DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Drawing2:
+        DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_Drawing3:
+        DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_LeftHand:
+        DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+        break;
+    case ANOMALYID::Wall_RightHand:
+        DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+        break;
+
+    case ANOMALYID::None:
+    default:
+        break;
+    }
+}
+
+void Wall_Unload()
+{
+    FreeMeshSafe(wallBgMesh);
 
     FreeMeshSafe(crack1Mesh);
     FreeMeshSafe(crack2Mesh);
@@ -173,8 +256,7 @@ void Wall_Unload() {
     FreeMeshSafe(leftHandMesh);
     FreeMeshSafe(rightHandMesh);
 
-    // Free textures
-	UnloadTextureSafe(wallBgTexture);
+    UnloadTextureSafe(wallBgTexture);
 
     UnloadTextureSafe(crack1Texture);
     UnloadTextureSafe(crack2Texture);
@@ -189,10 +271,11 @@ void Wall_Unload() {
     UnloadTextureSafe(rightHandTexture);
 }
 
-std::vector<AEGfxTexture*> Wall_GetAnomalies() {
-	return {
-		crack1Texture, crack2Texture, crack3Texture, crack4Texture,
-		drawing1Texture, drawing2Texture, drawing3Texture,
-		leftHandTexture, rightHandTexture
-	};
+std::vector<AEGfxTexture*> Wall_GetAnomalies()
+{
+    return {
+        crack1Texture, crack2Texture, crack3Texture, crack4Texture,
+        drawing1Texture, drawing2Texture, drawing3Texture,
+        leftHandTexture, rightHandTexture
+    };
 }

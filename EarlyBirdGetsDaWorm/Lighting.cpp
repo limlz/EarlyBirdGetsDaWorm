@@ -181,9 +181,9 @@ void Lighting_Unload()
 //  UPDATE
 // ============================================================
 
-void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNESSES illness)
+void Lighting_Update(s8 floorNum, float camX, bool dementia)
 {
-    illness = ResolveIllness(illness);
+    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
     Particles_Update();
 
     float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
@@ -207,8 +207,8 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNE
             float k = roundf((-camX - lightWx) / repeatDist);
             lightWx += k * repeatDist;
         }
-        Particles_Spawn(lightWx, 250.0f, 8);
 
+        Particles_Spawn(lightWx, 250.0f, 8);
         fd.timer = FlickerDuration(illness, fd.isVisible);
     }
 }
@@ -217,8 +217,8 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia, bool isGhost, ILLNE
 //  DRAW CONE LIGHT
 // ============================================================
 
-void DrawConeLight(float lightWorldX, float lightY, float camX,
-    bool right_left, bool isGhost, ILLNESSES illness)
+static void DrawConeLight(float lightWorldX, float lightY, float camX,
+    bool right_left, ILLNESSES illness)
 {
     illness = ResolveIllness(illness);
 
@@ -332,12 +332,11 @@ void DrawConeLight(float lightWorldX, float lightY, float camX,
 //  DRAW & FLICKER
 // ============================================================
 
-void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum,
-    bool dementia, bool isGhost, ILLNESSES illness)
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
-    illness = ResolveIllness(illness);
-
     if (floorNum < 0 || floorNum >= 10) return;
+
+    ILLNESSES illness = ResolveIllness(Player_GetCurrentIllness());
 
     int max_iter = dementia ? 1000 : 11;
 
@@ -346,12 +345,12 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum,
         float screenPos = lightWx + camX;
         if (screenPos < -1200.0f || screenPos > 1200.0f) continue;
 
-        int  idx = dementia ? (i % 10) : i;
-        int  state = lightingMatrix[floorNum][idx];
+        int idx = dementia ? (i % 10) : i;
+        int state = lightingMatrix[floorNum][idx];
         bool shouldDraw = (state == 1) || (state == 2 && flickerMem[floorNum][idx].isVisible);
 
         if (state != 0 && shouldDraw)
-            DrawConeLight(lightWx, 250.0f, -camX, left_right, isGhost, illness);
+            DrawConeLight(lightWx, 250.0f, -camX, left_right, illness);
     }
 
     Particles_Draw(squareMesh, -camX);

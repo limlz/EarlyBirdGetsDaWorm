@@ -33,18 +33,17 @@ int GetRandomStateByIllness(ILLNESSES illness) {
 	static const std::vector<int> allPool = { 1, 2, 3, 4};
 
     switch (illness) {
-    case PARANOIA:      return paranoiaPool[rand() % paranoiaPool.size()];
-    case MANIA:         return maniaPool[rand() % maniaPool.size()];
-    case DEPRESSION:    return depressionPool[rand() % depressionPool.size()];
-    case DEMENTIA:      return dementiaPool[rand() % dementiaPool.size()];
+    case ILLNESSES::PARANOIA:      return paranoiaPool[rand() % paranoiaPool.size()];
+    case ILLNESSES::MANIA:         return maniaPool[rand() % maniaPool.size()];
+    case ILLNESSES::DEPRESSION:    return depressionPool[rand() % depressionPool.size()];
+    case ILLNESSES::DEMENTIA:      return dementiaPool[rand() % dementiaPool.size()];
 
-    case SCHIZOPHRENIA:  return schizophreniaPool[rand() % schizophreniaPool.size()];
-    case AIW_SYNDROME:   return aiwPool[rand() % aiwPool.size()];
-    case INSOMNIA:       return insomniaPool[rand() % insomniaPool.size()];
-    case OCD:            return ocdPool[rand() % ocdPool.size()];
-    case SCOTOPHOBIA:    return scotophobiaPool[rand() % scotophobiaPool.size()];
+    case ILLNESSES::SCHIZOPHRENIA:  return schizophreniaPool[rand() % schizophreniaPool.size()];
+    case ILLNESSES::AIW_SYNDROME:   return aiwPool[rand() % aiwPool.size()];
+    case ILLNESSES::INSOMNIA:       return insomniaPool[rand() % insomniaPool.size()];
+    case ILLNESSES::OCD:            return ocdPool[rand() % ocdPool.size()];
+    case ILLNESSES::SCOTOPHOBIA:    return scotophobiaPool[rand() % scotophobiaPool.size()];
 
-    case ALL:           return allPool[rand() % (FRAME_STATES - 1)];
     default:            return 0; // Default to normal state
     }
 }
@@ -83,25 +82,22 @@ void Frames_SyncToLight(s8 floor, int lightIndex, bool isLightOn) {
 
 float GetFrameTimerByIllness(ILLNESSES illness, bool isGlitchingPhase) {
     switch (illness) {
-    case MANIA:
-    case SCHIZOPHRENIA:
+    case ILLNESSES::MANIA:
+    case ILLNESSES::SCHIZOPHRENIA:
         // Hyperactive: Fast glitches (0.05s), Short waits (0.2s)
         if (isGlitchingPhase) return (float)((rand() % 20) + 5) / 100.0f;
         else                  return (float)((rand() % 50) + 10) / 100.0f; 
-    case DEPRESSION:
-    case INSOMNIA:
+    case ILLNESSES::DEPRESSION:
+    case ILLNESSES::INSOMNIA:
         // Sluggish: Long glitches (2.0s), Short normal periods
         if (isGlitchingPhase) return (float)((rand() % 200) + 100) / 100.0f;
         else                  return (float)((rand() % 50) + 10) / 100.0f;
-    case DEMENTIA:
-    case OCD:
+    case ILLNESSES::DEMENTIA:
+    case ILLNESSES::OCD:
         // Confused: Medium pacing
         if (isGlitchingPhase) return (float)((rand() % 150) + 50) / 100.0f;
         else                  return (float)((rand() % 300) + 100) / 100.0f; 
-    case ALL: // Ghost
-        // Absolute Chaos: Strobe light speed
-        if (isGlitchingPhase) return (float)((rand() % 10) + 2) / 100.0f;
-        else                  return (float)((rand() % 15) + 2) / 100.0f;
+    
     default: return 1.0f;
     }
 }
@@ -158,9 +154,8 @@ void Frames_Initialize() {
 
 		for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
 			FrameAnomaly& currentFrame = levelMap[level][frame];
-            ENTITIES entity = Player_IsScaryPatient() ? GHOST : HUMAN;
 
-            currentFrame.entity = entity;
+            currentFrame.entity = HUMAN;    // ghost removed
             currentFrame.posX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
             currentFrame.posY = 0.0f;
 			currentFrame.width = FRAME_WIDTH;
@@ -191,9 +186,9 @@ void Frames_Update(float dt) {
         return;
     }
 
-    ILLNESSES currentIllness = Player_IsScaryPatient() ? ALL : Player_GetCurrentIllness();
+    ILLNESSES currentIllness = Player_GetCurrentIllness(); // ghost removed
 
-    if (currentIllness == PARANOIA || currentIllness == SCOTOPHOBIA) {
+    if (currentIllness == ILLNESSES::PARANOIA || currentIllness == ILLNESSES::SCOTOPHOBIA) {
         return;
     }
 
@@ -223,8 +218,8 @@ void Frames_Update(float dt) {
                     f.currentState = GetRandomStateByIllness(currentIllness);
                 }
 
-                if (currentIllness == MANIA || currentIllness == ALL) {
-                    float speed = (currentIllness == ALL) ? 30.0f : 20.0f;
+                if (currentIllness == ILLNESSES::MANIA) {
+                    float speed = (currentIllness == ILLNESSES::ALL) ? 30.0f : 20.0f;
                     f.currentState = (int)(fmodf(animTime * speed, (float)(FRAME_STATES - 1))) + 1;
                 }
 
@@ -232,13 +227,13 @@ void Frames_Update(float dt) {
                 float baseY = 0.0f;
 
                 switch (currentIllness) {
-                case DEMENTIA:
-                case MANIA:
+                case ILLNESSES::DEMENTIA:
+                case ILLNESSES::MANIA:
                     f.posX = baseX + ((rand() % 60) - 30);
                     f.posY = baseY + ((rand() % 60) - 30);
                     break;
 
-                case AIW_SYNDROME:
+                case ILLNESSES::AIW_SYNDROME:
                 { 
                     float scale = 1.0f + (sinf(animTime * 3.0f) * 0.5f);
 
@@ -253,21 +248,16 @@ void Frames_Update(float dt) {
                 }
                 break;
 
-                case SCHIZOPHRENIA:
+                case ILLNESSES::SCHIZOPHRENIA:
                     if (rand() % 10 > 7) f.posX = baseX + 20.0f;
                     else f.posX = baseX - 20.0f;
 
                     if (rand() % 100 > 95) f.posY = baseY + 50.0f;
                     break;
 
-                case DEPRESSION:
+                case ILLNESSES::DEPRESSION:
                     f.posY = baseY - (animTime * 40.0f);
                     f.posX = baseX + ((rand() % 4) - 2);
-                    break;
-
-                case ALL:
-                    f.posX = baseX + ((rand() % 100) - 50);
-                    f.posY = baseY + ((rand() % 100) - 50);
                     break;
 
                 default:
