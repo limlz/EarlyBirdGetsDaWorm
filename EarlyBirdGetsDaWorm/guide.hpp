@@ -6,6 +6,8 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive);
 
 bool IsGuideActive();
 
+void Guide_DrawSmallIcon();
+
 void Guide_Draw();
 
 void Guide_Free();

@@ -263,10 +263,11 @@ void Game_Draw()
     s8 targetFloor, targetDoor, destFloor, destDoor;
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
     Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
-    Guide_Draw();
+    Guide_DrawSmallIcon();
 
     Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
+    Guide_Draw();
     Lift_Draw(squareMesh);
     Tutorial_Draw();
 
