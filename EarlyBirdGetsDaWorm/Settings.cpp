@@ -99,10 +99,8 @@ void Settings_Update(float dt)
 
             if (isDraggingMaster) {
                 masterVolume = normalizedVolume;
-                // If your AudioManager doesn't natively support Master Scaling, 
-                // you might need to apply this to both BGM and SFX here.
-                // Assuming it has a dedicated Master volume function:
-                // AudioManager_SetMasterVolume(masterVolume);
+				AudioManager_SetBGMVolume(bgmVolume * masterVolume);
+				AudioManager_SetSFXVolume(sfxVolume * masterVolume);
             }
             else if (isDraggingBGM) {
                 bgmVolume = normalizedVolume;
@@ -185,8 +183,8 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
 
     // Draw the 3 Sliders using the helper function
     DrawSlider(squareMesh, masterVolume, 20.0f, "Master Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, bgmVolume, -40.0f, "Music Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, sfxVolume, -100.0f, "SFX Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, bgmVolume, -40.0f, "Background Music Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, sfxVolume, -100.0f, "Sound Effect Volume", settingsFontId, panelOffsetY);
 }
 
 void Settings_Unload()
