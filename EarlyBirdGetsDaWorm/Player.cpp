@@ -1,26 +1,50 @@
 #include "pch.hpp"
-#include <algorithm> // shuffle
-#include <random>    // default_random_engine
-#include <ctime>     // time
-#include <vector>    // (optional, not used now but safe)
+#include <algorithm> // std::shuffle
+#include <random>    // std::default_random_engine
+#include <ctime>     // std::time
+#include <vector>    // safe to keep (not used now)
 
-/*************************************** VARIABLES ***************************************/
-static constexpr float FRAME_TIME = 0.4f;  // walking speed (time per frame)
+/**************************************************************************************************
+    PLAYER.CPP
+    - Handles:
+        * Mission generation (pickup door/floor, destination door/floor)
+        * Picking up / delivering a patient
+        * Truth: Human vs Ghost (gameplay)
+        * Visual bluff: scary PNG vs human PNG (purely visuals)
+        * Illness assignment (real illness) + Ghost tag illness (ILLNESSES::GHOST)
+        * "Ghost = +1 extra anomaly" flag (minimal, doesn't require big file changes)
+**************************************************************************************************/
 
+/*************************************** CONFIG *************************************************/
+static constexpr float FRAME_TIME = 0.4f;   // walking speed (time per frame)
+
+/*************************************** RENDER DATA ********************************************/
 static AEGfxVertexList* gSpriteMesh = nullptr;
+
 static AEGfxTexture* gHumanTex[2]{};
 static AEGfxTexture* gScaryTex[2]{};
 static AEGfxTexture* gNoPatientTex[2]{};
 
-static bool     gIsScary = false;
-static bool     Patient_PickedUp = false;
-static bool     gVisualIsScary = false;
+/*************************************** STATE **************************************************/
+static bool gIsScary = false; // TRUTH from day pool (we treat scary==ghost truth)
+static bool Patient_PickedUp = false;
+static bool gVisualIsScary = false; // PNG BLUFF only (random)
 
-static int      gFacing = 1;     // 1 right, -1 left
-static int      gFrame = 0;
-static int      CurrentDayPool[5];
-static int      PatientsHandled = 0;
-static int      PlayerPool[6][5] =
+static int  gFacing = 1; // 1 right, -1 left
+static int  gFrame = 0;
+
+static float gTimer = 0.0f;
+
+// Mission targets
+static s8 PickupDoor = 0, PickupFloor = 0;
+static s8 DestDoor = 0, DestFloor = 0;
+
+// Day pool / pacing
+static int CurrentDayPool[5]{};
+static int PatientsHandled = 0;
+
+// 0 = human, 1 = ghost
+static int PlayerPool[6][5] =
 {
     {0,0,0,0,0}, // Day 0 (Unused)
     {0,1,0,0,0}, // Day 1: 1 Ghost (20%)
@@ -30,18 +54,29 @@ static int      PlayerPool[6][5] =
     {0,1,1,1,0}  // Day 5: 3 Ghosts (60%)
 };
 
-static float gTimer = 0.0f;
+// ============================================================
+// ILLNESS / GHOST TAG
+// ============================================================
+// gCurrentIllness is what OTHER systems read using Player_GetCurrentIllness().
+// If the patient is a ghost, we set gCurrentIllness = ILLNESSES::GHOST,
+// but we keep a "mimic" illness for effects/clues base.
+static ILLNESSES gCurrentIllness{};  // What the game sees (can be GHOST)
+static ILLNESSES gMimicIllness{};    // The real illness the ghost is mimicking
 
-static s8 PickupDoor, PickupFloor;
-static s8 DestDoor, DestFloor;
+// ============================================================
+// GHOST LOGIC = "truth"
+// ============================================================
+static bool gCarriedPatientIsGhost = false;
 
-ILLNESSES gCurrentIllness{};
+// "Ghost = +1 extra anomaly" (like ALL but only +1)
+static int gGhostExtraAnomalies = 0;
 
-/************************************* HELPERS *******************************************/
+/************************************* HELPERS ***************************************************/
 
-// Pick a REAL illness (no ALL / no NONE).
-// IMPORTANT: We rely on Player_HasPatient() to decide whether systems should apply illness effects.
-// If you want "no illness" state, do NOT use ILLNESSES::NONE (not defined) — just gate by Player_HasPatient().
+// Pick a REAL illness for the base/mimic.
+// IMPORTANT:
+// - Do NOT include ILLNESSES::ALL here.
+// - Do NOT include ILLNESSES::GHOST here (ghost is a TAG, not a real illness).
 static ILLNESSES Player_RandomRealIllness()
 {
     static ILLNESSES illnessPool[] =
@@ -61,118 +96,181 @@ static ILLNESSES Player_RandomRealIllness()
     return illnessPool[rand() % n];
 }
 
-void Player_GenerateMission() {
+// Decide and apply everything for a newly picked up patient.
+// Keeps logic in one place so you don't desync ghost/illness/visual.
+static void Player_ApplyNewPatientFromTruth(bool isGhostTruth)
+{
+    // TRUTH
+    gCarriedPatientIsGhost = isGhostTruth;
+
+    // Base illness that the patient (or ghost) is "about"
+    gMimicIllness = Player_RandomRealIllness();
+
+    // If ghost: tag illness as GHOST, but keep mimic illness around.
+    // If human: current illness is the real illness.
+    if (gCarriedPatientIsGhost)
+    {
+        gCurrentIllness = ILLNESSES::GHOST;
+        gGhostExtraAnomalies = 1;   // <- this is your "+1 extra anomaly" signal
+    }
+    else
+    {
+        gCurrentIllness = gMimicIllness;
+        gGhostExtraAnomalies = 0;
+    }
+
+    // PNG bluff stays random (purely visuals)
+    gVisualIsScary = (std::rand() % 2 == 0);
+
+    // reset walk anim
+    gFrame = 0;
+    gTimer = 0.0f;
+}
+
+/************************************* MISSION ***************************************************/
+
+void Player_GenerateMission()
+{
+    // Reset carry state
     Patient_PickedUp = false;
+    gCarriedPatientIsGhost = false;
+    gIsScary = false;
+    gVisualIsScary = false;
+    gGhostExtraAnomalies = 0;
+
+    // Reset illness values
+    gCurrentIllness = ILLNESSES{}; // default
+    gMimicIllness = ILLNESSES{}; // default
 
     // Clear evidence for next patient (so old anomalies don't carry over)
     Journal_Clear();
 
-    // Reset "truth" state for next patient
-    Player_SetScary(false);
-
+    // Generate pickup and destination rooms
     PickupDoor = (s8)(rand() % 10) + 1;
     PickupFloor = (s8)(rand() % 9) + 1;
 
-    do {
+    do
+    {
         DestDoor = (s8)(rand() % 10) + 1;
-        DestFloor = (s8)(rand() % 9) + 1;   // floors 1-9 ONLY (no 00)
+        DestFloor = (s8)(rand() % 9) + 1; // floors 1-9 ONLY (no 00)
     } while (DestDoor == PickupDoor && DestFloor == PickupFloor);
 }
 
-bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
-
+// Called by your door interaction logic.
+// Returns true if an interaction happened (pickup or delivery).
+bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day)
+{
+    // -------------------------
     // PHASE 1: PICKUP
-    if (!Patient_PickedUp) {
-        if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
+    // -------------------------
+    if (!Patient_PickedUp)
+    {
+        if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor)
+        {
             Patient_PickedUp = true;
 
-            // ROLL FOR GHOST (truth state)
-            // Ghost logic should NOT depend on PNG. PNG stays random bluff.
-            Player_SetScaryByDay(day);
-
-            // Always assign a REAL illness (ghost mimics a real illness).
-            // Extra anomaly that makes it "ghost" should be handled by your anomaly system,
-            // not by setting illness to ALL.
-            gCurrentIllness = Player_RandomRealIllness();
-
-            // KEEP PNG RANDOM BLUFF (do NOT change this)
-            gVisualIsScary = (std::rand() % 2 == 0);
+            // Roll ghost/human truth using day pool
+            Player_SetScaryByDay(day);            // sets gIsScary (truth)
+            Player_ApplyNewPatientFromTruth(gIsScary);
 
             return true;
         }
     }
-
+    // -------------------------
     // PHASE 2: DELIVERY
-    else {
-        if (currentFloor == DestFloor && doorNumAtPlayer == DestDoor) {
+    // -------------------------
+    else
+    {
+        if (currentFloor == DestFloor && doorNumAtPlayer == DestDoor)
+        {
+            // delivered successfully (if your Game.cpp decides to kill player for ghost delivery,
+            // it should do so BEFORE calling this, or stop calling this on that case)
             Patient_PickedUp = false;
-            // Mission Complete: Set up the next one
+            gCarriedPatientIsGhost = false;
+            gIsScary = false;
+            gVisualIsScary = false;
+            gGhostExtraAnomalies = 0;
+
             Player_GenerateMission();
             return true;
         }
     }
-    return false; // Wrong room or no door nearby
+
+    return false; // Wrong room / no interaction
 }
 
-void Player_ResetPatientCounter(int day) {
+/************************************* DAY POOL **************************************************/
+
+void Player_ResetPatientCounter(int day)
+{
     PatientsHandled = 0;
+
     int current_day = (day < 1) ? 1 : (day > 5 ? 5 : day);
 
-    // 1. Copy the master pool for the specific day into our active pool
-    for (int i = 0; i < 5; ++i) {
+    // Copy the master pool for the specific day into active pool
+    for (int i = 0; i < 5; ++i)
         CurrentDayPool[i] = PlayerPool[current_day][i];
-    }
 
-    // 2. Shuffle the active pool using the current time as a seed
-    // This ensures the order is different every single time the day starts
+    // Shuffle active pool so ghost positions are different each day run
     unsigned seed = (unsigned)time(NULL);
     std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
 }
 
+// If you still want to keep this helper, it just resets animation.
+// (Illness is assigned in Player_ApplyNewPatientFromTruth now.)
 void Player_NewPatientRandom()
 {
     gFrame = 0;
     gTimer = 0.0f;
-
-    // Assign Illness based on the Scary status already set by the Brain
-    // NOTE: We no longer use AllAnomalies_CurrentRun() and we do NOT use ALL.
-    // Ghost still gets a REAL illness (mimic), and the "extra anomaly" clue is handled elsewhere.
-    gCurrentIllness = Player_RandomRealIllness();
 }
 
-void Player_SetScaryByDay(int day) {
+// Decide ghost/human based on day pool / probabilities.
+// This sets gIsScary (truth).
+void Player_SetScaryByDay(int day)
+{
     int d = (day < 1) ? 1 : (day > 5 ? 5 : day);
     bool isScary = false;
 
-    // Use the balanced pool for the first 5 patients
-    if (PatientsHandled < 5) {
+    // Balanced pool for the first 5 patients
+    if (PatientsHandled < 5)
+    {
         isScary = (CurrentDayPool[PatientsHandled] == 1);
     }
-    // After 5 patients, use your percentage roll
-    else {
+    // After 5 patients, use percentage roll
+    else
+    {
         float extraRollProb[] = { 0.0f, 0.20f, 0.20f, 0.35f, 0.35f, 0.40f };
         isScary = ((float)(rand() % 101) / 100.0f) < extraRollProb[d];
     }
 
-    // 1. Set the global status
+    // Set truth
     Player_SetScary(isScary);
 
-    // 2. Set up the specific patient details (Illness, Anim Resets)
+    // Keep your reset helper
     Player_NewPatientRandom();
 
-    // 3. Increment for the next call
+    // Next patient slot
     PatientsHandled++;
 }
 
-/*************************************** MODIFIERS ***************************************/
+/*************************************** MODIFIERS ***********************************************/
+
 void Player_SetScary(bool scary)
 {
+    // IMPORTANT:
+    // gIsScary = TRUTH (ghost/human) decided by day pool.
     gIsScary = scary;
+
+    // Keep this mirrored so gameplay checks stay consistent.
+    // (If you prefer, you can remove gCarriedPatientIsGhost entirely and just use gIsScary.)
+    gCarriedPatientIsGhost = scary;
+
     gFrame = 0;
     gTimer = 0.0f;
 }
 
-void Player_SetIllness(ILLNESSES illness) {
+void Player_SetIllness(ILLNESSES illness)
+{
     gCurrentIllness = illness;
 }
 
@@ -181,62 +279,86 @@ void Player_SetFacing(int dir)
     gFacing = (dir >= 0) ? 1 : -1;
 }
 
-/*************************************** ACCESSORS ***************************************/
+/*************************************** ACCESSORS ***********************************************/
 
+// TRUTH: ghost/human
+bool Player_IsGhostPatient()
+{
+    return gCarriedPatientIsGhost;
+}
+
+// NOTE: this name is confusing now, but we keep it for compatibility.
+// It returns TRUTH (same as ghost/human roll), not PNG visuals.
 bool Player_IsScaryPatient()
 {
     return gIsScary;
 }
 
+// What the rest of the game reads.
+// If ghost: returns ILLNESSES::GHOST
+// If human: returns real illness
 ILLNESSES Player_GetCurrentIllness()
 {
     return gCurrentIllness;
 }
 
+// Useful if you want illness effects/clues even when patient is ghost.
+ILLNESSES Player_GetMimicIllness()
+{
+    return gMimicIllness;
+}
+
+// "Ghost = +1 extra anomaly" signal
+int Player_GetGhostExtraAnomalies()
+{
+    return gGhostExtraAnomalies; // 1 if ghost, else 0
+}
+
 static AEGfxTexture* GetActiveFrameTex()
 {
-    // If the nurse hasn't picked up a patient yet
+    // Nurse only (no patient yet)
     if (!Patient_PickedUp)
-    {
         return gNoPatientTex[gFrame];
-    }
 
-    // If a patient is picked up, choose between Human and Scary sets
+    // If carrying a patient: show PNG bluff
     return gVisualIsScary ? gScaryTex[gFrame] : gHumanTex[gFrame];
 }
 
-// Getters for Notifications.cpp
-bool Player_HasPatient() { return Patient_PickedUp; }
-void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
+// Used by Notifications.cpp and others
+bool Player_HasPatient()
+{
+    return Patient_PickedUp;
+}
+
+void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor)
+{
     patientFloor = PickupFloor;
     patientDoor = PickupDoor;
 
     destFloor = DestFloor;
     destDoor = DestDoor;
-
-    /*if (!Patient_PickedUp) {
-        floor = PickupFloor; door = PickupDoor;
-    }
-    else {
-        floor = DestFloor; door = DestDoor;
-    }*/
 }
 
 float Player_GetWidth() { return PLAYER_WIDTH; }
 float Player_GetHeight() { return PLAYER_HEIGHT; }
 
-/***************************************** LOAD ******************************************/
+/***************************************** LOAD **************************************************/
+
 void Player_Load()
 {
     std::srand((unsigned)std::time(nullptr));
 
-    // mesh 
+    // Mesh
     AEGfxMeshStart();
-    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     gSpriteMesh = AEGfxMeshEnd();
 
-    // load BOTH sets
+    // Textures
     gHumanTex[0] = LoadTextureChecked(Assets::Player::Human1);
     gHumanTex[1] = LoadTextureChecked(Assets::Player::Human2);
     gScaryTex[0] = LoadTextureChecked(Assets::Player::Scary1);
@@ -245,7 +367,8 @@ void Player_Load()
     gNoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
-/***************************************** UPDATE ****************************************/
+/***************************************** UPDATE ************************************************/
+
 void Player_Update(float dt, bool walkKey)
 {
     if (walkKey)
@@ -254,7 +377,7 @@ void Player_Update(float dt, bool walkKey)
         if (gTimer >= FRAME_TIME)
         {
             gTimer -= FRAME_TIME;
-            gFrame = (gFrame + 1) % 2; // 2 frames
+            gFrame = (gFrame + 1) % 2;
         }
     }
     else
@@ -264,20 +387,20 @@ void Player_Update(float dt, bool walkKey)
     }
 }
 
-/***************************************** DRAW ******************************************/
+/***************************************** DRAW **************************************************/
+
 void Player_Draw(float x, float y)
 {
     AEMtx33 scale, trans, transform;
+
     float widthMultiplier = Patient_PickedUp ? 1.0f : 0.3f;
-    float sx = (PLAYER_WIDTH * widthMultiplier) * (float)gFacing;   // // 1 = normal, -1 = flipped
+    float sx = (PLAYER_WIDTH * widthMultiplier) * (float)gFacing;
     float sy = PLAYER_HEIGHT;
 
-    // build transform matrix
     AEMtx33Scale(&scale, sx, sy);
     AEMtx33Trans(&trans, x, y);
     AEMtx33Concat(&transform, &trans, &scale);
 
-    // texture drawing settings (same as demo)
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetColorToMultiply(1.f, 1.f, 1.f, 1.f);
     AEGfxSetColorToAdd(0.f, 0.f, 0.f, 0.f);
@@ -287,14 +410,14 @@ void Player_Draw(float x, float y)
     AEGfxTextureSet(GetActiveFrameTex(), 0.0f, 0.0f);
     AEGfxSetTransform(transform.m);
 
-    // draw the UV mesh
     AEGfxMeshDraw(gSpriteMesh, AE_GFX_MDM_TRIANGLES);
 
-    // (optional) reset 
+    // reset (optional)
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 }
 
-/**************************************** UNLOAD *****************************************/
+/**************************************** UNLOAD *************************************************/
+
 void Player_Unload()
 {
     for (int i = 0; i < 2; ++i)
@@ -308,12 +431,9 @@ void Player_Unload()
     for (int i = 0; i < 2; ++i)
     {
         if (gNoPatientTex[i])
-        {
             UnloadTextureSafe(gNoPatientTex[i]);
-        }
+        gNoPatientTex[i] = nullptr;
     }
 
     FreeMeshSafe(gSpriteMesh);
 }
-
-/*****************************************************************************************/

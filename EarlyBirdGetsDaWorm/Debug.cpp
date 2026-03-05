@@ -61,6 +61,9 @@ void Debug_Draw(const DebugInfo& info)
     case ILLNESSES::NONE:
         illness = "NO PATIENT YET";
         break;
+    case ILLNESSES::GHOST:
+        illness = "GHOST";
+        break;
     default:
         illness = "UNKNOWN";
         break;

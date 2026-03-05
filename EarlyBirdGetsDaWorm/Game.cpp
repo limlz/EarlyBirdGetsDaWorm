@@ -65,6 +65,10 @@ const float BOSS_FADE_SPEED = 2.0f;
 // JUMPSCARE -> ENDGAME HANDOFF
 // ============================================================
 
+static bool gPendingEndgameAfterJumpscare = false;
+EndGameReason currentEndReason = REASON_SURVIVED_5_DAYS;
+static EndGameReason gPendingEndReason = REASON_SURVIVED_5_DAYS;
+
 // forward decls if not in pch.hpp
 void JumpScare_Start();
 bool JumpScare_IsActive();
@@ -80,6 +84,7 @@ static float ComputeSpawnYFromBorder()
     float borderTopY = borderCenterY + (borderHeight * 0.5f);
     return borderTopY + (Player_GetHeight() * 0.5f);
 }
+
 
 // ============================================================
 // LOAD
@@ -160,6 +165,24 @@ void Game_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
     Debug_Update();
+
+    // ------------------------------------------------------------
+    // If a jumpscare-triggered death is pending, wait for jumpscare to finish
+    // ------------------------------------------------------------
+    if (gPendingEndgameAfterJumpscare)
+    {
+        // Replace this check with what you actually have:
+        // - JumpScare_IsActive()
+        // - JumpScare_IsPlaying()
+        // - or a bool you store inside JumpScare.cpp
+        if (!JumpScare_IsActive())
+        {
+            currentEndReason = gPendingEndReason;
+            next = ENDGAME_STATE;
+            gPendingEndgameAfterJumpscare = false;
+        }
+        return;
+    }
 
     // ------------------------------------------------------------
     // 1) Fade transition TO boss fight
@@ -328,54 +351,67 @@ void Game_Update()
         s8 targetFloor, targetDoor, destFloor, destDoor;
         Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
-        // --------------------------------------------------------
-        // Rule:
-        // - If carrying a patient and disposing in basement:
-        //     - HUMAN -> GAME OVER
-        //     - GHOST -> BOSS FIGHT
-        // --------------------------------------------------------
-        if (Player_HasPatient() &&
-            floorNum == 0 &&
-            Doors_TryDisposal(floorNum, doorNumAtPlayer))
+        // Cache "truth" checks (IMPORTANT: do NOT use Player_IsScaryPatient for truth)
+        const bool hasPatient = Player_HasPatient();
+        const bool isGhostTruth = (Player_GetCurrentIllness() == ILLNESSES::GHOST);
+
+        // ========================================================
+        // RULE A: BASEMENT DISPOSAL (floor 0)
+        // - HUMAN -> GAME OVER (even if disposal got blocked / jumpscared)
+        // - GHOST -> BOSS FIGHT (only if disposal succeeds)
+        // ========================================================
+        if (hasPatient && floorNum == 0)
         {
-            // No jumpscare triggered! Now check if patient is a monster
-            if (Player_IsScaryPatient())
+            // Your Doors_TryDisposal() sometimes plays a jumpscare and returns false.
+            // So we must call it, but NOT rely on its return to decide endgame for humans.
+            bool didJumpscare = false;
+            const bool disposalSuccess = Doors_TryDisposal(floorNum, doorNumAtPlayer, didJumpscare);
+
+            if (!isGhostTruth)
             {
-                isFadingToBoss = true;
-            }
-            else
-            {
+                // HUMAN sent to basement -> instant fail
                 currentEndReason = REASON_WRONG_BASEMENT_DELIVERY;
                 next = ENDGAME_STATE;
+                return;
             }
+
+            // GHOST in basement: only start boss if disposal actually succeeded
+            if (disposalSuccess)
+            {
+                isFadingToBoss = true;
+                return;
+            }
+
+            // Disposal was blocked (maybe jumpscare happened). Stop here.
             return;
         }
 
-        // --------------------------------------------------------
-        // Rule:
-        // - If carrying a GHOST and delivering to the mission destination
-        //   (which is a NON-basement room because pager is a throw-off):
-        //     -> JUMPSCARE, then ENDGAME
-        // --------------------------------------------------------
-
-        // If player is at the destination door for the pager mission
-        if (Player_HasPatient() &&
+        // ========================================================
+        // RULE B: GHOST delivered to pager destination (floors 1-9)
+        // -> JUMPSCARE, then ENDGAME
+        //
+        // IMPORTANT:
+        // This must happen BEFORE Player_HandleInteraction(), otherwise your
+        // Player code will complete delivery and clear the patient first.
+        // ========================================================
+        if (hasPatient &&
             floorNum == destFloor &&
             doorAtPlayer1Based == destDoor)
         {
-            // If it's a ghost, delivering it like a human = failure
-            if (Player_IsScaryPatient())
+            if (isGhostTruth)
             {
-                currentEndReason = REASON_WRONG_BASEMENT_DELIVERY; // rename later if you want
                 JumpScare_Start();
-                gPendingGhostDeliveryDeath = true;
+
+                gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                gPendingEndgameAfterJumpscare = true;
+
                 return;
             }
         }
 
-        // --------------------------------------------------------
+        // ========================================================
         // Normal pickup / delivery flow
-        // --------------------------------------------------------
+        // ========================================================
         bool success = Player_HandleInteraction(floorNum, doorAtPlayer1Based, CurrentDay);
 
         if (success)
@@ -385,10 +421,6 @@ void Game_Update()
             if (!Player_HasPatient())
             {
                 liftActive = false;
-
-                // NOTE:
-                // With your new logic, we DO NOT roll ghost here.
-                // Next patient's truth is decided at pickup from JOURNAL evidence.
             }
         }
         else

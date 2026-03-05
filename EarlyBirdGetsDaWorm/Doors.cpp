@@ -19,10 +19,9 @@ static float ComputeDoorY()
     const float floorLineY = (-FLOOR_CENTER_Y) + (FLOOR_HEIGHT * 0.5f);
     return floorLineY + (DOOR_H * 0.5f);
 }
-
 static const float DOOR_Y = ComputeDoorY();
 
-// Window placement
+// Window placement (UV-ish placement within door)
 static constexpr float WINDOW_CENTER_U = 0.50f;
 static constexpr float WINDOW_CENTER_V = 0.62f;
 
@@ -34,14 +33,18 @@ static constexpr float WINDOW_H = DOOR_H * WINDOW_SIZE_V;
 
 // Event tuning
 static constexpr float EVENT_ROLL_COOLDOWN = 2.0f;
-static constexpr int EVENT_CHANCE_PERCENT = 35;
+static constexpr int   EVENT_CHANCE_PERCENT = 35;
+
+// Ghost "+1 extra anomaly" tuning (extra roll is rarer + gated)
+static constexpr float GHOST_EXTRA_ROLL_COOLDOWN = 3.0f;
+static constexpr int   GHOST_EXTRA_CHANCE_PERCENT = 18;
 
 // ============================================================
 // RENDER DATA
 // ============================================================
 
 static AEGfxVertexList* gQuadMesh = nullptr;
-static s8 gDoorFontId = -1;
+static s8               gDoorFontId = -1;
 
 static AEGfxTexture* gDoorTex = nullptr;
 static AEGfxTexture* gWindowBaseTex = nullptr;
@@ -62,14 +65,14 @@ enum class DoorEvent
 
 struct HandprintSlamState
 {
-    bool active = false;
+    bool  active = false;
     float t = 0.0f;
     float duration = 0.55f;
 };
 
 struct ShadowWalkState
 {
-    bool active = false;
+    bool  active = false;
     float offsetX = 0.0f;
     float speed = 220.0f;
 };
@@ -78,11 +81,14 @@ struct DoorEventState
 {
     DoorEvent event = DoorEvent::None;
 
-    float rollCooldown = 0.0f;
-    float eventCooldown = 0.0f;
+    float rollCooldown = 0.0f; // normal roll gate
+    float eventCooldown = 0.0f; // event active gate
+
+    // Ghost "+1 extra" roll gate
+    float ghostRollCooldown = 0.0f;
 
     HandprintSlamState slam;
-    ShadowWalkState shadow;
+    ShadowWalkState    shadow;
 };
 
 static DoorEventState gDoorState[NUM_DOORS]{};
@@ -105,25 +111,29 @@ void Doors_ResetAllLocks()
         basementDoors[i].lockedThisDay = false;
 }
 
-bool Doors_TryDisposal(int floorNum, int doorIdx)
+// Disposal door logic:
+// - Each door can only be used once per day (lockedThisDay)
+// - 30% chance of jumpscare fake-out (returns false)
+// - Otherwise disposal succeeds (returns true)
+bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
 {
-    if (doorIdx < 0 || doorIdx >= NUM_DOORS)
-        return false;
+    outDidJumpscare = false;
+
+    if (doorIdx < 0 || doorIdx >= NUM_DOORS) return false;
 
     BasementCheck& s = basementDoors[doorIdx];
+    if (s.lockedThisDay) return false;
 
-    if (s.lockedThisDay)
-        return false;
+    s.lockedThisDay = true;
 
     if ((rand() % 100) < 30)
     {
         JumpScare_Start();
-        s.lockedThisDay = true;
-        return false;
+        outDidJumpscare = true;
+        return false; // blocked disposal, but we DID jumpscare
     }
 
-    s.lockedThisDay = true;
-    return true;
+    return true; // disposal success
 }
 
 // ============================================================
@@ -144,13 +154,6 @@ void Doors_SetEnabled(bool enabled)
 // ============================================================
 // HELPERS
 // ============================================================
-
-static int ClampFloor(int f)
-{
-    if (f < 0) return 0;
-    if (f >= 10) return 9;
-    return f;
-}
 
 static float DoorWorldX(int doorIndex, float camX)
 {
@@ -182,8 +185,10 @@ static void TriggerKnock(int doorIdx)
 
     s.event = DoorEvent::Knock;
 
+    // sound
     AudioManager_PlaySFX(SFX_DOOR_KNOCK, 0.35f, 1.0f, -1);
 
+    // small cooldown so it doesn't chain instantly
     s.eventCooldown = 1.0f;
 }
 
@@ -205,6 +210,7 @@ static void TriggerShadowWalk(int doorIdx)
     s.event = DoorEvent::ShadowWalk;
     s.shadow.active = true;
 
+    // start offscreen left within window, then slide through
     s.shadow.offsetX = -(WINDOW_W * 0.5f) - (WINDOW_W * 0.6f);
     s.shadow.speed = 200.0f + (rand() % 120);
 }
@@ -237,8 +243,17 @@ static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
     case ILLNESSES::INSOMNIA:      return DoorEvent::Knock;
     case ILLNESSES::OCD:           return DoorEvent::HandprintSlam;
     case ILLNESSES::SCOTOPHOBIA:   return DoorEvent::ShadowWalk;
-    default:            return DoorEvent::None;
+    default:                       return DoorEvent::None;
     }
+}
+
+// If current illness is GHOST, use mimic illness for event selection.
+static ILLNESSES GetEffectiveIllnessForDoorEvents()
+{
+    ILLNESSES current = Player_GetCurrentIllness();
+    if (current == ILLNESSES::GHOST)
+        return Player_GetMimicIllness();
+    return current;
 }
 
 // ============================================================
@@ -276,10 +291,14 @@ void Doors_Unload()
 
     if (gDoorFontId >= 0)
         AEGfxDestroyFont(gDoorFontId);
+
+    gQuadMesh = nullptr;
+    gDoorTex = gWindowBaseTex = gHandprintTex = gShadowTex = nullptr;
+    gDoorFontId = -1;
 }
 
 // ============================================================
-// UPDATE
+// UPDATE: returns door index near the player (or -1)
 // ============================================================
 
 int Doors_Update(float camX)
@@ -290,6 +309,7 @@ int Doors_Update(float camX)
     {
         float doorX = DoorWorldX(i, camX);
 
+        // Your existing condition (kept)
         if (doorX > -detectionRange + 50 && doorX < detectionRange + 50)
             return i;
     }
@@ -297,21 +317,48 @@ int Doors_Update(float camX)
     return -1;
 }
 
-// ============================================================
+// ============================ss================================
 // EVENTS
 // ============================================================
 
-void Doors_Animate(float dt, int doorNearPlayer, float)
+void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
 {
     if (!gDoorsEnabled) return;
     if (!Player_HasPatient()) return;
 
+    // Tick down cooldowns for all doors
     for (int d = 0; d < NUM_DOORS; ++d)
     {
         DoorEventState& s = gDoorState[d];
 
-        if (s.rollCooldown > 0)  s.rollCooldown -= dt;
-        if (s.eventCooldown > 0) s.eventCooldown -= dt;
+        if (s.rollCooldown > 0)      s.rollCooldown -= dt;
+        if (s.eventCooldown > 0)     s.eventCooldown -= dt;
+        if (s.ghostRollCooldown > 0) s.ghostRollCooldown -= dt;
+
+        // Update running event internals (minimal: only shadow movement timer-ish)
+        if (s.event == DoorEvent::ShadowWalk && s.shadow.active)
+        {
+            s.shadow.offsetX += s.shadow.speed * dt;
+
+            // when fully passed window, stop it and cooldown a bit
+            if (s.shadow.offsetX > (WINDOW_W * 1.2f))
+            {
+                s.shadow.active = false;
+                s.event = DoorEvent::None;
+                s.eventCooldown = 0.8f;
+            }
+        }
+
+        if (s.event == DoorEvent::HandprintSlam && s.slam.active)
+        {
+            s.slam.t += dt;
+            if (s.slam.t >= s.slam.duration)
+            {
+                s.slam.active = false;
+                s.event = DoorEvent::None;
+                s.eventCooldown = 0.8f;
+            }
+        }
     }
 
     if (doorNearPlayer < 0 || doorNearPlayer >= NUM_DOORS)
@@ -319,15 +366,20 @@ void Doors_Animate(float dt, int doorNearPlayer, float)
 
     DoorEventState& s = gDoorState[doorNearPlayer];
 
+    // If door is already "busy", don't trigger new events
     if (s.eventCooldown > 0 || s.rollCooldown > 0)
         return;
 
+    // Normal roll gate
     s.rollCooldown = EVENT_ROLL_COOLDOWN;
 
+    // Chance roll
     if ((rand() % 100) >= EVENT_CHANCE_PERCENT)
         return;
 
-    DoorEvent chosen = GetDoorEventByIllness(Player_GetCurrentIllness());
+    // Choose event based on EFFECTIVE illness (ghost uses mimic illness)
+    const ILLNESSES eff = GetEffectiveIllnessForDoorEvents();
+    DoorEvent chosen = GetDoorEventByIllness(eff);
 
     switch (chosen)
     {
@@ -335,6 +387,52 @@ void Doors_Animate(float dt, int doorNearPlayer, float)
     case DoorEvent::Knock:         TriggerKnock(doorNearPlayer); break;
     case DoorEvent::ShadowWalk:    TriggerShadowWalk(doorNearPlayer); break;
     default: break;
+    }
+
+    // --------------------------------------------------------
+    // GHOST "+1 extra anomaly":
+    // If carrying a ghost, we give ONE extra chance to trigger
+    // a SECOND event (rarer, and separately cooldowned).
+    // --------------------------------------------------------
+    const bool isGhost = (Player_GetCurrentIllness() == ILLNESSES::GHOST);
+    const bool wantExtra = isGhost && (Player_GetGhostExtraAnomalies() >= 1);
+
+    if (wantExtra && s.ghostRollCooldown <= 0.0f)
+    {
+        s.ghostRollCooldown = GHOST_EXTRA_ROLL_COOLDOWN;
+
+        // extra event roll is smaller chance so it doesn't spam
+        if ((rand() % 100) < GHOST_EXTRA_CHANCE_PERCENT)
+        {
+            DoorEvent extraEvent = GetDoorEventByIllness(eff);
+
+            // Avoid repeating the exact same event twice in a row if possible
+            if (extraEvent == s.event)
+            {
+                for (int tries = 0; tries < 4; ++tries)
+                {
+                    DoorEvent re = GetDoorEventByIllness(eff);
+                    if (re != s.event && re != DoorEvent::None)
+                    {
+                        extraEvent = re;
+                        break;
+                    }
+                }
+            }
+
+            // Only trigger if the current one isn't still actively blocking
+            // (we keep it simple: if eventCooldown already set, skip extra)
+            if (s.eventCooldown <= 0.0f)
+            {
+                switch (extraEvent)
+                {
+                case DoorEvent::HandprintSlam: TriggerHandprintSlam(doorNearPlayer); break;
+                case DoorEvent::Knock:         TriggerKnock(doorNearPlayer); break;
+                case DoorEvent::ShadowWalk:    TriggerShadowWalk(doorNearPlayer); break;
+                default: break;
+                }
+            }
+        }
     }
 }
 
@@ -346,6 +444,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 {
     if (!gQuadMesh) return;
 
+    // dementia effect: draw many repeated doors
     int maxDoors = dementia ? 1000 : NUM_DOORS;
 
     for (int i = 0; i < maxDoors; ++i)
@@ -359,9 +458,11 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
+        // Door body
         if (gDoorTex)
             DrawTextureMesh(gQuadMesh, gDoorTex, doorX, DOOR_Y, DOOR_W, DOOR_H, 1.0f);
 
+        // Window
         float winX, winY;
         WindowWorldCenter(doorX, winX, winY);
 
@@ -370,8 +471,10 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         if (gWindowBaseTex)
             DrawTextureMesh(gQuadMesh, gWindowBaseTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
 
+        // Door event visuals
         DoorEventState& s = gDoorState[doorIdx];
 
+        // Shadow walk
         if (s.event == DoorEvent::ShadowWalk && s.shadow.active && gShadowTex)
         {
             float sx = winX + s.shadow.offsetX;
@@ -386,9 +489,22 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
                 0.85f);
         }
 
+        // Handprint slam (optional texture draw if you want it visible)
+        if (s.event == DoorEvent::HandprintSlam && s.slam.active && gHandprintTex)
+        {
+            // simple pop timing: appear near middle of slam
+            float alpha = 1.0f;
+            if (s.slam.t < 0.08f) alpha = (s.slam.t / 0.08f);
+            if (s.slam.t > s.slam.duration - 0.10f) alpha = (s.slam.duration - s.slam.t) / 0.10f;
+            if (alpha < 0.0f) alpha = 0.0f;
+
+            DrawTextureMesh(gQuadMesh, gHandprintTex, winX, winY, WINDOW_W, WINDOW_H, alpha);
+        }
+
+        // Door label text
         if (gDoorFontId >= 0)
         {
-            char text[32];
+            char text[32]{};
 
             if (floorNum == 0)
                 sprintf_s(text, "B1-%02d", i + 1);

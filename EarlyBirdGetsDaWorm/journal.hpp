@@ -19,3 +19,6 @@ bool Journal_IsGhostEvidence();
 void Journal_Update();  // handles I toggle + selection
 void Journal_Draw(AEGfxVertexList* squareMesh);
 bool Journal_IsOpen();
+
+void Journal_AddExtraGhostAnomaly();   // +1 extra clue (ghost-only)
+int  Journal_GetExtraGhostAnomalies(); // optional helper

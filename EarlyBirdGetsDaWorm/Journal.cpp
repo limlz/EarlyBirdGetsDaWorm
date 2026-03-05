@@ -96,6 +96,18 @@ static const std::vector<ANOMALYID>* GetAnomaliesForIllness(ILLNESSES illness)
     return nullptr;
 }
 
+static int gExtraGhostAnoms = 0;
+
+void Journal_AddExtraGhostAnomaly()
+{
+    ++gExtraGhostAnoms;
+}
+
+int Journal_GetExtraGhostAnomalies()
+{
+    return gExtraGhostAnoms;
+}
+
 // ============================================================
 // MATCHING LOGIC: observed anomalies -> illness OR ghost
 // ============================================================
@@ -166,6 +178,9 @@ bool Journal_IsGhostEvidence()
             return true; // GHOST evidence
     }
     return false;
+
+    // ghost evidence = illness evidence + 1 extra anomaly
+    return (Journal_GetExtraGhostAnomalies() >= 1);
 }
 
 static const char* IllnessText(ILLNESSES i)
@@ -255,6 +270,8 @@ bool Journal_HasObserved(ANOMALYID id)
 
 void Journal_Clear()
 {
+    // (keep your existing clears)
+    gExtraGhostAnoms = 0;
     gObserved.clear();
 }
 
