@@ -237,6 +237,8 @@ void Game_Draw()
     float playerY = -650.0f + (800.0f * 0.5f) + (Player_GetHeight() * 0.5f);
 
     AEMtx33 scale;
+
+    // Global Darkness Overlay
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetTransparency(0.7f);
@@ -244,6 +246,46 @@ void Game_Draw()
     AEMtx33Scale(&scale, 2000.0f, 2000.0f);
     AEGfxSetTransform(scale.m);
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+    // Morgue ambience overlay (basement only)
+    if (floorNum == 0)
+    {
+        static float t = 0.0f;
+        t += (float)AEFrameRateControllerGetFrameTime();
+
+        AEMtx33 scale;
+        AEMtx33Scale(&scale, 2000.0f, 2000.0f);
+
+        // --------------------------------------------------
+        // 1) BASE DARKNESS (constant black hue)
+        // --------------------------------------------------
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                
+        AEGfxSetColorToMultiply(0.5f, 0.1f, 0.1f, 1.0f);
+        AEGfxSetTransform(scale.m);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+        // --------------------------------------------------
+        // 2) RED EMERGENCY PULSE
+        // --------------------------------------------------
+
+        float pulse = 0.10f + 0.12f * (0.5f + 0.5f * sinf(t * 2.5f));
+
+        // small random electrical spike
+        if ((rand() % 100) < 2)
+            pulse += 0.05f;
+
+        AEGfxSetTransparency(pulse);
+        AEGfxSetColorToMultiply(0.6f, 0.15f, 0.15f, 1.0f);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+        // --------------------------------------------------
+        // RESET RENDER STATE
+        // --------------------------------------------------
+        AEGfxSetTransparency(1.0f);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    }
 
     Player_Draw(50.0f, playerY);
     Draw_and_Flicker(camX, left_right, floorNum, dementia);

@@ -58,6 +58,7 @@ extern EndGameReason currentEndReason;
 // Colors
 #define COLOR_WHITE         0xFFFFFFFF
 #define COLOR_BLACK         0x000000FF
+#define COLOR_RED           0xFFFF0000
 #define COLOR_LIGHT_GREY    0x696969FF
 #define COLOR_DARK_GREY		0x333333FF
 #define COLOR_NIGHT_BLUE    0x191970FF
