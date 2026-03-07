@@ -134,7 +134,7 @@ void Tutorial_Initialize() {
 		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f };
 	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f };
 	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"There are two types of patients:\nNormal and Ghost\nYou must deliver ghosts to the basement,\nNormal patients must be delivered\nto the room shown on your pager.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 25.0f };
+		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 25.0f };
 	tutPatientDeliveredBox = { 440.0f, 220.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 25.0f };
 
 	tutSpacePress = false;
@@ -228,12 +228,13 @@ void Tutorial_Update(f32 dt) {
 	}
 
 	// -------------------------------- TUTORIAL: YES --------------------------------
-	if (doTutorial) {
+	if (doTutorial && !tutFinished) {
+		Timer_SetPaused(true);
 		switch (curTutStage) {
 			case TUTORIAL_START: {
 				tutStarted = true;
 				DialogueBox_Update(tutStartedBox, dt, 400.0f);
-				if (AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_Q)) {
 					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE;
 					tutStarted = false;
 				}
@@ -242,7 +243,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
 				tutPagerOpened = true;
 				DialogueBox_Update(tutPagerOpenedBox, dt, 350.0f);
-				if (AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_Q)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_OPEN;
 					tutPagerOpened = false;
 				}
@@ -251,7 +252,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_OPEN: {
 				tutPagerClosed = true;
 				DialogueBox_Update(tutPagerClosedBox, dt, 400.0f);
-				if (AEInputCheckTriggered(AEVK_L)) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_LIFT_OPEN && AEInputCheckTriggered(AEVK_L)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION;
 					tutPagerClosed = false;
 				}
@@ -260,8 +261,8 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				tutLiftOpened = true;
 				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
-				if (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
-					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9)) {
+				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
+					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9))) {
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
 					tutLiftOpened = false;
 				}
@@ -270,7 +271,8 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
 				tutLiftFloorSelected = true;
 				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
-				if (Player_HasPatient()) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
+					Player_SetScary(false);
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
 					tutLiftFloorSelected = false;
 				}
@@ -279,7 +281,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
 				tutPatientCollected = true;
 				DialogueBox_Update(tutPatientCollectedBox, dt, 500.0f);
-				if (!Player_HasPatient()) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
 					curTutStage = TUTORIAL_END;
 					tutPatientCollected = false;
 				}
@@ -288,7 +290,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_END: {
 				tutPatientDelivered = true;
 				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
-				if (AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_Q)) {
 					tutFinished = true;
 				}
 				break;
@@ -343,6 +345,9 @@ void Tutorial_Draw() {
 	}
 
 	if (!tutFinished) {
+		f32 spacebarX{ textPosition(-220.0f, -380.0f).first },
+			spacebarY{ textPosition(-220.0f, -380.0f).second };
+		AEGfxPrint(promptFontID, "PRESS [SPACE] TO CONTINUE", spacebarX, spacebarY, 1.0f, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
 
 		if (tutStarted) {
 			//Tutorial_DialogueBox_Draw("const char* str");
