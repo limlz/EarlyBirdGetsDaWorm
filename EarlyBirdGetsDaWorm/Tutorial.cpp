@@ -345,9 +345,14 @@ void Tutorial_Draw() {
 	}
 
 	if (!tutFinished) {
-		f32 spacebarX{ textPosition(-220.0f, -380.0f).first },
-			spacebarY{ textPosition(-220.0f, -380.0f).second };
-		AEGfxPrint(promptFontID, "PRESS [SPACE] TO CONTINUE", spacebarX, spacebarY, 1.0f, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
+		const char* infoText{ "PRESS [SPACE] TO CONTINUE" };
+		// Change text when tutorial is ending
+		if (curTutStage == TUTORIAL_END) {
+			infoText = "PRESS [Q] TO END TUTORIAL";
+		}
+		f32 infoX{ textPosition(-220.0f, -380.0f).first },
+			infoY{ textPosition(-220.0f, -380.0f).second };
+		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
 
 		if (tutStarted) {
 			//Tutorial_DialogueBox_Draw("const char* str");
