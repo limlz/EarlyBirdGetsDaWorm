@@ -202,6 +202,14 @@ void Wall_Draw(f32 camX, s8 floorNum)
         gWallPick[idx] = GetWallPickByIllness(currentIllness); 
         gWallPicked[idx] = true;
         gLastIllness[idx] = currentIllness;
+
+        // Sound
+        if (gWallPick[idx] == ANOMALYID::Wall_Drawing1 ||
+            gWallPick[idx] == ANOMALYID::Wall_Drawing2 ||
+            gWallPick[idx] == ANOMALYID::Wall_Drawing3)
+        {
+            AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.5f);
+        }
     }
 
     switch (gWallPick[idx])

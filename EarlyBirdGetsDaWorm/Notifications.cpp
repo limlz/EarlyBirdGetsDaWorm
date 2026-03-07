@@ -101,6 +101,8 @@ void Notifications_Update(bool liftActive, f32 dt)
 		popupTimer += dt;
 
 		if (popupTimer >= 0.5f) {
+			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
+
 			isPagerOpen = true;
 			pagerVibrating = true;
 			vibrateTimer = 0.0f;
@@ -108,6 +110,7 @@ void Notifications_Update(bool liftActive, f32 dt)
 			popUpShown = true;
 		}
 	}
+
 
 	// Pop Up after task complete
 	bool currHasPatient{ Player_HasPatient() };
@@ -122,6 +125,8 @@ void Notifications_Update(bool liftActive, f32 dt)
 		taskTimer += dt;
 
 		if (taskTimer >= 0.5f) {
+			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
+
 			isPagerOpen = true;
 			pagerVibrating = true;
 			vibrateTimer = 0.0f;
@@ -197,6 +202,8 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8
 
 void Notifications_Free()
 {
+	AudioManager_StopSFX();
+
 	FreeMeshSafe(iconMesh);
 	FreeMeshSafe(pagerMesh);
 
