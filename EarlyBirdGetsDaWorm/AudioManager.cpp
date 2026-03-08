@@ -39,6 +39,7 @@ void AudioManager_LoadAll() {
     soundBank[SFX_SWOOSH_1] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_1.wav");
     soundBank[SFX_SWOOSH_2] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_2.wav");
     soundBank[SFX_SWOOSH_3] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
+    soundBank[SFX_BUTTON_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_BUTTON_SELECT.wav");
 }
 
 void AudioManager_Unload() {

@@ -141,7 +141,10 @@ void Lift_Update(float /*dt*/, float camX, float maxDist)
 
         // When opening, start the door animation timer
         if (gLiftActive)
+        {
             gLiftAnimTimer = LIFT_TIMER;
+            AudioManager_PlaySFX(SFX_LIFT, 0.05f);
+        }
     }
 
     // --------------------------------------------

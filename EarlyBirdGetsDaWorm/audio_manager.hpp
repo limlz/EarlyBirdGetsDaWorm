@@ -32,6 +32,7 @@ enum SoundID {
     SFX_SWOOSH_1,                   // SFX_SWOOSH_1.wav
     SFX_SWOOSH_2,                   // SFX_SWOOSH_2.wav
     SFX_SWOOSH_3,                   // SFX_SWOOSH_3.wav
+    SFX_BUTTON_SELECT,              // SFX_BUTTON_SELECT.wav
 
     SND_COUNT
 };

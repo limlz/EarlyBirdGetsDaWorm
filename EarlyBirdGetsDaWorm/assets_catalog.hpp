@@ -6,13 +6,15 @@ namespace Assets
         constexpr const char* Buggy = "Assets/Fonts/buggy-font.ttf";
         constexpr const char* DigitalClock = "Assets/Fonts/DS-DIGI.ttf";
         constexpr const char* Handwriting1 = "Assets/Fonts/SharrpeGothik-Mdyw.ttf";
-        constexpr const char* Handwriting2 = "Assets/Fonts/NotFairEnoughDemo-R9596.ttf";
     }
     namespace Equipment
     {
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
         constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
-		constexpr const char* HandSlam = "Assets/Equipment/HandSlam.png";
+		constexpr const char* DoorSlam = "Assets/Equipment/HandSlam.png";
+        constexpr const char* FrameGlitch = "Assets/Equipment/FrameGlitch.png";
+        constexpr const char* FrameShift = "Assets/Equipment/FrameShift.png";
+        constexpr const char* FrameDistort = "Assets/Equipment/FrameDistort.png";
     }
     namespace Boss_Fight
     {

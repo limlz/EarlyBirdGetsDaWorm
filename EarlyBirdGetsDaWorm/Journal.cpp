@@ -79,13 +79,13 @@ struct IllnessInfo
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
     { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Wall_LeftHand,     ANOMALYID::Light_Flicker } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack2,       ANOMALYID::Frame_Distort } },
+    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack2,       ANOMALYID::Frame_Glitch } },
     { ILLNESSES::DEPRESSION,    { ANOMALYID::Light_Dim,         ANOMALYID::Wall_Drawing1,     ANOMALYID::Frame_Shift } },
-    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Wall_Drawing3,     ANOMALYID::Frame_Distort } },
-    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Glitch,      ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_RightHand } },
+    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Wall_Drawing3,     ANOMALYID::Frame_Shift } },
+    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Shift,       ANOMALYID::Door_HandSlam,      ANOMALYID::Wall_RightHand } },
     { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Frame_Distort,     ANOMALYID::Wall_Drawing2,     ANOMALYID::Door_Knock } },
     { ILLNESSES::INSOMNIA,      { ANOMALYID::Light_Flicker,     ANOMALYID::Door_Knock,        ANOMALYID::Wall_Crack1 } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack4,       ANOMALYID::Frame_Shift } },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack4,       ANOMALYID::Frame_Glitch } },
     { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Light_Off,         ANOMALYID::Door_LightChange,  ANOMALYID::Wall_LeftHand } },
 };
 
@@ -151,13 +151,13 @@ static const char* AnomalyText(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:        return "Crack Type 1";
-    case ANOMALYID::Wall_Crack2:        return "Crack Type 2";
-    case ANOMALYID::Wall_Crack3:        return "Crack Type 3";
-    case ANOMALYID::Wall_Crack4:        return "Crack Type 4";
-    case ANOMALYID::Wall_Drawing1:      return "Drawing Type 1";
-    case ANOMALYID::Wall_Drawing2:      return "Drawing Type 2";
-    case ANOMALYID::Wall_Drawing3:      return "Drawing Type 3";
+    case ANOMALYID::Wall_Crack1:        return "Crack Type I";
+    case ANOMALYID::Wall_Crack2:        return "Crack Type II";
+    case ANOMALYID::Wall_Crack3:        return "Crack Type III";
+    case ANOMALYID::Wall_Crack4:        return "Crack Type IV";
+    case ANOMALYID::Wall_Drawing1:      return "Drawing Type I";
+    case ANOMALYID::Wall_Drawing2:      return "Drawing Type II";
+    case ANOMALYID::Wall_Drawing3:      return "Drawing Type III";
     case ANOMALYID::Wall_LeftHand:      return "Left Handprint";
     case ANOMALYID::Wall_RightHand:     return "Right Handprint";
 
@@ -261,15 +261,15 @@ void Journal_Load()
 	gWallDrawing3 = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
 	gLeftHand = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
 	gRightHand = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
-	gDoorSlam = LoadTextureChecked(Assets::Equipment::HandSlam);
-	//gLightChange = LoadTextureChecked(Assets::Equipment::LightChange);
+	gDoorSlam = LoadTextureChecked(Assets::Equipment::DoorSlam);
+	gLightChange = LoadTextureChecked(Assets::Door_Anomaly::Window_1);
 	//gKnock = LoadTextureChecked(Assets::Equipment::Knock);
 	//gLightFlicker = LoadTextureChecked(Assets::Equipment::Flicker);
 	//gLightDim = LoadTextureChecked(Assets::Equipment::Dim);
 	//gLightOff = LoadTextureChecked(Assets::Equipment::Off);
-	//gFrameGlitch = LoadTextureChecked(Assets::Equipment::Glitch);
-	//gFrameShift = LoadTextureChecked(Assets::Equipment::Shift);
-	//gFrame_Distort = LoadTextureChecked(Assets::Equipment::Distort);
+	gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
+	gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
+	gFrame_Distort = LoadTextureChecked(Assets::Equipment::FrameDistort);
 }
 
 void Journal_Unload()
@@ -335,8 +335,19 @@ void Journal_Update()
     if (!gOpen) return;
 
     // Keyboard navigation (optional)
-    if (AEInputCheckTriggered(AEVK_UP))   gSelected--;
-    if (AEInputCheckTriggered(AEVK_DOWN)) gSelected++;
+    if (AEInputCheckTriggered(AEVK_UP))
+    {
+        gSelected--;
+        AudioManager_PlaySFX(SFX_BUTTON_SELECT, 0.5f);
+
+    }
+
+    if (AEInputCheckTriggered(AEVK_DOWN))
+    {
+        gSelected++;
+        AudioManager_PlaySFX(SFX_BUTTON_SELECT, 0.5f);
+
+    }
 
     ClampSelected();
 }
@@ -440,7 +451,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             AEGfxTexture* tex = GetAnomalyJournalTexture(anomaly);
 
             // image frame
-            DrawSquareMesh(squareMesh, imgX, y, imgW + 8.0f, imgH + 8.0f, COLOR_WHITE);
+            //DrawSquareMesh(squareMesh, imgX, y, imgW + 8.0f, imgH + 8.0f, COLOR_WHITE);
 
             // image
             if (tex)
@@ -454,13 +465,13 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
             // label beside image
             AEGfxPrint(
-				journalFontId,          // font
-				AnomalyText(anomaly),   // text
-				X(imgX + 170.0f),       // position label to right of image
-				Y(y - imgH * 0.25f),    // position label to right of image
-				0.65f,                  // scale
-				0, 0, 0,                // black text
-				1                       // alpha
+				journalFontId,                  // font
+				AnomalyText(anomaly),           // text
+				X(imgX + 170.0f),               // position label to right of image
+				Y((y + 50.0f) - i * 70.0f),     //80.0f is an offset and 70.0f is a row gap
+				0.65f,                          // scale
+				0, 0, 0,                        // black text
+				1                               // alpha
             );
         }
     }
