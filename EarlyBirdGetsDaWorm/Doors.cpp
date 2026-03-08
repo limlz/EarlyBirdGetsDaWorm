@@ -23,10 +23,10 @@ static const float DOOR_Y = ComputeDoorY();
 
 // Window placement
 static constexpr float WINDOW_CENTER_U = 0.50f;
-static constexpr float WINDOW_CENTER_V = 0.62f;
+static constexpr float WINDOW_CENTER_V = 0.70f;
 
-static constexpr float WINDOW_SIZE_U = 0.45f;
-static constexpr float WINDOW_SIZE_V = 0.18f;
+static constexpr float WINDOW_SIZE_U = 0.40f;
+static constexpr float WINDOW_SIZE_V = 0.25f;
 
 static constexpr float WINDOW_W = DOOR_W * WINDOW_SIZE_U;
 static constexpr float WINDOW_H = DOOR_H * WINDOW_SIZE_V;
@@ -211,11 +211,11 @@ static DoorEvent PickDoorEventFromPool(std::vector<DoorEvent> const& pool)
 static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
 {
     // Pools to match dictionary / illness style
-    static const std::vector<DoorEvent> paranoiaPool{ DoorEvent::Knock, DoorEvent::LightChange };
+    static const std::vector<DoorEvent> paranoiaPool{ DoorEvent::Knock };
     static const std::vector<DoorEvent> maniaPool{ DoorEvent::HandprintSlam };
-    static const std::vector<DoorEvent> depressionPool{ DoorEvent::Knock };
+    static const std::vector<DoorEvent> depressionPool{ };
     static const std::vector<DoorEvent> dementiaPool{ DoorEvent::LightChange };
-    static const std::vector<DoorEvent> schizophreniaPool{ DoorEvent::HandprintSlam, DoorEvent::LightChange };
+    static const std::vector<DoorEvent> schizophreniaPool{ DoorEvent::HandprintSlam };
     static const std::vector<DoorEvent> aiwPool{ DoorEvent::Knock };
     static const std::vector<DoorEvent> insomniaPool{ DoorEvent::Knock };
     static const std::vector<DoorEvent> ocdPool{ DoorEvent::HandprintSlam };

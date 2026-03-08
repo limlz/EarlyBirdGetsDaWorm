@@ -2,7 +2,6 @@
 #include <algorithm> // std::shuffle
 #include <random>    // std::default_random_engine
 #include <ctime>     // std::time
-#include <vector>    // safe to keep (not used now)
 
 /**************************************************************************************************
     PLAYER.CPP
@@ -29,6 +28,8 @@ static AEGfxTexture* gNoPatientTex[2]{};
 static bool gIsScary = false; // TRUTH from day pool (we treat scary==ghost truth)
 static bool Patient_PickedUp = false;
 static bool gVisualIsScary = false; // PNG BLUFF only (random)
+static bool gWalkingSoundPlaying = false;
+static bool gWheelchairSoundPlaying = false;
 
 static int  gFacing = 1; // 1 right, -1 left
 static int  gFrame = 0;
@@ -243,14 +244,9 @@ void Player_SetScaryByDay(int day)
         isScary = ((float)(rand() % 101) / 100.0f) < extraRollProb[d];
     }
 
-    // Set truth
-    Player_SetScary(isScary);
-
-    // Keep your reset helper
-    Player_NewPatientRandom();
-
-    // Next patient slot
-    PatientsHandled++;
+    Player_SetScary(isScary);       // set truth
+    Player_NewPatientRandom();      // keep your reset helper
+    PatientsHandled++;              // next patient slot
 }
 
 /*************************************** MODIFIERS ***********************************************/
@@ -368,12 +364,15 @@ void Player_Load()
 }
 
 /***************************************** UPDATE ************************************************/
-
 void Player_Update(float dt, bool walkKey)
 {
+    // ----------------------------------------
+    // Walking animation
+    // ----------------------------------------
     if (walkKey)
     {
         gTimer += dt;
+
         if (gTimer >= FRAME_TIME)
         {
             gTimer -= FRAME_TIME;
@@ -384,6 +383,46 @@ void Player_Update(float dt, bool walkKey)
     {
         gFrame = 0;
         gTimer = 0.0f;
+    }
+
+    // ----------------------------------------
+    // Audio logic
+    // ----------------------------------------
+    if (!walkKey)
+    {
+        if (gWalkingSoundPlaying || gWheelchairSoundPlaying)
+        {
+            AudioManager_StopSFX();
+            gWalkingSoundPlaying = false;
+            gWheelchairSoundPlaying = false;
+        }
+        return;
+    }
+
+    if (Player_HasPatient())
+    {
+        // if wheelchair mode should play
+        if (!gWheelchairSoundPlaying)
+        {
+            AudioManager_StopSFX();
+            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.5f);
+            AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK, 0.1f);
+
+            gWalkingSoundPlaying = true;
+            gWheelchairSoundPlaying = true;
+        }
+    }
+    else
+    {
+        // normal walking only
+        if (!gWalkingSoundPlaying || gWheelchairSoundPlaying)
+        {
+            AudioManager_StopSFX();
+            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.5f);
+
+            gWalkingSoundPlaying = true;
+            gWheelchairSoundPlaying = false;
+        }
     }
 }
 

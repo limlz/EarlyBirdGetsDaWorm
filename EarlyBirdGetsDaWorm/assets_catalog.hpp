@@ -76,8 +76,7 @@ namespace Assets
     {
         constexpr const char* Window_0 = "Assets/Door_Anomaly/Window_0.png";
         constexpr const char* Window_1 = "Assets/Door_Anomaly/Window_1.png";
-        constexpr const char* Handprint = "Assets/Door_Anomaly/Handprint.png";
-        constexpr const char* Shadow = "Assets/Door_Anomaly/Shadow.png";
+        constexpr const char* Handprint = "Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png";
     }
     namespace Pause_Menu
     {

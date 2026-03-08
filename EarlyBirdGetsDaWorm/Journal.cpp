@@ -330,7 +330,10 @@ void Journal_Update()
 {
     // Toggle book with I
     if (AEInputCheckTriggered(AEVK_I))
+    {
         gOpen = !gOpen;
+        AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
+    }
 
     if (!gOpen) return;
 
@@ -338,15 +341,13 @@ void Journal_Update()
     if (AEInputCheckTriggered(AEVK_UP))
     {
         gSelected--;
-        AudioManager_PlaySFX(SFX_BUTTON_SELECT, 0.5f);
-
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
     if (AEInputCheckTriggered(AEVK_DOWN))
     {
         gSelected++;
-        AudioManager_PlaySFX(SFX_BUTTON_SELECT, 0.5f);
-
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
     ClampSelected();
