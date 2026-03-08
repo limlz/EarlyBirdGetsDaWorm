@@ -5,10 +5,14 @@ namespace Assets
     {
         constexpr const char* Buggy = "Assets/Fonts/buggy-font.ttf";
         constexpr const char* DigitalClock = "Assets/Fonts/DS-DIGI.ttf";
+        constexpr const char* Handwriting1 = "Assets/Fonts/SharrpeGothik-Mdyw.ttf";
+        constexpr const char* Handwriting2 = "Assets/Fonts/NotFairEnoughDemo-R9596.ttf";
     }
-    namespace Pager
+    namespace Equipment
     {
-        constexpr const char* Pager = "Assets/Pager/pager.png";
+        constexpr const char* Pager = "Assets/Equipment/Pager.png";
+        constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
+		constexpr const char* HandSlam = "Assets/Equipment/HandSlam.png";
     }
     namespace Boss_Fight
     {
@@ -65,11 +69,11 @@ namespace Assets
             "Assets/Background/LiftWall_9.png"
         };
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
-        constexpr const char* JournalBook = "Assets/Background/Journalbook.png";
     }
     namespace Door_Anomaly
     {
-        constexpr const char* WindowBase = "Assets/Door_Anomaly/Window_0.png";
+        constexpr const char* Window_0 = "Assets/Door_Anomaly/Window_0.png";
+        constexpr const char* Window_1 = "Assets/Door_Anomaly/Window_1.png";
         constexpr const char* Handprint = "Assets/Door_Anomaly/Handprint.png";
         constexpr const char* Shadow = "Assets/Door_Anomaly/Shadow.png";
     }

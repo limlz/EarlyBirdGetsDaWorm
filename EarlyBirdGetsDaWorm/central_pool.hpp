@@ -32,7 +32,7 @@ enum class ANOMALYID : int
 
     // ---- DOOR ----
     Door_HandSlam,
-    Door_ShadowMove,
+    Door_LightChange,
     Door_Knock,
 
     // ---- LIGHTING ----

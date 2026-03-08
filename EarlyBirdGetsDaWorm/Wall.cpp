@@ -81,17 +81,17 @@ static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 
 static ANOMALYID GetWallPickByIllness(ILLNESSES illness)
 {
-    // You can tweak these pools to match your “dictionary”
-    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Wall_Drawing2, ANOMALYID::Wall_LeftHand };
-    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Wall_Crack2,   ANOMALYID::Wall_Crack3 };
-    static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Drawing1, ANOMALYID::Wall_Crack1 };
-    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Crack4,   ANOMALYID::Wall_Drawing3 };
+    // Pools to match dictionary exactly
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Wall_LeftHand };
+    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Wall_Crack2 };
+    static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Drawing1 };
+    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Drawing3 };
 
-    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_Drawing3, ANOMALYID::Wall_RightHand };
-    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_Drawing1, ANOMALYID::Wall_Drawing2 };
-    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Crack1,   ANOMALYID::Wall_RightHand };
-    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_Crack2,   ANOMALYID::Wall_Crack4 };
-    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Wall_LeftHand, ANOMALYID::Wall_Crack3 };
+    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_RightHand };
+    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_Drawing2 };
+    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Crack1 };
+    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_Crack4 };
+    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Wall_LeftHand };
 
     switch (illness)
     {

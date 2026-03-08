@@ -33,8 +33,8 @@ static f32 vibrateDuration{ 0.0f };
 
 void Notifications_Load()
 {
-	iconTexture = LoadTextureChecked(Assets::Pager::Pager);
-	pagerTexture = LoadTextureChecked(Assets::Pager::Pager);
+	iconTexture = LoadTextureChecked(Assets::Equipment::Pager);
+	pagerTexture = LoadTextureChecked(Assets::Equipment::Pager);
 	lineID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
 	return;
