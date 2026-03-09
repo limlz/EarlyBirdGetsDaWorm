@@ -41,6 +41,7 @@ void AudioManager_LoadAll() {
     soundBank[SFX_SWOOSH_3] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
     soundBank[SFX_JOURNAL_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
     soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
+	soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
 }
 
 void AudioManager_Unload() {

@@ -11,6 +11,7 @@ const float FADE_SPEED = 1.5f;
 
 static AEGfxVertexList* squareMesh = nullptr;
 
+bool first_audio = true;
 void Endgame_Load()
 {
     // Lowered from 50 to 35 to prevent AlphaEngine from overflowing its memory buffer
@@ -21,6 +22,7 @@ void Endgame_Load()
 
 void Endgame_Initialize()
 {
+	first_audio = true;
     squareMesh = CreateSquareMesh(COLOR_WHITE);
 
     isFadingIn = true;
@@ -38,8 +40,11 @@ void Endgame_Initialize()
 
 void Endgame_Update()
 {
+    if (first_audio) {
+        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0);
+		first_audio = false;
+    }
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-
     // 1. Handle Fade In
     if (isFadingIn) {
         fadeAlpha -= FADE_SPEED * dt;
