@@ -133,4 +133,8 @@ void Endgame_Unload()
         AEGfxDestroyFont(endgameFontId);
         endgameFontId = -1;
     }
+    if (subFontId >= 0) {
+        AEGfxDestroyFont(subFontId);
+        subFontId = -1;
+    }
 }
