@@ -446,15 +446,8 @@ void Game_Draw()
 
     AEMtx33 scale;
 
-    // Full-screen dark overlay that sits between the world and the lights, giving the corridor its shadowed feel
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(0.7f);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-
-    AEMtx33Scale(&scale, 2000.0f, 2000.0f);
-    AEGfxSetTransform(scale.m);
-    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    // Full-screen dark overlay between world geometry and lights; alpha driven by active illness
+    DrawBlackOverlay(squareMesh, Lighting_GetOverlayAlpha());
 
     // Basement (floor 0) gets an extra red tint overlay with a slow sin pulse and rare random brightness spikes
     //if (floorNum == 0)

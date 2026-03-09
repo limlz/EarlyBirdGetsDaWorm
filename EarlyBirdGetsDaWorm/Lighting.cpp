@@ -425,3 +425,29 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 
     Particles_Draw(squareMesh, -camX);
 }
+
+// ============================================================
+//  OVERLAY ALPHA
+//  Drives the darkness of the full-screen black overlay drawn
+//  in Game_Draw() between the world geometry and the lights.
+//  Values are tuned per illness theme; default (NONE) = 0.5.
+// ============================================================
+
+float Lighting_GetOverlayAlpha()
+{
+    switch (GetEffectiveIllness())
+    {
+    case ILLNESSES::MANIA:          return 0.35f; // Hyperactive — brighter corridor
+    case ILLNESSES::AIW_SYNDROME:   return 0.40f; // Dreamlike — slightly lifted darkness
+    case ILLNESSES::INSOMNIA:       return 0.40f; // Wired, harsh light — not deep dark
+    case ILLNESSES::OCD:            return 0.45f; // Clean, orderly — close to default
+    case ILLNESSES::NONE:           return 0.50f; // Default
+    case ILLNESSES::DEMENTIA:       return 0.55f; // Mild disorientation
+    case ILLNESSES::SCHIZOPHRENIA:  return 0.60f; // Unsettling shadows
+    case ILLNESSES::PARANOIA:       return 0.65f; // You feel watched — darker
+    case ILLNESSES::DEPRESSION:     return 0.70f; // Heavy gloom
+    case ILLNESSES::SCOTOPHOBIA:    return 0.75f; // Fear of darkness — ironically darkest
+    case ILLNESSES::GHOST:          return 0.55f; // Mirrors the mimic illness roughly
+    default:                        return 0.50f;
+    }
+}
