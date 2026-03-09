@@ -51,18 +51,17 @@ void      Player_SetIllness(ILLNESSES illness);
 
 // This is your “truth scary” flag that you used earlier.
 // Keep it if other modules rely on it.
-void      Player_SetScary(bool scary);
-bool      Player_IsScaryPatient();
+bool      IsGhostPatient();
 
 // ------------------------------------------------------------
 // Random patient/day pool support
 // ------------------------------------------------------------
-void Player_NewPatientRandom();
-void Player_ResetPatientCounter(int day);
-void Player_SetScaryByDay(int day);
+void ResetPatientCounter(int day);
+void SetPatientScaryByDay(int day);
 
 // ------------------------------------------------------------
 // Player size
 // ------------------------------------------------------------
 float Player_GetWidth();
 float Player_GetHeight();
+void Player_ForceHumanPatient();

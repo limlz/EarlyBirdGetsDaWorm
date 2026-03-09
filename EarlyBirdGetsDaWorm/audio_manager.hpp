@@ -34,6 +34,7 @@ enum SoundID {
     SFX_SWOOSH_3,                   // SFX_SWOOSH_3.wav
 	SFX_JOURNAL_SELECT,             // SFX_JOURNAL_SELECT.wav
 	SFX_JOURNAL_OPEN,               // SFX_JOURNAL_OPEN.wav
+    SFX_TUTORIAL_TYPING,
 
     SND_COUNT
 };

@@ -9,13 +9,17 @@
 // ============================================================
 
 // Illnesses selected for the current run
-static std::vector<ILLNESSES> gRunIllnesses;
+static std::vector<ILLNESSES>   currentRunILLNESSES;
+
+static std::vector<bool>        currentPatientANOMALYFILES((int)AnomalyFiles::Count, false);
 
 // Random generator
-static std::mt19937 gRng((unsigned)std::time(nullptr));
+static std::mt19937             gRng((unsigned)std::time(nullptr));
 
 // Maximum illnesses in a run
-static const int MAX_ILLNESSES_PER_RUN = 7;
+static const int                MAX_ILLNESSES_PER_RUN = 6;
+
+static const int				MAX_ANOMALIES_PER_ILLNESS = 3;
 
 
 // ============================================================
@@ -47,7 +51,7 @@ void AllAnomalies_Initialize()
 
 void AllAnomalies_GenerateRun()
 {
-    gRunIllnesses.clear();
+    currentRunILLNESSES.clear();
 
     // Pool of all illnesses
     std::vector<ILLNESSES> illnessPool =
@@ -69,7 +73,7 @@ void AllAnomalies_GenerateRun()
     // Pick the first 7
     for (int i = 0; i < MAX_ILLNESSES_PER_RUN && i < (int)illnessPool.size(); ++i)
     {
-        gRunIllnesses.push_back(illnessPool[i]);
+        currentRunILLNESSES.push_back(illnessPool[i]);
     }
 }
 
@@ -80,10 +84,47 @@ void AllAnomalies_GenerateRun()
 
 const std::vector<ILLNESSES>& AllAnomalies_CurrentRun()
 {
-    if (gRunIllnesses.empty())
+    if (currentRunILLNESSES.empty())
     {
         AllAnomalies_GenerateRun();
     }
 
-    return gRunIllnesses;
+    return currentRunILLNESSES;
+}
+
+void CentralPool_GeneratePatientAnomalies(ILLNESSES illness, int ghostExtraAnomalies)
+{
+    std::fill(currentPatientANOMALYFILES.begin(), currentPatientANOMALYFILES.end(), false);
+
+    if (illness == ILLNESSES::NONE) return;
+
+    int totalSystemsToActivate = MAX_ANOMALIES_PER_ILLNESS + ghostExtraAnomalies;
+
+    if (totalSystemsToActivate > (int)AnomalyFiles::Count) {
+        totalSystemsToActivate = (int)AnomalyFiles::Count;
+    }
+
+    std::vector<int> availableSystems;
+    for (int i = 0; i < (int)AnomalyFiles::Count; ++i) {
+        availableSystems.push_back(i);
+    }
+
+    // Shuffle the systems randomly
+    unsigned seed = (unsigned)std::time(nullptr) + rand();
+    std::shuffle(availableSystems.begin(), availableSystems.end(), std::default_random_engine(seed));
+
+    for (int i = 0; i < totalSystemsToActivate; ++i) {
+        int chosenSystem = availableSystems[i];
+        currentPatientANOMALYFILES[chosenSystem] = true;
+    }
+}
+void CentralPool_ClearPatientAnomalies()
+{
+    std::fill(currentPatientANOMALYFILES.begin(), currentPatientANOMALYFILES.end(), false);
+}
+
+// The function other files will call to check their status
+bool CentralPool_IsSystemActive(AnomalyFiles systemFile)
+{
+    return currentPatientANOMALYFILES[static_cast<int>(systemFile)];
 }

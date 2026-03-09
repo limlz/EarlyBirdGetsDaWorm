@@ -142,7 +142,7 @@ void Game_Initialize()
     Guide_Initialize();
     AllAnomalies_Initialize();
 
-    Player_ResetPatientCounter(CurrentDay);
+    ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
 
     gPendingGhostDeliveryDeath = false;
@@ -272,7 +272,7 @@ void Game_Update()
         floorNum = 1;
         liftActive = false;
 
-        Player_ResetPatientCounter(CurrentDay);
+        ResetPatientCounter(CurrentDay);
         Player_GenerateMission();
         return;
     }

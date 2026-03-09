@@ -272,7 +272,7 @@ void Tutorial_Update(f32 dt) {
 				tutLiftFloorSelected = true;
 				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
 				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
-					Player_SetScary(false);
+					Player_ForceHumanPatient();
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
 					tutLiftFloorSelected = false;
 				}

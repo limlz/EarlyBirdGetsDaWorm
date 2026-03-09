@@ -143,7 +143,7 @@ void Boss_Fight_Update()
 
     // --- EXIT LOGIC ---
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        Player_NewPatientRandom();
+        Player_GenerateMission();
         Timer_SetPaused(false);
         PauseMenu_SetPaused(false);
         Notifications_Trigger();

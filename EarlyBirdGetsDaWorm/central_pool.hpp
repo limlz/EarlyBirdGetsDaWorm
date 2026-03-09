@@ -14,7 +14,8 @@ enum class ILLNESSES : int
     INSOMNIA,
     OCD,
     SCOTOPHOBIA,
-    GHOST			// evidence matches illness + 1 extra anomaly (impossible for a human patient)
+    GHOST,			// evidence matches illness + 1 extra anomaly (impossible for a human patient)
+    COUNT
 };
 
 enum class ANOMALYID : int
@@ -48,9 +49,26 @@ enum class ANOMALYID : int
     None,
 };
 
+enum class AnomalyFiles : int
+{
+    Frames_isActive,
+    Doors_isActive,
+    Lighting_isActive,
+    Wall_isActive,
+	//Sound_isActive,
+	//Lift_isActive,
+    Count 
+};
+
 void AllAnomalies_Load();
 void AllAnomalies_Initialize();
 
 void AllAnomalies_GenerateRun();
 const std::vector<ILLNESSES>& AllAnomalies_CurrentRun();
+// Functions to interact with the boolean vector
+void CentralPool_GeneratePatientAnomalies(ILLNESSES illness, int ghostExtraAnomalies);
+void CentralPool_ClearPatientAnomalies();
+
+// The function other files will call to check their status
+bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
 
