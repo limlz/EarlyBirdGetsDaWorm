@@ -30,6 +30,13 @@ namespace Config {
     // Size 11 covers exactly: NONE (0) through GHOST (10)
     extern FlickerTimes flickerTable[11];
     extern IllnessVisuals visualsTable[11];
+    extern float overlayAlphaTable[11]; // Full-screen darkness overlay per illness
+
+    // --- JUMPSCARE SETTINGS ---
+    extern float jumpscareDuration;
+    extern float jumpscareScreenShake;
+    extern float jumpscareImageShake;
+    extern float jumpscareFlashDuration;
 
     // --- CORE FUNCTIONS ---
     void Load();

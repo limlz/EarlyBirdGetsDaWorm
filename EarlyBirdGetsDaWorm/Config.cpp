@@ -40,6 +40,26 @@ namespace Config {
         /* 10: GHOST        */ { 0.95f, 0.92f, 0.85f, 0.10f, 1.20f }
     };
 
+    float overlayAlphaTable[11] = {
+        /* 0: NONE          */ 0.50f,
+        /* 1: PARANOIA      */ 0.65f,
+        /* 2: MANIA         */ 0.35f,
+        /* 3: DEPRESSION    */ 0.70f,
+        /* 4: DEMENTIA      */ 0.55f,
+        /* 5: SCHIZOPHRENIA */ 0.60f,
+        /* 6: AIW_SYNDROME  */ 0.40f,
+        /* 7: INSOMNIA      */ 0.40f,
+        /* 8: OCD           */ 0.45f,
+        /* 9: SCOTOPHOBIA   */ 0.75f,
+        /* 10: GHOST        */ 0.55f,
+    };
+
+    // --- JUMPSCARE SETTINGS ---
+    float jumpscareDuration      = 1.0f;
+    float jumpscareScreenShake   = 35.0f;
+    float jumpscareImageShake    = 18.0f;
+    float jumpscareFlashDuration = 0.08f;
+
     // --- Helper function to parse all illness variants cleanly! ---
     bool ParseIllness(const std::string& key, float val, const std::string& prefix, ILLNESSES illness) {
         int idx = static_cast<int>(illness);
@@ -52,6 +72,7 @@ namespace Config {
         if (key == prefix + "_ON_RANGE") { flickerTable[idx].onRange = (int)val; return true; }
         if (key == prefix + "_OFF_MIN") { flickerTable[idx].offMin = (int)val; return true; }
         if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange = (int)val; return true; }
+        if (key == prefix + "_OVERLAY_ALPHA") { overlayAlphaTable[idx] = val; return true; }
         return false; // Key didn't match this illness
     }
 
@@ -92,7 +113,14 @@ namespace Config {
                 else if (key == "FLOOR_FUCKED_CHANCE") floorFuckedChance = (int)val;
                 else if (key == "STANDALONE_BRIGHTNESS") standaloneBrightness = val;
 
+                // --- JUMPSCARE SETTINGS ---
+                else if (key == "JUMPSCARE_DURATION")       jumpscareDuration = val;
+                else if (key == "JUMPSCARE_SCREEN_SHAKE")   jumpscareScreenShake = val;
+                else if (key == "JUMPSCARE_IMAGE_SHAKE")    jumpscareImageShake = val;
+                else if (key == "JUMPSCARE_FLASH_DURATION") jumpscareFlashDuration = val;
+
                 // --- ILLNESS SETTINGS ---
+                else if (ParseIllness(key, val, "NONE", ILLNESSES::NONE)) {}
                 else if (ParseIllness(key, val, "PARANOIA", ILLNESSES::PARANOIA)) {}
                 else if (ParseIllness(key, val, "MANIA", ILLNESSES::MANIA)) {}
                 else if (ParseIllness(key, val, "DEPRESSION", ILLNESSES::DEPRESSION)) {}
