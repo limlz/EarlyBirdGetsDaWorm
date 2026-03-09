@@ -208,10 +208,8 @@ void Tutorial_Update(f32 dt) {
 	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) },
 		noButtonHover{ IsAreaClicked(200.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) };
 
-	f32 hoverTarget{ yesButtonHover ? 1.2f : 1.0f };
-	yesButtonScale += (hoverTarget - yesButtonScale) * buttonHoverSpeed * dt;
-	hoverTarget = noButtonHover ? 1.2f : 1.0f;
-	noButtonScale += (hoverTarget - noButtonScale) * buttonHoverSpeed * dt;
+	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);
+	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
 
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
 	if (noButtonHover && AEInputCheckCurr(AEVK_LBUTTON)) {
@@ -421,7 +419,7 @@ void Tutorial_Free() {
 	FreeMeshSafe(tutBGMesh);
 
 	UnloadTextureSafe(yesButtonTexture);
-	FreeMeshSafe(noButtonMesh);
+	UnloadTextureSafe(noButtonTexture);
 	UnloadTextureSafe(tutBGTexture);
 
 	// Destroy font if valid

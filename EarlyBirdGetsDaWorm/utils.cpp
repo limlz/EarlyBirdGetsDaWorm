@@ -106,6 +106,26 @@ bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 	return true; // None were true, so they must be touching
 }
 
+void DrawBlackOverlay(AEGfxVertexList* mesh, float alpha)
+{
+	if (alpha <= 0.0f) return;
+	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+	AEGfxSetTransparency(alpha);
+	AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+	AEMtx33 scale, trans, transform;
+	AEMtx33Scale(&scale, 1600.0f, 900.0f);
+	AEMtx33Trans(&trans, 0.0f, 0.0f);
+	AEMtx33Concat(&transform, &trans, &scale);
+	AEGfxSetTransform(transform.m);
+	AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}
+
+void UpdateButtonScale(float& scale, bool hovering, float hoverTarget, float animSpeed, float dt)
+{
+	scale += ((hovering ? hoverTarget : 1.0f) - scale) * animSpeed * dt;
+}
+
 // Converts pager-local pixel offset to normalized screen coordinates for AEGfxPrint
 // Basically put both ur XY values in the parameters.
 // To get X value: textPosition(X, Y).first

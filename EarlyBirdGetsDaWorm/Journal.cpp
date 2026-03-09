@@ -298,17 +298,35 @@ void Journal_Load()
 
 void Journal_Unload()
 {
-    // unload texture
-    if (JournalBook)
+    // unload textures
+    UnloadTextureSafe(JournalBook);
+    UnloadTextureSafe(gWallCrack1);
+    UnloadTextureSafe(gWallCrack2);
+    UnloadTextureSafe(gWallCrack3);
+    UnloadTextureSafe(gWallCrack4);
+    UnloadTextureSafe(gWallDrawing1);
+    UnloadTextureSafe(gWallDrawing2);
+    UnloadTextureSafe(gWallDrawing3);
+    UnloadTextureSafe(gLeftHand);
+    UnloadTextureSafe(gRightHand);
+    UnloadTextureSafe(gDoorSlam);
+    UnloadTextureSafe(gLightChange);
+    UnloadTextureSafe(gKnock);
+    UnloadTextureSafe(gLightFlicker);
+    UnloadTextureSafe(gLightDim);
+    UnloadTextureSafe(gLightOff);
+    UnloadTextureSafe(gFrameGlitch);
+    UnloadTextureSafe(gFrameShift);
+    UnloadTextureSafe(gFrame_Distort);
+
+    // destroy font
+    if (journalFontId >= 0)
     {
-        AEGfxTextureUnload(JournalBook);
-        JournalBook = nullptr;
+        AEGfxDestroyFont(journalFontId);
+        journalFontId = -1;
     }
 
-    // reset font handle so we don't use stale id
-    journalFontId = -1;
-
-    // optional: reset UI state
+    // reset UI state
     gOpen = false;
     gSelected = 0;
 }
