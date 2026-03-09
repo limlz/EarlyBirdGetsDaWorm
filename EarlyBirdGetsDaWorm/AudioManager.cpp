@@ -23,7 +23,7 @@ void AudioManager_LoadAll() {
     soundBank[SFX_LIFT] = AEAudioLoadSound("Assets/Audio/SFX_LIFT.wav");
     soundBank[SFX_LIGHT_FLICKER] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
     soundBank[SFX_PLANT_THUD] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
-    soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
+    soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
 
     // Characters
     soundBank[SFX_BOSS_FIGHT] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");
@@ -39,6 +39,8 @@ void AudioManager_LoadAll() {
     soundBank[SFX_SWOOSH_1] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_1.wav");
     soundBank[SFX_SWOOSH_2] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_2.wav");
     soundBank[SFX_SWOOSH_3] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
+    soundBank[SFX_JOURNAL_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
+    soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
 }
 
 void AudioManager_Unload() {

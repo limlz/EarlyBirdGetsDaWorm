@@ -1,7 +1,7 @@
 #pragma once
 
 enum SoundID {
-    
+
     /*************  1. BACKGROUND MUSIC (BGM)   *************/
 
     BGM_GAME_AMBIENCE,              // BGM_GAME_AMBIENCE.wav
@@ -14,7 +14,7 @@ enum SoundID {
     SFX_LIFT,                       // SFX_LIFT.wav
     SFX_LIGHT_FLICKER,              // SFX_LIGHT_BUZZING.wav
     SFX_PLANT_THUD,                 // SFX_PLANT_DROP_THONK.wav
-	SFX_DOOR_KNOCK,                 // SFX_DOOR_KNOCK.wav
+    SFX_DOOR_KNOCK,                 // SFX_DOOR_KNOCK.wav
 
     /*************  3. PLAYER & CHARACTER SFX   *************/
 
@@ -32,6 +32,8 @@ enum SoundID {
     SFX_SWOOSH_1,                   // SFX_SWOOSH_1.wav
     SFX_SWOOSH_2,                   // SFX_SWOOSH_2.wav
     SFX_SWOOSH_3,                   // SFX_SWOOSH_3.wav
+	SFX_JOURNAL_SELECT,             // SFX_JOURNAL_SELECT.wav
+	SFX_JOURNAL_OPEN,               // SFX_JOURNAL_OPEN.wav
 
     SND_COUNT
 };

@@ -13,7 +13,7 @@ struct AEGfxVertexList;
 // ------------------------------------------------------------
 void Player_Load();
 void Player_Unload();
-void Player_Update(float dt, bool walkKey);
+void Player_Update(float dt, bool walkKey); 
 void Player_Draw(float x, float y);
 
 // ------------------------------------------------------------
