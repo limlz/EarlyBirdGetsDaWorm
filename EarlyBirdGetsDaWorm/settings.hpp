@@ -17,3 +17,4 @@ bool Settings_IsOpen();
 void Settings_Open();
 void Settings_Close();
 float Settings_GetMasterVolume();
+bool  Settings_IsHorrorLessEnabled();

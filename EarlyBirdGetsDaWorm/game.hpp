@@ -13,3 +13,6 @@ void Game_Free();
 void Game_Unload();
 
 void Game_ResetSession();
+
+int   Game_GetCurrentDay();
+float Game_GetTimeSurvived();

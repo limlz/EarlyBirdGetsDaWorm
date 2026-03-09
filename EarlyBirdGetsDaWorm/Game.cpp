@@ -580,3 +580,13 @@ void Game_ResetSession()
 {
     gSessionStarted = false;
 }
+
+int Game_GetCurrentDay()
+{
+    return CurrentDay;
+}
+
+float Game_GetTimeSurvived()
+{
+    return totalTimeSurvived;
+}

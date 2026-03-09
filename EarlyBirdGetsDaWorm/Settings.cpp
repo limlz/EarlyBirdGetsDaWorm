@@ -19,6 +19,9 @@ static bool  isDraggingMaster = false;
 static bool  isDraggingBGM = false;
 static bool  isDraggingSFX = false;
 
+// --- Toggle States ---
+static bool  horrorLessMode = false;
+
 // --- Slide Animation Variable ---
 static float panelOffsetY = 800.0f; // Starts off-screen (high up)
 
@@ -42,6 +45,7 @@ void Settings_Initialize()
     isDraggingSFX = false;
 
     panelOffsetY = 800.0f;
+    // horrorLessMode intentionally NOT reset so it persists across game sessions
 }
 
 void Settings_Update(float dt)
@@ -66,9 +70,12 @@ void Settings_Update(float dt)
 
     // Slider Hitboxes (Stacked vertically)
     // Master is at Y = 20, BGM is at Y = -40, SFX is at Y = -100
-    bool hoverMaster = IsAreaClicked(0.0f, 20.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverBGM = IsAreaClicked(0.0f, -40.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverSFX = IsAreaClicked(0.0f, -100.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverMaster = IsAreaClicked(0.0f,  20.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverBGM    = IsAreaClicked(0.0f, -40.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverSFX    = IsAreaClicked(0.0f,-100.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+
+    // Horror-Less toggle button at Y = -160
+    bool hoverHorrorToggle = IsAreaClicked(100.0f, -160.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
 
     // --- INPUT LOGIC ---
     if (isOptionsOpen) {
@@ -76,6 +83,11 @@ void Settings_Update(float dt)
         // Handle Closing
         if (AEInputCheckTriggered(AEVK_ESCAPE) || (AEInputCheckTriggered(AEVK_LBUTTON) && hoverClose)) {
             Settings_Close();
+        }
+
+        // Handle Horror-Less toggle
+        if (AEInputCheckTriggered(AEVK_LBUTTON) && hoverHorrorToggle) {
+            horrorLessMode = !horrorLessMode;
         }
 
         // Handle Drag Initiation
@@ -153,8 +165,8 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
     // 2. Draw UI Elements
     AEGfxSetTransparency(1.0f);
 
-    // Solid Backing Panel (Made it slightly taller to fit 3 sliders)
-    DrawSquareMesh(squareMesh, 0.0f, panelOffsetY, 600.0f, 450.0f, 0xFF2A2A2A);
+    // Solid Backing Panel (extended to fit toggle below the sliders)
+    DrawSquareMesh(squareMesh, 0.0f, panelOffsetY, 600.0f, 500.0f, 0xFF2A2A2A);
     DrawSquareMesh(squareMesh, 0.0f, 175.0f + panelOffsetY, 600.0f, 100.0f, 0xFF3A3A3A); // Header bar
 
     // Close Button
@@ -172,9 +184,28 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
     }
 
     // Draw the 3 Sliders using the helper function
-    DrawSlider(squareMesh, masterVolume, 20.0f, "Master Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, bgmVolume, -40.0f, "Background Music Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, sfxVolume, -100.0f, "Sound Effect Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, masterVolume,  20.0f, "Master Volume",           settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, bgmVolume,    -40.0f, "Background Music Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, sfxVolume,   -100.0f, "Sound Effect Volume",     settingsFontId, panelOffsetY);
+
+    // --- Horror-Less Mode Toggle ---
+    if (settingsFontId >= 0) {
+        // Label
+        float labelNdcX = (-150.0f) / 800.0f;
+        float labelNdcY = (-135.0f + panelOffsetY) / 450.0f;
+        AEGfxPrint(settingsFontId, "Horror-Less Mode", labelNdcX, labelNdcY, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    // Toggle button background: green when ON, dark gray when OFF
+    u32 btnColor = horrorLessMode ? 0xFF2E7D32 : 0xFF444444;
+    DrawSquareMesh(squareMesh, 100.0f, -160.0f + panelOffsetY, 80.0f, 30.0f, btnColor);
+
+    // Toggle button text (ON / OFF)
+    if (settingsFontId >= 0) {
+        float btnNdcY = (-167.0f + panelOffsetY) / 450.0f;
+        AEGfxPrintCentered(settingsFontId, horrorLessMode ? "ON" : "OFF",
+            100.0f / 800.0f, btnNdcY, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
 }
 
 void Settings_Unload()
@@ -195,6 +226,7 @@ void Settings_Close() {
     isDraggingSFX = false;
 }
 
-float Settings_GetMasterVolume() { return masterVolume; }
-float Settings_GetBGMVolume() { return bgmVolume; }
-float Settings_GetSFXVolume() { return sfxVolume; }
+float Settings_GetMasterVolume()    { return masterVolume; }
+float Settings_GetBGMVolume()       { return bgmVolume; }
+float Settings_GetSFXVolume()       { return sfxVolume; }
+bool  Settings_IsHorrorLessEnabled(){ return horrorLessMode; }

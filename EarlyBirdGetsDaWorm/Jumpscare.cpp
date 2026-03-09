@@ -111,7 +111,13 @@ void JumpScare_Start()
     gShakeY = 0.0f;
 
     gFlashTimer = FLASH_DURATION; // optional quick flash at start
-    AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 1.0f);
+
+    if (Settings_IsHorrorLessEnabled()) {
+        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.5f, 0); // comedic high-pitched scream
+    }
+    else {
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 1.0f);
+    }
 }
 
 // ============================================================
