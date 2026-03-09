@@ -272,9 +272,9 @@ void Frames_Update(float dt)
     const ILLNESSES effIllness = Frames_GetEffectiveIllness();
     const int extraAnoms = Frames_GetExtraAnomalyCount();
 
-    // Your original behavior: paranoia + scotophobia do nothing (kept)
-    if (effIllness == ILLNESSES::PARANOIA || effIllness == ILLNESSES::SCOTOPHOBIA)
-        return;
+    //// Your original behavior: paranoia + scotophobia do nothing 
+    //if (effIllness == ILLNESSES::PARANOIA || effIllness == ILLNESSES::SCOTOPHOBIA)
+    //    return;
 
     // Shared state across updates (kept)
     static int   timerState = STATE_NORMAL;

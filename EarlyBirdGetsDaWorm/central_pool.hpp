@@ -36,9 +36,13 @@ enum class ANOMALYID : int
     Door_Knock,
 
     // ---- LIGHTING ----
-    Light_Flicker,
-    Light_Dim,
-    Light_Off,
+    Light_Mania,
+    Light_Depression,
+    Light_Dementia,
+    Light_Schizophrenia,
+    Light_AIW,
+    Light_Insomnia,
+    Light_Scotophobia,
 
     // ---- FRAMES ----
     Frame_Glitch,

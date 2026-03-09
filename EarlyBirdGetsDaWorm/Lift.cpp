@@ -43,28 +43,6 @@ static bool  gNearLift = false;         // true when player is near a lift entra
 static float gLiftAnimTimer = 0.0f;     // counts down from LIFT_TIMER to 0
 
 // ============================================================
-// HELPERS
-// ============================================================
-
-// Draws the lift background inside the overlay 
-void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor)
-{
-    if (floor < 0) floor = 0;
-    if (floor >= MAX_FLOORS) floor = MAX_FLOORS - 1;
-
-    AEGfxTexture* tex = gLiftWallTex[floor];        // eg. if floor == 0, this becomes gLiftWallTex[0]
-
-    if (mesh && tex)
-    {
-        DrawTextureMesh(mesh, tex, x, y, w, h, 1.0f);
-    }
-    else
-    {
-        DrawSquareMesh(mesh, x, y, w, h, COLOR_NIGHT_BLUE);
-    }
-}
-
-// ============================================================
 // LOAD / INIT / UNLOAD
 // ============================================================
 
@@ -74,7 +52,7 @@ void Lift_Load()
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
     gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
     gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 4; i++)
     {
         gLiftWallTex[i] = AEGfxTextureLoad(Assets::Background::LiftWalls[i]);
     }
@@ -180,6 +158,33 @@ void Lift_HandleInput(s8& floorNum)
     }
 }
 
+// ============================================================
+// DRAW (EXTERIOR BACKGROUND)
+// ============================================================
+
+void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor)
+{
+    if (floor < 0) floor = 0;
+    if (floor >= MAX_FLOORS) floor = MAX_FLOORS - 1;
+
+    int texIndex = floor;
+    if (floor >= 2 && floor <= 8) texIndex = 2;     // 2F-8F use same image
+	if (floor == 0) texIndex = 0;                   // B1 has a unique image
+	else if (floor == 1) texIndex = 1;              // 1F has a unique image
+	else if (floor == 9) texIndex = 9;              // 9F has a unique image
+    else texIndex = 2;  
+
+    AEGfxTexture* tex = gLiftWallTex[texIndex];
+
+    if (mesh && tex)
+    {
+        DrawTextureMesh(mesh, tex, x, y, w, h, 1.0f);
+    }
+    else
+    {
+        DrawSquareMesh(mesh, x, y, w, h, COLOR_NIGHT_BLUE);
+    }
+}
 
 // ============================================================
 // DRAW (WORLD LIFT + FLOOR LABEL)

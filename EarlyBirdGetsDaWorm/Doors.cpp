@@ -211,7 +211,7 @@ static DoorEvent PickDoorEventFromPool(std::vector<DoorEvent> const& pool)
 static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
 {
     // Pools to match dictionary / illness style
-    static const std::vector<DoorEvent> paranoiaPool{ DoorEvent::Knock };
+    static const std::vector<DoorEvent> paranoiaPool{ DoorEvent::Knock, DoorEvent::LightChange };
     static const std::vector<DoorEvent> maniaPool{ DoorEvent::HandprintSlam };
     static const std::vector<DoorEvent> depressionPool{ };
     static const std::vector<DoorEvent> dementiaPool{ DoorEvent::LightChange };
