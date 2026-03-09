@@ -15,6 +15,7 @@ static AEGfxTexture* lightingtest = nullptr;
 // ============================================================
 
 static f32 camX{}, playerY{}, playerX{};
+static f32 camVelX{}; // Velocity used for smooth camera acceleration/deceleration
 
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 
@@ -113,6 +114,7 @@ void Game_Load()
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
         camX = 0.0f;
+        camVelX = 0.0f;
         gSessionStarted = true;
     }
 }
@@ -264,6 +266,7 @@ void Game_Update()
         Timer_StartDayOverlay(CurrentDay);
 
         camX = 0.0f;
+        camVelX = 0.0f;
         floorNum = 1;
         liftActive = false;
 
@@ -275,8 +278,14 @@ void Game_Update()
     // ------------------------------------------------------------
     // PHASE 5: INPUT & MOVEMENT
     // ------------------------------------------------------------
-    if (AEInputCheckCurr(AEVK_A)) { camX += Config::playerSpeed * dt; left_right = false; }
-    if (AEInputCheckCurr(AEVK_D)) { camX -= Config::playerSpeed * dt; left_right = true; }
+    // Smooth camera: build a target velocity from input, then lerp camVelX toward it so
+    // the corridor accelerates up to full speed and decelerates to a stop instead of snapping.
+    const float CAM_ACCEL = 12.0f; // Higher = snappier; lower = more floaty
+    float targetVelX = 0.0f;
+    if (AEInputCheckCurr(AEVK_A)) { targetVelX =  Config::playerSpeed; left_right = false; }
+    if (AEInputCheckCurr(AEVK_D)) { targetVelX = -Config::playerSpeed; left_right = true;  }
+    camVelX += (targetVelX - camVelX) * CAM_ACCEL * dt;
+    camX += camVelX * dt;
 
     if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
     if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
@@ -291,10 +300,11 @@ void Game_Update()
 
     Player_Update(dt, isWalking);
 
-    // Clamp camera so the player can't scroll past either end of the corridor
+    // Clamp camera so the player can't scroll past either end of the corridor.
+    // Also kill velocity at each boundary so it doesn't fight against the clamp.
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
-    if (camX > 0)                        camX = 0;
-    else if ((camX < -maxDist) && !dementia) camX = -maxDist;
+    if (camX > 0)                            { camX = 0;        if (camVelX > 0) camVelX = 0; }
+    else if ((camX < -maxDist) && !dementia) { camX = -maxDist; if (camVelX < 0) camVelX = 0; }
 
     // ------------------------------------------------------------
     // PHASE 6: WORLD UPDATES
