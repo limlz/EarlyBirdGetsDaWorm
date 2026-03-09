@@ -83,13 +83,19 @@ void Endgame_Draw()
             AEGfxPrint(endgameFontId, "GAME OVER", -0.3f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
             AEGfxPrint(subFontId, "You Died", -0.25f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
-        else if (currentEndReason == REASON_WRONG_BASEMENT_DELIVERY) {
+        else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
             AEGfxPrint(endgameFontId, "YOUVE BEEN FIRED", -0.35f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
             AEGfxPrint(subFontId, "You've sent a human to the basement.", -0.6f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
+        else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+            AEGfxPrint(endgameFontId, "YOUVE BEEN FIRED", -0.35f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
+            AEGfxPrint(subFontId, "You assigned a ghost to a guest room.", -0.55f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
 
         // Blinking "Click to Continue" prompt
-        float blinkAlpha = (sinf(dt * 5.0f) + 1.0f) * 0.5f;
+        static float totalTime = 0.0f;
+        totalTime += dt;
+        float blinkAlpha = (sinf(totalTime * 5.0f) + 1.0f) * 0.5f;
         AEGfxPrint(subFontId, "Click or Press SPACE to return to menu", -0.55f, -0.4f, 1.0f, 1.0f, 1.0f, 1.0f, blinkAlpha);
     }
 

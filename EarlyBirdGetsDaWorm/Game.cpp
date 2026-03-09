@@ -341,12 +341,12 @@ void Game_Update()
                 if (didJumpscare)
                 {
                     // Jumpscare plays first; endgame triggers once it finishes in Phase 1
-                    gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    gPendingEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
                     gPendingEndgameAfterJumpscare = true;
                 }
                 else
                 {
-                    currentEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    currentEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
                     Analytics::LogRun(CurrentDay, "Murder - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
                     next = ENDGAME_STATE;
                 }
@@ -370,8 +370,8 @@ void Game_Update()
             if (isGhostTruth)
             {
                 JumpScare_Start();
-                gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
-
+                gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
+                currentEndReason = gPendingEndReason;
                 // Death is deferred to Phase 3 so the jumpscare can fully play out
                 gPendingGhostDeliveryDeath = true;
                 return;
