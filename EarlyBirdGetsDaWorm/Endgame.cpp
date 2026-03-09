@@ -105,19 +105,7 @@ void Endgame_Draw()
     }
 
     // --- DRAW FADE OVERLAY ---
-    if (fadeAlpha > 0.0f) {
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetTransparency(fadeAlpha);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Pure Black
-
-        AEMtx33 scale, trans, transform;
-        AEMtx33Scale(&scale, 1600.0f, 900.0f);
-        AEMtx33Trans(&trans, 0.0f, 0.0f);
-        AEMtx33Concat(&transform, &trans, &scale);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-    }
+    DrawBlackOverlay(squareMesh, fadeAlpha);
 }
 
 void Endgame_Free()

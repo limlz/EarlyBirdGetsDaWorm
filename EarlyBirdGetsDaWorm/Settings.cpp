@@ -148,17 +148,7 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
     if (optionsOverlayAlpha <= 0.0f) return;
 
     // 1. Draw Black Backdrop
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(optionsOverlayAlpha);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-
-    AEMtx33 scale, trans, transform;
-    AEMtx33Scale(&scale, 1600.0f, 900.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
-    AEMtx33Concat(&transform, &trans, &scale);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    DrawBlackOverlay(squareMesh, optionsOverlayAlpha);
 
     // 2. Draw UI Elements
     AEGfxSetTransparency(1.0f);

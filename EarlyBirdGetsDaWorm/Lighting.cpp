@@ -151,8 +151,6 @@ void Draw_StandaloneConeLight(float x, float y)
 //  LIFECYCLE
 // ============================================================
 
-void Lighting_Load() {}
-
 void Lighting_Initialize(int fucked_floor)
 {
     Particles_Initialize();

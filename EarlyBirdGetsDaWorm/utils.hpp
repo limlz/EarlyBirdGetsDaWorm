@@ -18,6 +18,10 @@ AEGfxTexture* LoadTextureChecked(const char* path);
 void UnloadTextureSafe(AEGfxTexture*& texture);
 void FreeMeshSafe(AEGfxVertexList*& mesh);
 
+void DrawBlackOverlay(AEGfxVertexList* mesh, float alpha);
+void DrawVignette(AEGfxVertexList* mesh);
+void UpdateButtonScale(float& scale, bool hovering, float hoverTarget, float animSpeed, float dt);
+
 bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 	float r2x, float r2y, float r2w, float r2h);
 

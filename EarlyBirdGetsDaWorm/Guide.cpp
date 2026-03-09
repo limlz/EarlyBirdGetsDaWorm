@@ -1,16 +1,7 @@
 #include "pch.hpp"
 
-// Mesh
-static AEGfxVertexList* guideIconMesh;
-static AEGfxVertexList* guideBGMesh;
-static AEGfxVertexList* guideCategoryMesh;
-static AEGfxVertexList* guideSeperatorMesh;
-//Image Meshes
-static AEGfxVertexList* guideImage1Mesh;
-static AEGfxVertexList* guideImage2Mesh;
-static AEGfxVertexList* guideImage3Mesh;
-static AEGfxVertexList* guideImage4Mesh;
-static AEGfxVertexList* guideImage5Mesh;
+// Shared mesh for all guide quads (all are identical white squares)
+static AEGfxVertexList* guideMesh;
 
 // Textures
 static AEGfxTexture* guideIconTexture;
@@ -19,8 +10,6 @@ static AEGfxTexture* guideCategoryTexture;
 static AEGfxTexture* guideImage1Texture;
 static AEGfxTexture* guideImage2Texture;
 static AEGfxTexture* guideImage3Texture;
-static AEGfxTexture* guideImage4Texture;
-static AEGfxTexture* guideImage5Texture;
 
 // Variables
 static bool isGuideOpen;
@@ -53,21 +42,11 @@ void Guide_Load() {
 	guideImage1Texture = LoadTextureChecked(Assets::Guide::image1);
 	guideImage2Texture = LoadTextureChecked(Assets::Guide::image2);
 	guideImage3Texture = LoadTextureChecked(Assets::Guide::image3);
-	guideImage4Texture = LoadTextureChecked(Assets::Guide::image4);
-	guideImage5Texture = LoadTextureChecked(Assets::Guide::image5);
 }
 
 void Guide_Initialize() {
-	// Mesh
-	guideIconMesh = CreateSquareMesh(0xFFFFFFFF);
-	guideBGMesh = CreateSquareMesh(0xFFFFFFFF);
-	guideCategoryMesh = CreateSquareMesh(0xFFFFFFFF);
-	guideSeperatorMesh = CreateSquareMesh(0xFFFFFFFF);
-	guideImage1Mesh = CreateSquareMesh(0xFFFFFFFF);
-	guideImage2Mesh = CreateSquareMesh(0xFFFFFFFF);
-	guideImage3Mesh = CreateSquareMesh(0xFFFFFFFF);
-	guideImage4Mesh = CreateSquareMesh(0xFFFFFFFF);
-	guideImage5Mesh = CreateSquareMesh(0xFFFFFFFF);
+	// Shared mesh for all guide quads
+	guideMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Variabls
 	isGuideOpen = false;
@@ -134,12 +113,9 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	catTargetAlpha = cat3Hover ? 0.5f : 1.0f;
 	cat3Alpha += (catTargetAlpha - cat3Alpha) * catSpeed * dt;
 
-	if (cat1Alpha < 0.5f) { cat1Alpha = 0.5f; }
-	if (cat1Alpha > 1.0f) { cat1Alpha = 1.0f; }
-	if (cat2Alpha < 0.5f) { cat2Alpha = 0.5f; }
-	if (cat2Alpha > 1.0f) { cat2Alpha = 1.0f; }
-	if (cat3Alpha < 0.5f) { cat3Alpha = 0.5f; }
-	if (cat3Alpha > 1.0f) { cat3Alpha = 1.0f; }
+	cat1Alpha = AEClamp(cat1Alpha, 0.5f, 1.0f);
+	cat2Alpha = AEClamp(cat2Alpha, 0.5f, 1.0f);
+	cat3Alpha = AEClamp(cat3Alpha, 0.5f, 1.0f);
 
 	if (cat1Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
 		cat1Alpha = 0.5;
@@ -179,7 +155,7 @@ void Guide_DrawSmallIcon() {
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Draws the guide icon in the corner
-	DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
+	DrawTextureMesh(guideMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
 
 }
 
@@ -194,25 +170,25 @@ void Guide_Draw() {
 	if (isGuideOpen) {
 		// Black BG
 		u32 black = (0x000000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
-		DrawSquareMesh(guideBGMesh, 0.0f, 0.0f, winW, winH, black);
+		DrawSquareMesh(guideMesh, 0.0f, 0.0f, winW, winH, black);
 
 		// Line that seperates the category and info
 		u32 white = 0xFFFFFFFF;
-		DrawSquareMesh(guideSeperatorMesh, AEGfxGetWinMinX() + 400.0f, centerY, 1.0f, 700.0f, white);
+		DrawSquareMesh(guideMesh, AEGfxGetWinMinX() + 400.0f, centerY, 1.0f, 700.0f, white);
 
-		// Category Text 
-		DrawTextureMesh(guideCategoryMesh, guideCategoryTexture, categoryTopX, categoryTopY, categoryW, categoryH, cat1Alpha);
-		DrawTextureMesh(guideCategoryMesh, guideCategoryTexture, categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH, cat2Alpha);
-		DrawTextureMesh(guideCategoryMesh, guideCategoryTexture, categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH, cat3Alpha);
+		// Category Text
+		DrawTextureMesh(guideMesh, guideCategoryTexture, categoryTopX, categoryTopY, categoryW, categoryH, cat1Alpha);
+		DrawTextureMesh(guideMesh, guideCategoryTexture, categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH, cat2Alpha);
+		DrawTextureMesh(guideMesh, guideCategoryTexture, categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH, cat3Alpha);
 
 		if (cat1Selected) {
-			DrawTextureMesh(guideImage1Mesh, guideImage1Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
+			DrawTextureMesh(guideMesh, guideImage1Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
 		}
 		if (cat2Selected) {
-			DrawTextureMesh(guideImage2Mesh, guideImage2Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
+			DrawTextureMesh(guideMesh, guideImage2Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
 		}
 		if (cat3Selected) {
-			DrawTextureMesh(guideImage3Mesh, guideImage3Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
+			DrawTextureMesh(guideMesh, guideImage3Texture, 180.0f, centerY, categoryW + 800.0f, 700.0f, 1.0f);
 		}
 
 	}
@@ -220,21 +196,11 @@ void Guide_Draw() {
 }
 
 void Guide_Free() {
-	FreeMeshSafe(guideIconMesh);
-	FreeMeshSafe(guideBGMesh);
-	FreeMeshSafe(guideCategoryMesh);
-	FreeMeshSafe(guideSeperatorMesh);
-	FreeMeshSafe(guideImage1Mesh);
-	FreeMeshSafe(guideImage2Mesh);
-	FreeMeshSafe(guideImage3Mesh);
-	FreeMeshSafe(guideImage4Mesh);
-	FreeMeshSafe(guideImage5Mesh);
+	FreeMeshSafe(guideMesh);
 
 	UnloadTextureSafe(guideIconTexture);
 	UnloadTextureSafe(guideCategoryTexture);
 	UnloadTextureSafe(guideImage1Texture);
 	UnloadTextureSafe(guideImage2Texture);
 	UnloadTextureSafe(guideImage3Texture);
-	UnloadTextureSafe(guideImage4Texture);
-	UnloadTextureSafe(guideImage5Texture);
 }

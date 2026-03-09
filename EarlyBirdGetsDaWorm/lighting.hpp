@@ -1,6 +1,5 @@
 #pragma once
 
-void Lighting_Load();
 void Lighting_Initialize(int fucked_floor);
 void Lighting_Update(s8 floorNum, float camX, bool dementia);
 

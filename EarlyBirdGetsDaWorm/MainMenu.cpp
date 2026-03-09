@@ -70,22 +70,6 @@ static inline void FadeAlpha(float& alpha, bool open, float dt, float maxVal = 1
     alpha = AEClamp(alpha, 0.0f, maxVal);
 }
 
-static void DrawBlackOverlay(float alpha)
-{
-    if (alpha <= 0.0f) return;
-
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(alpha);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-
-    AEMtx33 scale, trans, transform;
-    AEMtx33Scale(&scale, 1600.0f, 900.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
-    AEMtx33Concat(&transform, &trans, &scale);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-}
 
 static void StripTag(std::string& s, const char* open, const char* close)
 {
@@ -246,9 +230,9 @@ void MainMenu_Update()
     isHoveringCredits = IsAreaClickedByMouse(-750.0f, -400.0f, 300.0f, 800.0f);
 
     float animSpeed = 15.0f;
-    admit_scale += ((hoverAdmit ? 1.15f : 1.0f) - admit_scale) * animSpeed * dt;
-    options_scale += ((hoverOptions ? 1.15f : 1.0f) - options_scale) * animSpeed * dt;
-    quit_scale += ((hoverQuit ? 1.15f : 1.0f) - quit_scale) * animSpeed * dt;
+    UpdateButtonScale(admit_scale, hoverAdmit, 1.15f, animSpeed, dt);
+    UpdateButtonScale(options_scale, hoverOptions, 1.15f, animSpeed, dt);
+    UpdateButtonScale(quit_scale, hoverQuit, 1.15f, animSpeed, dt);
 
     jitter_update_timer -= dt;
 
@@ -316,10 +300,10 @@ void MainMenu_Draw()
 
     float fadeAlpha = (fade_in_timer > 0.0f) ? (fade_in_timer / FADE_IN_DURATION)
         : (isFadingOut ? fade_out_alpha : 0.0f);
-    DrawBlackOverlay(fadeAlpha);
+    DrawBlackOverlay(squareMesh, fadeAlpha);
 
     // --- CREDITS OVERLAY DRAW ---
-    DrawBlackOverlay(creditsOverlayAlpha);
+    DrawBlackOverlay(squareMesh, creditsOverlayAlpha);
     if (menuFontId >= 0 && creditsOverlayAlpha >= 0.5f) {
         AEGfxSetTransparency(1.0f);
 
