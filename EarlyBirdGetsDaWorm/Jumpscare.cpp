@@ -38,8 +38,7 @@ static float gTimer = 0.0f;
 
 static float gShakeX = 0.0f;   // screen/camera shake offset
 static float gShakeY = 0.0f;
-
-static float gFlashTimer = 0.0f;   // optional flash at start
+static float gFlashTimer = 0.0f;   
 
 // ============================================================
 // HELPERS
@@ -112,6 +111,7 @@ void JumpScare_Start()
     gShakeY = 0.0f;
 
     gFlashTimer = FLASH_DURATION; // optional quick flash at start
+    AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 1.0f);
 }
 
 // ============================================================

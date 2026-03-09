@@ -300,6 +300,7 @@ void Journal_Unload()
 {
     // unload textures
     UnloadTextureSafe(JournalBook);
+
     UnloadTextureSafe(gWallCrack1);
     UnloadTextureSafe(gWallCrack2);
     UnloadTextureSafe(gWallCrack3);
@@ -309,12 +310,19 @@ void Journal_Unload()
     UnloadTextureSafe(gWallDrawing3);
     UnloadTextureSafe(gLeftHand);
     UnloadTextureSafe(gRightHand);
+
     UnloadTextureSafe(gDoorSlam);
     UnloadTextureSafe(gLightChange);
     UnloadTextureSafe(gKnock);
-    UnloadTextureSafe(gLightFlicker);
-    UnloadTextureSafe(gLightDim);
-    UnloadTextureSafe(gLightOff);
+
+    UnloadTextureSafe(gLightMania);
+    UnloadTextureSafe(gLightDepression);
+    UnloadTextureSafe(gLightDementia);
+    UnloadTextureSafe(gLightSchizophrenia);
+    UnloadTextureSafe(gLightAIW);
+    UnloadTextureSafe(gLightInsomnia);
+    UnloadTextureSafe(gLightScotophobia);
+
     UnloadTextureSafe(gFrameGlitch);
     UnloadTextureSafe(gFrameShift);
     UnloadTextureSafe(gFrame_Distort);

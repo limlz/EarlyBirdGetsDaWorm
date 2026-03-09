@@ -71,7 +71,6 @@ namespace Assets
             "Assets/Background/LiftWall_0.png",
             "Assets/Background/LiftWall_1.png",
             "Assets/Background/LiftWall_2.png",
-            "Assets/Background/LiftWall_9.png"
         };
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
     }

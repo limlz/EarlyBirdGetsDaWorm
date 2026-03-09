@@ -52,7 +52,7 @@ void Lift_Load()
     gLiftTex = LoadTextureChecked(Assets::Background::LiftBg);
     gLiftDoorTex = LoadTextureChecked(Assets::Background::LiftDoor);
     gLiftPanelTex = LoadTextureChecked(Assets::Background::LiftPanel);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         gLiftWallTex[i] = AEGfxTextureLoad(Assets::Background::LiftWalls[i]);
     }
@@ -168,11 +168,10 @@ void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float
     if (floor >= MAX_FLOORS) floor = MAX_FLOORS - 1;
 
     int texIndex = floor;
-    if (floor >= 2 && floor <= 8) texIndex = 2;     // 2F-8F use same image
-	if (floor == 0) texIndex = 0;                   // B1 has a unique image
-	else if (floor == 1) texIndex = 1;              // 1F has a unique image
-	else if (floor == 9) texIndex = 9;              // 9F has a unique image
-    else texIndex = 2;  
+
+    if (floor == 0) texIndex = 0;          // B1 unique
+    else if (floor == 1) texIndex = 1;     // 1F unique
+    else if (floor >= 2) texIndex = 2;     // 2F-9F same image
 
     AEGfxTexture* tex = gLiftWallTex[texIndex];
 
