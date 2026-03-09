@@ -73,7 +73,6 @@ static EndGameReason gPendingEndReason = REASON_SURVIVED_5_DAYS;
 void JumpScare_Start();
 bool JumpScare_IsActive();
 
-static bool  gPendingGhostDeliveryDeath = false;
 static float totalTimeSurvived = 0.0f;
 
 // Computes the player's Y so they spawn flush with the top of the border collider, not clipped into it
@@ -145,7 +144,6 @@ void Game_Initialize()
     Player_ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
 
-    gPendingGhostDeliveryDeath = false;
     Config::Load();
     totalTimeSurvived = 0.0f;
 }
@@ -166,17 +164,23 @@ void Game_Update()
     // ------------------------------------------------------------
     // PHASE 1: JUMPSCARE & DEATH HANDOFF
     // ------------------------------------------------------------
-    // Spin here until the jumpscare animation finishes, then flush the pending end reason and transition
     if (gPendingEndgameAfterJumpscare)
     {
         if (!JumpScare_IsActive())
         {
             currentEndReason = gPendingEndReason;
-            Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+
+            // Determine the correct analytics event based on the death reason
+            std::string eventName = "Jumpscare - Wrong Basement Delivery";
+            if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+                eventName = "Jumpscare - Wrong Room Delivery";
+            }
+
+            Analytics::LogRun(CurrentDay, eventName, static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
         }
-        return;
     }
 
     // ------------------------------------------------------------
@@ -216,15 +220,6 @@ void Game_Update()
     // ------------------------------------------------------------
     bool freeze = JumpScare_Update(dt);
     if (freeze) return;
-
-    // Ghost wrong-room death is also deferred until its jumpscare completes
-    if (gPendingGhostDeliveryDeath && !JumpScare_IsActive())
-    {
-        Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Room Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
-        gPendingGhostDeliveryDeath = false;
-        next = ENDGAME_STATE;
-        return;
-    }
 
     Timer_UpdateDayOverlay(dt);
     if (Timer_IsDayOverlayActive()) return;
@@ -371,9 +366,7 @@ void Game_Update()
             {
                 JumpScare_Start();
                 gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
-                currentEndReason = gPendingEndReason;
-                // Death is deferred to Phase 3 so the jumpscare can fully play out
-                gPendingGhostDeliveryDeath = true;
+                gPendingEndgameAfterJumpscare = true; // <-- Unified flag
                 return;
             }
         }
