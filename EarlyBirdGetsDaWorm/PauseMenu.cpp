@@ -188,9 +188,9 @@ void PauseMenu_Update(float dt)
         }
 
         float animSpeed = 15.0f;
-        resumeScale += ((hoverResume ? 1.15f : 1.0f) - resumeScale) * animSpeed * dt;
-        optionsScale += ((hoverOptions ? 1.15f : 1.0f) - optionsScale) * animSpeed * dt;
-        quitScale += ((hoverQuit ? 1.15f : 1.0f) - quitScale) * animSpeed * dt;
+        UpdateButtonScale(resumeScale, hoverResume, 1.15f, animSpeed, dt);
+        UpdateButtonScale(optionsScale, hoverOptions, 1.15f, animSpeed, dt);
+        UpdateButtonScale(quitScale, hoverQuit, 1.15f, animSpeed, dt);
 
 
         // --- Directional Splatter Physics ---
@@ -251,17 +251,7 @@ void PauseMenu_Draw(AEGfxVertexList* squareMesh)
     if (pauseAlpha <= 0.0f) return;
 
     // LAYER 1: The Darkening Overlay
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(pauseAlpha);
-    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
-
-    AEMtx33 scale, trans, transform;
-    AEMtx33Scale(&scale, 1600.0f, 900.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
-    AEMtx33Concat(&transform, &trans, &scale);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    DrawBlackOverlay(squareMesh, pauseAlpha);
 
     // LAYER 2: PIXELATED Procedural Blood Splatter
     if (gamePaused)
@@ -270,7 +260,7 @@ void PauseMenu_Draw(AEGfxVertexList* squareMesh)
         AEGfxSetTransparency(pauseAlpha);
 
         for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
-            AEMtx33 finalTransform;
+            AEMtx33 scale, trans, finalTransform;
 
             int pixelScaleX = (int)bloodDrops[i].currentScaleX;
             int pixelScaleY = (int)bloodDrops[i].currentScaleY;

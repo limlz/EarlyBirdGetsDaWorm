@@ -15,6 +15,7 @@ static AEGfxTexture* lightingtest = nullptr;
 // ============================================================
 
 static f32 camX{}, playerY{}, playerX{};
+static f32 camVelX{}; // Velocity used for smooth camera acceleration/deceleration
 
 f32 textXoffset{ 0.06f }, textY{ 50.0f };
 
@@ -73,7 +74,6 @@ static EndGameReason gPendingEndReason = REASON_SURVIVED_5_DAYS;
 void JumpScare_Start();
 bool JumpScare_IsActive();
 
-static bool  gPendingGhostDeliveryDeath = false;
 static float totalTimeSurvived = 0.0f;
 
 // Computes the player's Y so they spawn flush with the top of the border collider, not clipped into it
@@ -114,6 +114,7 @@ void Game_Load()
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
         camX = 0.0f;
+        camVelX = 0.0f;
         gSessionStarted = true;
     }
 }
@@ -145,7 +146,6 @@ void Game_Initialize()
     ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
 
-    gPendingGhostDeliveryDeath = false;
     Config::Load();
     totalTimeSurvived = 0.0f;
 }
@@ -166,17 +166,23 @@ void Game_Update()
     // ------------------------------------------------------------
     // PHASE 1: JUMPSCARE & DEATH HANDOFF
     // ------------------------------------------------------------
-    // Spin here until the jumpscare animation finishes, then flush the pending end reason and transition
     if (gPendingEndgameAfterJumpscare)
     {
         if (!JumpScare_IsActive())
         {
             currentEndReason = gPendingEndReason;
-            Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+
+            // Determine the correct analytics event based on the death reason
+            std::string eventName = "Jumpscare - Wrong Basement Delivery";
+            if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+                eventName = "Jumpscare - Wrong Room Delivery";
+            }
+
+            Analytics::LogRun(CurrentDay, eventName, static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
         }
-        return;
     }
 
     // ------------------------------------------------------------
@@ -216,15 +222,6 @@ void Game_Update()
     // ------------------------------------------------------------
     bool freeze = JumpScare_Update(dt);
     if (freeze) return;
-
-    // Ghost wrong-room death is also deferred until its jumpscare completes
-    if (gPendingGhostDeliveryDeath && !JumpScare_IsActive())
-    {
-        Analytics::LogRun(CurrentDay, "Jumpscare - Wrong Room Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
-        gPendingGhostDeliveryDeath = false;
-        next = ENDGAME_STATE;
-        return;
-    }
 
     Timer_UpdateDayOverlay(dt);
     if (Timer_IsDayOverlayActive()) return;
@@ -269,6 +266,7 @@ void Game_Update()
         Timer_StartDayOverlay(CurrentDay);
 
         camX = 0.0f;
+        camVelX = 0.0f;
         floorNum = 1;
         liftActive = false;
 
@@ -280,8 +278,14 @@ void Game_Update()
     // ------------------------------------------------------------
     // PHASE 5: INPUT & MOVEMENT
     // ------------------------------------------------------------
-    if (AEInputCheckCurr(AEVK_A)) { camX += Config::playerSpeed * dt; left_right = false; }
-    if (AEInputCheckCurr(AEVK_D)) { camX -= Config::playerSpeed * dt; left_right = true; }
+    // Smooth camera: build a target velocity from input, then lerp camVelX toward it so
+    // the corridor accelerates up to full speed and decelerates to a stop instead of snapping.
+    const float CAM_ACCEL = 12.0f; // Higher = snappier; lower = more floaty
+    float targetVelX = 0.0f;
+    if (AEInputCheckCurr(AEVK_A)) { targetVelX =  Config::playerSpeed; left_right = false; }
+    if (AEInputCheckCurr(AEVK_D)) { targetVelX = -Config::playerSpeed; left_right = true;  }
+    camVelX += (targetVelX - camVelX) * CAM_ACCEL * dt;
+    camX += camVelX * dt;
 
     if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
     if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
@@ -296,10 +300,11 @@ void Game_Update()
 
     Player_Update(dt, isWalking);
 
-    // Clamp camera so the player can't scroll past either end of the corridor
+    // Clamp camera so the player can't scroll past either end of the corridor.
+    // Also kill velocity at each boundary so it doesn't fight against the clamp.
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
-    if (camX > 0)                        camX = 0;
-    else if ((camX < -maxDist) && !dementia) camX = -maxDist;
+    if (camX > 0)                            { camX = 0;        if (camVelX > 0) camVelX = 0; }
+    else if ((camX < -maxDist) && !dementia) { camX = -maxDist; if (camVelX < 0) camVelX = 0; }
 
     // ------------------------------------------------------------
     // PHASE 6: WORLD UPDATES
@@ -341,12 +346,12 @@ void Game_Update()
                 if (didJumpscare)
                 {
                     // Jumpscare plays first; endgame triggers once it finishes in Phase 1
-                    gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    gPendingEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
                     gPendingEndgameAfterJumpscare = true;
                 }
                 else
                 {
-                    currentEndReason = REASON_WRONG_BASEMENT_DELIVERY;
+                    currentEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
                     Analytics::LogRun(CurrentDay, "Murder - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
                     next = ENDGAME_STATE;
                 }
@@ -370,10 +375,8 @@ void Game_Update()
             if (isGhostTruth)
             {
                 JumpScare_Start();
-                gPendingEndReason = REASON_WRONG_BASEMENT_DELIVERY;
-
-                // Death is deferred to Phase 3 so the jumpscare can fully play out
-                gPendingGhostDeliveryDeath = true;
+                gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
+                gPendingEndgameAfterJumpscare = true; // <-- Unified flag
                 return;
             }
         }

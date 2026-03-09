@@ -53,7 +53,9 @@
 enum EndGameReason {
     REASON_SURVIVED_5_DAYS,
     REASON_DIED_TO_BOSS,
-    REASON_WRONG_BASEMENT_DELIVERY
+    REASON_SENT_HUMAN_TO_BASEMENT,
+	REASON_SENT_GHOST_TO_ROOM,
+	REASON_QUIT_FROM_MENU
 };
 
 // Declare it as extern so every file shares the EXACT same variable

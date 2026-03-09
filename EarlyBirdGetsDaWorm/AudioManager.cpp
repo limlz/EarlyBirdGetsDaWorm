@@ -42,6 +42,7 @@ void AudioManager_LoadAll() {
     //soundBank[SFX_TUTORIAL_TYPING] = AEAudioLoadSound("Assets/Audio/SFX_TUTORIAL_TYPING.wav");
     soundBank[SFX_JOURNAL_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
     soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
+	soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
 }
 
 void AudioManager_Unload() {

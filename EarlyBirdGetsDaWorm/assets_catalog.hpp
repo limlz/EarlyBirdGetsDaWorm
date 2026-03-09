@@ -11,10 +11,19 @@ namespace Assets
     {
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
         constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
+
 		constexpr const char* DoorSlam = "Assets/Equipment/HandSlam.png";
         constexpr const char* FrameGlitch = "Assets/Equipment/FrameGlitch.png";
         constexpr const char* FrameShift = "Assets/Equipment/FrameShift.png";
         constexpr const char* FrameDistort = "Assets/Equipment/FrameDistort.png";
+
+        constexpr const char* LightMania = "Assets/Equipment/LightMania.png";
+        constexpr const char* LightDepression = "Assets/Equipment/LightDepression.png";
+        constexpr const char* LightDementia = "Assets/Equipment/LightDementia.png";
+        constexpr const char* LightSchizophrenia = "Assets/Equipment/LightSchizophrenia.png";
+        constexpr const char* LightAIW = "Assets/Equipment/LightAIW.png";
+        constexpr const char* LightInsomnia = "Assets/Equipment/LightInsomnia.png";
+        constexpr const char* LightScotophobia = "Assets/Equipment/LightScotophobia.png";
     }
     namespace Boss_Fight
     {
@@ -62,13 +71,6 @@ namespace Assets
             "Assets/Background/LiftWall_0.png",
             "Assets/Background/LiftWall_1.png",
             "Assets/Background/LiftWall_2.png",
-            "Assets/Background/LiftWall_3.png",
-            "Assets/Background/LiftWall_4.png",
-            "Assets/Background/LiftWall_5.png",
-            "Assets/Background/LiftWall_6.png",
-            "Assets/Background/LiftWall_7.png",
-            "Assets/Background/LiftWall_8.png",
-            "Assets/Background/LiftWall_9.png"
         };
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
     }

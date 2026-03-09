@@ -93,17 +93,18 @@ void Update_StandaloneLight(float dt, float lightX, float lightY)
     singleLightTimer -= dt;
     if (singleLightTimer > 0.0f) return;
 
-    AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 0.15f, 1.0f, -1);
 
     singleLightIsOn = !singleLightIsOn;
 
     Particles_Spawn(lightX, lightY, 8);
 
     // On-phase is much longer than off-phase so the light reads as "mostly on with brief cuts"
-    if (singleLightIsOn)
+    if (singleLightIsOn) {
+        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 0.15f, 1.0f, 0);
         singleLightTimer = (float)((rand() % 140) + 10) / 100.0f;
-    else
+    } else {
         singleLightTimer = (float)((rand() % 25) + 5) / 100.0f;
+    }
 }
 
 void Draw_StandaloneConeLight(float x, float y)
@@ -149,8 +150,6 @@ void Draw_StandaloneConeLight(float x, float y)
 // ============================================================
 //  LIFECYCLE
 // ============================================================
-
-void Lighting_Load() {}
 
 void Lighting_Initialize(int fucked_floor)
 {

@@ -11,6 +11,7 @@ const float FADE_SPEED = 1.5f;
 
 static AEGfxVertexList* squareMesh = nullptr;
 
+bool first_audio = true;
 void Endgame_Load()
 {
     // Lowered from 50 to 35 to prevent AlphaEngine from overflowing its memory buffer
@@ -21,6 +22,7 @@ void Endgame_Load()
 
 void Endgame_Initialize()
 {
+	first_audio = true;
     squareMesh = CreateSquareMesh(COLOR_WHITE);
 
     isFadingIn = true;
@@ -38,8 +40,11 @@ void Endgame_Initialize()
 
 void Endgame_Update()
 {
+    if (first_audio) {
+        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0);
+		first_audio = false;
+    }
     float dt = (f32)AEFrameRateControllerGetFrameTime();
-
     // 1. Handle Fade In
     if (isFadingIn) {
         fadeAlpha -= FADE_SPEED * dt;
@@ -83,30 +88,24 @@ void Endgame_Draw()
             AEGfxPrint(endgameFontId, "GAME OVER", -0.3f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
             AEGfxPrint(subFontId, "You Died", -0.25f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
-        else if (currentEndReason == REASON_WRONG_BASEMENT_DELIVERY) {
+        else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
             AEGfxPrint(endgameFontId, "YOUVE BEEN FIRED", -0.35f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
             AEGfxPrint(subFontId, "You've sent a human to the basement.", -0.6f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
+        else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+            AEGfxPrint(endgameFontId, "YOUVE BEEN FIRED", -0.35f, 0.2f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f);
+            AEGfxPrint(subFontId, "You assigned a ghost to a guest room.", -0.55f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
 
         // Blinking "Click to Continue" prompt
-        float blinkAlpha = (sinf(dt * 5.0f) + 1.0f) * 0.5f;
+        static float totalTime = 0.0f;
+        totalTime += dt;
+        float blinkAlpha = (sinf(totalTime * 5.0f) + 1.0f) * 0.5f;
         AEGfxPrint(subFontId, "Click or Press SPACE to return to menu", -0.55f, -0.4f, 1.0f, 1.0f, 1.0f, 1.0f, blinkAlpha);
     }
 
     // --- DRAW FADE OVERLAY ---
-    if (fadeAlpha > 0.0f) {
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetTransparency(fadeAlpha);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Pure Black
-
-        AEMtx33 scale, trans, transform;
-        AEMtx33Scale(&scale, 1600.0f, 900.0f);
-        AEMtx33Trans(&trans, 0.0f, 0.0f);
-        AEMtx33Concat(&transform, &trans, &scale);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-    }
+    DrawBlackOverlay(squareMesh, fadeAlpha);
 }
 
 void Endgame_Free()
@@ -121,5 +120,9 @@ void Endgame_Unload()
     if (endgameFontId >= 0) {
         AEGfxDestroyFont(endgameFontId);
         endgameFontId = -1;
+    }
+    if (subFontId >= 0) {
+        AEGfxDestroyFont(subFontId);
+        subFontId = -1;
     }
 }

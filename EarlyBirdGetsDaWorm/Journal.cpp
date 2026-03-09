@@ -24,12 +24,20 @@ static AEGfxTexture* gWallDrawing2 = nullptr;
 static AEGfxTexture* gWallDrawing3 = nullptr;
 static AEGfxTexture* gLeftHand = nullptr;
 static AEGfxTexture* gRightHand = nullptr;
+
 static AEGfxTexture* gDoorSlam = nullptr;
 static AEGfxTexture* gLightChange = nullptr;
 static AEGfxTexture* gKnock = nullptr;
-static AEGfxTexture* gLightFlicker = nullptr;
-static AEGfxTexture* gLightDim = nullptr;
-static AEGfxTexture* gLightOff= nullptr;
+
+static AEGfxTexture* gLightParanoia = nullptr;
+static AEGfxTexture* gLightMania = nullptr;
+static AEGfxTexture* gLightDepression = nullptr;
+static AEGfxTexture* gLightDementia = nullptr;
+static AEGfxTexture* gLightSchizophrenia = nullptr;
+static AEGfxTexture* gLightAIW = nullptr;
+static AEGfxTexture* gLightInsomnia = nullptr;
+static AEGfxTexture* gLightScotophobia = nullptr;
+
 static AEGfxTexture* gFrameGlitch = nullptr;
 static AEGfxTexture* gFrameShift = nullptr;
 static AEGfxTexture* gFrame_Distort = nullptr;
@@ -47,12 +55,19 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Wall_Drawing3:      return gWallDrawing3;
     case ANOMALYID::Wall_LeftHand:      return gLeftHand;
     case ANOMALYID::Wall_RightHand:     return gRightHand;
+
     case ANOMALYID::Door_HandSlam:      return gDoorSlam;
     case ANOMALYID::Door_LightChange:   return gLightChange;
     case ANOMALYID::Door_Knock:         return gKnock;
-    case ANOMALYID::Light_Flicker:      return gLightFlicker;
-    case ANOMALYID::Light_Dim:          return gLightDim;
-    case ANOMALYID::Light_Off:          return gLightOff;
+
+    case ANOMALYID::Light_Mania:        return gLightMania;
+    case ANOMALYID::Light_Depression:   return gLightDepression;
+    case ANOMALYID::Light_Dementia:     return gLightDementia;
+    case ANOMALYID::Light_Schizophrenia:return gLightSchizophrenia;
+    case ANOMALYID::Light_AIW:          return gLightAIW;
+    case ANOMALYID::Light_Insomnia:     return gLightInsomnia;
+    case ANOMALYID::Light_Scotophobia:  return gLightScotophobia;
+
     case ANOMALYID::Frame_Glitch:       return gFrameGlitch;
     case ANOMALYID::Frame_Shift:        return gFrameShift;
     case ANOMALYID::Frame_Distort:      return gFrame_Distort;
@@ -78,15 +93,15 @@ struct IllnessInfo
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Wall_LeftHand,     ANOMALYID::Light_Flicker } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack2,       ANOMALYID::Frame_Glitch } },
-    { ILLNESSES::DEPRESSION,    { ANOMALYID::Light_Dim,         ANOMALYID::Wall_Drawing1,     ANOMALYID::Frame_Shift } },
-    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Wall_Drawing3,     ANOMALYID::Frame_Shift } },
-    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Shift,       ANOMALYID::Door_HandSlam,      ANOMALYID::Wall_RightHand } },
-    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Frame_Distort,     ANOMALYID::Wall_Drawing2,     ANOMALYID::Door_Knock } },
-    { ILLNESSES::INSOMNIA,      { ANOMALYID::Light_Flicker,     ANOMALYID::Door_Knock,        ANOMALYID::Wall_Crack1 } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Wall_Crack4,       ANOMALYID::Frame_Glitch } },
-    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Light_Off,         ANOMALYID::Door_LightChange,  ANOMALYID::Wall_LeftHand } },
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_LeftHand,    ANOMALYID::Door_LightChange } },
+    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack2,      ANOMALYID::Light_Mania } },
+    { ILLNESSES::DEPRESSION,    { ANOMALYID::Wall_Drawing1,    ANOMALYID::Frame_Shift,      ANOMALYID::Light_Depression } },
+    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange, ANOMALYID::Wall_Drawing3,    ANOMALYID::Light_Dementia } },
+    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Shift,      ANOMALYID::Door_HandSlam,    ANOMALYID::Light_Schizophrenia } },
+    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Frame_Distort,    ANOMALYID::Wall_Drawing2,    ANOMALYID::Light_AIW } },
+    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_Crack1,      ANOMALYID::Light_Insomnia } },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack4,      ANOMALYID::Frame_Glitch } },
+    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange, ANOMALYID::Wall_LeftHand,    ANOMALYID::Light_Scotophobia } },
 };
 
 static const std::vector<ILLNESSES> gIllnessList =
@@ -132,18 +147,18 @@ int Journal_GetExtraGhostAnomalies()
 
 static const char* IllnessText(ILLNESSES i)
 {
-    switch (i)
+    switch (i)                                            
     {
-    case ILLNESSES::PARANOIA:       return "PARANOIA";
-    case ILLNESSES::MANIA:          return "MANIA";
-    case ILLNESSES::DEPRESSION:     return "DEPRESSION";
-    case ILLNESSES::DEMENTIA:       return "DEMENTIA";
-    case ILLNESSES::SCHIZOPHRENIA:  return "SCHIZOPHRENIA";
-    case ILLNESSES::AIW_SYNDROME:   return "AIW SYNDROME";
-    case ILLNESSES::INSOMNIA:       return "INSOMNIA";
-    case ILLNESSES::OCD:            return "OCD";
-    case ILLNESSES::SCOTOPHOBIA:    return "SCOTOPHOBIA";
-    default:                        return "UNKNOWN";
+    case ILLNESSES::PARANOIA:       return "PARANOIA";      
+    case ILLNESSES::MANIA:          return "MANIA";         
+    case ILLNESSES::DEPRESSION:     return "DEPRESSION";    
+    case ILLNESSES::DEMENTIA:       return "DEMENTIA";      
+    case ILLNESSES::SCHIZOPHRENIA:  return "SCHIZOPHRENIA"; 
+	case ILLNESSES::AIW_SYNDROME:   return "AIW SYNDROME";  
+	case ILLNESSES::INSOMNIA:       return "INSOMNIA";      
+    case ILLNESSES::OCD:            return "OCD";          
+	case ILLNESSES::SCOTOPHOBIA:    return "SCOTOPHOBIA";   
+    default:                        return "UNKNOWN";       
     }
 }
 
@@ -151,27 +166,31 @@ static const char* AnomalyText(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:        return "Crack Type I";
-    case ANOMALYID::Wall_Crack2:        return "Crack Type II";
-    case ANOMALYID::Wall_Crack3:        return "Crack Type III";
-    case ANOMALYID::Wall_Crack4:        return "Crack Type IV";
-    case ANOMALYID::Wall_Drawing1:      return "Drawing Type I";
-    case ANOMALYID::Wall_Drawing2:      return "Drawing Type II";
-    case ANOMALYID::Wall_Drawing3:      return "Drawing Type III";
-    case ANOMALYID::Wall_LeftHand:      return "Left Handprint";
-    case ANOMALYID::Wall_RightHand:     return "Right Handprint";
+    case ANOMALYID::Wall_Crack1:         return "Crack Type I";
+    case ANOMALYID::Wall_Crack2:         return "Crack Type II";
+    case ANOMALYID::Wall_Crack3:         return "Crack Type III";
+    case ANOMALYID::Wall_Crack4:         return "Crack Type IV";
+    case ANOMALYID::Wall_Drawing1:       return "Drawing Type I";
+    case ANOMALYID::Wall_Drawing2:       return "Drawing Type II";
+    case ANOMALYID::Wall_Drawing3:       return "Drawing Type III";
+    case ANOMALYID::Wall_LeftHand:       return "Left Handprint";
+    case ANOMALYID::Wall_RightHand:      return "Right Handprint";
 
-    case ANOMALYID::Door_HandSlam:      return "Handprint on window";
-    case ANOMALYID::Door_LightChange:   return "Window light change";
-    case ANOMALYID::Door_Knock:         return "Knocking sound";
+    case ANOMALYID::Door_HandSlam:       return "Handprint on window";
+    case ANOMALYID::Door_LightChange:    return "Window light change";
+    case ANOMALYID::Door_Knock:          return "Knocking sound";
 
-    case ANOMALYID::Light_Flicker:      return "Lights flicker";
-    case ANOMALYID::Light_Dim:          return "Lights dim";
-    case ANOMALYID::Light_Off:          return "Lights go out";
+    case ANOMALYID::Light_Mania:         return "Rapid Pulse (Warm)";
+    case ANOMALYID::Light_Depression:    return "Slow Pulse (Blue)";
+    case ANOMALYID::Light_Dementia:      return "Slow Pulse (Warm)";
+    case ANOMALYID::Light_Schizophrenia: return "Eratic Flashes (Teal)";
+    case ANOMALYID::Light_AIW:           return "Slow Pulse";
+    case ANOMALYID::Light_Insomnia:      return "Eratic Flashes";
+    case ANOMALYID::Light_Scotophobia:   return "Rapid Pulse";  
 
-    case ANOMALYID::Frame_Glitch:       return "Paintings glitch";
-    case ANOMALYID::Frame_Shift:        return "Frames shift position";
-    case ANOMALYID::Frame_Distort:      return "Paintings distort";
+    case ANOMALYID::Frame_Glitch:        return "Paintings glitch";
+    case ANOMALYID::Frame_Shift:         return "Frames shift position";
+    case ANOMALYID::Frame_Distort:       return "Paintings distort";
 
     default:                            return "Unknown anomaly";
     }
@@ -261,12 +280,17 @@ void Journal_Load()
 	gWallDrawing3 = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
 	gLeftHand = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
 	gRightHand = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
+
 	gDoorSlam = LoadTextureChecked(Assets::Equipment::DoorSlam);
-	gLightChange = LoadTextureChecked(Assets::Door_Anomaly::Window_1);
-	//gKnock = LoadTextureChecked(Assets::Equipment::Knock);
-	//gLightFlicker = LoadTextureChecked(Assets::Equipment::Flicker);
-	//gLightDim = LoadTextureChecked(Assets::Equipment::Dim);
-	//gLightOff = LoadTextureChecked(Assets::Equipment::Off);
+
+    gLightMania = LoadTextureChecked(Assets::Equipment::LightMania);
+    gLightDepression = LoadTextureChecked(Assets::Equipment::LightDepression);
+    gLightDementia = LoadTextureChecked(Assets::Equipment::LightDementia);
+    gLightSchizophrenia = LoadTextureChecked(Assets::Equipment::LightSchizophrenia);
+    gLightAIW = LoadTextureChecked(Assets::Equipment::LightAIW);
+    gLightInsomnia = LoadTextureChecked(Assets::Equipment::LightInsomnia);
+    gLightScotophobia = LoadTextureChecked(Assets::Equipment::LightScotophobia);
+
 	gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
 	gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
 	gFrame_Distort = LoadTextureChecked(Assets::Equipment::FrameDistort);
@@ -274,17 +298,43 @@ void Journal_Load()
 
 void Journal_Unload()
 {
-    // unload texture
-    if (JournalBook)
+    // unload textures
+    UnloadTextureSafe(JournalBook);
+
+    UnloadTextureSafe(gWallCrack1);
+    UnloadTextureSafe(gWallCrack2);
+    UnloadTextureSafe(gWallCrack3);
+    UnloadTextureSafe(gWallCrack4);
+    UnloadTextureSafe(gWallDrawing1);
+    UnloadTextureSafe(gWallDrawing2);
+    UnloadTextureSafe(gWallDrawing3);
+    UnloadTextureSafe(gLeftHand);
+    UnloadTextureSafe(gRightHand);
+
+    UnloadTextureSafe(gDoorSlam);
+    UnloadTextureSafe(gLightChange);
+    UnloadTextureSafe(gKnock);
+
+    UnloadTextureSafe(gLightMania);
+    UnloadTextureSafe(gLightDepression);
+    UnloadTextureSafe(gLightDementia);
+    UnloadTextureSafe(gLightSchizophrenia);
+    UnloadTextureSafe(gLightAIW);
+    UnloadTextureSafe(gLightInsomnia);
+    UnloadTextureSafe(gLightScotophobia);
+
+    UnloadTextureSafe(gFrameGlitch);
+    UnloadTextureSafe(gFrameShift);
+    UnloadTextureSafe(gFrame_Distort);
+
+    // destroy font
+    if (journalFontId >= 0)
     {
-        AEGfxTextureUnload(JournalBook);
-        JournalBook = nullptr;
+        AEGfxDestroyFont(journalFontId);
+        journalFontId = -1;
     }
 
-    // reset font handle so we don't use stale id
-    journalFontId = -1;
-
-    // optional: reset UI state
+    // reset UI state
     gOpen = false;
     gSelected = 0;
 }
