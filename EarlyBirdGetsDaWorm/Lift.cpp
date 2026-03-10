@@ -15,7 +15,7 @@
 // CONFIG
 // ============================================================
 
-static constexpr float LIFT_TIMER = 2.0f;   // seconds for the lift overlay door animation
+static constexpr float LIFT_TIMER = 1.2f;   // seconds for the lift overlay door animation
 static constexpr int MAX_FLOORS = 10;
 static AEGfxTexture* gLiftWallTex[MAX_FLOORS]{};
 
@@ -145,6 +145,9 @@ void Lift_Update(float /*dt*/, float camX, float maxDist)
 void Lift_HandleInput(s8& floorNum)
 {
     if (!gLiftActive) return;
+
+    // Guard clause: ignore input if the door animation is still playing
+    if (gLiftAnimTimer > 0.0f) return;
 
     // Number keys 0..9 (or however many floors you have)
     for (int i = 0; i < NUM_OF_FLOOR; ++i)
@@ -277,6 +280,9 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh,
 // - sliding doors texture
 // - when opened, show the level button panel texture
 // ============================================================
+// ============================================================
+// DRAW (LIFT OVERLAY UI)
+// ============================================================
 
 void Lift_Draw(AEGfxVertexList* squareMesh)
 {
@@ -289,18 +295,21 @@ void Lift_Draw(AEGfxVertexList* squareMesh)
     if (gLiftAnimTimer > 0.0f) gLiftAnimTimer -= dt;
     if (gLiftAnimTimer < 0.0f) gLiftAnimTimer = 0.0f;
 
-    // gapOffset controls how far doors slide apart
-    float gapOffset = (gLiftAnimTimer / 4.0f) * SCREEN_W;
+    // Calculate animation progress: 1.0 (start) down to 0.0 (finished)
+    float progress = gLiftAnimTimer / LIFT_TIMER;
+
+    // gapOffset controls how far doors slide apart. 
+    float gapOffset = progress * SCREEN_W / 2.0f;
 
     // --------------------------------------------
-    // 2) Draw sliding doors (PNG replaces the old grey rectangles)
+    // 2) Draw sliding doors
     // --------------------------------------------
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
     const float doorW = SCREEN_WIDTH_HALF + (0.5f * LIFT_WIDTH);
     const float doorH = (f32)SCREEN_H;
 
-    // LEFT door
+    // LEFT door (Starts at -450 - SCREEN_W, slides into -450)
     if (gQuadMesh && gLiftDoorTex)
     {
         DrawTextureMesh(gQuadMesh, gLiftDoorTex,
@@ -310,11 +319,10 @@ void Lift_Draw(AEGfxVertexList* squareMesh)
     }
     else
     {
-        // fallback if texture fails
         DrawSquareMesh(squareMesh, -450.0f - gapOffset, 0.0f, doorW, doorH, COLOR_LIFT_BG);
     }
 
-    // RIGHT door
+    // RIGHT door (Starts at 450 + SCREEN_W, slides into 450)
     if (gQuadMesh && gLiftDoorTex)
     {
         DrawTextureMesh(gQuadMesh, gLiftDoorTex,
@@ -324,7 +332,6 @@ void Lift_Draw(AEGfxVertexList* squareMesh)
     }
     else
     {
-        // fallback if texture fails
         DrawSquareMesh(squareMesh, 450.0f + gapOffset, 0.0f, doorW, doorH, COLOR_LIFT_BG);
     }
 
@@ -346,7 +353,6 @@ void Lift_Draw(AEGfxVertexList* squareMesh)
         }
         else
         {
-            // fallback if texture fails
             DrawSquareMesh(squareMesh, 0.0f, 0.0f, 450.0f, 750.0f, COLOR_LIFT_CONSOLE);
         }
     }

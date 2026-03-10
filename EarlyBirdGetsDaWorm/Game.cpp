@@ -449,7 +449,7 @@ void Game_Draw()
     // Full-screen dark overlay that sits between the world and the lights, giving the corridor its shadowed feel
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetTransparency(0.7f);
+    AEGfxSetTransparency(0.5f);
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
 
     AEMtx33Scale(&scale, 2000.0f, 2000.0f);
