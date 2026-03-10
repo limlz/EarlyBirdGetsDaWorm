@@ -9,6 +9,7 @@ namespace Assets
     }
     namespace Equipment
     {
+        constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
         constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
 
@@ -109,11 +110,13 @@ namespace Assets
     namespace Guide
     {
         constexpr const char* guideIcon = "Assets/Guide/icon-placeholder.png";
-        constexpr const char* categoryText = "Assets/Guide/pcategory.jpg";
-        constexpr const char* image1 = "Assets/Guide/p1.jpg";
-        constexpr const char* image2 = "Assets/Guide/p2.jpg";
-        constexpr const char* image3 = "Assets/Guide/p3.jpg";
-        constexpr const char* image4 = "Assets/Guide/p4.jpg";
-        constexpr const char* image5 = "Assets/Guide/p5.jpg";
+        constexpr const char* category1Text = "Assets/Guide/cat1Text.png";
+        constexpr const char* category2Text = "Assets/Guide/cat2Text.png";
+        constexpr const char* category3Text = "Assets/Guide/cat3Text.png";
+        constexpr const char* image1 = "Assets/Guide/Movements.png";
+        constexpr const char* image2 = "Assets/Guide/Instructions1.png";
+        constexpr const char* image3 = "Assets/Guide/Instructions2.png";
+        constexpr const char* image4 = "Assets/Guide/BossFight.png";
+        constexpr const char* image5 = "Assets/Guide/controlText.png";
     }
 }

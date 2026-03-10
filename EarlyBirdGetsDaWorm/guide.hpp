@@ -4,6 +4,8 @@ void Guide_Initialize();
 
 void Guide_Update(bool liftActive, f32 dt, bool pagerActive);
 
+void Guide_BossFight();
+
 bool IsGuideActive();
 
 void Guide_DrawSmallIcon();
