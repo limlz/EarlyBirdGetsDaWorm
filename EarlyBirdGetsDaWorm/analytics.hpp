@@ -9,6 +9,6 @@ namespace Analytics {
 
     // Call this exactly once right before switching to the endgame/menu screen
     void LogRun(EndGameReason reason, int dayReached, int patientsHandled,
-                bool wasCarryingGhost, int currentIllness, int mimicIllness,
+                bool wasCarryingGhost, int TrueDiagnosis, int AnomalyIllness,
                 float timeSurvived);
 }

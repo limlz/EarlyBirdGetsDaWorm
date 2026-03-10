@@ -33,7 +33,7 @@ namespace Analytics {
     }
 
     void LogRun(EndGameReason reason, int dayReached, int patientsHandled,
-                bool wasCarryingGhost, int currentIllness, int mimicIllness,
+                bool wasCarryingGhost, int TrueDiagnosis, int AnomalyIllness,
                 float timeSurvived) {
 
         std::string filename = "Assets/analytics.csv";
@@ -67,8 +67,8 @@ namespace Analytics {
         outFile << timeStr << ","
             << dayReached << ","
             << GetEndReasonName(reason) << ","
-            << GetIllnessName(currentIllness) << ","
-            << GetIllnessName(mimicIllness) << ","
+            << GetIllnessName(TrueDiagnosis) << ","
+            << GetIllnessName(AnomalyIllness) << ","
             << (wasCarryingGhost ? "YES" : "NO") << ","
             << patientsHandled << ","
             << timeSurvived << "\n";

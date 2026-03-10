@@ -173,7 +173,7 @@ void Game_Update()
             currentEndReason = gPendingEndReason;
 
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
-                static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
+                static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
@@ -251,9 +251,17 @@ void Game_Update()
         {
             currentEndReason = REASON_SURVIVED_5_DAYS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
-                static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
+                static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
             next = ENDGAME_STATE;
             return;
+        }
+
+        if (Player_GetPatientsHandled() < 5) {
+            currentEndReason = REASON_DIED_TO_BOSS;
+            Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
+                static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
+            next = ENDGAME_STATE;
+			return;
         }
 
         // Advance the day: reset camera, floor, lift, and regenerate the patient mission
@@ -326,7 +334,7 @@ void Game_Update()
         Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
         const bool hasPatient = Player_HasPatient();
-        const bool isGhostTruth = (Player_GetCurrentIllness() == ILLNESSES::GHOST);
+        const bool isGhostTruth = (Player_GetTrueDiagnosis() == ILLNESSES::GHOST);
 
         // ========================================================
         // RULE A: BASEMENT DISPOSAL (Floor 0)
@@ -350,7 +358,7 @@ void Game_Update()
                 {
                     currentEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
                     Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
-                        static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
+                        static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
                     next = ENDGAME_STATE;
                 }
                 return;

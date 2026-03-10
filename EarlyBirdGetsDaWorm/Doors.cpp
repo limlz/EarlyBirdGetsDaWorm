@@ -238,9 +238,9 @@ static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
 
 static ILLNESSES GetEffectiveIllnessForDoorEvents()
 {
-    ILLNESSES current = Player_GetCurrentIllness();
+    ILLNESSES current = Player_GetTrueDiagnosis();
     if (current == ILLNESSES::GHOST)
-        return Player_GetMimicIllness();
+        return Player_GetAnomalyIllness();
     return current;
 }
 
@@ -353,7 +353,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     default: break;
     }
 
-    const bool isGhost = (Player_GetCurrentIllness() == ILLNESSES::GHOST);
+    const bool isGhost = (Player_GetTrueDiagnosis() == ILLNESSES::GHOST);
     const bool wantExtra = isGhost && (Player_GetGhostExtraAnomalies() >= 1);
 
     if (wantExtra && s.ghostRollCooldown <= 0.0f)

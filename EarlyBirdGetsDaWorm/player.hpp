@@ -124,7 +124,7 @@ bool IsGhostPatient();
 
     @return The active illness, or ILLNESSES::GHOST if the patient is a ghost.
 ******************************************************************************************/
-ILLNESSES Player_GetCurrentIllness();
+ILLNESSES Player_GetTrueDiagnosis();
 
 /******************************************************************************************
     @brief  Retrieves the base illness the patient has (or the illness the
@@ -132,7 +132,7 @@ ILLNESSES Player_GetCurrentIllness();
 
     @return The mimicked or actual illness.
 ******************************************************************************************/
-ILLNESSES Player_GetMimicIllness();
+ILLNESSES Player_GetAnomalyIllness();
 
 /******************************************************************************************
     @brief  Retrieves the extra anomaly count modifier triggered by a ghost.

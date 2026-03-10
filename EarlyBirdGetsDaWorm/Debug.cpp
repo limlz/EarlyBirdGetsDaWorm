@@ -30,7 +30,7 @@ void Debug_Draw(const DebugInfo& info)
     // 1. Declare a pointer to a constant character (string literal)
     const char* illness = "";
 
-    switch (Player_GetCurrentIllness()) {
+    switch (Player_GetTrueDiagnosis()) {
     case ILLNESSES::PARANOIA:
         illness = "PARANOIA";
         break;

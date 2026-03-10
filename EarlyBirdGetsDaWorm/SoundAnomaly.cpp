@@ -73,9 +73,9 @@ void SoundAnomaly_Update(float dt) {
     if (!hasPatient) return;
     if (!CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)) return;
 
-    ILLNESSES current   = Player_GetCurrentIllness();
+    ILLNESSES current   = Player_GetTrueDiagnosis();
     bool      isGhost   = (current == ILLNESSES::GHOST);
-    ILLNESSES effective = isGhost ? Player_GetMimicIllness() : current;
+    ILLNESSES effective = isGhost ? Player_GetAnomalyIllness() : current;
     int       idx       = static_cast<int>(effective);
 
     gEventTimer += dt;

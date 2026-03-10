@@ -23,9 +23,9 @@ static float g_TotalTime = 0.0f;
 // GHOST borrows another illness's behaviour at runtime; resolve that here before any logic reads the illness
 static ILLNESSES GetEffectiveIllness()
 {
-    ILLNESSES current = Player_GetCurrentIllness();
+    ILLNESSES current = Player_GetTrueDiagnosis();
     if (current == ILLNESSES::GHOST)
-        return Player_GetMimicIllness();
+        return Player_GetAnomalyIllness();
 
     return current;
 }
@@ -33,7 +33,7 @@ static ILLNESSES GetEffectiveIllness()
 // GHOST gets an extra anomaly layer on top of its mimic illness; this drives the bonus instability checks below
 static int GetGhostExtraCount()
 {
-    if (Player_GetCurrentIllness() == ILLNESSES::GHOST)
+    if (Player_GetTrueDiagnosis() == ILLNESSES::GHOST)
         return Player_GetGhostExtraAnomalies();
     return 0;
 }

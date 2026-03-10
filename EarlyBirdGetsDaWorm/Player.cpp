@@ -16,8 +16,8 @@ static int FacingDir = 1;
 static int Frame = 0;
 static float Timer = 0.0f;
 static int GhostExtraAnomalies = 0;
-static ILLNESSES CurrentIllness{};
-static ILLNESSES MimicIllness{};
+static ILLNESSES TrueDiagnosis{};
+static ILLNESSES AnomalyIllness{};
 
 static s8 PickupDoor = 0, PickupFloor = 0;
 static s8 DestDoor = 0, DestFloor = 0;
@@ -43,14 +43,14 @@ static ILLNESSES PatientRandomIllness() {
 
 static void ApplyNewPatientFromTruth(bool isGhostTruth) {
     CarriedPatientIsGhost = isGhostTruth;
-    MimicIllness = PatientRandomIllness();
+    AnomalyIllness = PatientRandomIllness();
 
     if (CarriedPatientIsGhost) {
-        CurrentIllness = ILLNESSES::GHOST;
+        TrueDiagnosis = ILLNESSES::GHOST;
         GhostExtraAnomalies = 1;
     }
     else {
-        CurrentIllness = MimicIllness;
+        TrueDiagnosis = AnomalyIllness;
         GhostExtraAnomalies = 0;
     }
 
@@ -58,7 +58,7 @@ static void ApplyNewPatientFromTruth(bool isGhostTruth) {
     Frame = 0;
     Timer = 0.0f;
 
-    CentralPool_GeneratePatientAnomalies(MimicIllness, GhostExtraAnomalies);
+    CentralPool_GeneratePatientAnomalies(AnomalyIllness, GhostExtraAnomalies);
 }
 
 void Player_GenerateMission() {
@@ -66,7 +66,7 @@ void Player_GenerateMission() {
     CarriedPatientIsGhost = false;
     VisualBluff = false;
     GhostExtraAnomalies = 0;
-    CurrentIllness = MimicIllness = ILLNESSES{};
+    TrueDiagnosis = AnomalyIllness = ILLNESSES{};
 
     CentralPool_ClearPatientAnomalies();
     Journal_Clear();
@@ -147,7 +147,7 @@ void Player_Load() {
     NoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
-/***************************************** UPDATE ****************************************/
+/***************************************** UPDATE ****************************************/ 
 void Player_Update(float dt, bool walkKey) {
     if (walkKey) {
         Timer += dt;
@@ -161,9 +161,10 @@ void Player_Update(float dt, bool walkKey) {
         Timer = 0.0f;
     }
 
+    // --- AUDIO LOGIC ---
     if (!walkKey) {
         if (WalkingSoundPlaying || WheelchairSoundPlaying) {
-            AudioManager_StopSFX();
+            AudioManager_StopWalkingSFX();
             WalkingSoundPlaying = false;
             WheelchairSoundPlaying = false;
         }
@@ -172,12 +173,12 @@ void Player_Update(float dt, bool walkKey) {
 
     if (Player_HasPatient())
     {
-        // if wheelchair mode should play
         if (!WheelchairSoundPlaying)
         {
             AudioManager_StopWalkingSFX();
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
-            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.1f);
+
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.1f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = true;
@@ -185,11 +186,11 @@ void Player_Update(float dt, bool walkKey) {
     }
     else
     {
-        // normal walking only
         if (!WalkingSoundPlaying || WheelchairSoundPlaying)
         {
             AudioManager_StopWalkingSFX();
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
+
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = false;
@@ -246,13 +247,13 @@ void Player_ForceGhostPatient() {
     VisualBluff = true;
 }
 
-void Player_SetIllness(ILLNESSES illness) { CurrentIllness = illness; }
+void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = illness; }
 void Player_SetFacing(int dir) { FacingDir = (dir >= 0) ? 1 : -1; }
 
 /*************************************** ACCESSORS ***************************************/
 bool        IsGhostPatient() { return CarriedPatientIsGhost; }
-ILLNESSES   Player_GetCurrentIllness() { return CurrentIllness; }
-ILLNESSES   Player_GetMimicIllness() { return MimicIllness; }
+ILLNESSES   Player_GetTrueDiagnosis() { return TrueDiagnosis; }
+ILLNESSES   Player_GetAnomalyIllness() { return AnomalyIllness; }
 int         Player_GetGhostExtraAnomalies() { return GhostExtraAnomalies; }
 int         Player_GetPatientsHandled() { return PatientsHandled; }
 bool        Player_HasPatient() { return PatientPickedUp; }

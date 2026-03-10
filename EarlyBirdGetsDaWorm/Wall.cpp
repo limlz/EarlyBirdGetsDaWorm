@@ -190,18 +190,18 @@ void Wall_Draw(f32 camX, s8 floorNum)
     if (!gWallEnabled) return;
     if (!Player_HasPatient()) return;
 
-    ILLNESSES currentIllness = Player_GetCurrentIllness();
+    ILLNESSES TrueDiagnosis = Player_GetTrueDiagnosis();
 
     // Position of anomalies (KEEP SAME)
     wallX = camX + (f32)randomX[idx];
     wallY = (f32)randomY[idx];
 
     // Pick once per floor based on current illness
-    if (!gWallPicked[idx] || gLastIllness[idx] != currentIllness)
+    if (!gWallPicked[idx] || gLastIllness[idx] != TrueDiagnosis)
     {
-        gWallPick[idx] = GetWallPickByIllness(currentIllness); 
+        gWallPick[idx] = GetWallPickByIllness(TrueDiagnosis); 
         gWallPicked[idx] = true;
-        gLastIllness[idx] = currentIllness;
+        gLastIllness[idx] = TrueDiagnosis;
 
         // Sound
         if (gWallPick[idx] == ANOMALYID::Wall_Drawing1 ||
