@@ -36,6 +36,7 @@ enum SoundID {
 	SFX_JOURNAL_OPEN,               // SFX_JOURNAL_OPEN.wav
     SFX_TUTORIAL_TYPING,
 	SFX_AA,                         // SFX_AA.wav
+	SFX_FAH,                        // SFX_FAH.wav
 
     SND_COUNT
 };

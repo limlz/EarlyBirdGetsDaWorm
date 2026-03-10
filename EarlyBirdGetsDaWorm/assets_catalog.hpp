@@ -64,6 +64,7 @@ namespace Assets
     {
         constexpr const char* WallBg = "Assets/Background/WALL_BG.png";
         constexpr const char* DoorBg = "Assets/Background/Door_bg.png";
+        constexpr const char* DoorBoarded = "Assets/Background/Door_boarded.png";
         constexpr const char* LiftBg = "Assets/Background/Lift_bg.png";
         constexpr const char* LiftDoor = "Assets/Background/LiftDoor_bg.png";
         constexpr const char* LiftPanel = "Assets/Background/LiftPanel_buttons.png";
