@@ -76,6 +76,7 @@ void Boss_Fight_Load()
     victoryFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 35);
     wallBgTexture = LoadTextureChecked("Assets/Background/WALL_BG.png");
     Boss_Load();
+    PauseMenu_Load();
     squareMesh = CreateSquareMesh(COLOR_WHITE);
     circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 }
@@ -83,7 +84,7 @@ void Boss_Fight_Load()
 void Boss_Fight_Initialize()
 {
     Bullets_Initialize();
-
+    PauseMenu_Initialize();
     Boss_Initialize(myBoss);
 
     playerX = -600.0f;
@@ -110,6 +111,9 @@ void Boss_Fight_Initialize()
 void Boss_Fight_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
+
+    PauseMenu_Update(dt);
+    if (PauseMenu_IsPaused()) return;
 
     if (myBoss.health <= 0 && !isVictorySequence) {
         isVictorySequence = true;
@@ -140,16 +144,6 @@ void Boss_Fight_Update()
             fadeInAlpha = 0.0f;
             isFadingIn = false; // Fade complete!
         }
-    }
-
-    // --- EXIT LOGIC ---
-    if (AEInputCheckTriggered(AEVK_ESCAPE)) {
-        Player_GenerateMission();
-        Timer_SetPaused(false);
-        PauseMenu_SetPaused(false);
-        Notifications_Trigger();
-        next = GAME_STATE;
-        return;
     }
 
     // --- PLAYER CONTROLS & WALL LIMITS ---
@@ -338,6 +332,8 @@ void Boss_Fight_Draw()
         }
     }
     AEGfxSetTransparency(1.0f);
+
+    PauseMenu_Draw(squareMesh);
 }
 
 void Boss_Fight_Free() {
@@ -351,4 +347,5 @@ void Boss_Fight_Unload() {
         AEGfxDestroyFont(victoryFontId);
         victoryFontId = -1;
     }
+    PauseMenu_Unload();
 }
