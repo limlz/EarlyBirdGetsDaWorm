@@ -1,7 +1,4 @@
 #include "pch.hpp"
-#include "Boss.hpp"
-#include <cmath>
-#include <cstdlib> // For rand()
 
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
