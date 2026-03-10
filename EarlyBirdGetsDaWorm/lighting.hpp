@@ -9,3 +9,6 @@ void Update_StandaloneLight(float dt, float lightX, float lightY);
 void Draw_StandaloneConeLight(float x, float y);
 
 void Lighting_Unload();
+
+// Returns the opacity for the full-screen dark overlay in Game_Draw(), scaled per active illness
+float Lighting_GetOverlayAlpha();

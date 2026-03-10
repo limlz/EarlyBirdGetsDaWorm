@@ -113,6 +113,7 @@ void Settings_Update(float dt)
                 masterVolume = normalizedVolume;
 				AudioManager_SetBGMVolume(bgmVolume * masterVolume);
 				AudioManager_SetSFXVolume(sfxVolume * masterVolume);
+                AudioManager_SetWalkingVolume(sfxVolume * masterVolume);
             }
             else if (isDraggingBGM) {
                 bgmVolume = normalizedVolume;
@@ -121,6 +122,7 @@ void Settings_Update(float dt)
             else if (isDraggingSFX) {
                 sfxVolume = normalizedVolume;
                 AudioManager_SetSFXVolume(sfxVolume);
+                AudioManager_SetWalkingVolume(sfxVolume);
             }
         }
     }

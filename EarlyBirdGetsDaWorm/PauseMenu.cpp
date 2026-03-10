@@ -240,6 +240,9 @@ void PauseMenu_Update(float dt)
                 Settings_Open();
             }
             if (hoverQuit && AEInputCheckTriggered(AEVK_LBUTTON)) {
+                currentEndReason = REASON_QUIT_FROM_MENU;
+                Analytics::LogRun(REASON_QUIT_FROM_MENU, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
+                    static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), Game_GetTimeSurvived());
                 next = MAIN_MENU;
             }
         }

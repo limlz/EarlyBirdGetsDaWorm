@@ -425,3 +425,17 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 
     Particles_Draw(squareMesh, -camX);
 }
+
+// ============================================================
+//  OVERLAY ALPHA
+//  Drives the darkness of the full-screen black overlay drawn
+//  in Game_Draw() between the world geometry and the lights.
+//  Values are tuned per illness theme; default (NONE) = 0.5.
+// ============================================================
+
+float Lighting_GetOverlayAlpha()
+{
+    int index = static_cast<int>(GetEffectiveIllness());
+    if (index < 0 || index > 10) return 0.50f;
+    return Config::overlayAlphaTable[index];
+}

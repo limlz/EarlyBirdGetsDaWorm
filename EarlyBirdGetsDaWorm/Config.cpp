@@ -40,6 +40,52 @@ namespace Config {
         /* 10: GHOST        */ { 0.95f, 0.92f, 0.85f, 0.10f, 1.20f }
     };
 
+    float overlayAlphaTable[11] = {
+        /* 0: NONE          */ 0.50f,
+        /* 1: PARANOIA      */ 0.65f,
+        /* 2: MANIA         */ 0.35f,
+        /* 3: DEPRESSION    */ 0.70f,
+        /* 4: DEMENTIA      */ 0.55f,
+        /* 5: SCHIZOPHRENIA */ 0.60f,
+        /* 6: AIW_SYNDROME  */ 0.40f,
+        /* 7: INSOMNIA      */ 0.40f,
+        /* 8: OCD           */ 0.45f,
+        /* 9: SCOTOPHOBIA   */ 0.75f,
+        /* 10: GHOST        */ 0.55f,
+    };
+
+    // Sound anomaly timing and volume per illness (index matches ILLNESSES enum)
+    SoundTimes soundTable[11] = {
+        /* 0: NONE          */ {  8.0f, 15.0f, 0.30f, 0.70f },
+        /* 1: PARANOIA      */ {  6.0f, 14.0f, 0.40f, 0.60f }, // Hushed whispers, moderately frequent
+        /* 2: MANIA         */ {  3.0f,  8.0f, 0.70f, 0.50f }, // Frequent loud screams
+        /* 3: DEPRESSION    */ { 10.0f, 20.0f, 0.30f, 0.80f }, // Rare slow muffled knocks
+        /* 4: DEMENTIA      */ {  5.0f, 12.0f, 0.50f, 0.60f }, // Mid-frequency disorienting thuds
+        /* 5: SCHIZOPHRENIA */ {  4.0f,  9.0f, 0.60f, 0.50f }, // Frequent clashing voice bursts
+        /* 6: AIW_SYNDROME  */ {  7.0f, 16.0f, 0.40f, 0.70f }, // Occasional wildly pitched whispers
+        /* 7: INSOMNIA      */ {  5.0f, 10.0f, 0.35f, 0.65f }, // Ticking/flicker bursts
+        /* 8: OCD           */ {  4.0f,  5.0f, 0.50f, 0.80f }, // Tight interval = metronomic knocking
+        /* 9: SCOTOPHOBIA   */ {  8.0f, 18.0f, 0.30f, 0.60f }, // Rare low breathing whispers
+        /* 10: GHOST        */ {  6.0f, 12.0f, 0.25f, 1.0f  }, // Ghost-layer volume; ghostMult unused here
+    };
+
+    // --- JUMPSCARE SETTINGS ---
+    float jumpscareDuration      = 1.0f;
+    float jumpscareScreenShake   = 35.0f;
+    float jumpscareImageShake    = 18.0f;
+    float jumpscareFlashDuration = 0.08f;
+
+    // --- Helper: parse sound anomaly keys for one illness ---
+    // Keys: PREFIX_SOUND_MIN, PREFIX_SOUND_MAX, PREFIX_SOUND_VOL, PREFIX_SOUND_GHOST_MULT
+    bool ParseSoundIllness(const std::string& key, float val, const std::string& prefix, ILLNESSES illness) {
+        int idx = static_cast<int>(illness);
+        if (key == prefix + "_SOUND_MIN")        { soundTable[idx].minInterval = val; return true; }
+        if (key == prefix + "_SOUND_MAX")        { soundTable[idx].maxInterval = val; return true; }
+        if (key == prefix + "_SOUND_VOL")        { soundTable[idx].volume      = val; return true; }
+        if (key == prefix + "_SOUND_GHOST_MULT") { soundTable[idx].ghostMult   = val; return true; }
+        return false;
+    }
+
     // --- Helper function to parse all illness variants cleanly! ---
     bool ParseIllness(const std::string& key, float val, const std::string& prefix, ILLNESSES illness) {
         int idx = static_cast<int>(illness);
@@ -52,6 +98,7 @@ namespace Config {
         if (key == prefix + "_ON_RANGE") { flickerTable[idx].onRange = (int)val; return true; }
         if (key == prefix + "_OFF_MIN") { flickerTable[idx].offMin = (int)val; return true; }
         if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange = (int)val; return true; }
+        if (key == prefix + "_OVERLAY_ALPHA") { overlayAlphaTable[idx] = val; return true; }
         return false; // Key didn't match this illness
     }
 
@@ -92,7 +139,14 @@ namespace Config {
                 else if (key == "FLOOR_FUCKED_CHANCE") floorFuckedChance = (int)val;
                 else if (key == "STANDALONE_BRIGHTNESS") standaloneBrightness = val;
 
+                // --- JUMPSCARE SETTINGS ---
+                else if (key == "JUMPSCARE_DURATION")       jumpscareDuration = val;
+                else if (key == "JUMPSCARE_SCREEN_SHAKE")   jumpscareScreenShake = val;
+                else if (key == "JUMPSCARE_IMAGE_SHAKE")    jumpscareImageShake = val;
+                else if (key == "JUMPSCARE_FLASH_DURATION") jumpscareFlashDuration = val;
+
                 // --- ILLNESS SETTINGS ---
+                else if (ParseIllness(key, val, "NONE", ILLNESSES::NONE)) {}
                 else if (ParseIllness(key, val, "PARANOIA", ILLNESSES::PARANOIA)) {}
                 else if (ParseIllness(key, val, "MANIA", ILLNESSES::MANIA)) {}
                 else if (ParseIllness(key, val, "DEPRESSION", ILLNESSES::DEPRESSION)) {}
@@ -102,6 +156,19 @@ namespace Config {
                 else if (ParseIllness(key, val, "INSOMNIA", ILLNESSES::INSOMNIA)) {}
                 else if (ParseIllness(key, val, "OCD", ILLNESSES::OCD)) {}
                 else if (ParseIllness(key, val, "SCOTOPHOBIA", ILLNESSES::SCOTOPHOBIA)) {}
+
+                // --- SOUND ANOMALY SETTINGS ---
+                else if (ParseSoundIllness(key, val, "NONE", ILLNESSES::NONE)) {}
+                else if (ParseSoundIllness(key, val, "PARANOIA", ILLNESSES::PARANOIA)) {}
+                else if (ParseSoundIllness(key, val, "MANIA", ILLNESSES::MANIA)) {}
+                else if (ParseSoundIllness(key, val, "DEPRESSION", ILLNESSES::DEPRESSION)) {}
+                else if (ParseSoundIllness(key, val, "DEMENTIA", ILLNESSES::DEMENTIA)) {}
+                else if (ParseSoundIllness(key, val, "SCHIZOPHRENIA", ILLNESSES::SCHIZOPHRENIA)) {}
+                else if (ParseSoundIllness(key, val, "AIW_SYNDROME", ILLNESSES::AIW_SYNDROME)) {}
+                else if (ParseSoundIllness(key, val, "INSOMNIA", ILLNESSES::INSOMNIA)) {}
+                else if (ParseSoundIllness(key, val, "OCD", ILLNESSES::OCD)) {}
+                else if (ParseSoundIllness(key, val, "SCOTOPHOBIA", ILLNESSES::SCOTOPHOBIA)) {}
+                else if (ParseSoundIllness(key, val, "GHOST", ILLNESSES::GHOST)) {}
 
             }
             catch (...) {

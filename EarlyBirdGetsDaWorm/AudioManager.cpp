@@ -1,15 +1,17 @@
 #include "pch.hpp"
 
-static AEAudio soundBank[SND_COUNT];
+static AEAudio      soundBank[SND_COUNT];
 
 static AEAudioGroup groupBGM;
 static AEAudioGroup groupSFX;
+static AEAudioGroup groupWalking; // Separate group so stopping walk sounds never kills anomaly SFX
 
 void AudioManager_Init() {
     AEAudioInit();
 
-    groupBGM = AEAudioCreateGroup();
-    groupSFX = AEAudioCreateGroup();
+    groupBGM     = AEAudioCreateGroup();
+    groupSFX     = AEAudioCreateGroup();
+    groupWalking = AEAudioCreateGroup();
 }
 
 void AudioManager_LoadAll() {
@@ -48,17 +50,20 @@ void AudioManager_LoadAll() {
 void AudioManager_Unload() {
     AEAudioStopGroup(groupSFX);
     AEAudioStopGroup(groupBGM);
+    AEAudioStopGroup(groupWalking);
     for (int i = 0; i < SND_COUNT; ++i) {
         AEAudioUnloadAudio(soundBank[i]);
     }
 
     AEAudioUnloadAudioGroup(groupSFX);
     AEAudioUnloadAudioGroup(groupBGM);
+    AEAudioUnloadAudioGroup(groupWalking);
 }
 
 void AudioManager_PlayBGM(SoundID id, float volume) {
     AEAudioPlay(soundBank[id], groupBGM, volume, 1.0f, -1);
 }
+
 void AudioManager_PlaySFX(SoundID id, float volume, float pitch, s32 loops) {
     AEAudioPlay(soundBank[id], groupSFX, volume, pitch, loops);
 }
@@ -95,4 +100,19 @@ void AudioManager_StopBGM()
 void AudioManager_StopSFX()
 {
     AEAudioStopGroup(groupSFX);
+}
+
+void AudioManager_PlayWalkingSFX(SoundID id, float volume, float pitch, s32 loops)
+{
+    AEAudioPlay(soundBank[id], groupWalking, volume, pitch, loops);
+}
+
+void AudioManager_StopWalkingSFX()
+{
+    AEAudioStopGroup(groupWalking);
+}
+
+void AudioManager_SetWalkingVolume(float volume)
+{
+    AEAudioSetGroupVolume(groupWalking, volume);
 }

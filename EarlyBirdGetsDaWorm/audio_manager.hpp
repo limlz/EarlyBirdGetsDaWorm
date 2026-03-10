@@ -50,6 +50,11 @@ void AudioManager_PlaySpatialSound(SoundID id, float anomalyX, float playerX);
 
 void AudioManager_SetBGMVolume(float volume);
 void AudioManager_SetSFXVolume(float volume);
+void AudioManager_SetWalkingVolume(float volume);
 
 void AudioManager_StopBGM();
 void AudioManager_StopSFX();
+
+// Dedicated walking group — stopping these never kills anomaly/door SFX
+void AudioManager_PlayWalkingSFX(SoundID id, float volume, float pitch = 1.f, s32 loops = 0);
+void AudioManager_StopWalkingSFX();

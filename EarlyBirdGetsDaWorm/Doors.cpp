@@ -165,7 +165,7 @@ static void TriggerKnock(int doorIdx)
     s.event = DoorEvent::Knock;
     s.eventCooldown = 1.0f;
 
-    AudioManager_PlaySFX(SFX_DOOR_KNOCK, 0.35f, 1.0f, -1);
+    AudioManager_PlaySFX(SFX_DOOR_KNOCK, 0.35f, 1.0f, 0);
 }
 
 static void TriggerHandprintSlam(int doorIdx)

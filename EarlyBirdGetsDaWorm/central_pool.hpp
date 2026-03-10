@@ -59,9 +59,9 @@ enum class AnomalyFiles : int
     Doors_isActive,
     Lighting_isActive,
     Wall_isActive,
-	//Sound_isActive,
-	//Lift_isActive,
-    Count 
+    Sound_isActive,
+    //Lift_isActive,
+    Count
 };
 
 void AllAnomalies_Load();

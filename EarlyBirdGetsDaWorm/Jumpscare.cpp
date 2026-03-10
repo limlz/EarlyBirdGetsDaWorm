@@ -17,10 +17,8 @@
 // CONFIG
 // ============================================================
 
-static constexpr float JUMPSCARE_DURATION = 1.0f;   // seconds
-static constexpr float SCREEN_SHAKE_POWER = 35.0f;  // pixels (try 20-60)
-static constexpr float IMAGE_SHAKE_POWER = 18.0f;   // pixels (try 10-30)
-static constexpr float FLASH_DURATION = 0.08f;      // seconds (optional quick flash)
+// Jumpscare timing values are driven by Config (Assets/config.txt)
+// Keys: JUMPSCARE_DURATION, JUMPSCARE_SCREEN_SHAKE, JUMPSCARE_IMAGE_SHAKE, JUMPSCARE_FLASH_DURATION
 
 // ============================================================
 // RENDER DATA (Texture + Mesh)
@@ -105,15 +103,15 @@ void JumpScare_Unload()
 void JumpScare_Start()
 {
     gActive = true;
-    gTimer = JUMPSCARE_DURATION;
+    gTimer = Config::jumpscareDuration;
 
     gShakeX = 0.0f;
     gShakeY = 0.0f;
 
-    gFlashTimer = FLASH_DURATION; // optional quick flash at start
+    gFlashTimer = Config::jumpscareFlashDuration; // optional quick flash at start
 
     if (Settings_IsHorrorLessEnabled()) {
-        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.5f, 0); // comedic high-pitched scream
+        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.5f, 0); // AA
     }
     else {
         AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 1.0f);
@@ -162,8 +160,8 @@ bool JumpScare_Update(float dt)
     // 3) Screen shake with decay
     //    Strong at start, weaker near the end
     // --------------------------------------------
-    float t = Clamp01(gTimer / JUMPSCARE_DURATION); // 1 -> 0
-    float s = SCREEN_SHAKE_POWER * t;
+    float t = Clamp01(gTimer / Config::jumpscareDuration); // 1 -> 0
+    float s = Config::jumpscareScreenShake * t;
 
     gShakeX = RandMinus1To1() * s;
     gShakeY = RandMinus1To1() * s;
@@ -198,8 +196,8 @@ void JumpScare_Draw()
     const float H = SCREEN_HEIGHT_HALF * 2.0f;
 
     // Extra shake for the image itself (separate from screen shake)
-    float imgX = RandMinus1To1() * IMAGE_SHAKE_POWER;
-    float imgY = RandMinus1To1() * IMAGE_SHAKE_POWER;
+    float imgX = RandMinus1To1() * Config::jumpscareImageShake;
+    float imgY = RandMinus1To1() * Config::jumpscareImageShake;
 
     const float baseX = gShakeX + imgX;
     const float baseY = gShakeY + imgY;
@@ -228,7 +226,7 @@ void JumpScare_Draw()
     // --------------------------------------------
     if (gFlashTimer > 0.0f)
     {
-        float a = Clamp01(gFlashTimer / FLASH_DURATION); // 1 -> 0
+        float a = Clamp01(gFlashTimer / Config::jumpscareFlashDuration); // 1 -> 0
         // If your DrawSquareMesh supports alpha in the color, use your own helper.
         // Otherwise you can draw a semi-transparent white using AEGfxSetTransparency.
         AEGfxSetTransparency(0.65f * a);

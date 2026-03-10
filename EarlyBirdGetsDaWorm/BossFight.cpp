@@ -263,6 +263,8 @@ void Boss_Fight_Update()
 
                     if (playerHP <= 0) {
                         currentEndReason = REASON_DIED_TO_BOSS;
+                        Analytics::LogRun(currentEndReason, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
+                            static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), Game_GetTimeSurvived());
                         next = ENDGAME_STATE;
                     }
                 }

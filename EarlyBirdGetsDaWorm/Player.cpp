@@ -170,19 +170,27 @@ void Player_Update(float dt, bool walkKey) {
         return;
     }
 
-    if (PatientPickedUp) {
-        if (!WheelchairSoundPlaying) {
-            AudioManager_StopSFX();
-            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.7f, 1.0f, -1);
-            AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK, 0.05f, 1.0f, -1);
+    if (Player_HasPatient())
+    {
+        // if wheelchair mode should play
+        if (!WheelchairSoundPlaying)
+        {
+            AudioManager_StopWalkingSFX();
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
+            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.1f);
+
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = true;
         }
     }
-    else {
-        if (!WalkingSoundPlaying || WheelchairSoundPlaying) {
-            AudioManager_StopSFX();
-            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.7f, 1.0f, -1);
+    else
+    {
+        // normal walking only
+        if (!WalkingSoundPlaying || WheelchairSoundPlaying)
+        {
+            AudioManager_StopWalkingSFX();
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
+
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = false;
         }
@@ -242,16 +250,17 @@ void Player_SetIllness(ILLNESSES illness) { CurrentIllness = illness; }
 void Player_SetFacing(int dir) { FacingDir = (dir >= 0) ? 1 : -1; }
 
 /*************************************** ACCESSORS ***************************************/
-bool IsGhostPatient() { return CarriedPatientIsGhost; }
-ILLNESSES Player_GetCurrentIllness() { return CurrentIllness; }
-ILLNESSES Player_GetMimicIllness() { return MimicIllness; }
-int Player_GetGhostExtraAnomalies() { return GhostExtraAnomalies; }
-bool Player_HasPatient() { return PatientPickedUp; }
-void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
-    patientFloor = PickupFloor;
-    patientDoor = PickupDoor;
-    destFloor = DestFloor;
-    destDoor = DestDoor;
-}
-float Player_GetWidth() { return PLAYER_WIDTH; }
-float Player_GetHeight() { return PLAYER_HEIGHT; }
+bool        IsGhostPatient() { return CarriedPatientIsGhost; }
+ILLNESSES   Player_GetCurrentIllness() { return CurrentIllness; }
+ILLNESSES   Player_GetMimicIllness() { return MimicIllness; }
+int         Player_GetGhostExtraAnomalies() { return GhostExtraAnomalies; }
+int         Player_GetPatientsHandled() { return PatientsHandled; }
+bool        Player_HasPatient() { return PatientPickedUp; }
+void        Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
+                patientFloor = PickupFloor;
+                patientDoor = PickupDoor;
+                destFloor = DestFloor;
+                destDoor = DestDoor;
+            }
+float       Player_GetWidth() { return PLAYER_WIDTH; }
+float       Player_GetHeight() { return PLAYER_HEIGHT; }
