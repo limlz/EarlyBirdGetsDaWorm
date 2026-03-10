@@ -126,7 +126,11 @@ void Boss_Fight_Update()
             victoryHoldTimer += dt;
 
             // Show the text for 3 seconds, then return to the main game
-            if (victoryHoldTimer > 3.0f) {
+            if (victoryHoldTimer > 3.0f) { 
+
+                Player_GenerateMission();
+                Timer_SetPaused(false);
+
                 next = GAME_STATE;
             }
         }
