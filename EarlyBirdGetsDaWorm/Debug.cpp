@@ -84,19 +84,24 @@ void Debug_Draw(const DebugInfo& info)
     sprintf_s(gDebugBuffer, "MOUSE Scrn: [%d, %d] | World: [%.0f, %.0f]", mouseX, mouseY, worldMouseX, worldMouseY);
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY, textScale, 0.0f, 1.0f, 0.0f, 1.0f);
 
-    sprintf_s(gDebugBuffer, "CAM X: %.2f | Player Facing: %s", info.camX, info.left_right ? "RIGHT" : "LEFT");
+    sprintf_s(gDebugBuffer, "CAM X: %.2f", info.camX);
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 1), textScale, 0.0f, 1.0f, 0.0f, 1.0f);
 
     // --- GAME LOGIC ---
-    sprintf_s(gDebugBuffer, "STATE: Day %d | Floor: %d | Dementia: %s | Current Illness: %s", info.day, info.floorNum, info.dementia ? "ON" : "OFF", illness);
+    sprintf_s(gDebugBuffer, "STATE: Day %d | Floor: %d | Current Illness: %s", info.day, info.floorNum, illness);
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 2), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
     sprintf_s(gDebugBuffer, "DOOR: At: %d | Patient Target: Rm %d (Flr %d) | Scary: %s", info.doorNumAtPlayer, info.patientDoorNum, info.patientFloorNum, IsGhostPatient() ? "GHOST" : "HUMAN");
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 3), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
-    // --- BOSS INFO ---
-    sprintf_s(gDebugBuffer, "DEMON: Floor: %d | Room: %d", info.demonFloorNum, info.demonRoomNum);
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 4), textScale, 1.0f, 0.5f, 0.5f, 1.0f);
+    // --- ANOMALY SYSTEMS ---
+    sprintf_s(gDebugBuffer, "ANOMALIES: FRAMES:%s  DOORS:%s  LIGHT:%s  WALL:%s  SOUND:%s",
+        CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)   ? "ON" : "--",
+        CentralPool_IsSystemActive(AnomalyFiles::Doors_isActive)    ? "ON" : "--",
+        CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive) ? "ON" : "--",
+        CentralPool_IsSystemActive(AnomalyFiles::Wall_isActive)     ? "ON" : "--",
+        CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)    ? "ON" : "--");
+    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 4), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
 
     // --- SYSTEM ---
     f32 fps = 1.0f / (f32)AEFrameRateControllerGetFrameTime();

@@ -15,6 +15,14 @@ struct IllnessVisuals {
     float baseConeAngle;
 };
 
+// Defines the sound event timing and volume for a sound anomaly per illness.
+struct SoundTimes {
+    float minInterval;  // minimum seconds between sound events
+    float maxInterval;  // maximum seconds between sound events
+    float volume;       // playback volume (0.0 - 1.0)
+    float ghostMult;    // multiplier applied to the interval when patient is a ghost (< 1.0 = more frequent)
+};
+
 namespace Config {
     // --- GAMEPLAY SETTINGS ---
     extern float playerSpeed;
@@ -28,9 +36,10 @@ namespace Config {
 
     // --- ILLNESS TABLES ---
     // Size 11 covers exactly: NONE (0) through GHOST (10)
-    extern FlickerTimes flickerTable[11];
+    extern FlickerTimes   flickerTable[11];
     extern IllnessVisuals visualsTable[11];
-    extern float overlayAlphaTable[11]; // Full-screen darkness overlay per illness
+    extern float          overlayAlphaTable[11]; // Full-screen darkness overlay per illness
+    extern SoundTimes     soundTable[11];        // Sound anomaly timing and volume per illness
 
     // --- JUMPSCARE SETTINGS ---
     extern float jumpscareDuration;

@@ -265,6 +265,7 @@ void Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& 
 
 float Player_GetWidth() { return PLAYER_WIDTH; }
 float Player_GetHeight() { return PLAYER_HEIGHT; }
+int   Player_GetPatientsHandled() { return PatientsHandled; }
 
 /***************************************** LOAD **************************************************/
 
@@ -320,7 +321,7 @@ void Player_Update(float dt, bool walkKey)
     {
         if (WalkingSoundPlaying || WheelchairSoundPlaying)
         {
-            AudioManager_StopSFX();
+            AudioManager_StopWalkingSFX();
             WalkingSoundPlaying = false;
             WheelchairSoundPlaying = false;
         }
@@ -332,9 +333,9 @@ void Player_Update(float dt, bool walkKey)
         // if wheelchair mode should play
         if (!WheelchairSoundPlaying)
         {
-            AudioManager_StopSFX();
-            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.5f);
-            AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK, 0.1f);
+            AudioManager_StopWalkingSFX();
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
+            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.1f);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = true;
@@ -345,8 +346,8 @@ void Player_Update(float dt, bool walkKey)
         // normal walking only
         if (!WalkingSoundPlaying || WheelchairSoundPlaying)
         {
-            AudioManager_StopSFX();
-            AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.5f);
+            AudioManager_StopWalkingSFX();
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = false;

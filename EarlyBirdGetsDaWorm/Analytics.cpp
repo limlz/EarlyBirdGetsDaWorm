@@ -20,7 +20,22 @@ namespace Analytics {
         }
     }
 
-    void LogRun(int dayReached, const std::string& deathReason, int currentIllness, float timeSurvived) {
+    // Single source of truth for end-reason strings; keeps call sites free of hand-written literals
+    std::string GetEndReasonName(EndGameReason reason) {
+        switch (reason) {
+        case REASON_SURVIVED_5_DAYS:        return "Victory - Survived 5 Days";
+        case REASON_DIED_TO_BOSS:           return "Death - Killed By Boss";
+        case REASON_SENT_HUMAN_TO_BASEMENT: return "Murder - Wrong Basement Delivery";
+        case REASON_SENT_GHOST_TO_ROOM:     return "Fired - Ghost Sent To Room";
+        case REASON_QUIT_FROM_MENU:         return "Quit From Menu";
+        default:                            return "UNKNOWN";
+        }
+    }
+
+    void LogRun(EndGameReason reason, int dayReached, int patientsHandled,
+                bool wasCarryingGhost, int currentIllness, int mimicIllness,
+                float timeSurvived) {
+
         std::string filename = "Assets/analytics.csv";
 
         // ifstream::good() returns false if the file is missing, so we use that to gate header writing
@@ -36,9 +51,9 @@ namespace Analytics {
             return;
         }
 
-        // Only runs once on first launch — subsequent runs skip this and append directly
+        // Only runs once on first launch - subsequent runs skip this and append directly
         if (needsHeader) {
-            outFile << "Date_Time,Day_Reached,Death_Reason,Illness_Active,Time_Survived_Seconds\n";
+            outFile << "Date_Time,Day_Reached,End_Reason,Illness_Active,Mimic_Illness,Was_Carrying_Ghost,Patients_Handled,Time_Survived_Seconds\n";
         }
 
         // localtime_s is the MSVC-safe alternative to localtime; avoids C4996 deprecation warning
@@ -51,8 +66,11 @@ namespace Analytics {
 
         outFile << timeStr << ","
             << dayReached << ","
-            << deathReason << ","
+            << GetEndReasonName(reason) << ","
             << GetIllnessName(currentIllness) << ","
+            << GetIllnessName(mimicIllness) << ","
+            << (wasCarryingGhost ? "YES" : "NO") << ","
+            << patientsHandled << ","
             << timeSurvived << "\n";
 
         outFile.close();

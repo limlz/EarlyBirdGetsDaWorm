@@ -42,6 +42,7 @@ void AllAnomalies_Initialize()
     Frames_Initialize();
     Lighting_Initialize(7);
     Wall_Initialize();
+    SoundAnomaly_Initialize();
 }
 
 

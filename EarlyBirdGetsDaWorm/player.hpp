@@ -49,7 +49,7 @@ int       Player_GetGhostExtraAnomalies();
 // Direct setters (debug / control)
 void      Player_SetIllness(ILLNESSES illness);
 
-// This is your “truth scary” flag that you used earlier.
+// This is your ï¿½truth scaryï¿½ flag that you used earlier.
 // Keep it if other modules rely on it.
 bool      IsGhostPatient();
 
@@ -65,3 +65,4 @@ void SetPatientScaryByDay(int day);
 float Player_GetWidth();
 float Player_GetHeight();
 void Player_ForceHumanPatient();
+int   Player_GetPatientsHandled();

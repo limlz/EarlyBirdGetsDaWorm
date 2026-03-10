@@ -48,9 +48,10 @@
 #include "tutorial.hpp"
 #include "guide.hpp"
 #include "journal.hpp"
+#include "sound_anomaly.hpp"
 
 // --- ENDGAME FLAGS ---
-enum EndGameReason {
+enum EndGameReason : int {
     REASON_SURVIVED_5_DAYS,
     REASON_DIED_TO_BOSS,
     REASON_SENT_HUMAN_TO_BASEMENT,

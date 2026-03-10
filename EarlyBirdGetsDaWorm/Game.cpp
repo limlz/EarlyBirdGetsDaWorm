@@ -172,13 +172,8 @@ void Game_Update()
         {
             currentEndReason = gPendingEndReason;
 
-            // Determine the correct analytics event based on the death reason
-            std::string eventName = "Jumpscare - Wrong Basement Delivery";
-            if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
-                eventName = "Jumpscare - Wrong Room Delivery";
-            }
-
-            Analytics::LogRun(CurrentDay, eventName, static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+            Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
+                static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
 
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
@@ -255,7 +250,8 @@ void Game_Update()
         if (CurrentDay >= 5)
         {
             currentEndReason = REASON_SURVIVED_5_DAYS;
-            Analytics::LogRun(CurrentDay, "Victory - Survived 5 Days", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+            Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
+                static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
             next = ENDGAME_STATE;
             return;
         }
@@ -317,6 +313,7 @@ void Game_Update()
 
     Lighting_Update(floorNum, camX, dementia);
     Frames_Update(dt);
+    SoundAnomaly_Update(dt);
 
     // ------------------------------------------------------------
     // PHASE 7: DOOR INTERACTION LOGIC (E key)
@@ -352,7 +349,8 @@ void Game_Update()
                 else
                 {
                     currentEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
-                    Analytics::LogRun(CurrentDay, "Murder - Wrong Basement Delivery", static_cast<int>(Player_GetCurrentIllness()), totalTimeSurvived);
+                    Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
+                        static_cast<int>(Player_GetCurrentIllness()), static_cast<int>(Player_GetMimicIllness()), totalTimeSurvived);
                     next = ENDGAME_STATE;
                 }
                 return;
