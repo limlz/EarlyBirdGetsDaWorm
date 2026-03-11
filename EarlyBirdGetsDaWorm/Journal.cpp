@@ -46,15 +46,15 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:        return gWallCrack1;
-    case ANOMALYID::Wall_Crack2:        return gWallCrack2;
-    case ANOMALYID::Wall_Crack3:        return gWallCrack3;
-    case ANOMALYID::Wall_Crack4:        return gWallCrack4;
-    case ANOMALYID::Wall_Drawing1:      return gWallDrawing1;
-    case ANOMALYID::Wall_Drawing2:      return gWallDrawing2;
-    case ANOMALYID::Wall_Drawing3:      return gWallDrawing3;
-    case ANOMALYID::Wall_LeftHand:      return gLeftHand;
-    case ANOMALYID::Wall_RightHand:     return gRightHand;
+    case ANOMALYID::Wall_Paranoia:          return gWallCrack1;
+    case ANOMALYID::Wall_Mania:             return gWallCrack2;
+    case ANOMALYID::Wall_Depression:        return gWallCrack3;
+    case ANOMALYID::Wall_Dementia:          return gWallCrack4;
+    case ANOMALYID::Wall_Schizophernia:     return gWallDrawing1;
+    case ANOMALYID::Wall_AIW:               return gWallDrawing2;
+    case ANOMALYID::Wall_Insomnia:          return gWallDrawing3;
+    case ANOMALYID::Wall_OCD:               return gLeftHand;
+    case ANOMALYID::Wall_Scotophobia:       return gRightHand;
 
     case ANOMALYID::Door_HandSlam:      return gDoorSlam;
     case ANOMALYID::Door_LightChange:   return gLightChange;
@@ -93,15 +93,15 @@ struct IllnessInfo
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_LeftHand,    ANOMALYID::Door_LightChange } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack2,      ANOMALYID::Light_Mania } },
-    { ILLNESSES::DEPRESSION,    { ANOMALYID::Wall_Drawing1,    ANOMALYID::Frame_Shift,      ANOMALYID::Light_Depression } },
-    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange, ANOMALYID::Wall_Drawing3,    ANOMALYID::Light_Dementia } },
-    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Shift,      ANOMALYID::Door_HandSlam,    ANOMALYID::Light_Schizophrenia } },
-    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Frame_Distort,    ANOMALYID::Wall_Drawing2,    ANOMALYID::Light_AIW } },
-    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_Crack1,      ANOMALYID::Light_Insomnia } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack4,      ANOMALYID::Frame_Glitch } },
-    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange, ANOMALYID::Wall_LeftHand,    ANOMALYID::Light_Scotophobia } },
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    ANOMALYID::Light_Paranoia,       ANOMALYID::Wall_Paranoia } },
+    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania } },
+    { ILLNESSES::DEPRESSION,    { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression } },
+    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,       ANOMALYID::Wall_Dementia } },
+    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia,  ANOMALYID::Wall_Schizophernia } },
+    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW } },
+    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,       ANOMALYID::Wall_Insomnia } },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_OCD,            ANOMALYID::Wall_OCD } },
+    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia } }
 };
 
 static const std::vector<ILLNESSES> gIllnessList =
@@ -166,15 +166,15 @@ static const char* AnomalyText(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:         return "Crack Type I";
-    case ANOMALYID::Wall_Crack2:         return "Crack Type II";
-    case ANOMALYID::Wall_Crack3:         return "Crack Type III";
-    case ANOMALYID::Wall_Crack4:         return "Crack Type IV";
-    case ANOMALYID::Wall_Drawing1:       return "Drawing Type I";
-    case ANOMALYID::Wall_Drawing2:       return "Drawing Type II";
-    case ANOMALYID::Wall_Drawing3:       return "Drawing Type III";
-    case ANOMALYID::Wall_LeftHand:       return "Left Handprint";
-    case ANOMALYID::Wall_RightHand:      return "Right Handprint";
+    case ANOMALYID::Wall_Paranoia:       return "Crack Type I";
+    case ANOMALYID::Wall_Mania:          return "Crack Type II";
+    case ANOMALYID::Wall_Depression:     return "Crack Type III";
+    case ANOMALYID::Wall_Dementia:       return "Crack Type IV";
+    case ANOMALYID::Wall_Schizophernia:  return "Drawing Type I";
+    case ANOMALYID::Wall_AIW:            return "Drawing Type II";
+    case ANOMALYID::Wall_Insomnia:       return "Drawing Type III";
+    case ANOMALYID::Wall_OCD:            return "Left Handprint";
+    case ANOMALYID::Wall_Scotophobia:    return "Right Handprint";
 
     case ANOMALYID::Door_HandSlam:       return "Handprint on window";
     case ANOMALYID::Door_LightChange:    return "Window light change";

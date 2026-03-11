@@ -82,16 +82,16 @@ static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 static ANOMALYID GetWallPickByIllness(ILLNESSES illness)
 {
     // Pools to match dictionary exactly
-    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Wall_LeftHand };
-    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Wall_Crack2 };
-    static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Drawing1 };
-    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Drawing3 };
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Wall_Paranoia };
+    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Wall_Mania };
+    static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Depression };
+    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Dementia };
 
-    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_RightHand };
-    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_Drawing2 };
-    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Crack1 };
-    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_Crack4 };
-    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Wall_LeftHand };
+    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_Schizophernia };
+    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_AIW };
+    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Insomnia };
+    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_OCD };
+    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Wall_Scotophobia };
 
     switch (illness)
     {
@@ -203,42 +203,42 @@ void Wall_Draw(f32 camX, s8 floorNum)
         gWallPicked[idx] = true;
         gLastIllness[idx] = TrueDiagnosis;
 
-        // Sound
-        if (gWallPick[idx] == ANOMALYID::Wall_Drawing1 ||
-            gWallPick[idx] == ANOMALYID::Wall_Drawing2 ||
-            gWallPick[idx] == ANOMALYID::Wall_Drawing3)
-        {
-            AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.5f);
-        }
+        //// Sound
+        //if (gWallPick[idx] == ANOMALYID::Wall_Drawing1 ||
+        //    gWallPick[idx] == ANOMALYID::Wall_Drawing2 ||
+        //    gWallPick[idx] == ANOMALYID::Wall_Drawing3)
+        //{
+        //    AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.5f);
+        //}
     }
 
     switch (gWallPick[idx])
     {
-    case ANOMALYID::Wall_Crack1:
+    case ANOMALYID::Wall_Paranoia:
         DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Crack2:
+    case ANOMALYID::Wall_Mania:
         DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Crack3:
+    case ANOMALYID::Wall_Depression:
         DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Crack4:
+    case ANOMALYID::Wall_Dementia:
         DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Drawing1:
+    case ANOMALYID::Wall_Schizophernia:
         DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Drawing2:
+    case ANOMALYID::Wall_AIW:
         DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Drawing3:
+    case ANOMALYID::Wall_Insomnia:
         DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_LeftHand:
+    case ANOMALYID::Wall_OCD:
         DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_RightHand:
+    case ANOMALYID::Wall_Scotophobia:
         DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
         break;
 
