@@ -63,17 +63,9 @@ namespace Assets
     namespace Background
     {
         constexpr const char* WallBg = "Assets/Background/WALL_BG.png";
-        constexpr const char* DoorBg = "Assets/Background/Door_bg.png";
         constexpr const char* DoorBoarded = "Assets/Background/Door_boarded.png";
-        constexpr const char* LiftBg = "Assets/Background/Lift_bg.png";
-        constexpr const char* LiftDoor = "Assets/Background/LiftDoor_bg.png";
-        constexpr const char* LiftPanel = "Assets/Background/LiftPanel_buttons.png";
-        constexpr const char* LiftWalls[] =
-        {
-            "Assets/Background/LiftWall_0.png",
-            "Assets/Background/LiftWall_1.png",
-            "Assets/Background/LiftWall_2.png",
-        };
+        constexpr const char* DoorBg = "Assets/Background/Door_bg.png";
+
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
     }
     namespace Door_Anomaly
@@ -120,4 +112,30 @@ namespace Assets
         constexpr const char* image4 = "Assets/Guide/BossFight.png";
         constexpr const char* image5 = "Assets/Guide/controlText.png";
     }
+    namespace Lift
+    {
+        constexpr const char* LiftBg = "Assets/Lift/Lift_bg.png";
+        constexpr const char* LiftDoor = "Assets/Lift/LiftDoor_bg.png";
+        constexpr const char* LiftPanel = "Assets/Lift/LiftPanel_buttons.png";
+        constexpr const char* LiftButton[] =
+        {
+            "Assets/Lift/LiftButton_B1.png",
+            "Assets/Lift/LiftButton_1.png",
+            "Assets/Lift/LiftButton_2.png",
+            "Assets/Lift/LiftButton_3.png",
+            "Assets/Lift/LiftButton_4.png",
+            "Assets/Lift/LiftButton_5.png",
+            "Assets/Lift/LiftButton_6.png",
+            "Assets/Lift/LiftButton_7.png",
+            "Assets/Lift/LiftButton_8.png",
+            "Assets/Lift/LiftButton_9.png"
+        };
+        constexpr const char* OutsideWorld[] =
+        {
+            "Assets/Lift/OutsideWorld_0.png",
+            "Assets/Lift/OutsideWorld_1.png",
+            "Assets/Lift/OutsideWorld_2.png",
+        };
+    }
+
 }
