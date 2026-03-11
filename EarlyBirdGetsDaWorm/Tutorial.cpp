@@ -55,13 +55,17 @@ static bool tutSpacePress{ false };
 
 // Mesh
 static AEGfxVertexList* tutPromptMesh;
+static AEGfxVertexList* yesTextMesh;
 static AEGfxVertexList* yesButtonMesh;
 static AEGfxVertexList* noButtonMesh;
+static AEGfxVertexList* noTextMesh;
 static AEGfxVertexList* tutBGMesh;
 
 // Textures
 static AEGfxTexture* yesButtonTexture;
+static AEGfxTexture* yesTextTexture;
 static AEGfxTexture* noButtonTexture;
+static AEGfxTexture* noTextTexture;
 //static AEGfxTexture* tutBGTexture;
 
 // Text
@@ -69,8 +73,8 @@ static s8 promptFontID;
 //static u32 black = 0x000000BB;
 
 // Button
-static f32 buttonW{ 200.0f };
-static f32 buttonH{ 50.0f };
+static f32 buttonW{ 250.0f };
+static f32 buttonH{ 100.0f };
 static bool doTutorial{ false };
 static bool promptAnswered{ false };
 
@@ -91,16 +95,22 @@ static f32 textSpaceAlpha{ 0.0f };
 
 void Tutorial_Load() {
 	promptFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
-	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
-	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
+	yesButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	yesTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	noButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	/*yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
+	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);*/
 	//tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
 }
 
 void Tutorial_Initialize() {
 	// Mesh
 	tutPromptMesh = CreateSquareMesh(0xFFFFFFFF);
+	yesTextMesh = CreateSquareMesh(0xFFFFFFFF);
 	yesButtonMesh = CreateSquareMesh(0xFFFFFFFF);
 	noButtonMesh = CreateSquareMesh(0xFFFFFFFF);
+	noTextMesh = CreateSquareMesh(0xFFFFFFFF);
 	tutBGMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Button
@@ -223,8 +233,8 @@ void Tutorial_Update(f32 dt) {
 
 	
 	// -------------------------------- TUTORIAL PROMPT: YES OR NO --------------------------------
-	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) },
-		noButtonHover{ IsAreaClicked(200.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) };
+	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) },
+		noButtonHover{ IsAreaClicked(200.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) };
 
 	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);
 	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
@@ -385,7 +395,9 @@ void Tutorial_Draw() {
 
 		// Draws the buttons
 		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
+		DrawTextureMesh(yesTextMesh, yesTextTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
 		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
+		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
 	if (!tutFinished) {
