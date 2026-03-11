@@ -60,7 +60,7 @@ enum class AnomalyFiles : int
     Lighting_isActive,
     Wall_isActive,
     Sound_isActive,
-    //Lift_isActive,
+    Lift_isActive,
     Count
 };
 
