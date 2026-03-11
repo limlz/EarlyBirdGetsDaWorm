@@ -101,7 +101,7 @@ static const std::vector<IllnessInfo> gIllnessDictionary =
     { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW } },
     { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,       ANOMALYID::Wall_Insomnia } },
     { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_OCD,            ANOMALYID::Wall_OCD } },
-    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia } }
+    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia } }
 };
 
 static const std::vector<ILLNESSES> gIllnessList =
@@ -487,7 +487,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     float imgW = 200.0f;
     float imgH = 180.0f;
 
-    float colGap = 250.0f;
+    float colGap = 230.0f;
     float rowGap = 200.0f;
 
     float gridStartX = (RightStartX-20.0f)   + imgW * 0.5f;

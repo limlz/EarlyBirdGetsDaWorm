@@ -11,20 +11,22 @@ namespace Assets
     {
         constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
-        constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
+        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
-		constexpr const char* DoorSlam = "Assets/Equipment/HandSlam.png";
-        constexpr const char* FrameGlitch = "Assets/Equipment/FrameGlitch.png";
-        constexpr const char* FrameShift = "Assets/Equipment/FrameShift.png";
-        constexpr const char* FrameDistort = "Assets/Equipment/FrameDistort.png";
+        constexpr const char* DoorSlam = "Assets/Equipment/Journal/DoorSlam.png";
+		constexpr const char* DoorLight = "Assets/Equipment/Journal/DoorLight.png";
 
-        constexpr const char* LightMania = "Assets/Equipment/LightMania.png";
-        constexpr const char* LightDepression = "Assets/Equipment/LightDepression.png";
-        constexpr const char* LightDementia = "Assets/Equipment/LightDementia.png";
-        constexpr const char* LightSchizophrenia = "Assets/Equipment/LightSchizophrenia.png";
-        constexpr const char* LightAIW = "Assets/Equipment/LightAIW.png";
-        constexpr const char* LightInsomnia = "Assets/Equipment/LightInsomnia.png";
-        constexpr const char* LightScotophobia = "Assets/Equipment/LightScotophobia.png";
+        constexpr const char* FrameGlitch = "Assets/Equipment/Journal/FrameGlitch.png";
+        constexpr const char* FrameShift = "Assets/Equipment/Journal/FrameShift.png";
+        constexpr const char* FrameDistort = "Assets/Equipment/Journal/FrameDistort.png";
+
+        constexpr const char* LightMania = "Assets/Equipment/Journal/LightMania.png";
+        constexpr const char* LightDepression = "Assets/Equipment/Journal/LightDepression.png";
+        constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
+        constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
+        constexpr const char* LightAIW = "Assets/Equipment/Journal/LightAIW.png";
+        constexpr const char* LightInsomnia = "Assets/Equipment/Journal/LightInsomnia.png";
+        constexpr const char* LightScotophobia = "Assets/Equipment/Journal/LightScotophobia.png";
     }
     namespace Boss_Fight
     {
