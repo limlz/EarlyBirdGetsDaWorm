@@ -18,7 +18,7 @@ void Endgame_Load()
 {
     // Title font slightly larger than subtitle for visual hierarchy
     endgameFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 30);
-    subFontId     = AEGfxCreateFont(Assets::Fonts::Buggy, 25);
+    subFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 25);
 }
 
 void Endgame_Initialize()
@@ -44,12 +44,22 @@ void Endgame_Update()
 {
     if (first_audio) {
         AudioManager_StopBGM();
+
+        // ---- INDIVIDUAL ENDGAME AUDIO TRIGGERS ----
         if (currentEndReason == REASON_SURVIVED_5_DAYS) {
             AudioManager_PlayBGM(BGM_MAIN_MENU, 0.5f);
+            AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0); // Optional SFX for winning
         }
-        else {
-            AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0);
+        else if (currentEndReason == REASON_DIED_TO_BOSS) {
+            AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0); // Replace SFX_AA with Boss Death SFX
         }
+        else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
+            AudioManager_PlaySFX(SFX_FAH, 1.0f, 1.0f, 0); // Replace SFX_AA with Human Fired SFX
+        }
+        else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+            AudioManager_PlaySFX(SFX_FAH, 1.0f, 1.0f, 0); // Replace SFX_AA with Ghost Fired SFX
+        }
+
         first_audio = false;
     }
 
@@ -95,7 +105,7 @@ void Endgame_Draw()
         // Computes a centered start-X for AEGfxPrintWithGlow (title font size 30 -> ~0.036 NDC per char)
         auto titleX = [](const char* text) -> float {
             return -(strlen(text) * 0.036f / 2.0f);
-        };
+            };
 
         // --- Title with coloured glow + subtitle ---
         if (currentEndReason == REASON_SURVIVED_5_DAYS) {
@@ -132,10 +142,10 @@ void Endgame_Draw()
         }
 
         // --- Run stats (day reached + real-time survived) ---
-        int   day     = Game_GetCurrentDay();
+        int   day = Game_GetCurrentDay();
         float seconds = Game_GetTimeSurvived();
-        int   mins    = (int)(seconds / 60);
-        int   secs    = (int)(seconds) % 60;
+        int   mins = (int)(seconds / 60);
+        int   secs = (int)(seconds) % 60;
         char statsBuf[64];
         sprintf_s(statsBuf, "Day %d / 5   |   Time: %02d:%02d", day, mins, secs);
         AEGfxPrintCentered(subFontId, statsBuf, 0.0f, -0.15f, 0.85f, 0.75f, 0.75f, 0.75f, 1.0f, 0.030f);

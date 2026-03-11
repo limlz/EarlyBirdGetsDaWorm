@@ -18,6 +18,7 @@ static s8 prevFloor;
 static s8 currentPage;
 static bool isPagerOpen;		// controls big notif
 static bool openPagerAfterDoor;	// request to open pager from room
+static bool pagerFirstPop;
 
 static bool popUpShown{ false };
 static bool prevHadPatient{ false };
@@ -33,7 +34,7 @@ static f32 vibrateDuration{ 0.0f };
 
 void Notifications_Load()
 {
-	iconTexture = LoadTextureChecked(Assets::Equipment::Pager);
+	iconTexture = LoadTextureChecked(Assets::Equipment::PagerIcon);
 	pagerTexture = LoadTextureChecked(Assets::Equipment::Pager);
 	lineID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
@@ -66,6 +67,7 @@ void Notifications_Initialize()
 	mouseX = static_cast<s32>(0.0f);
 	mouseY = static_cast <s32>(0.0f);
 	prevFloor = -1;
+	pagerFirstPop = false;
 
 	// Mesh
 	iconMesh = CreateSquareMesh(0xFFFFFFFF);
@@ -102,7 +104,8 @@ void Notifications_Update(bool liftActive, f32 dt)
 
 		if (popupTimer >= 0.5f) {
 			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
-
+			if (!IsTutorialActive() && !Doing_Tutorial()) { pagerFirstPop = true; }
+			
 			isPagerOpen = true;
 			pagerVibrating = true;
 			vibrateTimer = 0.0f;
@@ -110,7 +113,6 @@ void Notifications_Update(bool liftActive, f32 dt)
 			popUpShown = true;
 		}
 	}
-
 
 	// Pop Up after task complete
 	bool currHasPatient{ Player_HasPatient() };
@@ -132,6 +134,12 @@ void Notifications_Update(bool liftActive, f32 dt)
 			vibrateTimer = 0.0f;
 			vibrateDuration = 0.5f;
 			waitTaskPopUp = false;
+		}
+	}
+
+	if (pagerFirstPop) {
+		if (AEInputCheckTriggered(AEVK_Q) && !liftActive) {
+			pagerFirstPop = false;
 		}
 	}
 
@@ -196,6 +204,12 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8
 		sprintf_s(bringBuffer, "Bring patient to room #%02d-%02d", desDoorNum, desFloorNum);
 		AEGfxPrint(lineID, collecttextBuffer, collectTextX, collectTextY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 		AEGfxPrint(lineID, bringBuffer, bringTextX, bringTextY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		if (pagerFirstPop) {
+			f32 infoX{ textPosition(-220.0f, -380.0f).first },
+				infoY{ textPosition(-220.0f, -380.0f).second };
+			AEGfxPrint(lineID, "PRESS [Q] TO CLOSE PAGER", infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
 	}
 
 }

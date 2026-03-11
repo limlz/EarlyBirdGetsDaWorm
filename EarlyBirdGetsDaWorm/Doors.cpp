@@ -47,6 +47,7 @@ static AEGfxVertexList* gQuadMesh = nullptr;
 static s8               gDoorFontId = -1;
 
 static AEGfxTexture* gDoorTex = nullptr;
+static AEGfxTexture* gDoorBoardedTex = nullptr; // NEW: Boarded Door Texture
 static AEGfxTexture* gWindow0Tex = nullptr;
 static AEGfxTexture* gWindow1Tex = nullptr;
 static AEGfxTexture* gHandprintTex = nullptr;
@@ -253,6 +254,7 @@ void Doors_Load()
     gDoorFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
     gDoorTex = LoadTextureChecked(Assets::Background::DoorBg);
+    gDoorBoardedTex = LoadTextureChecked(Assets::Background::DoorBoarded);
     gWindow0Tex = LoadTextureChecked(Assets::Door_Anomaly::Window_0);
     gWindow1Tex = LoadTextureChecked(Assets::Door_Anomaly::Window_1);
     gHandprintTex = LoadTextureChecked(Assets::Door_Anomaly::Handprint);
@@ -273,6 +275,7 @@ void Doors_Unload()
     FreeMeshSafe(gQuadMesh);
 
     UnloadTextureSafe(gDoorTex);
+    UnloadTextureSafe(gDoorBoardedTex);
     UnloadTextureSafe(gWindow0Tex);
     UnloadTextureSafe(gWindow1Tex);
     UnloadTextureSafe(gHandprintTex);
@@ -281,7 +284,7 @@ void Doors_Unload()
         AEGfxDestroyFont(gDoorFontId);
 
     gQuadMesh = nullptr;
-    gDoorTex = gWindow0Tex = gWindow1Tex = gHandprintTex = nullptr;
+    gDoorTex = gDoorBoardedTex = gWindow0Tex = gWindow1Tex = gHandprintTex = nullptr;
     gDoorFontId = -1;
 }
 
@@ -318,8 +321,8 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     {
         DoorEventState& s = gDoorState[d];
 
-        if (s.rollCooldown > 0.0f)      s.rollCooldown -= dt;
-        if (s.eventCooldown > 0.0f)     s.eventCooldown -= dt;
+        if (s.rollCooldown > 0.0f)       s.rollCooldown -= dt;
+        if (s.eventCooldown > 0.0f)      s.eventCooldown -= dt;
         if (s.ghostRollCooldown > 0.0f) s.ghostRollCooldown -= dt;
 
         if (s.event != DoorEvent::None && s.eventCooldown <= 0.0f)
@@ -413,14 +416,17 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
+        // Check if this door is in the basement and has already been used today
+        bool isBoarded = (floorNum == 0 && basementDoors[doorIdx].lockedThisDay);
+
         // =====================================================
         // DOOR
         // =====================================================
-        if (gDoorTex)
-            DrawTextureMesh(gQuadMesh, gDoorTex, doorX, DOOR_Y, DOOR_W, DOOR_H, 1.0f);
+
+        DrawTextureMesh(gQuadMesh, gDoorTex, doorX, DOOR_Y, DOOR_W, DOOR_H, 1.0f);
 
         // =====================================================
-        // WINDOW
+        // WINDOW & OVERLAYS 
         // =====================================================
         float winX, winY;
         WindowWorldCenter(doorX, winX, winY);
@@ -440,6 +446,12 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         // =====================================================
         if (s.event == DoorEvent::HandprintSlam && gHandprintTex)
             DrawTextureMesh(gQuadMesh, gHandprintTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
+
+		// Boarded doors get drawn on top of everything else to fully obscure the window and any anomalies behind it
+        if (isBoarded) {
+            DrawTextureMesh(gQuadMesh, gDoorBoardedTex, doorX, DOOR_Y, 300.0f, 200.0f, 1.0f);
+        }
+
 
         // =====================================================
         // LABEL

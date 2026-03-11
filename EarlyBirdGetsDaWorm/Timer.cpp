@@ -17,7 +17,7 @@
 // In-game clock settings
 static constexpr int   START_MIN = 0;                 // minutes since midnight
 static constexpr int   END_MIN = START_MIN + 60 * 6; // 6 in-game hours
-static constexpr float MIN_PER_SEC = 3.0f;              // 3 in-game minutes per 1 real second
+static constexpr float MIN_PER_SEC = 2.0f;              // 2 in-game minutes per 1 real second
 
 // Day overlay settings
 static constexpr float DAY_HOLD_TIME = 1.0f; // seconds to hold full black

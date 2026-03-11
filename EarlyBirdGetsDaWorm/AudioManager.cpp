@@ -41,10 +41,11 @@ void AudioManager_LoadAll() {
     soundBank[SFX_SWOOSH_1] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_1.wav");
     soundBank[SFX_SWOOSH_2] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_2.wav");
     soundBank[SFX_SWOOSH_3] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
-    //soundBank[SFX_TUTORIAL_TYPING] = AEAudioLoadSound("Assets/Audio/SFX_TUTORIAL_TYPING.wav");
+    soundBank[SFX_TUTORIAL_TYPING] = AEAudioLoadSound("Assets/Audio/SFX_TUTORIAL_TYPING.wav");
     soundBank[SFX_JOURNAL_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
     soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
 	soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
+    soundBank[SFX_FAH] = AEAudioLoadSound("Assets/Audio/SFX_FAH.wav");
 }
 
 void AudioManager_Unload() {

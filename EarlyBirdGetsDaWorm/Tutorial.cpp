@@ -38,7 +38,8 @@ struct DialogueBox {
 	const char* tutFullText;	// The entire 
 
 	f32 tutTypingSpeed;			// Number of lines currently visible
-	f32 tutVisibleCharCount;			// Number of characters currently shown
+	bool tutSoundPlayed;		// T check if sound is being played
+	f32 tutVisibleCharCount;	// Number of characters currently shown
 	s8 tutLineCount;			// Number of lines currently visible
 
 	f32 tutTextW;
@@ -50,26 +51,30 @@ struct DialogueBox {
 };
 static DialogueBox tutStartedBox, tutPagerOpenedBox, tutPagerClosedBox, tutLiftOpenedBox,
 tutLiftFloorSelectedBox, tutPatientCollectedBox, tutPatientDeliveredBox;
-static f32 tutSpacePress{ false };
+static bool tutSpacePress{ false };
 
 // Mesh
 static AEGfxVertexList* tutPromptMesh;
+static AEGfxVertexList* yesTextMesh;
 static AEGfxVertexList* yesButtonMesh;
 static AEGfxVertexList* noButtonMesh;
+static AEGfxVertexList* noTextMesh;
 static AEGfxVertexList* tutBGMesh;
 
 // Textures
 static AEGfxTexture* yesButtonTexture;
+static AEGfxTexture* yesTextTexture;
 static AEGfxTexture* noButtonTexture;
-static AEGfxTexture* tutBGTexture;
+static AEGfxTexture* noTextTexture;
+//static AEGfxTexture* tutBGTexture;
 
 // Text
 static s8 promptFontID;
 //static u32 black = 0x000000BB;
 
 // Button
-static f32 buttonW{ 200.0f };
-static f32 buttonH{ 50.0f };
+static f32 buttonW{ 250.0f };
+static f32 buttonH{ 100.0f };
 static bool doTutorial{ false };
 static bool promptAnswered{ false };
 
@@ -86,19 +91,26 @@ static f32 tutPopupTimer{ 0.0f };
 // Fade In Animation
 static f32 fadeSpeed{ 2.5f };
 static f32 promptAlpha{ 0.0f };
+static f32 textSpaceAlpha{ 0.0f };
 
 void Tutorial_Load() {
 	promptFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
-	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
-	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
-	tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
+	yesButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	yesTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	noButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	/*yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
+	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);*/
+	//tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
 }
 
 void Tutorial_Initialize() {
 	// Mesh
 	tutPromptMesh = CreateSquareMesh(0xFFFFFFFF);
+	yesTextMesh = CreateSquareMesh(0xFFFFFFFF);
 	yesButtonMesh = CreateSquareMesh(0xFFFFFFFF);
 	noButtonMesh = CreateSquareMesh(0xFFFFFFFF);
+	noTextMesh = CreateSquareMesh(0xFFFFFFFF);
 	tutBGMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Button
@@ -114,6 +126,7 @@ void Tutorial_Initialize() {
 	// Fade In Animation
 	fadeSpeed = 2.5f;
 	promptAlpha = 0.0f;	
+	textSpaceAlpha = 0.0f;
 
 	// Tutorial
 	tutStarted = false;
@@ -126,16 +139,16 @@ void Tutorial_Initialize() {
 	tutFinished = false;
 
 	// Tutorial Dialogue Box
-	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f };
+	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f, false};
 	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
-		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f };
-	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f };
+		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f, false };
+	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
 	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f };
-	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f };
+		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f, false };
+	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f, false };
 	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nIdentify ghosts by looking for\nanomalies.\nWrong delivery will end the game.", 25.0f };
-	tutPatientDeliveredBox = { 440.0f, 220.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nStay alert and watch out\nfor anomalies.", 25.0f };
+		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nGhosts will have an additional\nsymptom on top of illness.\nWrong delivery will end the game.", 25.0f, false };
+	tutPatientDeliveredBox = { 605.0f, 250.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nDeliver at least 5 patients.\nPress [G] anytime to view the guide.\nStay alert and watch out.", 25.0f, false };
 
 	tutSpacePress = false;
 }
@@ -166,6 +179,15 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 			}
 		}
 
+		// Sound play
+		if (!dialogue.finishedTyping && !dialogue.tutSoundPlayed) {
+			AudioManager_PlaySFX(SFX_TUTORIAL_TYPING, 0.2f, 1.0f, -1);
+			dialogue.tutSoundPlayed = true;
+		}
+		if (dialogue.finishedTyping && dialogue.tutSoundPlayed) {
+			AudioManager_StopSFX();
+		}
+
 		// Text typing effect
 		dialogue.tutVisibleCharCount += dialogue.tutTypingSpeed * dt;
 		if (dialogue.tutVisibleCharCount >= static_cast<f32>(strlen(dialogue.tutFullText))) {
@@ -180,8 +202,14 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 			if (!dialogue.finishedTyping) {
 				dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
 				dialogue.finishedTyping = true;
+				dialogue.tutSoundPlayed = true;
+				//textSpaceAlpha = 0.0f;
 			}
 		}
+
+		/*if (dialogue.finishedTyping) {
+			textSpaceAlpha = 0.0f;
+		}*/
 	}
 }
 
@@ -205,8 +233,8 @@ void Tutorial_Update(f32 dt) {
 
 	
 	// -------------------------------- TUTORIAL PROMPT: YES OR NO --------------------------------
-	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) },
-		noButtonHover{ IsAreaClicked(200.0f, -100.0f, 200.0f, 50.0f, Input_GetMouseX(), Input_GetMouseY()) };
+	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) },
+		noButtonHover{ IsAreaClicked(200.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) };
 
 	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);
 	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
@@ -225,8 +253,25 @@ void Tutorial_Update(f32 dt) {
 		curTutStage = TUTORIAL_START;
 	}
 
+	// Debug: Skip to last dialogue
+	if (AEInputCheckTriggered(AEVK_T)) {
+		doTutorial = true;                  // Make sure tutorial mode is active
+		tutFinished = false;                // Tutorial not finished
+		curTutStage = TUTORIAL_END;         // Jump to last stage
+
+		// Force the last dialogue box to show
+		tutPatientDeliveredBox.dialogueShown = true;
+		tutPatientDeliveredBox.tutVisibleCharCount = 0.0f; // Reset typing
+		tutPatientDeliveredBox.finishedTyping = false;
+		tutPatientDeliveredBox.dialogueFadeAlpha = 0.0f;   // Start fade-in
+
+		// Also force its flag true so Tutorial_Draw() will render it
+		tutPatientDelivered = tutPatientDelivered; // optional, ensures reference
+	}
+
 	// -------------------------------- TUTORIAL: YES --------------------------------
 	if (doTutorial && !tutFinished) {
+		textSpaceAlpha = 1.0f;
 		Timer_SetPaused(true);
 		switch (curTutStage) {
 			case TUTORIAL_START: {
@@ -270,7 +315,7 @@ void Tutorial_Update(f32 dt) {
 				tutLiftFloorSelected = true;
 				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
 				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
-					Player_ForceGhostPatient();
+					Player_ForceHumanPatient();
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
 					tutLiftFloorSelected = false;
 				}
@@ -302,7 +347,8 @@ bool Doing_Tutorial() { return doTutorial; }
 bool Tutorial_Prompt_Answered() { return promptAnswered; }
 bool IsTutorialActive() { return tutPopUpShown; }
 
-void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY) {
+// Helper function for typing effect
+void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) {
 	f32 winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 	f32 lineHeight{ 100.0f / winH};
 	s8 lineNum{};
@@ -311,7 +357,7 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY) {
 	for (int i{};; ++i) {
 		if (str[i] == '\n' || str[i] == '\0') {
 			std::string line(lineStart, &str[i]); // copy line
-			AEGfxPrint(promptFontID, line.c_str(), textPosition(tutTextX, tutTextY).first, textPosition(tutTextX, tutTextY).second - lineHeight * lineNum, 700.0f / winH, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
+			AEGfxPrint(promptFontID, line.c_str(), textPosition(tutTextX, tutTextY).first, textPosition(tutTextX, tutTextY).second - lineHeight * lineNum, 700.0f / winH, 1.0f, 1.0f, 1.0f, alpha);
 			++lineNum;
 			if (str[i] == '\0') {
 				break;
@@ -320,6 +366,17 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY) {
 		}
 		
 	}
+}
+
+// Helper function for dialogue
+void DrawDialogueBoxBackground(DialogueBox& dialogue) {
+	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
+		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+
+	// Apply black fade like the guide
+	//u32 colorBG = (0x000000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
+	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
+	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
 }
 
 void Tutorial_Draw() {
@@ -339,7 +396,9 @@ void Tutorial_Draw() {
 
 		// Draws the buttons
 		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
+		DrawTextureMesh(yesTextMesh, yesTextTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
 		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
+		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
 	if (!tutFinished) {
@@ -350,64 +409,71 @@ void Tutorial_Draw() {
 		}
 		f32 infoX{ textPosition(-220.0f, -380.0f).first },
 			infoY{ textPosition(-220.0f, -380.0f).second };
-		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
+		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, textSpaceAlpha);
 
 		if (tutStarted) {
 			//Tutorial_DialogueBox_Draw("const char* str");
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutStartedBox);
 			std::string visibleText(
 				tutStartedBox.tutFullText,
 				(size_t)tutStartedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerOpened) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutPagerOpenedBox);
 			std::string visibleText(
 				tutPagerOpenedBox.tutFullText,
 				(size_t)tutPagerOpenedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerClosed) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutPagerClosedBox);
 			std::string visibleText(
 				tutPagerClosedBox.tutFullText,
 				(size_t)tutPagerClosedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY, tutPagerClosedBox.dialogueFadeAlpha);
 		}
 		if (tutLiftOpened) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutLiftOpenedBox);
 			std::string visibleText(
 				tutLiftOpenedBox.tutFullText,
 				(size_t)tutLiftOpenedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutLiftFloorSelected) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutLiftFloorSelectedBox);
 			std::string visibleText(
 				tutLiftFloorSelectedBox.tutFullText,
 				(size_t)tutLiftFloorSelectedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.dialogueFadeAlpha);
 		}
 		if (tutPatientCollected) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutPatientCollectedBox);
 			std::string visibleText(
 				tutPatientCollectedBox.tutFullText,
 				(size_t)tutPatientCollectedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.dialogueFadeAlpha);
 		}
-		if (tutPatientDelivered) {
-			DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
+		if (tutPatientDelivered || curTutStage == TUTORIAL_END) {
+			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
+			DrawDialogueBoxBackground(tutPatientDeliveredBox);
 			std::string visibleText(
 				tutPatientDeliveredBox.tutFullText,
 				(size_t)tutPatientDeliveredBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -190.0f + tutPatientDeliveredBox.tutBGX, 70.0f + tutPatientDeliveredBox.tutBGY);
+			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPatientDeliveredBox.tutBGX, 90.0f + tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.dialogueFadeAlpha);
 		}
 	}
 }
@@ -420,7 +486,7 @@ void Tutorial_Free() {
 
 	UnloadTextureSafe(yesButtonTexture);
 	UnloadTextureSafe(noButtonTexture);
-	UnloadTextureSafe(tutBGTexture);
+	//UnloadTextureSafe(tutBGTexture);
 
 	// Destroy font if valid
 	if (promptFontID >= 0) {
