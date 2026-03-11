@@ -34,9 +34,7 @@ static AEGfxTexture* gLightMania = nullptr;
 static AEGfxTexture* gLightDepression = nullptr;
 static AEGfxTexture* gLightDementia = nullptr;
 static AEGfxTexture* gLightSchizophrenia = nullptr;
-static AEGfxTexture* gLightAIW = nullptr;
-static AEGfxTexture* gLightInsomnia = nullptr;
-static AEGfxTexture* gLightScotophobia = nullptr;
+static AEGfxTexture* gLight = nullptr;
 
 static AEGfxTexture* gFrameGlitch = nullptr;
 static AEGfxTexture* gFrameShift = nullptr;
@@ -64,9 +62,9 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Light_Depression:   return gLightDepression;
     case ANOMALYID::Light_Dementia:     return gLightDementia;
     case ANOMALYID::Light_Schizophrenia:return gLightSchizophrenia;
-    case ANOMALYID::Light_AIW:          return gLightAIW;
-    case ANOMALYID::Light_Insomnia:     return gLightInsomnia;
-    case ANOMALYID::Light_Scotophobia:  return gLightScotophobia;
+    case ANOMALYID::Light_AIW:          return gLight;
+    case ANOMALYID::Light_Insomnia:     return gLight;
+    case ANOMALYID::Light_Scotophobia:  return gLight;
 
     case ANOMALYID::Frame_Glitch:       return gFrameGlitch;
     case ANOMALYID::Frame_Shift:        return gFrameShift;
@@ -93,14 +91,14 @@ struct IllnessInfo
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    ANOMALYID::Light_Paranoia,       ANOMALYID::Wall_Paranoia } },
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    /*ANOMALYID::Light_Paranoia,*/   ANOMALYID::Wall_Paranoia}},
     { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania } },
     { ILLNESSES::DEPRESSION,    { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression } },
     { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,       ANOMALYID::Wall_Dementia } },
     { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia,  ANOMALYID::Wall_Schizophernia } },
     { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW } },
     { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,       ANOMALYID::Wall_Insomnia } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_OCD,            ANOMALYID::Wall_OCD } },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     /*ANOMALYID::Light_OCD,*/        ANOMALYID::Wall_OCD}},
     { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia } }
 };
 
@@ -224,15 +222,13 @@ static const char* AnomalyDescription(ANOMALYID id)
     case ANOMALYID::Door_LightChange:    return "The door window light changes unnaturally.";
     case ANOMALYID::Door_Knock:          return "Knocking can be heard from the door.";
 
-    case ANOMALYID::Light_Paranoia:      return "The light flickers with uneasy rhythm.";
-    case ANOMALYID::Light_Mania:         return "The light pulses rapidly with warm tones.";
-    case ANOMALYID::Light_Depression:    return "The light pulses slowly in blue.";
-    case ANOMALYID::Light_Dementia:      return "The light fades in a slow warm pulse.";
-    case ANOMALYID::Light_Schizophrenia: return "Erratic teal flashes disturb the hallway.";
-    case ANOMALYID::Light_AIW:           return "The light pulses in a surreal pattern.";
-    case ANOMALYID::Light_Insomnia:      return "The light flashes in restless bursts.";
-    case ANOMALYID::Light_OCD:           return "The light blinks in a repeated rigid pattern.";
-    case ANOMALYID::Light_Scotophobia:   return "The light rapidly pulses in the dark.";
+    case ANOMALYID::Light_Mania:         return "Rapid Pulse (Warm)";
+    case ANOMALYID::Light_Depression:    return "Slow Pulse (Blue)";
+    case ANOMALYID::Light_Dementia:      return "Slow Pulse (Warm)";
+    case ANOMALYID::Light_Schizophrenia: return "Eratic Flashes (Teal)";
+    case ANOMALYID::Light_AIW:           return "Slow Pulse";
+    case ANOMALYID::Light_Insomnia:      return "Eratic Flashes";
+    case ANOMALYID::Light_Scotophobia:   return "Rapid Pulse";  
 
     case ANOMALYID::Frame_Glitch:        return "The painting flickers and glitches.";
     case ANOMALYID::Frame_Shift:         return "The frame moves out of place.";
@@ -333,9 +329,7 @@ void Journal_Load()
     gLightDepression = LoadTextureChecked(Assets::Equipment::LightDepression);
     gLightDementia = LoadTextureChecked(Assets::Equipment::LightDementia);
     gLightSchizophrenia = LoadTextureChecked(Assets::Equipment::LightSchizophrenia);
-    gLightAIW = LoadTextureChecked(Assets::Equipment::LightAIW);
-    gLightInsomnia = LoadTextureChecked(Assets::Equipment::LightInsomnia);
-    gLightScotophobia = LoadTextureChecked(Assets::Equipment::LightScotophobia);
+    gLight = LoadTextureChecked(Assets::Equipment::Light);
 
 	gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
 	gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
@@ -365,9 +359,7 @@ void Journal_Unload()
     UnloadTextureSafe(gLightDepression);
     UnloadTextureSafe(gLightDementia);
     UnloadTextureSafe(gLightSchizophrenia);
-    UnloadTextureSafe(gLightAIW);
-    UnloadTextureSafe(gLightInsomnia);
-    UnloadTextureSafe(gLightScotophobia);
+    UnloadTextureSafe(gLight);
 
     UnloadTextureSafe(gFrameGlitch);
     UnloadTextureSafe(gFrameShift);
@@ -472,26 +464,26 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
 
     // Dimensions -----------------------------------------------------------------------------------------
-    float HeaderY = 300.0f;     
-    float SubHeaderY = 250.0f;
+    float HeaderY = 350.0f;     
+    float SubHeaderY = 350.0f;
     
     // Pages X positions
     float LeftStartX = -650.0f;
-    float RightStartX = 60.0f;
+    float RightStartX = 80.0f;
 
     // Anomalies list
-    float ListY = 200.0f;
+    float ListY = 230.0f;
     float ListStep = 55.0f;
 
     // 2x2 grid layout
-    float imgW = 200.0f;
-    float imgH = 180.0f;
+    float imgW = 180.0f;
+    float imgH = 200.0f;
 
-    float colGap = 230.0f;
-    float rowGap = 200.0f;
+    float colGap = 210.0f;
+    float rowGap = 210.0f;
 
     float gridStartX = (RightStartX-20.0f)   + imgW * 0.5f;
-    float gridStartY = (ListY-20.0f)        - imgH * 0.5f;
+    float gridStartY = (ListY-10.0f)        - imgH * 0.5f;
 
     float tiltAngle = 0.12f;
 

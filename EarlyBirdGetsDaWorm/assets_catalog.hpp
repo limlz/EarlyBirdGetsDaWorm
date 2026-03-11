@@ -24,9 +24,7 @@ namespace Assets
         constexpr const char* LightDepression = "Assets/Equipment/Journal/LightDepression.png";
         constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
-        constexpr const char* LightAIW = "Assets/Equipment/Journal/LightAIW.png";
-        constexpr const char* LightInsomnia = "Assets/Equipment/Journal/LightInsomnia.png";
-        constexpr const char* LightScotophobia = "Assets/Equipment/Journal/LightScotophobia.png";
+        constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
     }
     namespace Boss_Fight
     {
