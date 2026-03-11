@@ -6,6 +6,7 @@ static AEGfxVertexList* circleMesh;
 
 // Textures
 static AEGfxTexture* wallBgTexture = nullptr;
+static AEGfxTexture* playerTex = nullptr; // --- NEW: Player Texture ---
 
 // --- PLAYER PHYSICS ---
 static f32 playerX, playerY;
@@ -13,7 +14,7 @@ float playerVelY = 0.0f;
 bool isGrounded = false;
 const float GRAVITY = 1500.0f;
 const float JUMP_FORCE = 850.0f;
-const float GROUND_Y = -315.0f;
+const float GROUND_Y = -230.0f; // Adjusted so the bottom of the 360-tall player sits exactly on the -350 line (top of the black bar)
 int jumpCount = 0;
 const int MAX_JUMPS = 2;
 bool facingRight = true;
@@ -26,7 +27,7 @@ float hitTimer = 0.0f;
 
 // --- WEAPON: HOLY WATER GUN ---
 static float fireCooldown = 0.0f;
-const float FIRE_RATE = 0.05f; // Fires a particle every 0.05 seconds (20 per second!)
+const float FIRE_RATE = 0.02f; // Fires a particle every 0.02 seconds 
 static float bossDodgeCooldown = 0.0f;
 
 // --- BOSS INSTANCE ---
@@ -73,8 +74,12 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
 void Boss_Fight_Load()
 {
     // Load the font for the victory text (We use size 35 here)
-    victoryFontId = AEGfxCreateFont("Assets/buggy-font.ttf", 35);
-    wallBgTexture = LoadTextureChecked("Assets/Background/WALL_BG.png");
+    victoryFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 35);
+    wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
+
+    // --- NEW: Load the player texture (Change path if needed) ---
+    playerTex = LoadTextureChecked(Assets::Player::Nurse1);
+
     Boss_Load();
     PauseMenu_Load();
     squareMesh = CreateSquareMesh(COLOR_WHITE);
@@ -127,7 +132,7 @@ void Boss_Fight_Update()
             victoryHoldTimer += dt;
 
             // Show the text for 3 seconds, then return to the main game
-            if (victoryHoldTimer > 3.0f) { 
+            if (victoryHoldTimer > 3.0f) {
 
                 Player_GenerateMission();
                 Timer_SetPaused(false);
@@ -150,8 +155,9 @@ void Boss_Fight_Update()
     if (AEInputCheckCurr(AEVK_D)) { playerX += PLAYER_SPEED * dt; facingRight = true; }
     if (AEInputCheckCurr(AEVK_A)) { playerX -= PLAYER_SPEED * dt; facingRight = false; }
 
-    if (playerX < -765.0f) playerX = -765.0f;
-    if (playerX > 765.0f)  playerX = 765.0f;
+    // Adjusted X clamp to account for the new 140 width (half width = 70)
+    if (playerX < -753.33f) playerX = -753.33f;
+    if (playerX > 753.33f)  playerX = 753.33f;
 
     if (AEInputCheckTriggered(AEVK_SPACE)) {
         if (isGrounded || jumpCount < MAX_JUMPS) {
@@ -196,8 +202,8 @@ void Boss_Fight_Update()
             }
 
             // ADD SPREAD: Randomizes the direction slightly to simulate spraying liquid
-            float spreadX = ((rand() % 200 - 100) / 1000.0f); // Random between -0.1 and 0.1
-            float spreadY = ((rand() % 200 - 100) / 1000.0f);
+            float spreadX = ((rand() % 100 - 50) / 1000.0f); // Random between -0.1 and 0.1
+            float spreadY = ((rand() % 100 - 50) / 1000.0f);
             dirX += spreadX;
             dirY += spreadY;
 
@@ -227,8 +233,9 @@ void Boss_Fight_Update()
     playerVelY -= GRAVITY * dt;
     playerY += playerVelY * dt;
 
-    if (playerY > 415.0f) {
-        playerY = 415.0f;
+    // Adjusted ceiling clamp for the new 360 height (half height = 180). Top bar bottom is at 350.
+    if (playerY > 230.0f) {
+        playerY = 230.0f;
         if (playerVelY > 0.0f) playerVelY = 0.0f;
     }
 
@@ -248,8 +255,9 @@ void Boss_Fight_Update()
     if (myBoss.active) {
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (myBoss.bullets[i].active) {
-                if (abs(myBoss.bullets[i].x - playerX) < 35.0f &&
-                    abs(myBoss.bullets[i].y - playerY) < 35.0f)
+                // Expanded hitbox to fully match the new 140x360 dimensions
+                if (abs(myBoss.bullets[i].x - playerX) < 46.66f &&
+                    abs(myBoss.bullets[i].y - playerY) < 120.0f)
                 {
                     playerHP--;
                     myBoss.bullets[i].active = false;
@@ -279,8 +287,36 @@ void Boss_Fight_Draw()
 {
     DrawTextureMesh(squareMesh, wallBgTexture, 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
 
-    u32 playerColor = isPlayerHit ? 0xFFFF00FF : COLOR_WHITE;
-    DrawSquareMesh(squareMesh, playerX, playerY, 70.0f, 70.0f, playerColor);
+    // --- NEW: Draw Textured Player ---
+    if (playerTex)
+    {
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+
+        // Tint magenta if hit, else normal color
+        if (isPlayerHit) AEGfxSetColorToMultiply(1.0f, 0.0f, 1.0f, 1.0f);
+        else             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+        AEMtx33 scale, trans, transform;
+        float dirScale = facingRight ? 93.33f : -93.33f; // Flip texture based on facing
+        AEMtx33Scale(&scale, dirScale, 240.0f);        // Increased height to 360.0f to form a rectangle
+        AEMtx33Trans(&trans, playerX, playerY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxTextureSet(playerTex, 0.0f, 0.0f);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+        // Reset tint and render mode
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    }
+    else
+    {
+        // Fallback to rectangle if texture fails to load
+        u32 playerColor = isPlayerHit ? 0xFFFF00FF : COLOR_WHITE;
+        DrawSquareMesh(squareMesh, playerX, playerY, 93.33f, 240.0f, playerColor);
+    }
 
     DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
     DrawSquareMesh(squareMesh, 0.0f, 400.0f, 1600.0f, 100.0f, COLOR_BLACK);
@@ -306,7 +342,6 @@ void Boss_Fight_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
     }
-
 
     // --- DRAW VICTORY SEQUENCE ---
     if (isVictorySequence) {
@@ -338,11 +373,17 @@ void Boss_Fight_Draw()
 
 void Boss_Fight_Free() {
 }
+
 void Boss_Fight_Unload() {
     Boss_Unload();
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
     Bullets_Free();
+
+    // --- NEW: Clean up textures to prevent memory leaks ---
+    UnloadTextureSafe(wallBgTexture);
+    UnloadTextureSafe(playerTex);
+
     if (victoryFontId >= 0) {
         AEGfxDestroyFont(victoryFontId);
         victoryFontId = -1;
