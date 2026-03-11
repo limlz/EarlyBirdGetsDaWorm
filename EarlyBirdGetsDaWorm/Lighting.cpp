@@ -439,3 +439,29 @@ float Lighting_GetOverlayAlpha()
     if (index < 0 || index > 10) return 0.50f;
     return Config::overlayAlphaTable[index];
 }
+
+bool Lighting_IsPlayerInDarkness(float camX, s8 floorNum)
+{
+    if (floorNum < 0 || floorNum >= 10) return false;
+
+    // Player is always drawn at screen X = 50; screen position = worldX + camX
+    const float PLAYER_SCREEN_X = 50.0f;
+
+    float bestDist   = 1e9f;
+    bool  nearestLit = false;
+
+    for (int i = 0; i < 11; i++)
+    {
+        float screenX = i * 600.0f + 300.0f + camX;
+        float dist    = fabsf(screenX - PLAYER_SCREEN_X);
+
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            int state   = lightingMatrix[floorNum][i];
+            nearestLit  = (state == 1) || (state == 2 && flickerMem[floorNum][i].isVisible);
+        }
+    }
+
+    return !nearestLit;
+}

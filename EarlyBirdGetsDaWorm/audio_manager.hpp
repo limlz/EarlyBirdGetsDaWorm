@@ -22,6 +22,10 @@ enum SoundID {
     SFX_SCREAMING,                  // SFX_SCREAMING.wav
     SFX_VOICE_WHISPER,              // SFX_VOICE_WHISPER.wav
     SFX_WHEELCHAIR_SQUEAK,          // SFX_WHEELCHAIR_SQUEAK.wav
+    SFX_HEARTBEAT,                  // SFX_HEARTBEAT.wav
+    SFX_EXHALE,                     // SFX_EXHALE.wav
+    SFX_CRYING,                     // SFX_CRYING.wav
+    SFX_CLOCK_TICK,                 // SFX_CLOCK_TICK.wav
 
     /****************  4. UI & SYSTEM SFX   *****************/
 

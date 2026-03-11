@@ -129,3 +129,9 @@ bool CentralPool_IsSystemActive(AnomalyFiles systemFile)
 {
     return currentPatientANOMALYFILES[static_cast<int>(systemFile)];
 }
+
+// Debug only: forces a specific anomaly system on for the current patient
+void CentralPool_ForceSystemActive(AnomalyFiles systemFile)
+{
+    currentPatientANOMALYFILES[static_cast<int>(systemFile)] = true;
+}

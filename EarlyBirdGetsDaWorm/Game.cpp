@@ -317,8 +317,25 @@ void Game_Update()
 
     Player_Update(dt, isWalking);
 
-    // 5. Clamp camera so the player can't scroll past either end of the corridor.
-    // RESTORED: maxDist declaration and clamping logic!
+    // Debug: force illness + sound system active (only when debug overlay is on and carrying a patient)
+    if (Debug_IsActive() && Player_HasPatient())
+    {
+        bool illnessSwitched = false;
+        if (AEInputCheckTriggered(AEVK_1)) { Player_SetIllness(ILLNESSES::PARANOIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_2)) { Player_SetIllness(ILLNESSES::MANIA);         CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_3)) { Player_SetIllness(ILLNESSES::DEPRESSION);    CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_4)) { Player_SetIllness(ILLNESSES::DEMENTIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_5)) { Player_SetIllness(ILLNESSES::SCHIZOPHRENIA); CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_6)) { Player_SetIllness(ILLNESSES::AIW_SYNDROME);  CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_7)) { Player_SetIllness(ILLNESSES::INSOMNIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_8)) { Player_SetIllness(ILLNESSES::OCD);           CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_9)) { Player_SetIllness(ILLNESSES::SCOTOPHOBIA);   CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        // Reset sound state so audio levels restore and OnPatientPickup re-fires for the new illness
+        if (illnessSwitched) SoundAnomaly_Initialize();
+    }
+
+    // Clamp camera so the player can't scroll past either end of the corridor.
+    // Also kill velocity at each boundary so it doesn't fight against the clamp.
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
     if (camX > 0) { camX = 0;        if (camVelX > 0) camVelX = 0; }
     else if ((camX < -maxDist) && !dementia) { camX = -maxDist; if (camVelX < 0) camVelX = 0; }
@@ -336,7 +353,7 @@ void Game_Update()
 
     Lighting_Update(floorNum, camX, dementia);
     Frames_Update(dt);
-    SoundAnomaly_Update(dt);
+    SoundAnomaly_Update(dt, camX, floorNum);
 
     // ------------------------------------------------------------
     // PHASE 7: DOOR INTERACTION LOGIC (E key)
