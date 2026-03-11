@@ -38,7 +38,8 @@ struct DialogueBox {
 	const char* tutFullText;	// The entire 
 
 	f32 tutTypingSpeed;			// Number of lines currently visible
-	f32 tutVisibleCharCount;			// Number of characters currently shown
+	bool tutSoundPlayed;		// T check if sound is being played
+	f32 tutVisibleCharCount;	// Number of characters currently shown
 	s8 tutLineCount;			// Number of lines currently visible
 
 	f32 tutTextW;
@@ -50,7 +51,7 @@ struct DialogueBox {
 };
 static DialogueBox tutStartedBox, tutPagerOpenedBox, tutPagerClosedBox, tutLiftOpenedBox,
 tutLiftFloorSelectedBox, tutPatientCollectedBox, tutPatientDeliveredBox;
-static f32 tutSpacePress{ false };
+static bool tutSpacePress{ false };
 
 // Mesh
 static AEGfxVertexList* tutPromptMesh;
@@ -86,6 +87,7 @@ static f32 tutPopupTimer{ 0.0f };
 // Fade In Animation
 static f32 fadeSpeed{ 2.5f };
 static f32 promptAlpha{ 0.0f };
+static f32 textSpaceAlpha{ 0.0f };
 
 void Tutorial_Load() {
 	promptFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
@@ -114,6 +116,7 @@ void Tutorial_Initialize() {
 	// Fade In Animation
 	fadeSpeed = 2.5f;
 	promptAlpha = 0.0f;	
+	textSpaceAlpha = 0.0f;
 
 	// Tutorial
 	tutStarted = false;
@@ -126,16 +129,16 @@ void Tutorial_Initialize() {
 	tutFinished = false;
 
 	// Tutorial Dialogue Box
-	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f };
+	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f, false};
 	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
-		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f };
-	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f };
+		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f, false };
+	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
 	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f };
-	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f };
+		"This lift can travel from\nBasement 1 (0) to Level 9.\nTo go to a level,\nPress [0-9] to select a floor.", 25.0f, false };
+	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f, false };
 	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nGhosts will have an additional\nsymptom on top of illness.\nWrong delivery will end the game.", 25.0f };
-	tutPatientDeliveredBox = { 605.0f, 250.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nDeliver at least 5 patients.\nPress [G] anytime to view the guide.\nStay alert and watch out.", 25.0f };
+		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nGhosts will have an additional\nsymptom on top of illness.\nWrong delivery will end the game.", 25.0f, false };
+	tutPatientDeliveredBox = { 605.0f, 250.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nDeliver at least 5 patients.\nPress [G] anytime to view the guide.\nStay alert and watch out.", 25.0f, false };
 
 	tutSpacePress = false;
 }
@@ -166,6 +169,15 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 			}
 		}
 
+		// Sound play
+		if (!dialogue.finishedTyping && !dialogue.tutSoundPlayed) {
+			AudioManager_PlaySFX(SFX_TUTORIAL_TYPING, 0.2f, 1.0f, -1);
+			dialogue.tutSoundPlayed = true;
+		}
+		if (dialogue.finishedTyping && dialogue.tutSoundPlayed) {
+			AudioManager_StopSFX();
+		}
+
 		// Text typing effect
 		dialogue.tutVisibleCharCount += dialogue.tutTypingSpeed * dt;
 		if (dialogue.tutVisibleCharCount >= static_cast<f32>(strlen(dialogue.tutFullText))) {
@@ -180,26 +192,14 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 			if (!dialogue.finishedTyping) {
 				dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
 				dialogue.finishedTyping = true;
+				dialogue.tutSoundPlayed = true;
+				//textSpaceAlpha = 0.0f;
 			}
 		}
-	}
-}
 
-// Helper function for sound
-void PlayTypingSFX(DialogueBox& dialogue) {
-	static bool sfxPlaying = false;
-
-	if (!dialogue.finishedTyping) {
-		if (!sfxPlaying) {
-			AudioManager_PlaySFX(SFX_TUTORIAL_TYPING, 1.0f, 0.0f, -1);
-			sfxPlaying = true;
-		}
-	}
-	else {
-		if (sfxPlaying) {
-			AudioManager_StopSFX();
-			sfxPlaying = false;
-		}
+		/*if (dialogue.finishedTyping) {
+			textSpaceAlpha = 0.0f;
+		}*/
 	}
 }
 
@@ -261,12 +261,12 @@ void Tutorial_Update(f32 dt) {
 
 	// -------------------------------- TUTORIAL: YES --------------------------------
 	if (doTutorial && !tutFinished) {
+		textSpaceAlpha = 1.0f;
 		Timer_SetPaused(true);
 		switch (curTutStage) {
 			case TUTORIAL_START: {
 				tutStarted = true;
 				DialogueBox_Update(tutStartedBox, dt, 400.0f);
-				PlayTypingSFX(tutStartedBox);
 				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_Q)) {
 					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE;
 					tutStarted = false;
@@ -276,7 +276,6 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
 				tutPagerOpened = true;
 				DialogueBox_Update(tutPagerOpenedBox, dt, 350.0f);
-				PlayTypingSFX(tutPagerOpenedBox);
 				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_Q)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_OPEN;
 					tutPagerOpened = false;
@@ -286,7 +285,6 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_OPEN: {
 				tutPagerClosed = true;
 				DialogueBox_Update(tutPagerClosedBox, dt, 400.0f);
-				PlayTypingSFX(tutPagerClosedBox);
 				if (curTutStage == TUTORIAL_WAIT_FOR_LIFT_OPEN && AEInputCheckTriggered(AEVK_L)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION;
 					tutPagerClosed = false;
@@ -296,7 +294,6 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				tutLiftOpened = true;
 				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
-				PlayTypingSFX(tutLiftOpenedBox);
 				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
 					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9))) {
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
@@ -307,9 +304,8 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
 				tutLiftFloorSelected = true;
 				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
-				PlayTypingSFX(tutLiftFloorSelectedBox);
 				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
-					Player_ForceGhostPatient();
+					Player_ForceHumanPatient();
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
 					tutLiftFloorSelected = false;
 				}
@@ -318,7 +314,6 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
 				tutPatientCollected = true;
 				DialogueBox_Update(tutPatientCollectedBox, dt, 500.0f);
-				PlayTypingSFX(tutPatientCollectedBox);
 				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
 					curTutStage = TUTORIAL_END;
 					tutPatientCollected = false;
@@ -328,7 +323,6 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_END: {
 				tutPatientDelivered = true;
 				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
-				PlayTypingSFX(tutPatientDeliveredBox);
 				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_Q)) {
 					tutFinished = true;
 				}
@@ -402,7 +396,7 @@ void Tutorial_Draw() {
 		}
 		f32 infoX{ textPosition(-220.0f, -380.0f).first },
 			infoY{ textPosition(-220.0f, -380.0f).second };
-		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, tutStartedBox.dialogueFadeAlpha);
+		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, textSpaceAlpha);
 
 		if (tutStarted) {
 			//Tutorial_DialogueBox_Draw("const char* str");
