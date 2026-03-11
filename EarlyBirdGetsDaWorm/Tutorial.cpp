@@ -374,8 +374,9 @@ void DrawDialogueBoxBackground(DialogueBox& dialogue) {
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Apply black fade like the guide
-	u32 black = (0x000000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
-	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, black);
+	//u32 colorBG = (0x000000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
+	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
+	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
 }
 
 void Tutorial_Draw() {

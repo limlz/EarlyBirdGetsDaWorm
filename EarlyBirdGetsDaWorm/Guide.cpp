@@ -108,7 +108,8 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 		if (guideAlpha < 0.0f) {
 			guideAlpha = 0.0f;
 		}
-		cat1Alpha = 0.5;
+		cat2Alpha = 0.5;
+		cat3Alpha = 0.5;
 		cat1Selected = true;
 		cat2Selected = false;
 		cat3Selected = false;
@@ -124,11 +125,11 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 		cat2Hover{ IsAreaClicked(categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH, Input_GetMouseX(), Input_GetMouseY()) },
 		cat3Hover{ IsAreaClicked(categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH, Input_GetMouseX(), Input_GetMouseY()) };
 	// Fade out when button hover 
-	f32 catTargetAlpha = cat1Hover ? 0.5f : 1.0f;
+	f32 catTargetAlpha = cat1Hover ? 1.0f : 0.5f;
 	cat1Alpha += (catTargetAlpha - cat1Alpha) * catSpeed * dt;
-	catTargetAlpha = cat2Hover ? 0.5f : 1.0f;
+	catTargetAlpha = cat2Hover ? 1.0f : 0.5f;
 	cat2Alpha += (catTargetAlpha - cat2Alpha) * catSpeed * dt;
-	catTargetAlpha = cat3Hover ? 0.5f : 1.0f;
+	catTargetAlpha = cat3Hover ? 1.0f : 0.5f;
 	cat3Alpha += (catTargetAlpha - cat3Alpha) * catSpeed * dt;
 
 	cat1Alpha = AEClamp(cat1Alpha, 0.5f, 1.0f);
@@ -136,27 +137,27 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	cat3Alpha = AEClamp(cat3Alpha, 0.5f, 1.0f);
 
 	if (cat1Hover) {
-		cat1Alpha = 0.5;
+		cat1Alpha = 1.0;
 	}
 	if (cat2Hover) {
-		cat2Alpha = 0.5f;
+		cat2Alpha = 1.0;
 	}
 	if (cat3Hover) {
-		cat3Alpha = 0.5f;
+		cat3Alpha = 1.0;
 	}
 
 	if (cat1Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
-		cat1Alpha = 0.5;
+		cat1Alpha = 1.0f;
 		categoryID = 1;
 		
 	}
 	if (cat2Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
-		cat2Alpha = 0.5f;
+		cat2Alpha = 1.0f;
 		categoryID = 2;
-		cat2ScrollY = 0.0f;
+		//cat2ScrollY = 0.0f;
 	}
 	if (cat3Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
-		cat3Alpha = 0.5f;
+		cat3Alpha = 1.0f;
 		categoryID = 3;
 	}
 
@@ -194,10 +195,10 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	}
 
 	if (cat1Selected) {
-		cat1Alpha = 0.5;
+		cat1Alpha = 1.0f;
 	}
 	if (cat2Selected) {
-		cat2Alpha = 0.5f;
+		cat2Alpha = 1.0f;
 		if (cat2Page1 && AEInputCheckTriggered(AEVK_D)) {
 			cat2Page1 = false;
 			cat2Page2 = true;
@@ -208,7 +209,7 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 		}
 	}
 	if (cat3Selected) {
-		cat3Alpha = 0.5f;
+		cat3Alpha = 1.0f;
 	}
 }
 
@@ -228,9 +229,9 @@ void Guide_BossFight() {
 	guidePopTimer = 0.0f;
 
 	// Reset category alphas
-	cat1Alpha = 1.0f;
-	cat2Alpha = 1.0f;
-	cat3Alpha = 0.5f;        // selected category should be dimmed
+	cat1Alpha = 0.5f;
+	cat2Alpha = 0.5f;
+	cat3Alpha = 1.0f;        // non-selected category should be dimmed
 
 	// Reset scroll & pages if needed
 	cat2ScrollY = 0.0f;
@@ -260,8 +261,9 @@ void Guide_Draw() {
 
 	if (isGuideOpen) {
 		// Black BG
-		u32 black = (0x000000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
-		DrawSquareMesh(guideMesh, 0.0f, 0.0f, winW, winH, black);
+		//u32 colorBG = (0x000000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
+		u32 colorBG = (0x880000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
+		DrawSquareMesh(guideMesh, 0.0f, 0.0f, winW, winH, colorBG);
 
 		// Line that seperates the category and info
 		u32 white = 0xFFFFFFFF;
