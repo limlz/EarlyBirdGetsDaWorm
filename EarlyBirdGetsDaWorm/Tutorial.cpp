@@ -240,34 +240,34 @@ void Tutorial_Update(f32 dt) {
 	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
 
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
-	if (noButtonHover && AEInputCheckCurr(AEVK_LBUTTON)) {
+	if (noButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		tutPopUpShown = false;
 		promptAnswered = true;
 		doTutorial = false;
 	}
 
-	if (yesButtonHover && AEInputCheckCurr(AEVK_LBUTTON)) {
+	if (yesButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		tutPopUpShown = false;
 		promptAnswered = true;
 		doTutorial = true;
 		curTutStage = TUTORIAL_START;
 	}
 
-	// Debug: Skip to last dialogue
-	if (AEInputCheckTriggered(AEVK_T)) {
-		doTutorial = true;                  // Make sure tutorial mode is active
-		tutFinished = false;                // Tutorial not finished
-		curTutStage = TUTORIAL_END;         // Jump to last stage
+	//// Debug: Skip to last dialogue
+	//if (AEInputCheckTriggered(AEVK_T)) {
+	//	doTutorial = true;                  // Make sure tutorial mode is active
+	//	tutFinished = false;                // Tutorial not finished
+	//	curTutStage = TUTORIAL_END;         // Jump to last stage
 
-		// Force the last dialogue box to show
-		tutPatientDeliveredBox.dialogueShown = true;
-		tutPatientDeliveredBox.tutVisibleCharCount = 0.0f; // Reset typing
-		tutPatientDeliveredBox.finishedTyping = false;
-		tutPatientDeliveredBox.dialogueFadeAlpha = 0.0f;   // Start fade-in
+	//	// Force the last dialogue box to show
+	//	tutPatientDeliveredBox.dialogueShown = true;
+	//	tutPatientDeliveredBox.tutVisibleCharCount = 0.0f; // Reset typing
+	//	tutPatientDeliveredBox.finishedTyping = false;
+	//	tutPatientDeliveredBox.dialogueFadeAlpha = 0.0f;   // Start fade-in
 
-		// Also force its flag true so Tutorial_Draw() will render it
-		tutPatientDelivered = tutPatientDelivered; // optional, ensures reference
-	}
+	//	// Also force its flag true so Tutorial_Draw() will render it
+	//	tutPatientDelivered = tutPatientDelivered; // optional, ensures reference
+	//}
 
 	// -------------------------------- TUTORIAL: YES --------------------------------
 	if (doTutorial && !tutFinished) {
@@ -401,7 +401,7 @@ void Tutorial_Draw() {
 		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
-	if (!tutFinished) {
+	if (doTutorial && !tutFinished) {
 		const char* infoText{ "PRESS [SPACE] TO CONTINUE" };
 		// Change text when tutorial is ending
 		if (curTutStage == TUTORIAL_END) {
@@ -411,7 +411,7 @@ void Tutorial_Draw() {
 			infoY{ textPosition(-220.0f, -380.0f).second };
 		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, textSpaceAlpha);
 
-		if (tutStarted) {
+		if (doTutorial && tutStarted) {
 			//Tutorial_DialogueBox_Draw("const char* str");
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutStartedBox);
@@ -421,7 +421,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
-		if (tutPagerOpened) {
+		if (doTutorial && tutPagerOpened) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutPagerOpenedBox);
 			std::string visibleText(
@@ -430,7 +430,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
 		}
-		if (tutPagerClosed) {
+		if (doTutorial && tutPagerClosed) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutPagerClosedBox);
 			std::string visibleText(
@@ -439,7 +439,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY, tutPagerClosedBox.dialogueFadeAlpha);
 		}
-		if (tutLiftOpened) {
+		if (doTutorial && tutLiftOpened) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutLiftOpenedBox);
 			std::string visibleText(
@@ -448,7 +448,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.dialogueFadeAlpha);
 		}
-		if (tutLiftFloorSelected) {
+		if (doTutorial && tutLiftFloorSelected) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutLiftFloorSelectedBox);
 			std::string visibleText(
@@ -457,7 +457,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.dialogueFadeAlpha);
 		}
-		if (tutPatientCollected) {
+		if (doTutorial && tutPatientCollected) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutPatientCollectedBox);
 			std::string visibleText(
@@ -466,7 +466,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.dialogueFadeAlpha);
 		}
-		if (tutPatientDelivered || curTutStage == TUTORIAL_END) {
+		if (doTutorial && tutPatientDelivered) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutPatientDeliveredBox);
 			std::string visibleText(
