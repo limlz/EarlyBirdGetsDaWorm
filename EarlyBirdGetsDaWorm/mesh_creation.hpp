@@ -14,3 +14,5 @@ void DrawSquareMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 width, f32 height, 
 void DrawCircleMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 radius, u32 color);
 
 void DrawTextureMesh(AEGfxVertexList* mesh, AEGfxTexture* texture, f32 x, f32 y, f32 width, f32 height, f32 opacity);
+
+void DrawTextureMeshRotated(AEGfxVertexList* mesh, AEGfxTexture* texture, f32 x, f32 y, f32 width, f32 height, f32 angle, f32 opacity);
