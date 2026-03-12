@@ -596,6 +596,9 @@ void Lift_Unload() {
     }
 }
 
-/*************************************** ACCESSORS ***************************************/
+/*************************************** ACCESSORS *****s**********************************/
 bool Lift_IsActive() { return LiftActive; }
 bool Lift_IsNear() { return NearLift; }
+bool Lift_IsFloorPressed() {
+    return (SelectedSlot != -1);
+}
