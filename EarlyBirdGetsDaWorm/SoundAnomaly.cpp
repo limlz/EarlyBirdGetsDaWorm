@@ -314,7 +314,7 @@ static void UpdateDementia(float dt)
     switch (rand() % 2)
     {
     case 0: // Audio displacement — lift ding from the wrong end of the hall
-        AudioManager_PlaySFX(SFX_LIFT, t.volume, RandRange(0.85f, 1.15f), 0);
+        AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, t.volume, RandRange(0.85f, 1.15f), 0);
         gDem_NextAt = RandRange(t.minInterval, t.maxInterval);
         break;
 
