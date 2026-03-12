@@ -56,24 +56,16 @@ static AEGfxTexture* gHandprintTex = nullptr;
 // EVENT STATE
 // ============================================================
 
-enum class DoorEvent
+struct DoorState
 {
-    None,
-    HandprintSlam,
-    LightChange,
-    Knock
-};
-
-struct DoorEventState
-{
-    DoorEvent event = DoorEvent::None;
+    ANOMALYID anomaly = ANOMALYID::None;
 
     float rollCooldown = 0.0f;
     float eventCooldown = 0.0f;
     float ghostRollCooldown = 0.0f;
 };
 
-static DoorEventState gDoorState[NUM_DOORS]{};
+static DoorState gDoorState[NUM_DOORS]{};
 static bool gDoorsEnabled = true;
 
 // ============================================================
@@ -125,7 +117,7 @@ void Doors_SetEnabled(bool enabled)
     if (!enabled)
     {
         for (int i = 0; i < NUM_DOORS; ++i)
-            gDoorState[i] = DoorEventState{};
+            gDoorState[i] = DoorState{};
     }
 }
 
@@ -149,8 +141,8 @@ static void WindowWorldCenter(float doorX, float& x, float& y)
 
 static void ClearDoorEvent(int doorIdx)
 {
-    DoorEventState& s = gDoorState[doorIdx];
-    s.event = DoorEvent::None;
+    DoorState& s = gDoorState[doorIdx];
+    s.anomaly = ANOMALYID::None;
     s.eventCooldown = 0.0f;
 }
 
@@ -160,10 +152,10 @@ static void ClearDoorEvent(int doorIdx)
 
 static void TriggerKnock(int doorIdx)
 {
-    DoorEventState& s = gDoorState[doorIdx];
+    DoorState& s = gDoorState[doorIdx];
     ClearDoorEvent(doorIdx);
 
-    s.event = DoorEvent::Knock;
+    s.anomaly = ANOMALYID::Door_Knock;
     s.eventCooldown = 1.0f;
 
     AudioManager_PlaySFX(SFX_DOOR_KNOCK, 0.35f, 1.0f, 0);
@@ -171,19 +163,19 @@ static void TriggerKnock(int doorIdx)
 
 static void TriggerHandprintSlam(int doorIdx)
 {
-    DoorEventState& s = gDoorState[doorIdx];
+    DoorState& s = gDoorState[doorIdx];
     ClearDoorEvent(doorIdx);
 
-    s.event = DoorEvent::HandprintSlam;
+    s.anomaly = ANOMALYID::Door_HandSlam;
     s.eventCooldown = 0.8f;
 }
 
 static void TriggerLightChange(int doorIdx)
 {
-    DoorEventState& s = gDoorState[doorIdx];
+    DoorState& s = gDoorState[doorIdx];
     ClearDoorEvent(doorIdx);
 
-    s.event = DoorEvent::LightChange;
+    s.anomaly = ANOMALYID::Door_LightChange;
     s.eventCooldown = 0.8f;
 }
 
@@ -202,38 +194,30 @@ static void SeedRNGOnce()
 // ILLNESS -> DOOR EVENT POOLS
 // ============================================================
 
-static DoorEvent PickDoorEventFromPool(std::vector<DoorEvent> const& pool)
+static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 {
-    if (pool.empty()) return DoorEvent::None;
+    if (pool.empty()) return ANOMALYID::None;
     int r = rand() % (int)pool.size();
     return pool[r];
 }
 
-static DoorEvent GetDoorEventByIllness(ILLNESSES illness)
+static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
 {
-    // Pools to match dictionary / illness style
-    static const std::vector<DoorEvent> paranoiaPool{ DoorEvent::Knock, DoorEvent::LightChange };
-    static const std::vector<DoorEvent> maniaPool{ DoorEvent::HandprintSlam };
-    static const std::vector<DoorEvent> depressionPool{ };
-    static const std::vector<DoorEvent> dementiaPool{ DoorEvent::LightChange };
-    static const std::vector<DoorEvent> schizophreniaPool{ DoorEvent::HandprintSlam };
-    static const std::vector<DoorEvent> aiwPool{ DoorEvent::Knock };
-    static const std::vector<DoorEvent> insomniaPool{ DoorEvent::Knock };
-    static const std::vector<DoorEvent> ocdPool{ DoorEvent::HandprintSlam };
-    static const std::vector<DoorEvent> scotophobiaPool{ DoorEvent::LightChange };
+    // Pools to match dictionary exactly
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_Knock };
+    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Door_HandSlam };
+    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Door_Knock };
+    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Door_HandSlam, ANOMALYID::Door_LightChange };
+    static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Door_LightChange };
 
     switch (illness)
     {
-    case ILLNESSES::PARANOIA:      return PickDoorEventFromPool(paranoiaPool);
-    case ILLNESSES::MANIA:         return PickDoorEventFromPool(maniaPool);
-    case ILLNESSES::DEPRESSION:    return PickDoorEventFromPool(depressionPool);
-    case ILLNESSES::DEMENTIA:      return PickDoorEventFromPool(dementiaPool);
-    case ILLNESSES::SCHIZOPHRENIA: return PickDoorEventFromPool(schizophreniaPool);
-    case ILLNESSES::AIW_SYNDROME:  return PickDoorEventFromPool(aiwPool);
-    case ILLNESSES::INSOMNIA:      return PickDoorEventFromPool(insomniaPool);
-    case ILLNESSES::OCD:           return PickDoorEventFromPool(ocdPool);
-    case ILLNESSES::SCOTOPHOBIA:   return PickDoorEventFromPool(scotophobiaPool);
-    default:                       return DoorEvent::None;
+    case ILLNESSES::PARANOIA:      return PickFromPool(paranoiaPool);
+    case ILLNESSES::SCHIZOPHRENIA: return PickFromPool(schizophreniaPool);
+    case ILLNESSES::INSOMNIA:      return PickFromPool(insomniaPool);
+    case ILLNESSES::OCD:           return PickFromPool(ocdPool);
+    case ILLNESSES::SCOTOPHOBIA:   return PickFromPool(scotophobiaPool);
+    default:             return ANOMALYID::None;
     }
 }
 
@@ -267,7 +251,7 @@ void Doors_Initialize()
     gQuadMesh = CreateSquareMesh(0xFFFFFFFF);
 
     for (int i = 0; i < NUM_DOORS; ++i)
-        gDoorState[i] = DoorEventState{};
+        gDoorState[i] = DoorState{};
 }
 
 void Doors_Unload()
@@ -319,15 +303,15 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     // Tick cooldowns / clear finished events
     for (int d = 0; d < NUM_DOORS; ++d)
     {
-        DoorEventState& s = gDoorState[d];
+        DoorState& s = gDoorState[d];
 
-        if (s.rollCooldown > 0.0f)       s.rollCooldown -= dt;
-        if (s.eventCooldown > 0.0f)      s.eventCooldown -= dt;
+        if (s.rollCooldown > 0.0f)      s.rollCooldown -= dt;
+        if (s.eventCooldown > 0.0f)     s.eventCooldown -= dt;
         if (s.ghostRollCooldown > 0.0f) s.ghostRollCooldown -= dt;
 
-        if (s.event != DoorEvent::None && s.eventCooldown <= 0.0f)
+        if (s.anomaly != ANOMALYID::None && s.eventCooldown <= 0.0f)
         {
-            s.event = DoorEvent::None;
+            s.anomaly = ANOMALYID::None;
             s.eventCooldown = 0.0f;
         }
     }
@@ -335,7 +319,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     if (doorNearPlayer < 0 || doorNearPlayer >= NUM_DOORS)
         return;
 
-    DoorEventState& s = gDoorState[doorNearPlayer];
+    DoorState& s = gDoorState[doorNearPlayer];
 
     if (s.eventCooldown > 0.0f || s.rollCooldown > 0.0f)
         return;
@@ -346,13 +330,13 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
         return;
 
     const ILLNESSES eff = GetEffectiveIllnessForDoorEvents();
-    DoorEvent chosen = GetDoorEventByIllness(eff);
+    ANOMALYID chosen = GetDoorEventByIllness(eff);
 
     switch (chosen)
     {
-    case DoorEvent::HandprintSlam: TriggerHandprintSlam(doorNearPlayer); break;
-    case DoorEvent::Knock:         TriggerKnock(doorNearPlayer); break;
-    case DoorEvent::LightChange:   TriggerLightChange(doorNearPlayer); break;
+    case ANOMALYID::Door_HandSlam:   TriggerHandprintSlam(doorNearPlayer); break;
+    case ANOMALYID::Door_Knock:      TriggerKnock(doorNearPlayer); break;
+    case ANOMALYID::Door_LightChange:TriggerLightChange(doorNearPlayer); break;
     default: break;
     }
 
@@ -365,14 +349,14 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
 
         if ((rand() % 100) < GHOST_EXTRA_CHANCE_PERCENT)
         {
-            DoorEvent extraEvent = GetDoorEventByIllness(eff);
+            ANOMALYID extraEvent = GetDoorEventByIllness(eff);
 
-            if (extraEvent == s.event)
+            if (extraEvent == s.anomaly)
             {
                 for (int tries = 0; tries < 4; ++tries)
                 {
-                    DoorEvent re = GetDoorEventByIllness(eff);
-                    if (re != s.event && re != DoorEvent::None)
+                    ANOMALYID re = GetDoorEventByIllness(eff);
+                    if (re != s.anomaly && re != ANOMALYID::None)
                     {
                         extraEvent = re;
                         break;
@@ -384,9 +368,9 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
             {
                 switch (extraEvent)
                 {
-                case DoorEvent::HandprintSlam: TriggerHandprintSlam(doorNearPlayer); break;
-                case DoorEvent::Knock:         TriggerKnock(doorNearPlayer); break;
-                case DoorEvent::LightChange:   TriggerLightChange(doorNearPlayer); break;
+                case ANOMALYID::Door_HandSlam:    TriggerHandprintSlam(doorNearPlayer); break;
+                case ANOMALYID::Door_Knock:       TriggerKnock(doorNearPlayer); break;
+                case ANOMALYID::Door_LightChange: TriggerLightChange(doorNearPlayer); break;
                 default: break;
                 }
             }
@@ -412,7 +396,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         if (doorX > SCREEN_WIDTH_HALF + DOOR_W) continue;
 
         int doorIdx = i % NUM_DOORS;
-        DoorEventState& s = gDoorState[doorIdx];
+        DoorState& s = gDoorState[doorIdx];
 
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
@@ -435,7 +419,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 
         AEGfxTexture* windowTex = gWindow0Tex;
 
-        if (s.event == DoorEvent::LightChange)
+        if (s.anomaly == ANOMALYID::Door_LightChange)
             windowTex = gWindow1Tex;
 
         if (windowTex)
@@ -444,7 +428,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         // =====================================================
         // OVERLAY ANOMALY
         // =====================================================
-        if (s.event == DoorEvent::HandprintSlam && gHandprintTex)
+        if (s.anomaly == ANOMALYID::Door_HandSlam && gHandprintTex)
             DrawTextureMesh(gQuadMesh, gHandprintTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
 
 		// Boarded doors get drawn on top of everything else to fully obscure the window and any anomalies behind it
