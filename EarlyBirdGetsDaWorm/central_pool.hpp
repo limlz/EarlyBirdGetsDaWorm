@@ -25,7 +25,7 @@ enum class ANOMALYID : int
     Wall_Mania,
     Wall_Depression,
     Wall_Dementia,
-    Wall_Schizophernia,
+    Wall_Schizophrenia,
     Wall_AIW,
     Wall_Insomnia,
     Wall_OCD,
@@ -51,6 +51,11 @@ enum class ANOMALYID : int
     Frame_Glitch,
     Frame_Shift,
     Frame_Distort,
+
+    // ---- LIFT ----
+    Lift_Dementia,
+    Lift_OCD,
+    Lift_AIW,
 
     None,
 };

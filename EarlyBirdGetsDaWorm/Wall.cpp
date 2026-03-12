@@ -103,7 +103,7 @@ static ANOMALYID GetWallPickByIllness(ILLNESSES illness)
     static const std::vector<ANOMALYID> depressionPool{ ANOMALYID::Wall_Depression };
     static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Wall_Dementia };
 
-    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_Schizophernia };
+    static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Wall_Schizophrenia };
     static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Wall_AIW };
     static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Wall_Insomnia };
     static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Wall_OCD };
@@ -308,7 +308,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
         //DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
             DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
-    case ANOMALYID::Wall_Schizophernia:
+    case ANOMALYID::Wall_Schizophrenia:
         //DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
             DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;

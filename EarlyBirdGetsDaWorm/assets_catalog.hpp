@@ -25,6 +25,20 @@ namespace Assets
         constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
         constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
+        
+        constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
+        constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
+        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LightOCD.png";
+
+        constexpr const char* WallParanoia = "Assets/Equipment/Journal/WallMania.png";
+        constexpr const char* WallMania = "Assets/Equipment/Journal/WallMania.png";
+        constexpr const char* WallDepression = "Assets/Equipment/Journal/WallDepression.png";
+        constexpr const char* WallDementia = "Assets/Equipment/Journal/WallDementia.png";
+        constexpr const char* WallSchizophrenia = "Assets/Equipment/Journal/WallSchizophrenia.png";
+        constexpr const char* WallAIW = "Assets/Equipment/Journal/WallAIW.png";
+        constexpr const char* WallOCD = "Assets/Equipment/Journal/WallOCD.png";
+        constexpr const char* WallInsomnia = "Assets/Equipment/Journal/WallInsomnia.png";
+        constexpr const char* WallScotophobia = "Assets/Equipment/Journal/WallScotophobia.png";
     }
     namespace Boss_Fight
     {
