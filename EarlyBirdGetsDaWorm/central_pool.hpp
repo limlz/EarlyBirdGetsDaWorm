@@ -88,3 +88,6 @@ void CentralPool_ClearPatientAnomalies();
 // The function other files will call to check their status
 bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
 
+// Debug only: forces a specific anomaly system on for the current patient
+void CentralPool_ForceSystemActive(AnomalyFiles systemFile);
+

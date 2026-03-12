@@ -266,3 +266,4 @@ void        Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloo
             }
 float       Player_GetWidth() { return PLAYER_WIDTH; }
 float       Player_GetHeight() { return PLAYER_HEIGHT; }
+bool        Player_IsWalking() { return WalkingSoundPlaying; }

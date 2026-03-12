@@ -13,7 +13,7 @@ void Startup_Load()
 	// Load resources for the main menu
 	AudioManager_Init();
 	AudioManager_LoadAll();
-	digipenLogo = LoadTextureChecked("Assets/digipen_white.png");
+	digipenLogo = LoadTextureChecked(Assets::Splash::DigipenLogo);
 	std::cout << "Startup: Load\n";
 }
 

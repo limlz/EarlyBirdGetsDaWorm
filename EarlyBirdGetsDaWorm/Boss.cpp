@@ -1,6 +1,4 @@
 #include "pch.hpp"
-#include "Boss.hpp"
-#include <cmath> // Required for sinf(), cosf(), sqrtf(), atan2f(), fabsf()
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex = nullptr;
@@ -101,7 +99,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
                 boss.bullets[i].active = true;
-                boss.bullets[i].hp = 10;
+                boss.bullets[i].hp = 15;
                 boss.bullets[i].x = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
@@ -129,7 +127,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         for (int i = 0; i < MAX_BOSS_BULLETS && bulletsFired < 5; i++) {
             if (!boss.bullets[i].active) {
                 boss.bullets[i].active = true;
-                boss.bullets[i].hp = 5;
+                boss.bullets[i].hp = 10;
                 boss.bullets[i].x = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
@@ -232,6 +230,7 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     //AEGfxSetTransparency(1.0f);
     
 
+    // Get the current frame texture
     // Get the current frame texture
     AEGfxTexture* currentTex = bossBulletFrames[currentBulletFrame];
 

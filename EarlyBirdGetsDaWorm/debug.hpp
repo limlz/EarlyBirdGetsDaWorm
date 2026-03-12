@@ -15,3 +15,4 @@ void Debug_Load();
 void Debug_Update();
 void Debug_Draw(const DebugInfo& info);
 void Debug_Unload();
+bool Debug_IsActive();

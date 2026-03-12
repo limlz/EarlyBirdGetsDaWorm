@@ -20,9 +20,13 @@ static float g_TotalTime = 0.0f;
 //  GHOST HELPERS
 // ============================================================
 
-// GHOST borrows another illness's behaviour at runtime; resolve that here before any logic reads the illness
+// GHOST borrows another illness's behaviour at runtime; resolve that here before any logic reads the illness.
+// Returns NONE when the lighting anomaly system is not active so all downstream effects fall back to baseline.
 static ILLNESSES GetEffectiveIllness()
 {
+    if (!CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive))
+        return ILLNESSES::NONE;
+
     ILLNESSES current = Player_GetTrueDiagnosis();
     if (current == ILLNESSES::GHOST)
         return Player_GetAnomalyIllness();
@@ -30,9 +34,13 @@ static ILLNESSES GetEffectiveIllness()
     return current;
 }
 
-// GHOST gets an extra anomaly layer on top of its mimic illness; this drives the bonus instability checks below
+// GHOST gets an extra anomaly layer on top of its mimic illness; this drives the bonus instability checks below.
+// Returns 0 when the lighting anomaly system is not active.
 static int GetGhostExtraCount()
 {
+    if (!CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive))
+        return 0;
+
     if (Player_GetTrueDiagnosis() == ILLNESSES::GHOST)
         return Player_GetGhostExtraAnomalies();
     return 0;
@@ -438,4 +446,30 @@ float Lighting_GetOverlayAlpha()
     int index = static_cast<int>(GetEffectiveIllness());
     if (index < 0 || index > 10) return 0.50f;
     return Config::overlayAlphaTable[index];
+}
+
+bool Lighting_IsPlayerInDarkness(float camX, s8 floorNum)
+{
+    if (floorNum < 0 || floorNum >= 10) return false;
+
+    // Player is always drawn at screen X = 50; screen position = worldX + camX
+    const float PLAYER_SCREEN_X = 50.0f;
+
+    float bestDist   = 1e9f;
+    bool  nearestLit = false;
+
+    for (int i = 0; i < 11; i++)
+    {
+        float screenX = i * 600.0f + 300.0f + camX;
+        float dist    = fabsf(screenX - PLAYER_SCREEN_X);
+
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            int state   = lightingMatrix[floorNum][i];
+            nearestLit  = (state == 1) || (state == 2 && flickerMem[floorNum][i].isVisible);
+        }
+    }
+
+    return !nearestLit;
 }
