@@ -66,7 +66,7 @@ static bool        gWallPicked[MAX_FLOORS]{};
 static ILLNESSES   gLastIllness[MAX_FLOORS]{};
 static bool        gWallEnabled = true;
 
-// ANimation
+// Animation
 static s32 currentImage;
 static f32 imageDuration;
 static f32 wallTimer;
@@ -176,34 +176,11 @@ void Wall_Load()
     scotoTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_2);
     scotoTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_3);
     scotoTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_4);
-
-    /*crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
-    crack2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack2);
-    crack3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack3);
-    crack4Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack4);
-
-    drawing1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing1);
-    drawing2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing2);
-    drawing3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
-
-    leftHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
-    rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);*/
 }
 
 void Wall_Initialize()
 {
     wallMesh = CreateSquareMesh(0xFFFFFFFF);
-    /*crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
-    crack2Mesh = CreateSquareMesh(0xFFFFFFFF);
-    crack3Mesh = CreateSquareMesh(0xFFFFFFFF);
-    crack4Mesh = CreateSquareMesh(0xFFFFFFFF);
-
-    drawing1Mesh = CreateSquareMesh(0xFFFFFFFF);
-    drawing2Mesh = CreateSquareMesh(0xFFFFFFFF);
-    drawing3Mesh = CreateSquareMesh(0xFFFFFFFF);
-
-    leftHandMesh = CreateSquareMesh(0xFFFFFFFF);
-    rightHandMesh = CreateSquareMesh(0xFFFFFFFF);*/
 
     srand((unsigned)std::time(nullptr));
 
@@ -230,8 +207,9 @@ void Wall_Update(f32 dt) {
         wallTimer = 0.0f;
         currentImage++;
 
-        if (currentImage >= MAX_IMG)
+        if (currentImage >= MAX_IMG) {
             currentImage = 0; // loop animation
+        }
     }
 
 }
@@ -264,7 +242,9 @@ void Wall_Draw(f32 camX, s8 floorNum)
     }
 
     if (!gWallEnabled) return;
-    if (!Player_HasPatient()) return;
+    if (!Player_HasPatient()) {
+        return;
+    }
 
     ILLNESSES TrueDiagnosis = Player_GetTrueDiagnosis();
 
@@ -288,50 +268,41 @@ void Wall_Draw(f32 camX, s8 floorNum)
         //}
     }
 
+
     switch (gWallPick[idx])
     {
-    case ANOMALYID::Wall_Paranoia:
-        //DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
-        /*for (int i{ ; i < 2; ++i) {
-            DrawTextureMesh(wallMesh, paranoiaTexture[i], wallX, wallY, 200.0f, 179.0f, 1.0f);
-                }*/
-        break;
-    case ANOMALYID::Wall_Mania:
-        //DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
-            DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_Depression:
-        //DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
-            DrawTextureMesh(wallMesh, depressionTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_Dementia:
-        //DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
-            DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_Schizophernia:
-        //DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
-            DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_AIW:
-        //DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
-            DrawTextureMesh(wallMesh, aiwTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_Insomnia:
-        //DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
-            DrawTextureMesh(wallMesh, insomniaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_OCD:
-        //DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
-            DrawTextureMesh(wallMesh, ocdTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
-    case ANOMALYID::Wall_Scotophobia:
-        //DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
-            DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
-        break;
+        case ANOMALYID::Wall_Paranoia:
+            DrawTextureMesh(wallMesh, paranoiaTexture[0], wallX, wallY, 447.0f, 500.0f, 1.0f);
+            DrawTextureMesh(wallMesh, paranoiaTexture[1], wallX, wallY, 447.0f, 500.0f, 1.0f);
+            break;
+        case ANOMALYID::Wall_Mania:
+                DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 250.0f, 246.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_Depression:
+                DrawTextureMesh(wallMesh, depressionTexture[currentImage], wallX, wallY, 500.0f, 465.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_Dementia:
+                DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_Schizophernia:
+                DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 600.0f, 320.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_AIW:
+                DrawTextureMesh(wallMesh, aiwTexture[currentImage], wallX, wallY, 600.0f, 455.0f, 1.0f); // sizing done
+            break;
+        case ANOMALYID::Wall_Insomnia:
+                DrawTextureMesh(wallMesh, insomniaTexture[currentImage], wallX, wallY, 600.0f, 246.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_OCD:
+                DrawTextureMesh(wallMesh, ocdTexture[currentImage], wallX, wallY, 500.0f, 418.0f, 1.0f);// sizing done
+            break;
+        case ANOMALYID::Wall_Scotophobia:
+                DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 500.0f, 439.0f, 1.0f);// sizing done
+            break;
 
-    case ANOMALYID::None:
-    default:
-        break;
+        case ANOMALYID::None:
+        default:
+            break;
     }
 }
 
@@ -339,31 +310,7 @@ void Wall_Unload()
 {
     FreeMeshSafe(wallMesh);
 
-    /*FreeMeshSafe(crack1Mesh);
-    FreeMeshSafe(crack2Mesh);
-    FreeMeshSafe(crack3Mesh);
-    FreeMeshSafe(crack4Mesh);
-
-    FreeMeshSafe(drawing1Mesh);
-    FreeMeshSafe(drawing2Mesh);
-    FreeMeshSafe(drawing3Mesh);
-
-    FreeMeshSafe(leftHandMesh);
-    FreeMeshSafe(rightHandMesh);*/
-
     UnloadTextureSafe(wallBgTexture);
-
-    /*UnloadTextureSafe(crack1Texture);
-    UnloadTextureSafe(crack2Texture);
-    UnloadTextureSafe(crack3Texture);
-    UnloadTextureSafe(crack4Texture);
-
-    UnloadTextureSafe(drawing1Texture);
-    UnloadTextureSafe(drawing2Texture);
-    UnloadTextureSafe(drawing3Texture);
-
-    UnloadTextureSafe(leftHandTexture);
-    UnloadTextureSafe(rightHandTexture);*/
 
     for (int i{}; i < 2; ++i) {
         UnloadTextureSafe(paranoiaTexture[i]);
