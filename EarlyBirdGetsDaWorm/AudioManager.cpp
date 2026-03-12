@@ -22,7 +22,6 @@ void AudioManager_LoadAll() {
 
     // Environmental
     soundBank[SFX_DOOR_KNOCKING] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
-    soundBank[SFX_LIFT] = AEAudioLoadSound("Assets/Audio/SFX_LIFT.wav");
     soundBank[SFX_LIGHT_FLICKER] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
     soundBank[SFX_PLANT_THUD] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
     soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
@@ -46,6 +45,8 @@ void AudioManager_LoadAll() {
     soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
 	soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
     soundBank[SFX_FAH] = AEAudioLoadSound("Assets/Audio/SFX_FAH.wav");
+	soundBank[SFX_ELEVATOR_PRESS] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_PRESS.wav");
+    soundBank[SFX_ELEVATOR_CLOSE] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_CLOSE.wav");
 }
 
 void AudioManager_Unload() {

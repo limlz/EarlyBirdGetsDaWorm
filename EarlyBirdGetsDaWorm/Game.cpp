@@ -284,19 +284,32 @@ void Game_Update()
     // ------------------------------------------------------------
     // Smooth camera: build a target velocity from input, then lerp camVelX toward it so
     // the corridor accelerates up to full speed and decelerates to a stop instead of snapping.
+
     const float CAM_ACCEL = 12.0f; // Higher = snappier; lower = more floaty
     float targetVelX = 0.0f;
-    if (AEInputCheckCurr(AEVK_A)) { targetVelX =  Config::playerSpeed; left_right = false; }
-    if (AEInputCheckCurr(AEVK_D)) { targetVelX = -Config::playerSpeed; left_right = true;  }
+
+    bool moveRight = false;
+    bool moveLeft = false;
+
+    // Only allow keyboard input if the Lift UI is closed
+    if (!Lift_IsActive())
+    {
+        moveLeft = AEInputCheckCurr(AEVK_A);
+        moveRight = AEInputCheckCurr(AEVK_D);
+
+        if (moveLeft) { targetVelX = Config::playerSpeed; left_right = false; }
+        if (moveRight) { targetVelX = -Config::playerSpeed; left_right = true; }
+
+        if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
+        if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
+        if (AEInputCheckTriggered(AEVK_K))   Timer_DebugSetTime(5 * 60 + 58);
+    }
+
+    // Apply velocity
     camVelX += (targetVelX - camVelX) * CAM_ACCEL * dt;
     camX += camVelX * dt;
 
-    if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
-    if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
-    if (AEInputCheckTriggered(AEVK_K))   Timer_DebugSetTime(5 * 60 + 58);
-
-    bool moveRight = AEInputCheckCurr(AEVK_D);
-    bool moveLeft = AEInputCheckCurr(AEVK_A);
+    // Determine walking state for Audio & Animation
     bool isWalking = moveRight || moveLeft;
 
     if (moveRight)      Player_SetFacing(1);
@@ -304,11 +317,12 @@ void Game_Update()
 
     Player_Update(dt, isWalking);
 
-    // Clamp camera so the player can't scroll past either end of the corridor.
-    // Also kill velocity at each boundary so it doesn't fight against the clamp.
+    // 5. Clamp camera so the player can't scroll past either end of the corridor.
+    // RESTORED: maxDist declaration and clamping logic!
     float maxDist = (NUM_DOORS + 1) * DIST_BETWEEN_DOORS;
-    if (camX > 0)                            { camX = 0;        if (camVelX > 0) camVelX = 0; }
+    if (camX > 0) { camX = 0;        if (camVelX > 0) camVelX = 0; }
     else if ((camX < -maxDist) && !dementia) { camX = -maxDist; if (camVelX < 0) camVelX = 0; }
+
 
     // ------------------------------------------------------------
     // PHASE 6: WORLD UPDATES

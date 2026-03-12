@@ -6,13 +6,18 @@ const f32 FRAME_SPACING = DIST_BETWEEN_DOORS * 2.0f;
 const f32 OFFSET = 50.0f;
 
 const int FRAMES_PERLVL = 6;
-const int FRAME_STATES = 5;
+const int TOTAL_DESIGNS = 5;
+const int MAX_FRAME_STATES = 5;
 
-// --- Texture Arrays ---
-static AEGfxTexture* framedesign_1[FRAME_STATES]{};
-static AEGfxTexture* framedesign_2[FRAME_STATES]{};
-static AEGfxTexture* framedesign_3[FRAME_STATES]{};
-
+static int DesignStateCounts[TOTAL_DESIGNS] = { 5, 5, 5, 3, 3 };
+static AEGfxTexture* AllFrameDesigns[TOTAL_DESIGNS][MAX_FRAME_STATES]{};
+enum PosterType {
+    POSTER_EVERYDAY = 0,
+    POSTER_HOPE,
+    POSTER_RECOVERY,
+    POSTER_SIGNS,
+    POSTER_COLOR
+};
 
 static AEGfxVertexList* frameMesh = nullptr;
 static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL]{};
@@ -38,51 +43,77 @@ static int Frames_GetExtraAnomalyCount() {
     return 0;
 }
 
-// Selects a random corrupted texture state (1-4) based on the patient's illness.
-static int GetRandomStateByIllness(ILLNESSES illness, int extraAnomalyCount) {
-    // These vectors define which scary textures fit the "theme" of the illness.
-    static const std::vector<int> paranoiaPool{ 3, 4 };
-    static const std::vector<int> maniaPool{ 2, 3 };
-    static const std::vector<int> depressionPool{ 2, 3, 4 };
-    static const std::vector<int> dementiaPool{ 1, 2 };
-    static const std::vector<int> schizophreniaPool{ 1, 3 };
-    static const std::vector<int> aiwPool{ 2, 4 };
-    static const std::vector<int> insomniaPool{ 3, 1 };
-    static const std::vector<int> ocdPool{ 4, 2 };
-    static const std::vector<int> scotophobiaPool{ 1, 4 };
-
-    // Lambda helper function to pick a random state from the provided pool
-    auto pick = [&](std::vector<int> const& pool) -> int {
-        if (pool.empty()) return 0;
-
-        // Pick a random index from the pool
-        int chosen = pool[rand() % (int)pool.size()];
-
-        // GHOST MODIFIER: If the patient is a ghost, there is a 25% chance 
-        // to override the choice with the absolute scariest frame state (4).
-        if (extraAnomalyCount >= 1 && (rand() % 100) < 25) {
-            chosen = 4;
-        }
-        return chosen;
-        };
-
-    // Route the current illness to its specific pool
+// Tells the game exactly which state a poster should switch to.
+// Returns 0 if the poster should NOT glitch for this illness.
+static int GetSpecificGlitchState(ILLNESSES illness, int designID) {
     switch (illness) {
-    case ILLNESSES::PARANOIA:       return pick(paranoiaPool);
-    case ILLNESSES::MANIA:          return pick(maniaPool);
-    case ILLNESSES::DEPRESSION:     return pick(depressionPool);
-    case ILLNESSES::DEMENTIA:       return pick(dementiaPool);
-    case ILLNESSES::SCHIZOPHRENIA:  return pick(schizophreniaPool);
-    case ILLNESSES::AIW_SYNDROME:   return pick(aiwPool);
-    case ILLNESSES::INSOMNIA:       return pick(insomniaPool);
-    case ILLNESSES::OCD:            return pick(ocdPool);
-    case ILLNESSES::SCOTOPHOBIA:    return pick(scotophobiaPool);
-    default:                        return 0; // Fallback to normal
+
+    case ILLNESSES::PARANOIA:
+        if (designID == POSTER_EVERYDAY) return 2; // EverydayEye
+        if (designID == POSTER_HOPE)     return 4; // HopeEye
+        if (designID == POSTER_SIGNS)    return 1; // SignsBlood
+        break;
+
+    case ILLNESSES::MANIA:
+        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt
+        if (designID == POSTER_COLOR)    return 2; // ColorBloody
+        if (designID == POSTER_RECOVERY) return 2; // RecoveryScary
+        break;
+
+    case ILLNESSES::DEPRESSION:
+        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative
+        if (designID == POSTER_HOPE)     return 2; // HopeTear
+        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking
+        break;
+
+    case ILLNESSES::DEMENTIA:
+        if (designID == POSTER_HOPE)     return 1; // HopePlain
+        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain
+        if (designID == POSTER_RECOVERY) return 4; // RecoveryMemLoss
+        if (designID == POSTER_COLOR)    return 1; // ColorFaces
+        break;
+
+    case ILLNESSES::SCHIZOPHRENIA:
+        if (designID == POSTER_SIGNS)    return 2; // SignsBeware
+        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative
+        if (designID == POSTER_HOPE)     return 4; // HopeEye
+        break;
+
+    case ILLNESSES::AIW_SYNDROME:
+        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking
+        if (designID == POSTER_HOPE)     return 2; // HopeTear
+        break;
+
+    case ILLNESSES::INSOMNIA:
+        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain
+        if (designID == POSTER_HOPE)     return 3; // HopeFear
+        if (designID == POSTER_COLOR)    return 1; // ColorFaces
+        if (designID == POSTER_SIGNS)    return 1; // SignsBlood
+        break;
+
+    case ILLNESSES::OCD:
+        if (designID == POSTER_RECOVERY) return 1; // RecoveryPlain
+        if (designID == POSTER_HOPE)     return 1; // HopePlain
+        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt
+
+        break;
+
+    case ILLNESSES::SCOTOPHOBIA:
+        if (designID == POSTER_SIGNS)    return 2; // SignsBeware
+        if (designID == POSTER_HOPE)     return 3; // HopeFear
+        if (designID == POSTER_COLOR)    return 2; // ColorBloody
+        break;
     }
+    return 0;
 }
+
+
 
 // Called by the Lighting system. If a nearby light turns off, the frame jumpscares.
 void Frames_SyncToLight(s8 floor, int lightIndex, bool isLightOn) {
+
+    if (!CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)) return;
+
     // Calculate the world X position of the light bulb
     float lightX = lightIndex * 600.0f + 300.0f;
 
@@ -93,7 +124,7 @@ void Frames_SyncToLight(s8 floor, int lightIndex, bool isLightOn) {
         if (fabs(frame.posX - lightX) < 350.0f) {
             if (!isLightOn) {
                 // LIGHTS OUT: Pick a random scary texture, pop it upwards, and jitter its X position
-                frame.currentState = (rand() % (FRAME_STATES - 1)) + 1;
+                frame.currentState = (rand() % (MAX_FRAME_STATES - 1)) + 1;
                 frame.posY = 30.0f;
                 frame.posX += (rand() % 20) - 10.0f;
             }
@@ -151,12 +182,15 @@ static float GetFrameTimerByIllness(ILLNESSES illness, bool isGlitchingPhase, in
     return t;
 }
 
-// Helper function to force all frames back to their perfectly normal state and original positions
 static void Frames_ResetAll() {
     for (int level = 0; level < NUM_OF_FLOOR; ++level) {
         for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
             FrameAnomaly& currentFrame = levelMap[level][frame];
-            currentFrame.currentState = 0;
+            currentFrame.currentState = 0; // Everything is normal
+
+            // Cycle through all 5 normal posters sequentially (0, 1, 2, 3, 4)
+            currentFrame.designID = (frame + level) % TOTAL_DESIGNS;
+
             currentFrame.posX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
             currentFrame.posY = 0.0f;
             currentFrame.width = FRAME_WIDTH;
@@ -167,15 +201,67 @@ static void Frames_ResetAll() {
 
 /***************************************** LOAD ******************************************/
 void Frames_Load() {
-    Frames_Unload(); // Clean up old textures before loading new ones to prevent memory leaks
+    Frames_Unload(); // Clean up old textures before loading new ones
 
-    // Loop through the 5 states and load the corresponding PNG file for each design
-    for (int i = 0; i < FRAME_STATES; i++) {
-        std::string suffix = "_ (" + std::to_string(i) + ").png";
+    // --- 1. THE PATH MAP ---
+    const char* framePaths[TOTAL_DESIGNS][MAX_FRAME_STATES] = {
 
-        framedesign_1[i] = LoadTextureChecked(("Assets/Frame_Anomaly/Frame_1" + suffix).c_str());
-        framedesign_2[i] = LoadTextureChecked(("Assets/Frame_Anomaly/Frame_2" + suffix).c_str());
-        framedesign_3[i] = LoadTextureChecked(("Assets/Frame_Anomaly/Frame_3" + suffix).c_str());
+        // POSTER_EVERYDAY (5 states)
+        {
+            Assets::Frame_Anomaly::EverydayNormal,
+            Assets::Frame_Anomaly::EverydayPlain,
+            Assets::Frame_Anomaly::EverydayEye,
+            Assets::Frame_Anomaly::EverydayHaunt,
+            Assets::Frame_Anomaly::EverydayNegative
+        },
+
+        // POSTER_HOPE (5 states)
+        {
+            Assets::Frame_Anomaly::HopeNormal,
+            Assets::Frame_Anomaly::HopePlain,
+            Assets::Frame_Anomaly::HopeTear,
+            Assets::Frame_Anomaly::HopeFear,
+            Assets::Frame_Anomaly::HopeEye
+        },
+
+        // POSTER_RECOVERY (5 states)
+        {
+            Assets::Frame_Anomaly::RecoveryNormal,
+            Assets::Frame_Anomaly::RecoveryPlain,
+            Assets::Frame_Anomaly::RecoveryScary,
+            Assets::Frame_Anomaly::RecoverySinking,
+            Assets::Frame_Anomaly::RecoveryMemLoss
+        },
+
+        // POSTER_SIGNS (3 states)
+        {
+            Assets::Frame_Anomaly::SignsNormal,
+            Assets::Frame_Anomaly::SignsBlood,
+            Assets::Frame_Anomaly::SignsBeware,
+            nullptr,
+            nullptr
+        },
+
+        // POSTER_COLOR (3 states)
+        {
+            Assets::Frame_Anomaly::ColorNormal,
+            Assets::Frame_Anomaly::ColorFaces,
+            Assets::Frame_Anomaly::ColorBloody,
+            nullptr,
+            nullptr
+        }
+    };
+
+    // --- 2. LOAD THE TEXTURES ---
+    for (int design = 0; design < TOTAL_DESIGNS; design++) {
+        // Only loop up to the specific number of states this design actually has
+        for (int state = 0; state < DesignStateCounts[design]; state++) {
+
+            // Safety check: Only load if the path isn't a nullptr
+            if (framePaths[design][state] != nullptr) {
+                AllFrameDesigns[design][state] = LoadTextureChecked(framePaths[design][state]);
+            }
+        }
     }
 }
 
@@ -205,8 +291,8 @@ void Frames_Initialize() {
 
 /***************************************** UPDATE ****************************************/
 void Frames_Update(float dt) {
-    // Optimization & Safety: If there is no patient, the environment is safe. Reset and exit.
-    if (!Player_HasPatient()) {
+    
+    if (!Player_HasPatient() || !CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)) {
         Frames_ResetAll();
         return;
     }
@@ -240,15 +326,24 @@ void Frames_Update(float dt) {
                 FrameAnomaly& f = levelMap[level][frame];
 
                 // If this frame hasn't picked a scary texture yet, assign it one
-                if (f.currentState == 0) f.currentState = GetRandomStateByIllness(effIllness, extraAnoms);
+                if (f.currentState == 0) {
+                    // Ask the dictionary exactly which state this poster should become
+                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
 
-                // MANIA OVERRIDE: Ignore the assigned texture and rapidly cycle through all textures
-                if (effIllness == ILLNESSES::MANIA) {
-                    float speed = 20.0f; // Cycle 20 times per second
-                    // Use fmodf to loop the animation time, ensuring it picks states 1 through 4
-                    f.currentState = (int)(fmodf(animTime * speed, (float)(FRAME_STATES - 1))) + 1;
+                    // Ghost override: 25% chance to force it to its absolute scariest state
+                    if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < 25) {
+                        f.currentState = DesignStateCounts[f.designID] - 1;
+                    }
                 }
 
+                // MANIA OVERRIDE: Ignore the assigned texture and rapidly cycle through all valid textures
+                if (effIllness == ILLNESSES::MANIA && f.currentState > 0) {
+                    float speed = 20.0f; // Cycle 20 times per second
+
+                    // SAFE CYCLING: Only cycle up to the max states THIS specific poster has!
+                    int maxScaryStates = DesignStateCounts[f.designID] - 1;
+                    f.currentState = (int)(fmodf(animTime * speed, (float)maxScaryStates)) + 1;
+                }
                 // Calculate where the frame *should* be
                 float baseX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
                 float baseY = 0.0f;
@@ -329,29 +424,21 @@ void Frames_Update(float dt) {
 
 /***************************************** DRAW ******************************************/
 void Frames_Draw(int currentLevel, f32 camX) {
-    // Safety checks to prevent array out-of-bounds crashes
     if (currentLevel < 0 || currentLevel >= NUM_OF_FLOOR) return;
     if (frameMesh == nullptr) return;
 
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
         FrameAnomaly& currentFrame = levelMap[currentLevel][i];
-        AEGfxTexture* Tex = nullptr;
 
-        // Select the correct texture array based on the frame's assigned design ID
-        switch (currentFrame.designID) {
-        case 1:  Tex = framedesign_1[currentFrame.currentState]; break;
-        case 2:  Tex = framedesign_2[currentFrame.currentState]; break;
-        case 3:  Tex = framedesign_3[currentFrame.currentState]; break;
-        default: Tex = framedesign_1[0]; break;
-        }
+        // Pull directly from the 2D array!
+        AEGfxTexture* Tex = AllFrameDesigns[currentFrame.designID][currentFrame.currentState];
 
         if (Tex) {
-            // Apply camera parallax/offset to ensure frames move with the hallway
             const f32 drawX = currentFrame.posX + camX;
             DrawTextureMesh(frameMesh, Tex, drawX, currentFrame.posY, currentFrame.width, currentFrame.height, 1.0f);
         }
     }
-}
+} 
 
 /**************************************** UNLOAD *****************************************/
 // Called when the game shuts down or restarts to clean up video memory
@@ -361,13 +448,13 @@ void Frames_Unload() {
         frameMesh = nullptr;
     }
 
-    for (int i = 0; i < FRAME_STATES; i++) {
-        UnloadTextureSafe(framedesign_1[i]);
-        UnloadTextureSafe(framedesign_2[i]);
-        UnloadTextureSafe(framedesign_3[i]);
-
-        framedesign_1[i] = nullptr;
-        framedesign_2[i] = nullptr;
-        framedesign_3[i] = nullptr;
+    // Safely unload everything in the grid
+    for (int design = 0; design < TOTAL_DESIGNS; design++) {
+        for (int state = 0; state < MAX_FRAME_STATES; state++) {
+            if (AllFrameDesigns[design][state] != nullptr) {
+                UnloadTextureSafe(AllFrameDesigns[design][state]);
+                AllFrameDesigns[design][state] = nullptr;
+            }
+        }
     }
 }

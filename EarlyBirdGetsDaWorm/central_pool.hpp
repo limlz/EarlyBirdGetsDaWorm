@@ -4,7 +4,6 @@
 enum class ILLNESSES : int
 {
     NONE,           // no patient / no evidence yet
-    //ALL,			// ghost (matches no illness exactly)
     PARANOIA,
     MANIA,
     DEPRESSION,
