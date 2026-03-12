@@ -43,8 +43,8 @@ static ILLNESSES PatientRandomIllness() {
 
 static void ApplyNewPatientFromTruth(bool isGhostTruth) {
     CarriedPatientIsGhost = isGhostTruth;
-    //AnomalyIllness = PatientRandomIllness();
-	AnomalyIllness = ILLNESSES::DEPRESSION; // TESTING
+    AnomalyIllness = PatientRandomIllness();
+	//AnomalyIllness = ILLNESSES::DEPRESSION; // TESTING
 
     if (CarriedPatientIsGhost) {
         TrueDiagnosis = ILLNESSES::GHOST;
