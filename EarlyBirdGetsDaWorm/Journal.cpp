@@ -28,7 +28,6 @@ static AEGfxTexture* gWallScotophobia = nullptr;
 
 static AEGfxTexture* gDoorSlam = nullptr;
 static AEGfxTexture* gLightChange = nullptr;
-static AEGfxTexture* gKnock = nullptr;
 
 static AEGfxTexture* gLightParanoia = nullptr;
 static AEGfxTexture* gLightMania = nullptr;
@@ -63,7 +62,6 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
 
     case ANOMALYID::Door_HandSlam:          return gDoorSlam;
     case ANOMALYID::Door_LightChange:       return gLightChange;
-    case ANOMALYID::Door_Knock:             return gKnock;
 
     case ANOMALYID::Light_Mania:            return gLightMania;
     case ANOMALYID::Light_Depression:       return gLightDepression;
@@ -76,9 +74,9 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
 
     case ANOMALYID::Lift_Mania:             return gLiftMania;
     case ANOMALYID::Lift_Depression:        return gLiftDepression;
-    case ANOMALYID::Lift_Dementia:          return gLight;
-    case ANOMALYID::Lift_OCD:               return gLight;
-    case ANOMALYID::Lift_AIW:               return gLight;
+    case ANOMALYID::Lift_Dementia:          return gLiftDementia;
+    case ANOMALYID::Lift_OCD:               return gLiftOCD;
+    case ANOMALYID::Lift_AIW:               return gLiftAIW;
 
     case ANOMALYID::Frame_Glitch:           return gFrameGlitch;
     case ANOMALYID::Frame_Shift:            return gFrameShift;
@@ -100,20 +98,21 @@ static std::vector<ANOMALYID> gObserved;
 struct IllnessInfo
 {
     ILLNESSES illness;
-    std::vector<ANOMALYID> anomalies;
+    std::vector<ANOMALYID> anomalies; // visual anomalies only
+    const char* soundText;            // 5th anomaly shown as text
 };
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    ANOMALYID::Door_LightChange,     ANOMALYID::Wall_Paranoia       } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Lift_Mania,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania          } },
-    { ILLNESSES::DEPRESSION,    { ANOMALYID::Lift_Depression,   ANOMALYID::Frame_Shift,     ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression     } },
-    { ILLNESSES::DEMENTIA,      { ANOMALYID::Lift_Dementia,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,       ANOMALYID::Wall_Dementia       } },
-    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia,  ANOMALYID::Wall_Schizophrenia  } },
-    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Lift_AIW,          ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW            } },
-    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,       ANOMALYID::Wall_Insomnia       } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     ANOMALYID::Lift_OCD,             ANOMALYID::Wall_OCD            } },
-    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia    } }
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Door_HandSlam,       ANOMALYID::Wall_Paranoia },     "WHISPERING" },
+    { ILLNESSES::MANIA,         { ANOMALYID::Lift_Mania,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,         ANOMALYID::Wall_Mania },        "SCREAMING" },
+    { ILLNESSES::DEPRESSION,    { ANOMALYID::Lift_Depression,   ANOMALYID::Frame_Shift,     ANOMALYID::Light_Depression,    ANOMALYID::Wall_Depression },   "KNOCKING" },
+    { ILLNESSES::DEMENTIA,      { ANOMALYID::Lift_Dementia,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,      ANOMALYID::Wall_Dementia },     "THUD" },
+    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia, ANOMALYID::Wall_Schizophrenia },"SCREAMING" },
+    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Lift_AIW,          ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,           ANOMALYID::Wall_AIW },          "WHISPERING" },
+    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,      ANOMALYID::Wall_Insomnia },     "FLICKERING" },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     ANOMALYID::Lift_OCD,            ANOMALYID::Wall_OCD },          "KNOCKING" },
+    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Scotophobia,   ANOMALYID::Wall_Scotophobia },  "WHISPERING" }
 };
 
 static const std::vector<ILLNESSES> gIllnessList =
@@ -161,6 +160,16 @@ static bool Journal_PointInRect(float px, float py, float cx, float cy, float w,
     float top = cy + h * 0.5f;
 
     return (px >= left && px <= right && py >= bottom && py <= top);
+}
+
+static const char* GetSoundTextForIllness(ILLNESSES illness)
+{
+    for (const auto& e : gIllnessDictionary)
+    {
+        if (e.illness == illness)
+            return e.soundText;
+    }
+    return "UNKNOWN";
 }
 
 // ============================================================
@@ -381,7 +390,6 @@ void Journal_Unload()
 
     UnloadTextureSafe(gDoorSlam);
     UnloadTextureSafe(gLightChange);
-    UnloadTextureSafe(gKnock);
 
     UnloadTextureSafe(gLightMania);
     UnloadTextureSafe(gLightDepression);
@@ -562,6 +570,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         1);
 
     const auto* list = GetAnomaliesForIllness(chosen);
+    const char* soundText = GetSoundTextForIllness(chosen);
 
     // Mouse position
     s32 mouseX = 0, mouseY = 0;
@@ -634,6 +643,18 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 0.2f, 0.2f, 0.2f,
                 1);
         }
+
+        AEGfxPrint(journalFontId, "SOUND:",
+            X(RightStartX), Y(-250.0f),
+            0.65f,
+            0.2f, 0.2f, 0.2f,
+            1);
+
+        AEGfxPrint(journalFontId, soundText,
+            X(RightStartX + 180.0f), Y(-250.0f),
+            0.7f,
+            0.55f, 0.05f, 0.05f,
+            1);
     }
     // -----------------------------------------------------------------------------------------------------------
 }

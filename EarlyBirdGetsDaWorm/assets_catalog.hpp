@@ -30,7 +30,7 @@ namespace Assets
         constexpr const char* LiftDepression = "Assets/Equipment/Journal/LiftDepression.png";
         constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
         constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
-        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LightOCD.png";
+        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LiftOCD.png";
 
         constexpr const char* WallParanoia = "Assets/Equipment/Journal/WallMania.png";
         constexpr const char* WallMania = "Assets/Equipment/Journal/WallMania.png";
