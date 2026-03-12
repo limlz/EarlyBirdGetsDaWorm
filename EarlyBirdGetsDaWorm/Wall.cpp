@@ -176,7 +176,7 @@ void Wall_Initialize()
     }
 
     currentImage = 0;
-    imageDuration = 0.5f;
+    imageDuration = 0.1;
     wallTimer = 0.5f;
 }
 
@@ -268,7 +268,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
                 DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 250.0f, 246.0f, 1.0f);// sizing done
             break;
         case ANOMALYID::Wall_Depression:
-            DrawTextureMesh(wallMesh, depressionTexture[currentImage], 50.0f, wallY, 500.0f, 465.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, depressionTexture[currentImage], 50.0f, 0.0f, 500.0f, 465.0f, 1.0f);// sizing done
             break;
         case ANOMALYID::Wall_Dementia:
                 DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
