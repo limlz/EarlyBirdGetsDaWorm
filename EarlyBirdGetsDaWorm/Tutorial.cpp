@@ -240,34 +240,36 @@ void Tutorial_Update(f32 dt) {
 	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
 
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
-	if (noButtonHover && AEInputCheckCurr(AEVK_LBUTTON)) {
-		tutPopUpShown = false;
-		promptAnswered = true;
-		doTutorial = false;
+	if (tutPopUpShown) {
+		if (noButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			tutPopUpShown = false;
+			promptAnswered = true;
+			doTutorial = false;
+		}
+
+		if (yesButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			tutPopUpShown = false;
+			promptAnswered = true;
+			doTutorial = true;
+			curTutStage = TUTORIAL_START;
+		}
 	}
 
-	if (yesButtonHover && AEInputCheckCurr(AEVK_LBUTTON)) {
-		tutPopUpShown = false;
-		promptAnswered = true;
-		doTutorial = true;
-		curTutStage = TUTORIAL_START;
-	}
+	//// Debug: Skip to last dialogue
+	//if (AEInputCheckTriggered(AEVK_T)) {
+	//	doTutorial = true;                  // Make sure tutorial mode is active
+	//	tutFinished = false;                // Tutorial not finished
+	//	curTutStage = TUTORIAL_END;         // Jump to last stage
 
-	// Debug: Skip to last dialogue
-	if (AEInputCheckTriggered(AEVK_T)) {
-		doTutorial = true;                  // Make sure tutorial mode is active
-		tutFinished = false;                // Tutorial not finished
-		curTutStage = TUTORIAL_END;         // Jump to last stage
+	//	// Force the last dialogue box to show
+	//	tutPatientDeliveredBox.dialogueShown = true;
+	//	tutPatientDeliveredBox.tutVisibleCharCount = 0.0f; // Reset typing
+	//	tutPatientDeliveredBox.finishedTyping = false;
+	//	tutPatientDeliveredBox.dialogueFadeAlpha = 0.0f;   // Start fade-in
 
-		// Force the last dialogue box to show
-		tutPatientDeliveredBox.dialogueShown = true;
-		tutPatientDeliveredBox.tutVisibleCharCount = 0.0f; // Reset typing
-		tutPatientDeliveredBox.finishedTyping = false;
-		tutPatientDeliveredBox.dialogueFadeAlpha = 0.0f;   // Start fade-in
-
-		// Also force its flag true so Tutorial_Draw() will render it
-		tutPatientDelivered = tutPatientDelivered; // optional, ensures reference
-	}
+	//	// Also force its flag true so Tutorial_Draw() will render it
+	//	tutPatientDelivered = tutPatientDelivered; // optional, ensures reference
+	//}
 
 	// -------------------------------- TUTORIAL: YES --------------------------------
 	if (doTutorial && !tutFinished) {
@@ -401,7 +403,7 @@ void Tutorial_Draw() {
 		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
-	if (!tutFinished) {
+	if (doTutorial && !tutFinished) {
 		const char* infoText{ "PRESS [SPACE] TO CONTINUE" };
 		// Change text when tutorial is ending
 		if (curTutStage == TUTORIAL_END) {
@@ -466,7 +468,7 @@ void Tutorial_Draw() {
 			);
 			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.dialogueFadeAlpha);
 		}
-		if (tutPatientDelivered || curTutStage == TUTORIAL_END) {
+		if (tutPatientDelivered) {
 			//DrawTextureMesh(tutBGMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
 			DrawDialogueBoxBackground(tutPatientDeliveredBox);
 			std::string visibleText(

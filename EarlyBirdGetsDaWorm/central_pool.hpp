@@ -20,15 +20,15 @@ enum class ILLNESSES : int
 enum class ANOMALYID : int
 {
     // ---- WALL ----
-    Wall_Crack1,
-    Wall_Crack2,
-    Wall_Crack3,
-    Wall_Crack4,
-    Wall_Drawing1,
-    Wall_Drawing2,
-    Wall_Drawing3,
-    Wall_LeftHand,
-    Wall_RightHand,
+    Wall_Paranoia,
+    Wall_Mania,
+    Wall_Depression,
+    Wall_Dementia,
+    Wall_Schizophernia,
+    Wall_AIW,
+    Wall_Insomnia,
+    Wall_OCD,
+    Wall_Scotophobia,
 
     // ---- DOOR ----
     Door_HandSlam,
@@ -36,12 +36,14 @@ enum class ANOMALYID : int
     Door_Knock,
 
     // ---- LIGHTING ----
+    Light_Paranoia,
     Light_Mania,
     Light_Depression,
     Light_Dementia,
     Light_Schizophrenia,
     Light_AIW,
     Light_Insomnia,
+    Light_OCD,
     Light_Scotophobia,
 
     // ---- FRAMES ----

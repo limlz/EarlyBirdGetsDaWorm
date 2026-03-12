@@ -34,9 +34,7 @@ static AEGfxTexture* gLightMania = nullptr;
 static AEGfxTexture* gLightDepression = nullptr;
 static AEGfxTexture* gLightDementia = nullptr;
 static AEGfxTexture* gLightSchizophrenia = nullptr;
-static AEGfxTexture* gLightAIW = nullptr;
-static AEGfxTexture* gLightInsomnia = nullptr;
-static AEGfxTexture* gLightScotophobia = nullptr;
+static AEGfxTexture* gLight = nullptr;
 
 static AEGfxTexture* gFrameGlitch = nullptr;
 static AEGfxTexture* gFrameShift = nullptr;
@@ -46,15 +44,15 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:        return gWallCrack1;
-    case ANOMALYID::Wall_Crack2:        return gWallCrack2;
-    case ANOMALYID::Wall_Crack3:        return gWallCrack3;
-    case ANOMALYID::Wall_Crack4:        return gWallCrack4;
-    case ANOMALYID::Wall_Drawing1:      return gWallDrawing1;
-    case ANOMALYID::Wall_Drawing2:      return gWallDrawing2;
-    case ANOMALYID::Wall_Drawing3:      return gWallDrawing3;
-    case ANOMALYID::Wall_LeftHand:      return gLeftHand;
-    case ANOMALYID::Wall_RightHand:     return gRightHand;
+    case ANOMALYID::Wall_Paranoia:          return gWallCrack1;
+    case ANOMALYID::Wall_Mania:             return gWallCrack2;
+    case ANOMALYID::Wall_Depression:        return gWallCrack3;
+    case ANOMALYID::Wall_Dementia:          return gWallCrack4;
+    case ANOMALYID::Wall_Schizophernia:     return gWallDrawing1;
+    case ANOMALYID::Wall_AIW:               return gWallDrawing2;
+    case ANOMALYID::Wall_Insomnia:          return gWallDrawing3;
+    case ANOMALYID::Wall_OCD:               return gLeftHand;
+    case ANOMALYID::Wall_Scotophobia:       return gRightHand;
 
     case ANOMALYID::Door_HandSlam:      return gDoorSlam;
     case ANOMALYID::Door_LightChange:   return gLightChange;
@@ -64,9 +62,9 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Light_Depression:   return gLightDepression;
     case ANOMALYID::Light_Dementia:     return gLightDementia;
     case ANOMALYID::Light_Schizophrenia:return gLightSchizophrenia;
-    case ANOMALYID::Light_AIW:          return gLightAIW;
-    case ANOMALYID::Light_Insomnia:     return gLightInsomnia;
-    case ANOMALYID::Light_Scotophobia:  return gLightScotophobia;
+    case ANOMALYID::Light_AIW:          return gLight;
+    case ANOMALYID::Light_Insomnia:     return gLight;
+    case ANOMALYID::Light_Scotophobia:  return gLight;
 
     case ANOMALYID::Frame_Glitch:       return gFrameGlitch;
     case ANOMALYID::Frame_Shift:        return gFrameShift;
@@ -93,15 +91,15 @@ struct IllnessInfo
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_LeftHand,    ANOMALYID::Door_LightChange } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack2,      ANOMALYID::Light_Mania } },
-    { ILLNESSES::DEPRESSION,    { ANOMALYID::Wall_Drawing1,    ANOMALYID::Frame_Shift,      ANOMALYID::Light_Depression } },
-    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange, ANOMALYID::Wall_Drawing3,    ANOMALYID::Light_Dementia } },
-    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Frame_Shift,      ANOMALYID::Door_HandSlam,    ANOMALYID::Light_Schizophrenia } },
-    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Frame_Distort,    ANOMALYID::Wall_Drawing2,    ANOMALYID::Light_AIW } },
-    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,       ANOMALYID::Wall_Crack1,      ANOMALYID::Light_Insomnia } },
-    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,    ANOMALYID::Wall_Crack4,      ANOMALYID::Frame_Glitch } },
-    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange, ANOMALYID::Wall_LeftHand,    ANOMALYID::Light_Scotophobia } },
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    /*ANOMALYID::Light_Paranoia,*/   ANOMALYID::Wall_Paranoia}},
+    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania } },
+    { ILLNESSES::DEPRESSION,    { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression } },
+    { ILLNESSES::DEMENTIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,       ANOMALYID::Wall_Dementia } },
+    { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia,  ANOMALYID::Wall_Schizophernia } },
+    { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW } },
+    { ILLNESSES::INSOMNIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Insomnia,       ANOMALYID::Wall_Insomnia } },
+    { ILLNESSES::OCD,           { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Shift,     /*ANOMALYID::Light_OCD,*/        ANOMALYID::Wall_OCD}},
+    { ILLNESSES::SCOTOPHOBIA,   { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Scotophobia,    ANOMALYID::Wall_Scotophobia } }
 };
 
 static const std::vector<ILLNESSES> gIllnessList =
@@ -141,6 +139,16 @@ int Journal_GetExtraGhostAnomalies()
     return gExtraGhostAnoms;
 }
 
+static bool Journal_PointInRect(float px, float py, float cx, float cy, float w, float h)
+{
+    float left = cx - w * 0.5f;
+    float right = cx + w * 0.5f;
+    float bottom = cy - h * 0.5f;
+    float top = cy + h * 0.5f;
+
+    return (px >= left && px <= right && py >= bottom && py <= top);
+}
+
 // ============================================================
 // MATCHING LOGIC: observed anomalies -> illness OR ghost
 // ============================================================
@@ -162,23 +170,57 @@ static const char* IllnessText(ILLNESSES i)
     }
 }
 
-static const char* AnomalyText(ANOMALYID id)
+//static const char* AnomalyText(ANOMALYID id)
+//{
+//    switch (id)
+//    {
+//    case ANOMALYID::Wall_Paranoia:       return "Crack Type I";
+//    case ANOMALYID::Wall_Mania:          return "Crack Type II";
+//    case ANOMALYID::Wall_Depression:     return "Crack Type III";
+//    case ANOMALYID::Wall_Dementia:       return "Crack Type IV";
+//    case ANOMALYID::Wall_Schizophernia:  return "Drawing Type I";
+//    case ANOMALYID::Wall_AIW:            return "Drawing Type II";
+//    case ANOMALYID::Wall_Insomnia:       return "Drawing Type III";
+//    case ANOMALYID::Wall_OCD:            return "Left Handprint";
+//    case ANOMALYID::Wall_Scotophobia:    return "Right Handprint";
+//
+//    case ANOMALYID::Door_HandSlam:       return "Handprint on window";
+//    case ANOMALYID::Door_LightChange:    return "Window light change";
+//    case ANOMALYID::Door_Knock:          return "Knocking sound";
+//
+//    case ANOMALYID::Light_Mania:         return "Rapid Pulse (Warm)";
+//    case ANOMALYID::Light_Depression:    return "Slow Pulse (Blue)";
+//    case ANOMALYID::Light_Dementia:      return "Slow Pulse (Warm)";
+//    case ANOMALYID::Light_Schizophrenia: return "Eratic Flashes (Teal)";
+//    case ANOMALYID::Light_AIW:           return "Slow Pulse";
+//    case ANOMALYID::Light_Insomnia:      return "Eratic Flashes";
+//    case ANOMALYID::Light_Scotophobia:   return "Rapid Pulse";  
+//
+//    case ANOMALYID::Frame_Glitch:        return "Paintings glitch";
+//    case ANOMALYID::Frame_Shift:         return "Frames shift position";
+//    case ANOMALYID::Frame_Distort:       return "Paintings distort";
+//
+//    default:                            return "Unknown anomaly";
+//    }
+//}
+
+static const char* AnomalyDescription(ANOMALYID id)
 {
     switch (id)
     {
-    case ANOMALYID::Wall_Crack1:         return "Crack Type I";
-    case ANOMALYID::Wall_Crack2:         return "Crack Type II";
-    case ANOMALYID::Wall_Crack3:         return "Crack Type III";
-    case ANOMALYID::Wall_Crack4:         return "Crack Type IV";
-    case ANOMALYID::Wall_Drawing1:       return "Drawing Type I";
-    case ANOMALYID::Wall_Drawing2:       return "Drawing Type II";
-    case ANOMALYID::Wall_Drawing3:       return "Drawing Type III";
-    case ANOMALYID::Wall_LeftHand:       return "Left Handprint";
-    case ANOMALYID::Wall_RightHand:      return "Right Handprint";
+    case ANOMALYID::Wall_Paranoia:       return "Thin wall cracks appear suddenly.";
+    case ANOMALYID::Wall_Mania:          return "Jagged cracks spread across the wall.";
+    case ANOMALYID::Wall_Depression:     return "Heavy dark cracks sink into the surface.";
+    case ANOMALYID::Wall_Dementia:       return "Broken fracture lines form unpredictably.";
+    case ANOMALYID::Wall_Schizophernia:  return "Strange drawings appear on the wall.";
+    case ANOMALYID::Wall_AIW:            return "Distorted childlike drawings cover the wall.";
+    case ANOMALYID::Wall_Insomnia:       return "Messy repeated sketches appear.";
+    case ANOMALYID::Wall_OCD:            return "A left handprint stains the wall.";
+    case ANOMALYID::Wall_Scotophobia:    return "A right handprint appears in the dark.";
 
-    case ANOMALYID::Door_HandSlam:       return "Handprint on window";
-    case ANOMALYID::Door_LightChange:    return "Window light change";
-    case ANOMALYID::Door_Knock:          return "Knocking sound";
+    case ANOMALYID::Door_HandSlam:       return "A hand violently slams against the window.";
+    case ANOMALYID::Door_LightChange:    return "The door window light changes unnaturally.";
+    case ANOMALYID::Door_Knock:          return "Knocking can be heard from the door.";
 
     case ANOMALYID::Light_Mania:         return "Rapid Pulse (Warm)";
     case ANOMALYID::Light_Depression:    return "Slow Pulse (Blue)";
@@ -188,11 +230,11 @@ static const char* AnomalyText(ANOMALYID id)
     case ANOMALYID::Light_Insomnia:      return "Eratic Flashes";
     case ANOMALYID::Light_Scotophobia:   return "Rapid Pulse";  
 
-    case ANOMALYID::Frame_Glitch:        return "Paintings glitch";
-    case ANOMALYID::Frame_Shift:         return "Frames shift position";
-    case ANOMALYID::Frame_Distort:       return "Paintings distort";
+    case ANOMALYID::Frame_Glitch:        return "The painting flickers and glitches.";
+    case ANOMALYID::Frame_Shift:         return "The frame moves out of place.";
+    case ANOMALYID::Frame_Distort:       return "The painting stretches and distorts.";
 
-    default:                            return "Unknown anomaly";
+    default: return "Unknown anomaly.";
     }
 }
 
@@ -287,9 +329,7 @@ void Journal_Load()
     gLightDepression = LoadTextureChecked(Assets::Equipment::LightDepression);
     gLightDementia = LoadTextureChecked(Assets::Equipment::LightDementia);
     gLightSchizophrenia = LoadTextureChecked(Assets::Equipment::LightSchizophrenia);
-    gLightAIW = LoadTextureChecked(Assets::Equipment::LightAIW);
-    gLightInsomnia = LoadTextureChecked(Assets::Equipment::LightInsomnia);
-    gLightScotophobia = LoadTextureChecked(Assets::Equipment::LightScotophobia);
+    gLight = LoadTextureChecked(Assets::Equipment::Light);
 
 	gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
 	gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
@@ -319,9 +359,7 @@ void Journal_Unload()
     UnloadTextureSafe(gLightDepression);
     UnloadTextureSafe(gLightDementia);
     UnloadTextureSafe(gLightSchizophrenia);
-    UnloadTextureSafe(gLightAIW);
-    UnloadTextureSafe(gLightInsomnia);
-    UnloadTextureSafe(gLightScotophobia);
+    UnloadTextureSafe(gLight);
 
     UnloadTextureSafe(gFrameGlitch);
     UnloadTextureSafe(gFrameShift);
@@ -425,36 +463,52 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
 
-    // LEFT PAGE: illness list -----------------------------------------------------------------------------
-    float startX = -650.0f;
-    float startY = 180.0f;
-    float rowStep = 55.0f;
+    // Dimensions -----------------------------------------------------------------------------------------
+    float HeaderY = 350.0f;     
+    float SubHeaderY = 350.0f;
+    
+    // Pages X positions
+    float LeftStartX = -650.0f;
+    float RightStartX = 80.0f;
 
-    // Header
-    AEGfxPrint(journalFontId, "ILLNESSES", X(startX), Y(300.0f), 
+    // Anomalies list
+    float ListY = 230.0f;
+    float ListStep = 55.0f;
+
+    // 2x2 grid layout
+    float imgW = 180.0f;
+    float imgH = 200.0f;
+
+    float colGap = 210.0f;
+    float rowGap = 210.0f;
+
+    float gridStartX = (RightStartX-20.0f)   + imgW * 0.5f;
+    float gridStartY = (ListY-10.0f)        - imgH * 0.5f;
+
+    float tiltAngle = 0.12f;
+
+    // LEFT PAGE: illness list -----------------------------------------------------------------------------
+	// Header & Subheader
+    AEGfxPrint(journalFontId, "ILLNESSES", X(LeftStartX), Y(HeaderY),
 		1.0f, 
         0, 0, 0, // black
-        1);
-    AEGfxPrint(journalFontId, "use UpDown keys", X(startX), Y(250.0f), 
-        0.60f, 
-		0.15f, 0.15f, 0.15f, // dark gray
         1);
 
     for (int i = 0; i < (int)gIllnessList.size(); ++i)
     {
         const char* name = IllnessText(gIllnessList[i]);
-        float y = startY - i * rowStep;
+        float IllnessY = ListY - i * ListStep;
 
         if (i == gSelected)
         {
-            AEGfxPrint(journalFontId, name, X(startX), Y(y), 
+            AEGfxPrint(journalFontId, name, X(LeftStartX), Y(IllnessY),
                 0.95f, 
 				0.55f, 0.05f, 0.05f, // bright red
                 1);
         }
         else
         {
-            AEGfxPrint(journalFontId, name, X(startX), Y(y),
+            AEGfxPrint(journalFontId, name, X(LeftStartX), Y(IllnessY),
                 0.8f, 
                 0.2f, 0.2f, 0.2f, // dark gray
                 1);
@@ -466,64 +520,84 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     ClampSelected();
     ILLNESSES chosen = gIllnessList[gSelected];
 
-    AEGfxPrint(journalFontId, "ANOMALIES", X(60.0f), Y(300.0f), 
-        1.0f, 
-		0, 0, 0, // black
-        1);
-    AEGfxPrint(journalFontId, IllnessText(chosen), X(60.0f), Y(250.0f), 
-        0.8f, 
-		0.2f, 0.2f, 0.2f, // dark gray
+    // Header & Subheader
+    AEGfxPrint(journalFontId, "ANOMALIES", X(RightStartX), Y(HeaderY),
+        1.0f,
+        0, 0, 0,
         1);
 
     const auto* list = GetAnomaliesForIllness(chosen);
 
-    float imgX = 120.0f;
-    float imgY = 100.0f;
+    // Mouse position
+    s32 mouseX = 0, mouseY = 0;
+    AEInputGetCursorPosition(&mouseX, &mouseY);
 
-    float imgW = 120.0f;
-    float imgH = 85.0f;
+    float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
+    float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
 
-    float rowGap = 115.0f;
+    // Hover state
+    bool hasHovered = false;
+    ANOMALYID hoveredAnomaly = ANOMALYID::None; // temporary default
 
     if (!list || list->empty())
     {
-        AEGfxPrint( journalFontId, "(No mapping found)", X(imgX), Y(imgY), 
-            0.75f, 
-			0.2f, 0.2f, 0.2f, // dark gray
+        AEGfxPrint(journalFontId, "(No mapping found)",
+            X(gridStartX), Y(gridStartY),
+            0.75f,
+            0.2f, 0.2f, 0.2f,
             1);
     }
     else
     {
         for (int i = 0; i < (int)list->size(); ++i)
         {
-            float y = imgY - i * rowGap;
-
             ANOMALYID anomaly = (*list)[i];
             AEGfxTexture* tex = GetAnomalyJournalTexture(anomaly);
 
-            // image frame
-            //DrawSquareMesh(squareMesh, imgX, y, imgW + 8.0f, imgH + 8.0f, COLOR_WHITE);
+            int col = i % 2;
+            int row = i / 2;
 
-            // image
+            float x = gridStartX + col * colGap;
+            float y = gridStartY - row * rowGap;
+
+            bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+
             if (tex)
             {
-                DrawTextureMesh(squareMesh, tex, imgX, y, imgW, imgH, 1.0f);
+                if (hovered)
+                {
+                    hasHovered = true;
+                    hoveredAnomaly = anomaly;
+
+                    DrawTextureMeshRotated(squareMesh, tex, x, y, imgW, imgH, tiltAngle, 1.0f);
+                }
+                else
+                {
+                    DrawTextureMesh(squareMesh, tex, x, y, imgW, imgH, 1.0f);
+                }
             }
             else
             {
-                DrawSquareMesh(squareMesh, imgX, y, imgW, imgH, 0xFFBBBBBB);
+                DrawSquareMesh(squareMesh, x, y, imgW, imgH, 0xFFBBBBBB);
             }
+        }
 
-            // label beside image
-            AEGfxPrint(
-				journalFontId,                  // font
-				AnomalyText(anomaly),           // text
-				X(imgX + 170.0f),               // position label to right of image
-				Y((y + 50.0f) - i * 70.0f),     //80.0f is an offset and 70.0f is a row gap
-				0.65f,                          // scale
-				0, 0, 0,                        // black text
-				1                               // alpha
-            );
+        // fixed hover info area under the grid
+        if (hasHovered)
+        {
+            AEGfxPrint(journalFontId, AnomalyDescription(hoveredAnomaly),
+                X(RightStartX), Y(-350.0f),
+                0.55f,
+                0.2f, 0.2f, 0.2f,
+                1);
+        }
+        else
+        {
+            AEGfxPrint(journalFontId, "Hover over an image",
+                X(RightStartX), Y(-350.0f),
+                0.55f,
+                0.2f, 0.2f, 0.2f,
+                1);
         }
     }
     // -----------------------------------------------------------------------------------------------------------

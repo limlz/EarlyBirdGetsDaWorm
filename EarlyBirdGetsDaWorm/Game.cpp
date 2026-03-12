@@ -327,6 +327,7 @@ void Game_Update()
     // ------------------------------------------------------------
     // PHASE 6: WORLD UPDATES
     // ------------------------------------------------------------
+    Wall_Update(dt);
     doorNumAtPlayer = Doors_Update(camX);
     Doors_Animate(dt, doorNumAtPlayer, camX);
 

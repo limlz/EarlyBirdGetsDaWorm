@@ -163,12 +163,14 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 
 	// Arrow-Keys
 	if (AEInputCheckTriggered(AEVK_UP) || AEInputCheckTriggered(AEVK_LEFT)) {
+		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 		--categoryID;
 		if (categoryID < 1) {
 			categoryID = 1;
 		}
 	}
 	if (AEInputCheckTriggered(AEVK_DOWN) || AEInputCheckTriggered(AEVK_RIGHT)) {
+		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 		++categoryID;
 		if (categoryID > 3) {
 			categoryID = 3;
@@ -200,10 +202,12 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	if (cat2Selected) {
 		cat2Alpha = 1.0f;
 		if (cat2Page1 && AEInputCheckTriggered(AEVK_D)) {
+			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 			cat2Page1 = false;
 			cat2Page2 = true;
 		}
 		else if (cat2Page2 && AEInputCheckTriggered(AEVK_A)) {
+			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 			cat2Page2 = false;
 			cat2Page1 = true;
 		}

@@ -11,20 +11,20 @@ namespace Assets
     {
         constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
-        constexpr const char* JournalBook = "Assets/Equipment/Journalbook.png";
+        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
-		constexpr const char* DoorSlam = "Assets/Equipment/HandSlam.png";
-        constexpr const char* FrameGlitch = "Assets/Equipment/FrameGlitch.png";
-        constexpr const char* FrameShift = "Assets/Equipment/FrameShift.png";
-        constexpr const char* FrameDistort = "Assets/Equipment/FrameDistort.png";
+        constexpr const char* DoorSlam = "Assets/Equipment/Journal/DoorSlam.png";
+		constexpr const char* DoorLight = "Assets/Equipment/Journal/DoorLight.png";
 
-        constexpr const char* LightMania = "Assets/Equipment/LightMania.png";
-        constexpr const char* LightDepression = "Assets/Equipment/LightDepression.png";
-        constexpr const char* LightDementia = "Assets/Equipment/LightDementia.png";
-        constexpr const char* LightSchizophrenia = "Assets/Equipment/LightSchizophrenia.png";
-        constexpr const char* LightAIW = "Assets/Equipment/LightAIW.png";
-        constexpr const char* LightInsomnia = "Assets/Equipment/LightInsomnia.png";
-        constexpr const char* LightScotophobia = "Assets/Equipment/LightScotophobia.png";
+        constexpr const char* FrameGlitch = "Assets/Equipment/Journal/FrameGlitch.png";
+        constexpr const char* FrameShift = "Assets/Equipment/Journal/FrameShift.png";
+        constexpr const char* FrameDistort = "Assets/Equipment/Journal/FrameDistort.png";
+
+        constexpr const char* LightMania = "Assets/Equipment/Journal/LightMania.png";
+        constexpr const char* LightDepression = "Assets/Equipment/Journal/LightDepression.png";
+        constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
+        constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
+        constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
     }
     namespace Boss_Fight
     {
@@ -50,6 +50,7 @@ namespace Assets
     }
     namespace Wall_Anomaly
     {
+        // Will delete this old one after i implmenet the new one, i deleted the images alr tho
         constexpr const char* Crack1 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png";
         constexpr const char* Crack2 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png";
         constexpr const char* Crack3 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png";
@@ -59,6 +60,49 @@ namespace Assets
         constexpr const char* Drawing3 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png";
         constexpr const char* LeftHand = "Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png";
         constexpr const char* RightHand = "Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png";
+
+        constexpr const char* PARANOIA_BACKGROUND = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
+        constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
+
+        constexpr const char* MANIA_1 = "Assets/Wall_Anomaly/MANIA_1.png";
+        constexpr const char* MANIA_2 = "Assets/Wall_Anomaly/MANIA_2.png";
+        constexpr const char* MANIA_3 = "Assets/Wall_Anomaly/MANIA_3.png";
+        constexpr const char* MANIA_4 = "Assets/Wall_Anomaly/MANIA_4.png";
+
+        constexpr const char* DEPRESSION_1 = "Assets/Wall_Anomaly/DEPRESSION_1.png";
+        constexpr const char* DEPRESSION_2 = "Assets/Wall_Anomaly/DEPRESSION_2.png";
+        constexpr const char* DEPRESSION_3 = "Assets/Wall_Anomaly/DEPRESSION_3.png";
+        constexpr const char* DEPRESSION_4 = "Assets/Wall_Anomaly/DEPRESSION_4.png";
+
+        constexpr const char* DEMENTIA_1 = "Assets/Wall_Anomaly/DEMENTIA_1.png";
+        constexpr const char* DEMENTIA_2 = "Assets/Wall_Anomaly/DEMENTIA_2.png";
+        constexpr const char* DEMENTIA_3 = "Assets/Wall_Anomaly/DEMENTIA_3.png";
+        constexpr const char* DEMENTIA_4 = "Assets/Wall_Anomaly/DEMENTIA_4.png";
+
+        constexpr const char* SCHIZOPHRENIA_1 = "Assets/Wall_Anomaly/SCHIZOPHRENIA_1.png";
+        constexpr const char* SCHIZOPHRENIA_2 = "Assets/Wall_Anomaly/SCHIZOPHRENIA_2.png";
+        constexpr const char* SCHIZOPHRENIA_3 = "Assets/Wall_Anomaly/SCHIZOPHRENIA_3.png";
+        constexpr const char* SCHIZOPHRENIA_4 = "Assets/Wall_Anomaly/SCHIZOPHRENIA_4.png";
+
+        constexpr const char* AIW_SYNDROME_1 = "Assets/Wall_Anomaly/AIW_1.png";
+        constexpr const char* AIW_SYNDROME_2 = "Assets/Wall_Anomaly/AIW_2.png";
+        constexpr const char* AIW_SYNDROME_3 = "Assets/Wall_Anomaly/AIW_3.png";
+        constexpr const char* AIW_SYNDROME_4 = "Assets/Wall_Anomaly/AIW_4.png";
+
+        constexpr const char* INSOMNIA_1 = "Assets/Wall_Anomaly/INSOMNIA_1.png";
+        constexpr const char* INSOMNIA_2 = "Assets/Wall_Anomaly/INSOMNIA_2.png";
+        constexpr const char* INSOMNIA_3 = "Assets/Wall_Anomaly/INSOMNIA_3.png";
+        constexpr const char* INSOMNIA_4 = "Assets/Wall_Anomaly/INSOMNIA_4.png";
+
+        constexpr const char* OCD_1 = "Assets/Wall_Anomaly/OCD_1.png";
+        constexpr const char* OCD_2 = "Assets/Wall_Anomaly/OCD_2.png";
+        constexpr const char* OCD_3 = "Assets/Wall_Anomaly/OCD_3.png";
+        constexpr const char* OCD_4 = "Assets/Wall_Anomaly/OCD_4.png";
+
+        constexpr const char* SCOTOPHOBIA_1 = "Assets/Wall_Anomaly/SCOTOPHOBIA_1.png";
+        constexpr const char* SCOTOPHOBIA_2 = "Assets/Wall_Anomaly/SCOTOPHOBIA_2.png";
+        constexpr const char* SCOTOPHOBIA_3 = "Assets/Wall_Anomaly/SCOTOPHOBIA_3.png";
+        constexpr const char* SCOTOPHOBIA_4 = "Assets/Wall_Anomaly/SCOTOPHOBIA_4.png";
     }
     namespace Background
     {
@@ -72,7 +116,7 @@ namespace Assets
     {
         constexpr const char* Window_0 = "Assets/Door_Anomaly/Window_0.png";
         constexpr const char* Window_1 = "Assets/Door_Anomaly/Window_1.png";
-        constexpr const char* Handprint = "Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png";
+        constexpr const char* Handprint = "Assets/Door_Anomaly/LEFTHAND.png";
     }
     namespace Pause_Menu
     {

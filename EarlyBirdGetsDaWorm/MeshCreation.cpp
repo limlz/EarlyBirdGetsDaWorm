@@ -110,3 +110,24 @@ void DrawTextureMesh(AEGfxVertexList* mesh, AEGfxTexture* texture, f32 x, f32 y,
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
+
+void DrawTextureMeshRotated(AEGfxVertexList* mesh, AEGfxTexture* texture, f32 x, f32 y, f32 width, f32 height, f32 angle, f32 opacity)
+{
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+    AEGfxTextureSet(texture, 0.0f, 0.0f);
+    AEGfxSetTransparency(opacity);
+
+    AEMtx33 scale, rotate, translate;
+    AEMtx33 temp, transform;
+
+    AEMtx33Scale(&scale, width, height);
+    AEMtx33Rot(&rotate, angle);
+    AEMtx33Trans(&translate, x, y);
+    AEMtx33Concat(&temp, &rotate, &scale);
+    AEMtx33Concat(&transform, &translate, &temp);
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
+}
