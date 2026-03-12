@@ -54,22 +54,22 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Wall_OCD:               return gLeftHand;
     case ANOMALYID::Wall_Scotophobia:       return gRightHand;
 
-    case ANOMALYID::Door_HandSlam:      return gDoorSlam;
-    case ANOMALYID::Door_LightChange:   return gLightChange;
-    case ANOMALYID::Door_Knock:         return gKnock;
+    case ANOMALYID::Door_HandSlam:          return gDoorSlam;
+    case ANOMALYID::Door_LightChange:       return gLightChange;
+    case ANOMALYID::Door_Knock:             return gKnock;
 
-    case ANOMALYID::Light_Mania:        return gLightMania;
-    case ANOMALYID::Light_Depression:   return gLightDepression;
-    case ANOMALYID::Light_Dementia:     return gLightDementia;
-    case ANOMALYID::Light_Schizophrenia:return gLightSchizophrenia;
-    case ANOMALYID::Light_AIW:          return gLight;
-    case ANOMALYID::Light_Insomnia:     return gLight;
-    case ANOMALYID::Light_Scotophobia:  return gLight;
+    case ANOMALYID::Light_Mania:            return gLightMania;
+    case ANOMALYID::Light_Depression:       return gLightDepression;
+    case ANOMALYID::Light_Dementia:         return gLightDementia;
+    case ANOMALYID::Light_Schizophrenia:    return gLightSchizophrenia;
+    case ANOMALYID::Light_AIW:              return gLight;
+    case ANOMALYID::Light_Insomnia:         return gLight;
+    case ANOMALYID::Light_Scotophobia:      return gLight;
 
-    case ANOMALYID::Frame_Glitch:       return gFrameGlitch;
-    case ANOMALYID::Frame_Shift:        return gFrameShift;
-    case ANOMALYID::Frame_Distort:      return gFrame_Distort;
-    default:                            return nullptr;
+    case ANOMALYID::Frame_Glitch:           return gFrameGlitch;
+    case ANOMALYID::Frame_Shift:            return gFrameShift;
+    case ANOMALYID::Frame_Distort:          return gFrame_Distort;
+    default:                                return nullptr;
     }
 }
 
