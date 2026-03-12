@@ -117,7 +117,7 @@ void Tutorial_Initialize() {
 	yesButtonScale = 1.0f;
 	noButtonScale = 1.0f;
 	doTutorial = false;
-	promptAnswered = false;
+	//promptAnswered = false;
 
 	// Prompt Pop Up
 	tutPopupTimer = 0.0f;
