@@ -497,8 +497,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         JournalBook,
         0.0f * UI_SCALE,
         0.0f * UI_SCALE,
-        1700.0f * UI_SCALE,
-        950.0f * UI_SCALE,
+        1800.0f * UI_SCALE,
+        1050.0f * UI_SCALE,
         1.0f);
 
     if (journalFontId < 0) return;
@@ -507,15 +507,15 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
 
     // Dimensions -----------------------------------------------------------------------------------------
-    float HeaderY = 350.0f;     
+    float HeaderY = 380.0f;     
     float SubHeaderY = 350.0f;
     
     // Pages X positions
-    float LeftStartX = -650.0f;
+    float LeftStartX = -700.0f;
     float RightStartX = 80.0f;
 
     // Anomalies list
-    float ListY = 230.0f;
+    float ListY = 250.0f;
     float ListStep = 55.0f;
 
     // 2x2 grid layout
@@ -526,7 +526,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     float rowGap = 210.0f;
 
     float gridStartX = (RightStartX-20.0f)   + imgW * 0.5f;
-    float gridStartY = (ListY-10.0f)        - imgH * 0.5f;
+    float gridStartY = (ListY)        - imgH * 0.5f;
 
     float tiltAngle = 0.12f;
 
@@ -630,7 +630,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         if (hasHovered)
         {
             AEGfxPrint(journalFontId, AnomalyDescription(hoveredAnomaly),
-                X(RightStartX), Y(-350.0f),
+                X(RightStartX), Y(-280.0f),
                 0.55f,
                 0.2f, 0.2f, 0.2f,
                 1);
@@ -638,20 +638,20 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         else
         {
             AEGfxPrint(journalFontId, "Hover over an image",
-                X(RightStartX), Y(-350.0f),
+                X(RightStartX), Y(-280.0f),
                 0.55f,
                 0.2f, 0.2f, 0.2f,
                 1);
         }
 
-        AEGfxPrint(journalFontId, "SOUND:",
-            X(RightStartX), Y(-250.0f),
+        AEGfxPrint(journalFontId, "AUDITORY HALLUCINATION",
+            X(RightStartX), Y(-350.0f),
             0.65f,
             0.2f, 0.2f, 0.2f,
             1);
 
         AEGfxPrint(journalFontId, soundText,
-            X(RightStartX + 180.0f), Y(-250.0f),
+            X(RightStartX), Y(-400.0f),
             0.7f,
             0.55f, 0.05f, 0.05f,
             1);
