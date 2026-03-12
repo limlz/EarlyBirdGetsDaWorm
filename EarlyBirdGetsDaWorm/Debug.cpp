@@ -95,18 +95,24 @@ void Debug_Draw(const DebugInfo& info)
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 3), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
     // --- ANOMALY SYSTEMS ---
-    sprintf_s(gDebugBuffer, "ANOMALIES: FRAMES:%s  DOORS:%s  LIGHT:%s  WALL:%s  SOUND:%s",
+    sprintf_s(gDebugBuffer, "ANOMALIES: FRAMES:%s  DOORS:%s  LIGHT:%s  WALL:%s  SOUND:%s  | DARK:%s",
         CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)   ? "ON" : "--",
         CentralPool_IsSystemActive(AnomalyFiles::Doors_isActive)    ? "ON" : "--",
         CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive) ? "ON" : "--",
         CentralPool_IsSystemActive(AnomalyFiles::Wall_isActive)     ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)    ? "ON" : "--");
+        CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)    ? "ON" : "--",
+        Lighting_IsPlayerInDarkness(info.camX, info.floorNum)       ? "YES" : "NO");
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 4), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
 
     // --- SYSTEM ---
     f32 fps = 1.0f / (f32)AEFrameRateControllerGetFrameTime();
     sprintf_s(gDebugBuffer, "FPS: %.2f | DT: %.5f", fps, (f32)AEFrameRateControllerGetFrameTime());
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 5), textScale, 0.0f, 1.0f, 1.0f, 1.0f);
+}
+
+bool Debug_IsActive()
+{
+    return gDebugMode;
 }
 
 void Debug_Unload()

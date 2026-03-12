@@ -57,13 +57,10 @@ enum class ANOMALYID : int
     Lift_Dementia,
     Lift_OCD,
     Lift_AIW,
-
-    // 1. PARANOIA:     buttons repel away from the mouse cursor for a few seconds after the panel becomes active
-    // 2. MANIA:        buttons constantly vibrate around their center point while the panel is active
-    // 3. DEPRESSION:   buttons are all physically lower on the panel, as if weighed down by sadness
-    // 6. AIW_SYNDROME: size scaling through AiwScaleMap that is randomised by LiftGenerateAnomalies();
-    // 8. OCD:          slight misalignment of a single button, chosen in LiftGenerateAnomalies() and stored in OcdTarget; 
-    //                  button also shudders if player tries to click it but hasn't clicked 3 times yet
+	Lift_Paranoia,
+	Lift_Schizophrenia,
+	Lift_Insomnia,
+	Lift_Scotophobia,
 
     None,
 };
@@ -90,4 +87,7 @@ void CentralPool_ClearPatientAnomalies();
 
 // The function other files will call to check their status
 bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
+
+// Debug only: forces a specific anomaly system on for the current patient
+void CentralPool_ForceSystemActive(AnomalyFiles systemFile);
 

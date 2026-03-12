@@ -22,7 +22,7 @@ namespace Config {
         /* 6: AIW_SYNDROME  */ { 10, 140,   5,  25 },
         /* 7: INSOMNIA      */ {200, 400,   5,   1 },
         /* 8: OCD           */ {100,   1, 100,   1 },
-        /* 9: SCOTOPHOBIA   */ { 10, 140, 100, 200 },
+        /* 9: SCOTOPHOBIA   */ { 10, 140, 300, 600 },
         /* 10: GHOST        */ { 10, 140,   5,  25 }, // Uses mimic logic, but needs a safe placeholder
     };
 

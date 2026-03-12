@@ -182,3 +182,10 @@ float Player_GetWidth();
     @return The player's height as a float.
 ******************************************************************************************/
 float Player_GetHeight();
+
+/******************************************************************************************
+    @brief  Returns whether the player is currently walking (movement key held).
+
+    @return True if the walking sound is playing, false otherwise.
+******************************************************************************************/
+bool Player_IsWalking();

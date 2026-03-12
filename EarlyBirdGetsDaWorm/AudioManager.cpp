@@ -29,9 +29,13 @@ void AudioManager_LoadAll() {
     // Characters
     soundBank[SFX_BOSS_FIGHT] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");
     soundBank[SFX_PLAYER_WALKING] = AEAudioLoadSound("Assets/Audio/SFX_PLAYER_WALK.wav");
-    soundBank[SFX_SCREAMING] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAMING.wav");
+    soundBank[SFX_SCREAMING] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAM.wav");
     soundBank[SFX_VOICE_WHISPER] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_WHISPER.wav");
     soundBank[SFX_WHEELCHAIR_SQUEAK] = AEAudioLoadSound("Assets/Audio/SFX_WHEELCHAIR_SQUEAK.wav");
+    soundBank[SFX_HEARTBEAT] = AEAudioLoadSound("Assets/Audio/SFX_HEARTBEAT.wav");
+    soundBank[SFX_EXHALE] = AEAudioLoadSound("Assets/Audio/SFX_EXHALE.wav");
+    soundBank[SFX_CRYING] = AEAudioLoadSound("Assets/Audio/SFX_CRYING.wav");
+    soundBank[SFX_CLOCK_TICK] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.wav");
 
     // UI
     soundBank[SFX_MAIN_MENU_WRITING_SCRATCH] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.wav");

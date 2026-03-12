@@ -5,17 +5,18 @@ struct Bullet {
     float x, y;
     float dirX, dirY;
     float speed;
+    float size;
     bool active;
 };
 
 static AEGfxVertexList* squareMesh;
-
+static AEGfxVertexList* circleMesh;
 // Allow more water droplets on the screen at once
-#define MAX_BULLETS 150 
+#define MAX_BULLETS 300
 std::vector<Bullet> bullets(MAX_BULLETS);
 
 // Gives the player a larger "Water Tank" before needing to reload
-const int MAX_AMMO = 80;
+const int MAX_AMMO = 150; 
 static int currentAmmo = MAX_AMMO;
 static bool isReloading = false;
 static float reloadTimer = 0.0f;
@@ -23,6 +24,7 @@ const float RELOAD_TIME = 1.5f; // Takes 1.5 seconds to reload
 
 void Bullets_Initialize() {
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
+    circleMesh = CreateCircleMesh(0.5f, 16, 0xFFFFFFFF);
     bullets.assign(MAX_BULLETS, Bullet{});
     for (int i = 0; i < MAX_BULLETS; i++) {
         bullets[i].active = false;
@@ -48,8 +50,9 @@ void Fire_Bullet(float startX, float startY, float dirX, float dirY) {
             bullets[i].dirX = dirX;
             bullets[i].dirY = dirY;
             bullets[i].speed = 1200.0f;
+            bullets[i].size = 8.0f + (rand() % 800) / 100.0f;
 
-            // --- NEW: CONSUME AMMO ---
+			// Consume ammo for each shot fired
             currentAmmo--;
             if (currentAmmo <= 0) {
                 isReloading = true;
@@ -80,6 +83,9 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
             // 1. Move Bullet
             bullets[i].x += bullets[i].dirX * bullets[i].speed * dt;
             bullets[i].y += bullets[i].dirY * bullets[i].speed * dt;
+
+            // GRAVITAY
+            bullets[i].dirY -= 1.0f * dt;
 
             // 2. Culling
             float screenPosX = bullets[i].x + camX;
@@ -144,7 +150,7 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
                         bullets[i].speed = 1800.0f;
                     }
                     else {
-                        myBoss.health -= 10;
+                        myBoss.health -= 2;
                         bullets[i].active = false;
 
                         if (myBoss.health <= 0) {
@@ -158,34 +164,43 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
 }
 
 void Bullets_Draw(float camX) {
-    float w = 20.0f;
-    float h = 10.0f;
-
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
+            // 1. Calculate the exact angle the water is traveling
             float angle = atan2f(bullets[i].dirY, bullets[i].dirX);
 
             AEMtx33 scale, rot, trans, rotScale, finalTransform;
-            AEMtx33Scale(&scale, w, h);
-            AEMtx33Rot(&rot, angle);
+
+            // 2. VELOCITY STRETCHING
+            float stretchLength = bullets[i].size * 4.5f;
+            // Pinch the thickness slightly so it looks like a high-pressure jet
+            float streamThickness = bullets[i].size * 0.7f;
+
+            AEMtx33Scale(&scale, stretchLength, streamThickness);
+            AEMtx33Rot(&rot, angle); // Rotate the stretched oval to match its travel arc
             AEMtx33Trans(&trans, bullets[i].x, bullets[i].y);
 
             AEMtx33Concat(&rotScale, &rot, &scale);
             AEMtx33Concat(&finalTransform, &trans, &rotScale);
 
             AEGfxSetTransform(finalTransform.m);
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-            AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+            // 3. Holy Water Color (Lower alpha to 0.4f because the overlapped stretched shapes will compound)
+            AEGfxSetColorToMultiply(0.1f, 0.9f, 1.0f, 0.4f);
+
+            // Draw using the circle mesh (a stretched circle naturally becomes an oval/capsule!)
+            AEGfxMeshDraw(circleMesh, AE_GFX_MDM_TRIANGLES);
         }
     }
 
-    // Reset Transform
+    // Reset Transform & Color
     AEMtx33 finalTransform;
     AEMtx33Identity(&finalTransform);
     AEGfxSetTransform(finalTransform.m);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 // --- NEW: AMMO UI DRAWING ---
