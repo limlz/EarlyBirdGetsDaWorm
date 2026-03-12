@@ -40,6 +40,8 @@ static AEGfxTexture* gLight = nullptr;
 static AEGfxTexture* gLiftDementia = nullptr;
 static AEGfxTexture* gLiftOCD = nullptr;
 static AEGfxTexture* gLiftAIW = nullptr;
+static AEGfxTexture* gLiftDepression = nullptr;
+static AEGfxTexture* gLiftMania = nullptr;
 
 static AEGfxTexture* gFrameGlitch = nullptr;
 static AEGfxTexture* gFrameShift = nullptr;
@@ -71,6 +73,9 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Light_Insomnia:         return gLight;
     case ANOMALYID::Light_Scotophobia:      return gLight;
 
+
+    case ANOMALYID::Lift_Mania:             return gLiftMania;
+    case ANOMALYID::Lift_Depression:        return gLiftDepression;
     case ANOMALYID::Lift_Dementia:          return gLight;
     case ANOMALYID::Lift_OCD:               return gLight;
     case ANOMALYID::Lift_AIW:               return gLight;
@@ -101,8 +106,8 @@ struct IllnessInfo
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
     { ILLNESSES::PARANOIA,      { ANOMALYID::Door_Knock,        ANOMALYID::Frame_Shift ,    ANOMALYID::Door_LightChange,     ANOMALYID::Wall_Paranoia       } },
-    { ILLNESSES::MANIA,         { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania          } },
-    { ILLNESSES::DEPRESSION,    { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression     } },
+    { ILLNESSES::MANIA,         { ANOMALYID::Lift_Mania,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,          ANOMALYID::Wall_Mania          } },
+    { ILLNESSES::DEPRESSION,    { ANOMALYID::Lift_Depression,   ANOMALYID::Frame_Shift,     ANOMALYID::Light_Depression,     ANOMALYID::Wall_Depression     } },
     { ILLNESSES::DEMENTIA,      { ANOMALYID::Lift_Dementia,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,       ANOMALYID::Wall_Dementia       } },
     { ILLNESSES::SCHIZOPHRENIA, { ANOMALYID::Door_HandSlam,     ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Schizophrenia,  ANOMALYID::Wall_Schizophrenia  } },
     { ILLNESSES::AIW_SYNDROME,  { ANOMALYID::Lift_AIW,          ANOMALYID::Frame_Distort,   ANOMALYID::Light_AIW,            ANOMALYID::Wall_AIW            } },
@@ -239,6 +244,9 @@ static const char* AnomalyDescription(ANOMALYID id)
     case ANOMALYID::Light_Insomnia:      return "Eratic Flashes";
     case ANOMALYID::Light_Scotophobia:   return "Rapid Pulse";  
 
+
+    case ANOMALYID::Lift_Mania:          return "Rapid Pulse (Warm)";
+    case ANOMALYID::Lift_Depression:     return "Slow Pulse (Blue)";
     case ANOMALYID::Lift_Dementia:       return "Slow Pulse";
     case ANOMALYID::Lift_AIW:            return "Eratic Flashes";
     case ANOMALYID::Lift_OCD:            return "Rapid Pulse";
@@ -345,6 +353,8 @@ void Journal_Load()
     gLightSchizophrenia = LoadTextureChecked(Assets::Equipment::LightSchizophrenia);
     gLight = LoadTextureChecked(Assets::Equipment::Light);
 
+    gLiftMania = LoadTextureChecked(Assets::Equipment::LiftMania);
+    gLiftDepression = LoadTextureChecked(Assets::Equipment::LiftDepression);
     gLiftDementia = LoadTextureChecked(Assets::Equipment::LiftDementia);
     gLiftAIW = LoadTextureChecked(Assets::Equipment::LiftAIW);
     gLiftOCD = LoadTextureChecked(Assets::Equipment::LiftOCD);
@@ -378,6 +388,13 @@ void Journal_Unload()
     UnloadTextureSafe(gLightDementia);
     UnloadTextureSafe(gLightSchizophrenia);
     UnloadTextureSafe(gLight);
+
+
+    UnloadTextureSafe(gLiftMania);
+    UnloadTextureSafe(gLiftDepression);
+	UnloadTextureSafe(gLiftDementia);
+	UnloadTextureSafe(gLiftAIW);
+	UnloadTextureSafe(gLiftOCD);
 
     UnloadTextureSafe(gFrameGlitch);
     UnloadTextureSafe(gFrameShift);

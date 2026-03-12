@@ -205,11 +205,7 @@ static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
 {
     // Pools to match dictionary exactly
     static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_Knock };
-    static const std::vector<ANOMALYID> maniaPool{ ANOMALYID::Door_HandSlam };
-    static const std::vector<ANOMALYID> depressionPool{ };
-    static const std::vector<ANOMALYID> dementiaPool{ ANOMALYID::Door_LightChange };
     static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Door_HandSlam };
-    static const std::vector<ANOMALYID> aiwPool{ ANOMALYID::Door_Knock };
     static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Door_Knock };
     static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Door_HandSlam, ANOMALYID::Door_LightChange };
     static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Door_LightChange };
@@ -217,11 +213,7 @@ static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
     switch (illness)
     {
     case ILLNESSES::PARANOIA:      return PickFromPool(paranoiaPool);
-    case ILLNESSES::MANIA:         return PickFromPool(maniaPool);
-    case ILLNESSES::DEPRESSION:    return PickFromPool(depressionPool);
-    case ILLNESSES::DEMENTIA:      return PickFromPool(dementiaPool);
     case ILLNESSES::SCHIZOPHRENIA: return PickFromPool(schizophreniaPool);
-    case ILLNESSES::AIW_SYNDROME:  return PickFromPool(aiwPool);
     case ILLNESSES::INSOMNIA:      return PickFromPool(insomniaPool);
     case ILLNESSES::OCD:           return PickFromPool(ocdPool);
     case ILLNESSES::SCOTOPHOBIA:   return PickFromPool(scotophobiaPool);

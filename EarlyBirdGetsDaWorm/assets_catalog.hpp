@@ -25,7 +25,9 @@ namespace Assets
         constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
         constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
-        
+
+        constexpr const char* LiftMania = "Assets/Equipment/Journal/LiftMania.png";
+        constexpr const char* LiftDepression = "Assets/Equipment/Journal/LiftDepression.png";
         constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
         constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
         constexpr const char* LiftOCD = "Assets/Equipment/Journal/LightOCD.png";
