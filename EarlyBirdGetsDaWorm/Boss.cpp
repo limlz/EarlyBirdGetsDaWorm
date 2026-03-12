@@ -1,6 +1,4 @@
 #include "pch.hpp"
-#include "Boss.hpp"
-#include <cmath> // Required for sinf(), cosf(), sqrtf(), atan2f(), fabsf()
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex = nullptr;

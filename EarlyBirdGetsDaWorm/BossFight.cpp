@@ -3,15 +3,18 @@
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 
-
-// Textures
+// Textures for level background and player character
 static AEGfxTexture* wallBgTexture = nullptr;
-static AEGfxTexture* playerTex = nullptr; // --- NEW: Player Texture ---
+static AEGfxTexture* player_walk1 = nullptr;
+static AEGfxTexture* player_walk2 = nullptr;
+static AEGfxTexture* player_crouch = nullptr;
 
-// --- PLAYER PHYSICS ---
+// --- PLAYER PHYSICS SETTINGS ---
 static f32 playerX, playerY;
 float playerVelY = 0.0f;
+float playerVelX = 0.0f;
 bool isGrounded = false;
+bool isCrouching = false; // Flag to track whether the player is currently crouching
 const float GRAVITY = 1500.0f;
 const float JUMP_FORCE = 850.0f;
 const float GROUND_Y = -230.0f; // Adjusted so the bottom of the 360-tall player sits exactly on the -350 line (top of the black bar)
@@ -25,20 +28,25 @@ const int MAX_PLAYER_HP = 10;
 bool isPlayerHit = false;
 float hitTimer = 0.0f;
 
+// --- PLAYER ANIMATION VARIABLES ---
+static int currentPlayerFrame = 0;
+static float playerAnimTimer = 0.0f;
+const float PLAYER_ANIM_SPEED = 0.15f; // Time in seconds per frame
+
 // --- WEAPON: HOLY WATER GUN ---
 static float fireCooldown = 0.0f;
-const float FIRE_RATE = 0.02f; // Fires a particle every 0.02 seconds 
+const float FIRE_RATE = 0.02f; // Fires a particle every 0.02 seconds for a continuous stream
 static float bossDodgeCooldown = 0.0f;
 
 // --- BOSS INSTANCE ---
 static Boss myBoss;
 
-// --- Boss Fight Fade-In Variables ---
+// --- BOSS FIGHT FADE-IN SETTINGS ---
 static bool isFadingIn = true;
-static float fadeInAlpha = 1.0f; // Start completely black (1.0)
+static float fadeInAlpha = 1.0f; // Start completely black with an alpha of 1.0
 const float FADE_IN_SPEED = 1.0f; // Takes 1 second to fade in
 
-// --- Victory Sequence Variables ---
+// --- VICTORY SEQUENCE VARIABLES ---
 static bool isVictorySequence = false;
 static float victoryAlpha = 0.0f;
 static float victoryHoldTimer = 0.0f;
@@ -73,12 +81,14 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
 
 void Boss_Fight_Load()
 {
-    // Load the font for the victory text (We use size 35 here)
+    // Load the font for the victory text (size 35)
     victoryFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 35);
     wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
 
-    // --- NEW: Load the player texture (Change path if needed) ---
-    playerTex = LoadTextureChecked(Assets::Player::Nurse1);
+    // Load player textures
+    player_walk1 = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting1);
+    player_walk2 = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting2);
+    player_crouch = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting1); // Placeholder for crouch texture
 
     Boss_Load();
     PauseMenu_Load();
@@ -95,13 +105,15 @@ void Boss_Fight_Initialize()
     playerX = -600.0f;
     playerY = GROUND_Y;
     playerVelY = 0.0f;
+    playerVelX = 0.0f;
     isGrounded = true;
+    isCrouching = false;
     jumpCount = 0;
     facingRight = true;
     playerHP = MAX_PLAYER_HP;
     isPlayerHit = false;
 
-    // Reset the victory sequence
+    // Reset the victory sequence variables
     isVictorySequence = false;
     victoryAlpha = 0.0f;
     victoryHoldTimer = 0.0f;
@@ -124,9 +136,9 @@ void Boss_Fight_Update()
         isVictorySequence = true;
     }
 
-    // Run the victory animation and block all gameplay
+    // Run the victory animation and block all gameplay input
     if (isVictorySequence) {
-        victoryAlpha += 1.0f * dt; // Fade to black over 1 second
+        victoryAlpha += 1.0f * dt; // Fade the screen to black over 1 second
         if (victoryAlpha >= 1.0f) {
             victoryAlpha = 1.0f;
             victoryHoldTimer += dt;
@@ -147,93 +159,142 @@ void Boss_Fight_Update()
         fadeInAlpha -= FADE_IN_SPEED * dt;
         if (fadeInAlpha <= 0.0f) {
             fadeInAlpha = 0.0f;
-            isFadingIn = false; // Fade complete!
+            isFadingIn = false; // Fade-in complete
         }
     }
 
-    // --- PLAYER CONTROLS & WALL LIMITS ---
-    if (AEInputCheckCurr(AEVK_D)) { playerX += PLAYER_SPEED * dt; facingRight = true; }
-    if (AEInputCheckCurr(AEVK_A)) { playerX -= PLAYER_SPEED * dt; facingRight = false; }
+    // --- DETERMINE CROUCH STATE ---
+    isCrouching = AEInputCheckCurr(AEVK_S);
 
-    // Adjusted X clamp to account for the new 140 width (half width = 70)
-    if (playerX < -753.33f) playerX = -753.33f;
-    if (playerX > 753.33f)  playerX = 753.33f;
+    // Only allow movement, animation, and shooting if NOT crouching
+    if (!isCrouching) {
 
-    if (AEInputCheckTriggered(AEVK_SPACE)) {
-        if (isGrounded || jumpCount < MAX_JUMPS) {
-            playerVelY = JUMP_FORCE;
-            isGrounded = false;
-            jumpCount++;
+        // --- PLAYER ANIMATION LOGIC ---
+        if (AEInputCheckCurr(AEVK_A) || AEInputCheckCurr(AEVK_D)) {
+            playerAnimTimer += dt;
+            if (playerAnimTimer >= PLAYER_ANIM_SPEED) {
+                playerAnimTimer = 0.0f;
+                currentPlayerFrame = (currentPlayerFrame == 0) ? 1 : 0; // Toggle frame between 0 and 1 to create the walking effect
+            }
         }
-    }
+        else {
+            currentPlayerFrame = 0; // Reset to default standing frame when idle
+            playerAnimTimer = 0.0f;
+        }
 
-    // --- HOLY WATER GUN LOGIC ---
-    // Decrease timers
-    fireCooldown -= dt;
-    bossDodgeCooldown -= dt;
-
-    // CHANGED: Now checks if the button is HELD DOWN (AEInputCheckCurr)
-    if (AEInputCheckCurr(AEVK_LBUTTON)) {
-
-        // Only fire if the cooldown timer has finished
-        if (fireCooldown <= 0.0f) {
-            fireCooldown = FIRE_RATE; // Reset timer
-
-            s32 cursorX, cursorY;
-            AEInputGetCursorPosition(&cursorX, &cursorY);
-
-            float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth() / 2.0f);
-            float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
-
-            float startX = playerX;
-            float startY = playerY + 15.0f;
-
-            float dirX = worldMouseX - startX;
-            float dirY = worldMouseY - startY;
-
-            float length = sqrtf((dirX * dirX) + (dirY * dirY));
-            if (length > 0.0001f) {
-                dirX /= length;
-                dirY /= length;
+        if (AEInputCheckTriggered(AEVK_SPACE)) {
+            if (isGrounded || jumpCount < MAX_JUMPS) {
+                playerVelY = JUMP_FORCE;
+                isGrounded = false;
+                jumpCount++;
             }
-            else {
-                dirX = facingRight ? 1.0f : -1.0f;
-                dirY = 0.0f;
-            }
+        }
 
-            // ADD SPREAD: Randomizes the direction slightly to simulate spraying liquid
-            float spreadX = ((rand() % 100 - 50) / 1000.0f); // Random between -0.1 and 0.1
-            float spreadY = ((rand() % 100 - 50) / 1000.0f);
-            dirX += spreadX;
-            dirY += spreadY;
+        // --- HOLY WATER GUN LOGIC ---
+        // Decrease timers
+        fireCooldown -= dt;
+        bossDodgeCooldown -= dt;
 
-            // Re-normalize after adding spread
-            length = sqrtf((dirX * dirX) + (dirY * dirY));
-            if (length > 0.0001f) {
-                dirX /= length;
-                dirY /= length;
-            }
+        // Check if the button is HELD DOWN for rapid fire (AEInputCheckCurr)
+        if (AEInputCheckCurr(AEVK_LBUTTON)) {
 
-            Fire_Bullet(startX, startY, dirX, dirY);
+            // Only fire if the cooldown timer has finished
+            if (fireCooldown <= 0.0f) {
+                fireCooldown = FIRE_RATE; // Reset timer
 
-            // Interaction: If sprayed, boss occasionally dodges
-            if (myBoss.active && !myBoss.shieldActive && bossDodgeCooldown <= 0.0f) {
-                if (rand() % 100 < 15) { // 15% chance to dodge per drop hitting near him
-                    if (myBoss.baseY > 0) myBoss.baseY = -200.0f;
-                    else myBoss.baseY = 200.0f;
+                s32 cursorX, cursorY;
+                AEInputGetCursorPosition(&cursorX, &cursorY);
 
-                    // Prevent him from dodging again for 1.5 seconds so he doesn't teleport rapidly
-                    bossDodgeCooldown = 1.5f;
+                float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth() / 2.0f);
+                float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
+
+                float startX = playerX;
+                float startY = playerY + 15.0f;
+
+                float dirX = worldMouseX - startX;
+                float dirY = worldMouseY - startY;
+
+                float length = sqrtf((dirX * dirX) + (dirY * dirY));
+                if (length > 0.0001f) {
+                    dirX /= length;
+                    dirY /= length;
+                }
+                else {
+                    dirX = facingRight ? 1.0f : -1.0f;
+                    dirY = 0.0f;
+                }
+
+                // Add a slight randomized spread to simulate spraying liquid
+                float spreadX = ((rand() % 100 - 50) / 1000.0f); // Random spread value between -0.05 and 0.05
+                float spreadY = ((rand() % 100 - 50) / 1000.0f);
+                dirX += spreadX;
+                dirY += spreadY;
+
+                // Re-normalize direction vector after adding spread
+                length = sqrtf((dirX * dirX) + (dirY * dirY));
+                if (length > 0.0001f) {
+                    dirX /= length;
+                    dirY /= length;
+                }
+
+                Fire_Bullet(startX, startY, dirX, dirY);
+
+                // Interaction: If sprayed, boss occasionally dodges
+                if (myBoss.active && !myBoss.shieldActive && bossDodgeCooldown <= 0.0f) {
+                    if (rand() % 100 < 15) { // 15% chance to dodge per drop hitting near the boss
+                        if (myBoss.baseY > 0) myBoss.baseY = -200.0f;
+                        else myBoss.baseY = 200.0f;
+
+                        // Prevent dodging again for 1.5 seconds to avoid rapid teleportation
+                        bossDodgeCooldown = 1.5f;
+                    }
                 }
             }
         }
     }
+    else {
+        // Force idle frame and lock timers when crouching
+        currentPlayerFrame = 0;
+        playerAnimTimer = 0.0f;
+        fireCooldown -= dt; // Keep decrementing cooldowns so shooting is possible immediately after standing
+        bossDodgeCooldown -= dt;
+    }
+
+    // --- MOMENTUM & MOVEMENT LOGIC ---
+    float targetVelX = 0.0f;
+
+    // Only accept left/right input if NOT crouching
+    if (!isCrouching) {
+        if (AEInputCheckCurr(AEVK_D)) { targetVelX = PLAYER_SPEED; facingRight = true; }
+        if (AEInputCheckCurr(AEVK_A)) { targetVelX = -PLAYER_SPEED; facingRight = false; }
+    }
+
+    if (isGrounded) {
+        // On the ground: Tight controls. No sliding physics
+        if (isCrouching) {
+            playerVelX = 0.0f; // Instant stop when crouching on the ground
+        }
+        else {
+            playerVelX = targetVelX; // Instant start/stop when running
+        }
+    }
+    else {
+        // In the air: Smoothly retain momentum (crouching mid-air keeps forward velocity)
+        playerVelX += (targetVelX - playerVelX) * 2.0f * dt;
+    }
+
+    // Apply velocity to move the player
+    playerX += playerVelX * dt;
+
+    // Adjusted X clamp to account for the new 140 width (half width is 70)
+    if (playerX < -753.33f) { playerX = -753.33f; playerVelX = 0.0f; } // Kill horizontal velocity against walls
+    if (playerX > 753.33f) { playerX = 753.33f; playerVelX = 0.0f; }
 
     // --- GRAVITY & CEILING LIMITS ---
     playerVelY -= GRAVITY * dt;
     playerY += playerVelY * dt;
 
-    // Adjusted ceiling clamp for the new 360 height (half height = 180). Top bar bottom is at 350.
+    // Adjusted ceiling clamp for the new 360 height (half height is 180). Top bar bottom is at 350.
     if (playerY > 230.0f) {
         playerY = 230.0f;
         if (playerVelY > 0.0f) playerVelY = 0.0f;
@@ -245,6 +306,8 @@ void Boss_Fight_Update()
     else {
         isGrounded = false;
     }
+
+    // Fast fall logic acts independently, allowing plummeting mid-air and crouching upon landing
     if (AEInputCheckCurr(AEVK_S)) { playerVelY -= 1000.0f * dt; }
 
     // ----------------------------------------------------
@@ -255,9 +318,13 @@ void Boss_Fight_Update()
     if (myBoss.active) {
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (myBoss.bullets[i].active) {
+                // Adjust player physical hitbox dynamically based on crouch state
+                float currentHitboxY = isCrouching ? playerY - 60.0f : playerY;
+                float currentHitboxH = isCrouching ? 60.0f : 120.0f;
+
                 // Expanded hitbox to fully match the new 140x360 dimensions
                 if (abs(myBoss.bullets[i].x - playerX) < 46.66f &&
-                    abs(myBoss.bullets[i].y - playerY) < 120.0f)
+                    abs(myBoss.bullets[i].y - currentHitboxY) < currentHitboxH)
                 {
                     playerHP--;
                     myBoss.bullets[i].active = false;
@@ -287,24 +354,36 @@ void Boss_Fight_Draw()
 {
     DrawTextureMesh(squareMesh, wallBgTexture, 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
 
-    // --- NEW: Draw Textured Player ---
-    if (playerTex)
+
+    // --- DRAW TEXTURED PLAYER ---
+    if (player_walk1 && player_walk2 && player_crouch)
     {
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 
-        // Tint magenta if hit, else normal color
+        // Tint magenta if hit, otherwise use normal color
         if (isPlayerHit) AEGfxSetColorToMultiply(1.0f, 0.0f, 1.0f, 1.0f);
         else             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
         AEMtx33 scale, trans, transform;
-        float dirScale = facingRight ? 93.33f : -93.33f; // Flip texture based on facing
-        AEMtx33Scale(&scale, dirScale, 240.0f);        // Increased height to 360.0f to form a rectangle
-        AEMtx33Trans(&trans, playerX, playerY);
+
+        // Flip texture horizontally based on facing direction
+        float dirScale = facingRight ? 93.33f : -93.33f;
+
+        // Dynamically adjust visual scaling and Y position based on crouch state
+        float drawHeight = isCrouching ? 120.0f : 240.0f;
+        float drawY = isCrouching ? playerY - 60.0f : playerY;
+
+        AEMtx33Scale(&scale, dirScale, drawHeight);
+        AEMtx33Trans(&trans, playerX, drawY);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
-        AEGfxTextureSet(playerTex, 0.0f, 0.0f);
+
+        // Select texture based on crouch state first, then fallback to walk animation
+        AEGfxTexture* currentTex = isCrouching ? player_crouch : ((currentPlayerFrame == 0) ? player_walk1 : player_walk2);
+        AEGfxTextureSet(currentTex, 0.0f, 0.0f);
+
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
         // Reset tint and render mode
@@ -313,9 +392,11 @@ void Boss_Fight_Draw()
     }
     else
     {
-        // Fallback to rectangle if texture fails to load
+        // Fallback to drawing a colored rectangle if texture fails to load
+        float drawHeight = isCrouching ? 120.0f : 240.0f;
+        float drawY = isCrouching ? playerY - 60.0f : playerY;
         u32 playerColor = isPlayerHit ? 0xFFFF00FF : COLOR_WHITE;
-        DrawSquareMesh(squareMesh, playerX, playerY, 93.33f, 240.0f, playerColor);
+        DrawSquareMesh(squareMesh, playerX, drawY, 93.33f, drawHeight, playerColor);
     }
 
     DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
@@ -332,7 +413,7 @@ void Boss_Fight_Draw()
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(fadeInAlpha);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Pure Black
+        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
 
         AEMtx33 scale, trans, transform;
         AEMtx33Scale(&scale, 1600.0f, 900.0f);
@@ -345,7 +426,7 @@ void Boss_Fight_Draw()
 
     // --- DRAW VICTORY SEQUENCE ---
     if (isVictorySequence) {
-        // 1. Draw Black Screen
+        // 1. Draw black overlay screen
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(victoryAlpha);
@@ -358,12 +439,12 @@ void Boss_Fight_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-        // 2. Draw Text when fully black
+        // 2. Draw victory text once the screen is fully black
         if (victoryAlpha >= 1.0f && victoryFontId >= 0) {
             AEGfxSetTransparency(1.0f);
 
-            // X: -0.4f roughly centers standard length text. Adjust if it's off-center!
-            AEGfxPrint(victoryFontId, "Patient Successfully Subdued", -0.4f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+            // -1.0f adjusts the X position
+            AEGfxPrint(victoryFontId, "Patient Successfully Subdued", -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
     }
     AEGfxSetTransparency(1.0f);
@@ -380,9 +461,11 @@ void Boss_Fight_Unload() {
     FreeMeshSafe(circleMesh);
     Bullets_Free();
 
-    // --- NEW: Clean up textures to prevent memory leaks ---
+    // Clean up textures to prevent memory leaks
     UnloadTextureSafe(wallBgTexture);
-    UnloadTextureSafe(playerTex);
+    UnloadTextureSafe(player_walk1);
+    UnloadTextureSafe(player_walk2);
+    UnloadTextureSafe(player_crouch);
 
     if (victoryFontId >= 0) {
         AEGfxDestroyFont(victoryFontId);
