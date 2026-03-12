@@ -137,5 +137,31 @@ namespace Assets
             "Assets/Lift/OutsideWorld_2.png",
         };
     }
+    namespace Frame_Anomaly {
+        constexpr const char* EverydayNormal = "Assets/Frame_Anomaly/EverydayNormal.png";
+        constexpr const char* EverydayPlain = "Assets/Frame_Anomaly/EverydayPlain.png";
+        constexpr const char* EverydayEye = "Assets/Frame_Anomaly/EverydayEye.png";
+        constexpr const char* EverydayHaunt = "Assets/Frame_Anomaly/EverydayHaunt.png";
+        constexpr const char* EverydayNegative = "Assets/Frame_Anomaly/EverydayNegative.png";
 
+        constexpr const char* HopeNormal = "Assets/Frame_Anomaly/HopeNormal.png";
+        constexpr const char* HopePlain = "Assets/Frame_Anomaly/HopePlain.png";
+        constexpr const char* HopeTear = "Assets/Frame_Anomaly/HopeTear.png";
+        constexpr const char* HopeFear = "Assets/Frame_Anomaly/HopeFear.png";
+        constexpr const char* HopeEye = "Assets/Frame_Anomaly/HopeEye.png";
+
+        constexpr const char* RecoveryNormal = "Assets/Frame_Anomaly/RecoveryNormal.png";
+        constexpr const char* RecoveryPlain = "Assets/Frame_Anomaly/RecoveryPlain.png";
+        constexpr const char* RecoveryScary = "Assets/Frame_Anomaly/RecoveryScary.png";
+        constexpr const char* RecoverySinking = "Assets/Frame_Anomaly/RecoverySinking.png";
+        constexpr const char* RecoveryMemLoss = "Assets/Frame_Anomaly/RecoveryMemLoss.png";
+
+        constexpr const char* SignsNormal = "Assets/Frame_Anomaly/SignsNormal.png";
+        constexpr const char* SignsBlood = "Assets/Frame_Anomaly/SignsBlood.png";
+        constexpr const char* SignsBeware = "Assets/Frame_Anomaly/SignsBeware.png";
+
+        constexpr const char* ColorNormal = "Assets/Frame_Anomaly/ColorNormal.png";
+        constexpr const char* ColorFaces = "Assets/Frame_Anomaly/ColorFaces.png";
+        constexpr const char* ColorBloody = "Assets/Frame_Anomaly/ColorBloody.png";
+    };
 }
