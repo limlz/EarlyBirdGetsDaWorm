@@ -11,7 +11,6 @@ enum SoundID {
     /****************  2. ENVIRONMENTAL SFX   ***************/
 
     SFX_DOOR_KNOCKING,              // SFX_DOOR_KNOCKING.wav
-    SFX_LIFT,                       // SFX_LIFT.wav
     SFX_LIGHT_FLICKER,              // SFX_LIGHT_BUZZING.wav
     SFX_PLANT_THUD,                 // SFX_PLANT_DROP_THONK.wav
     SFX_DOOR_KNOCK,                 // SFX_DOOR_KNOCK.wav
@@ -23,6 +22,10 @@ enum SoundID {
     SFX_SCREAMING,                  // SFX_SCREAMING.wav
     SFX_VOICE_WHISPER,              // SFX_VOICE_WHISPER.wav
     SFX_WHEELCHAIR_SQUEAK,          // SFX_WHEELCHAIR_SQUEAK.wav
+    SFX_HEARTBEAT,                  // SFX_HEARTBEAT.wav
+    SFX_EXHALE,                     // SFX_EXHALE.wav
+    SFX_CRYING,                     // SFX_CRYING.wav
+    SFX_CLOCK_TICK,                 // SFX_CLOCK_TICK.wav
 
     /****************  4. UI & SYSTEM SFX   *****************/
 
@@ -37,6 +40,8 @@ enum SoundID {
     SFX_TUTORIAL_TYPING,
 	SFX_AA,                         // SFX_AA.wav
 	SFX_FAH,                        // SFX_FAH.wav
+	SFX_ELEVATOR_PRESS,             // SFX_ELEVATOR_PRESS.wav
+    SFX_ELEVATOR_CLOSE,
 
     SND_COUNT
 };

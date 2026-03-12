@@ -272,6 +272,10 @@ void MainMenu_Update()
         else if (hoverQuit) { pendingNextState = GS_QUIT; isFadingOut = true; }
         else if (isHoveringCredits) { isCreditsOpen = true; creditsScrollY = -600.0f; }
     }
+
+    if (AEInputCheckCurr(AEVK_B)) {
+        next = BOSS_FIGHT_STATE;
+    }
 }
 
 void MainMenu_Draw()

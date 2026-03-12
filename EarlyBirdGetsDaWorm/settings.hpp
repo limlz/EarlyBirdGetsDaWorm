@@ -17,4 +17,6 @@ bool Settings_IsOpen();
 void Settings_Open();
 void Settings_Close();
 float Settings_GetMasterVolume();
+float Settings_GetBGMVolume();
+float Settings_GetSFXVolume();
 bool  Settings_IsHorrorLessEnabled();

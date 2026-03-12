@@ -22,7 +22,6 @@ void AudioManager_LoadAll() {
 
     // Environmental
     soundBank[SFX_DOOR_KNOCKING] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
-    soundBank[SFX_LIFT] = AEAudioLoadSound("Assets/Audio/SFX_LIFT.wav");
     soundBank[SFX_LIGHT_FLICKER] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
     soundBank[SFX_PLANT_THUD] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
     soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
@@ -30,9 +29,13 @@ void AudioManager_LoadAll() {
     // Characters
     soundBank[SFX_BOSS_FIGHT] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");
     soundBank[SFX_PLAYER_WALKING] = AEAudioLoadSound("Assets/Audio/SFX_PLAYER_WALK.wav");
-    soundBank[SFX_SCREAMING] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAMING.wav");
+    soundBank[SFX_SCREAMING] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAM.wav");
     soundBank[SFX_VOICE_WHISPER] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_WHISPER.wav");
     soundBank[SFX_WHEELCHAIR_SQUEAK] = AEAudioLoadSound("Assets/Audio/SFX_WHEELCHAIR_SQUEAK.wav");
+    soundBank[SFX_HEARTBEAT] = AEAudioLoadSound("Assets/Audio/SFX_HEARTBEAT.wav");
+    soundBank[SFX_EXHALE] = AEAudioLoadSound("Assets/Audio/SFX_EXHALE.wav");
+    soundBank[SFX_CRYING] = AEAudioLoadSound("Assets/Audio/SFX_CRYING.wav");
+    soundBank[SFX_CLOCK_TICK] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.wav");
 
     // UI
     soundBank[SFX_MAIN_MENU_WRITING_SCRATCH] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.wav");
@@ -46,6 +49,8 @@ void AudioManager_LoadAll() {
     soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
 	soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
     soundBank[SFX_FAH] = AEAudioLoadSound("Assets/Audio/SFX_FAH.wav");
+	soundBank[SFX_ELEVATOR_PRESS] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_PRESS.wav");
+    soundBank[SFX_ELEVATOR_CLOSE] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_CLOSE.wav");
 }
 
 void AudioManager_Unload() {

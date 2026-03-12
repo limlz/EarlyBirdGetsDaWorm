@@ -12,3 +12,6 @@ void Lighting_Unload();
 
 // Returns the opacity for the full-screen dark overlay in Game_Draw(), scaled per active illness
 float Lighting_GetOverlayAlpha();
+
+// Returns true when the nearest overhead light to the player is currently off or mid-flicker-off
+bool Lighting_IsPlayerInDarkness(float camX, s8 floorNum);

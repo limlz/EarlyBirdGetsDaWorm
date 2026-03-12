@@ -25,12 +25,30 @@ namespace Assets
         constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
         constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
+
+        constexpr const char* LiftMania = "Assets/Equipment/Journal/LiftMania.png";
+        constexpr const char* LiftDepression = "Assets/Equipment/Journal/LiftDepression.png";
+        constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
+        constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
+        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LiftOCD.png";
+
+        constexpr const char* WallParanoia = "Assets/Equipment/Journal/WallMania.png";
+        constexpr const char* WallMania = "Assets/Equipment/Journal/WallMania.png";
+        constexpr const char* WallDepression = "Assets/Equipment/Journal/WallDepression.png";
+        constexpr const char* WallDementia = "Assets/Equipment/Journal/WallDementia.png";
+        constexpr const char* WallSchizophrenia = "Assets/Equipment/Journal/WallSchizophrenia.png";
+        constexpr const char* WallAIW = "Assets/Equipment/Journal/WallAIW.png";
+        constexpr const char* WallOCD = "Assets/Equipment/Journal/WallOCD.png";
+        constexpr const char* WallInsomnia = "Assets/Equipment/Journal/WallInsomnia.png";
+        constexpr const char* WallScotophobia = "Assets/Equipment/Journal/WallScotophobia.png";
     }
     namespace Boss_Fight
     {
         constexpr const char* Boss = "Assets/Boss/boss.png";
         constexpr const char* Bullet1 = "Assets/Boss/boss_bullet.png";
         constexpr const char* Bullet2 = "Assets/Boss/boss_bullet1.png";
+        constexpr const char* PlayerShooting1 = "Assets/Player/player_shooting_1.png";
+        constexpr const char* PlayerShooting2 = "Assets/Player/player_shooting_2.png";
     }
     namespace Main_Menu
     {
@@ -181,5 +199,31 @@ namespace Assets
             "Assets/Lift/OutsideWorld_2.png",
         };
     }
+    namespace Frame_Anomaly {
+        constexpr const char* EverydayNormal = "Assets/Frame_Anomaly/EverydayNormal.png";
+        constexpr const char* EverydayPlain = "Assets/Frame_Anomaly/EverydayPlain.png";
+        constexpr const char* EverydayEye = "Assets/Frame_Anomaly/EverydayEye.png";
+        constexpr const char* EverydayHaunt = "Assets/Frame_Anomaly/EverydayHaunt.png";
+        constexpr const char* EverydayNegative = "Assets/Frame_Anomaly/EverydayNegative.png";
 
+        constexpr const char* HopeNormal = "Assets/Frame_Anomaly/HopeNormal.png";
+        constexpr const char* HopePlain = "Assets/Frame_Anomaly/HopePlain.png";
+        constexpr const char* HopeTear = "Assets/Frame_Anomaly/HopeTear.png";
+        constexpr const char* HopeFear = "Assets/Frame_Anomaly/HopeFear.png";
+        constexpr const char* HopeEye = "Assets/Frame_Anomaly/HopeEye.png";
+
+        constexpr const char* RecoveryNormal = "Assets/Frame_Anomaly/RecoveryNormal.png";
+        constexpr const char* RecoveryPlain = "Assets/Frame_Anomaly/RecoveryPlain.png";
+        constexpr const char* RecoveryScary = "Assets/Frame_Anomaly/RecoveryScary.png";
+        constexpr const char* RecoverySinking = "Assets/Frame_Anomaly/RecoverySinking.png";
+        constexpr const char* RecoveryMemLoss = "Assets/Frame_Anomaly/RecoveryMemLoss.png";
+
+        constexpr const char* SignsNormal = "Assets/Frame_Anomaly/SignsNormal.png";
+        constexpr const char* SignsBlood = "Assets/Frame_Anomaly/SignsBlood.png";
+        constexpr const char* SignsBeware = "Assets/Frame_Anomaly/SignsBeware.png";
+
+        constexpr const char* ColorNormal = "Assets/Frame_Anomaly/ColorNormal.png";
+        constexpr const char* ColorFaces = "Assets/Frame_Anomaly/ColorFaces.png";
+        constexpr const char* ColorBloody = "Assets/Frame_Anomaly/ColorBloody.png";
+    };
 }

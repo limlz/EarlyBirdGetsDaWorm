@@ -4,7 +4,6 @@
 enum class ILLNESSES : int
 {
     NONE,           // no patient / no evidence yet
-    //ALL,			// ghost (matches no illness exactly)
     PARANOIA,
     MANIA,
     DEPRESSION,
@@ -25,7 +24,7 @@ enum class ANOMALYID : int
     Wall_Mania,
     Wall_Depression,
     Wall_Dementia,
-    Wall_Schizophernia,
+    Wall_Schizophrenia,
     Wall_AIW,
     Wall_Insomnia,
     Wall_OCD,
@@ -52,6 +51,17 @@ enum class ANOMALYID : int
     Frame_Shift,
     Frame_Distort,
 
+    // ---- LIFT ----
+    Lift_Mania,
+    Lift_Depression,
+    Lift_Dementia,
+    Lift_OCD,
+    Lift_AIW,
+	Lift_Paranoia,
+	Lift_Schizophrenia,
+	Lift_Insomnia,
+	Lift_Scotophobia,
+
     None,
 };
 
@@ -77,4 +87,7 @@ void CentralPool_ClearPatientAnomalies();
 
 // The function other files will call to check their status
 bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
+
+// Debug only: forces a specific anomaly system on for the current patient
+void CentralPool_ForceSystemActive(AnomalyFiles systemFile);
 
