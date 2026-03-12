@@ -9,18 +9,6 @@
 
 static AEGfxVertexList* wallMesh = nullptr;
 
-//static AEGfxVertexList* crack1Mesh = nullptr;
-//static AEGfxVertexList* crack2Mesh = nullptr;
-//static AEGfxVertexList* crack3Mesh = nullptr;
-//static AEGfxVertexList* crack4Mesh = nullptr;
-//
-//static AEGfxVertexList* drawing1Mesh = nullptr;
-//static AEGfxVertexList* drawing2Mesh = nullptr;
-//static AEGfxVertexList* drawing3Mesh = nullptr;
-//
-//static AEGfxVertexList* leftHandMesh = nullptr;
-//static AEGfxVertexList* rightHandMesh = nullptr;
-
 // ============================================================
 // TEXTURES
 // ============================================================
@@ -37,18 +25,6 @@ static AEGfxTexture* aiwTexture[MAX_IMG];
 static AEGfxTexture* insomniaTexture[MAX_IMG];
 static AEGfxTexture* ocdTexture[MAX_IMG];
 static AEGfxTexture* scotoTexture[MAX_IMG];
-
-//static AEGfxTexture* crack1Texture = nullptr;
-//static AEGfxTexture* crack2Texture = nullptr;
-//static AEGfxTexture* crack3Texture = nullptr;
-//static AEGfxTexture* crack4Texture = nullptr;
-//
-//static AEGfxTexture* drawing1Texture = nullptr;
-//static AEGfxTexture* drawing2Texture = nullptr;
-//static AEGfxTexture* drawing3Texture = nullptr;
-//
-//static AEGfxTexture* leftHandTexture = nullptr;
-//static AEGfxTexture* rightHandTexture = nullptr;
 
 // ============================================================
 // STATE / VARIABLES
@@ -83,6 +59,11 @@ void Wall_SetEnabled(bool enabled)
 // draw position
 static f32 wallX = 0.0f;
 static f32 wallY = 0.0f;
+static f32 paranoiaX;
+static f32 paranoiaY;
+static f32 paranoiaEyeX;
+static f32 playerLeftPos;
+static f32 playerRightPos;
 
 // ============================================================
 // HELPERS: illness -> pool
@@ -242,9 +223,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
     }
 
     if (!gWallEnabled) return;
-    if (!Player_HasPatient()) {
-        return;
-    }
+    if (!Player_HasPatient()) return;
 
     ILLNESSES TrueDiagnosis = Player_GetTrueDiagnosis();
 
@@ -268,18 +247,28 @@ void Wall_Draw(f32 camX, s8 floorNum)
         //}
     }
 
+    // For paranoia eye anim
+    paranoiaX = 3267.0f + camX;
+    paranoiaY = 0.0f;
+
+    f32 camMin{ -3692.0f }, camMax{ -2778.0f };
+    f32 t{ (camX - camMin) / (camMax - camMin) };
+    t = AEClamp(t, 0.0f, 1.0f);
+
+    t = 1.0f - t; // flip direction
+    paranoiaEyeX = paranoiaX + (t - 0.5f) * 80.0f;
 
     switch (gWallPick[idx])
     {
         case ANOMALYID::Wall_Paranoia:
-            DrawTextureMesh(wallMesh, paranoiaTexture[0], wallX, wallY, 447.0f, 500.0f, 1.0f);
-            DrawTextureMesh(wallMesh, paranoiaTexture[1], wallX, wallY, 447.0f, 500.0f, 1.0f);
+            DrawTextureMesh(wallMesh, paranoiaTexture[0], paranoiaX, paranoiaY, 447.0f, 500.0f, 1.0f);
+            DrawTextureMesh(wallMesh, paranoiaTexture[1], paranoiaEyeX, paranoiaY, 447.0f, 500.0f, 1.0f);
             break;
         case ANOMALYID::Wall_Mania:
                 DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 250.0f, 246.0f, 1.0f);// sizing done
             break;
         case ANOMALYID::Wall_Depression:
-                DrawTextureMesh(wallMesh, depressionTexture[currentImage], wallX, wallY, 500.0f, 465.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, depressionTexture[currentImage], 50.0f, wallY, 500.0f, 465.0f, 1.0f);// sizing done
             break;
         case ANOMALYID::Wall_Dementia:
                 DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
@@ -299,7 +288,6 @@ void Wall_Draw(f32 camX, s8 floorNum)
         case ANOMALYID::Wall_Scotophobia:
                 DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 500.0f, 439.0f, 1.0f);// sizing done
             break;
-
         case ANOMALYID::None:
         default:
             break;

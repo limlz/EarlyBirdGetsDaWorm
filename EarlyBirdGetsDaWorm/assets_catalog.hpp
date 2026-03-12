@@ -80,7 +80,7 @@ namespace Assets
         constexpr const char* RightHand = "Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png";
 
         constexpr const char* PARANOIA_BACKGROUND = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
-        constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
+        constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_TOP.png";
 
         constexpr const char* MANIA_1 = "Assets/Wall_Anomaly/MANIA_1.png";
         constexpr const char* MANIA_2 = "Assets/Wall_Anomaly/MANIA_2.png";
