@@ -7,37 +7,48 @@
 // MESHES
 // ============================================================
 
-static AEGfxVertexList* wallBgMesh = nullptr;
+static AEGfxVertexList* wallMesh = nullptr;
 
-static AEGfxVertexList* crack1Mesh = nullptr;
-static AEGfxVertexList* crack2Mesh = nullptr;
-static AEGfxVertexList* crack3Mesh = nullptr;
-static AEGfxVertexList* crack4Mesh = nullptr;
-
-static AEGfxVertexList* drawing1Mesh = nullptr;
-static AEGfxVertexList* drawing2Mesh = nullptr;
-static AEGfxVertexList* drawing3Mesh = nullptr;
-
-static AEGfxVertexList* leftHandMesh = nullptr;
-static AEGfxVertexList* rightHandMesh = nullptr;
+//static AEGfxVertexList* crack1Mesh = nullptr;
+//static AEGfxVertexList* crack2Mesh = nullptr;
+//static AEGfxVertexList* crack3Mesh = nullptr;
+//static AEGfxVertexList* crack4Mesh = nullptr;
+//
+//static AEGfxVertexList* drawing1Mesh = nullptr;
+//static AEGfxVertexList* drawing2Mesh = nullptr;
+//static AEGfxVertexList* drawing3Mesh = nullptr;
+//
+//static AEGfxVertexList* leftHandMesh = nullptr;
+//static AEGfxVertexList* rightHandMesh = nullptr;
 
 // ============================================================
 // TEXTURES
 // ============================================================
+#define MAX_IMG 4
 
 static AEGfxTexture* wallBgTexture = nullptr;
 
-static AEGfxTexture* crack1Texture = nullptr;
-static AEGfxTexture* crack2Texture = nullptr;
-static AEGfxTexture* crack3Texture = nullptr;
-static AEGfxTexture* crack4Texture = nullptr;
+static AEGfxTexture* paranoiaTexture[2];
+static AEGfxTexture* maniaTexture[MAX_IMG];
+static AEGfxTexture* depressionTexture[MAX_IMG];
+static AEGfxTexture* dementiaTexture[MAX_IMG];
+static AEGfxTexture* schizoTexture[MAX_IMG];
+static AEGfxTexture* aiwTexture[MAX_IMG];
+static AEGfxTexture* insomniaTexture[MAX_IMG];
+static AEGfxTexture* ocdTexture[MAX_IMG];
+static AEGfxTexture* scotoTexture[MAX_IMG];
 
-static AEGfxTexture* drawing1Texture = nullptr;
-static AEGfxTexture* drawing2Texture = nullptr;
-static AEGfxTexture* drawing3Texture = nullptr;
-
-static AEGfxTexture* leftHandTexture = nullptr;
-static AEGfxTexture* rightHandTexture = nullptr;
+//static AEGfxTexture* crack1Texture = nullptr;
+//static AEGfxTexture* crack2Texture = nullptr;
+//static AEGfxTexture* crack3Texture = nullptr;
+//static AEGfxTexture* crack4Texture = nullptr;
+//
+//static AEGfxTexture* drawing1Texture = nullptr;
+//static AEGfxTexture* drawing2Texture = nullptr;
+//static AEGfxTexture* drawing3Texture = nullptr;
+//
+//static AEGfxTexture* leftHandTexture = nullptr;
+//static AEGfxTexture* rightHandTexture = nullptr;
 
 // ============================================================
 // STATE / VARIABLES
@@ -54,6 +65,11 @@ static ANOMALYID gWallPick[MAX_FLOORS]{};
 static bool        gWallPicked[MAX_FLOORS]{};
 static ILLNESSES   gLastIllness[MAX_FLOORS]{};
 static bool        gWallEnabled = true;
+
+// ANimation
+static s32 currentImage;
+static f32 imageDuration;
+static f32 wallTimer;
 
 void Wall_SetEnabled(bool enabled)              
 {
@@ -118,7 +134,50 @@ void Wall_Load()
 {
     wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
 
-    crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
+    paranoiaTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::PARANOIA_BACKGROUND);
+    paranoiaTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::PARANOIA_TOP);
+
+    maniaTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::MANIA_1);
+    maniaTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::MANIA_2);
+    maniaTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::MANIA_3);
+    maniaTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::MANIA_4);
+
+    depressionTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::DEPRESSION_1);
+    depressionTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::DEPRESSION_2);
+    depressionTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::DEPRESSION_3);
+    depressionTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::DEPRESSION_4);
+
+    dementiaTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::DEMENTIA_1);
+    dementiaTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::DEMENTIA_2);
+    dementiaTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::DEMENTIA_3);
+    dementiaTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::DEMENTIA_4);
+
+    schizoTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::SCHIZOPHRENIA_1);
+    schizoTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::SCHIZOPHRENIA_2);
+    schizoTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::SCHIZOPHRENIA_3);
+    schizoTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::SCHIZOPHRENIA_4);
+
+    aiwTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::AIW_SYNDROME_1);
+    aiwTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::AIW_SYNDROME_2);
+    aiwTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::AIW_SYNDROME_3);
+    aiwTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::AIW_SYNDROME_4);
+
+    insomniaTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::INSOMNIA_1);
+    insomniaTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::INSOMNIA_2);
+    insomniaTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::INSOMNIA_3);
+    insomniaTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::INSOMNIA_4);
+
+    ocdTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::OCD_1);
+    ocdTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::OCD_2);
+    ocdTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::OCD_3);
+    ocdTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::OCD_4);
+
+    scotoTexture[0] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_1);
+    scotoTexture[1] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_2);
+    scotoTexture[2] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_3);
+    scotoTexture[3] = LoadTextureChecked(Assets::Wall_Anomaly::SCOTOPHOBIA_4);
+
+    /*crack1Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack1);
     crack2Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack2);
     crack3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack3);
     crack4Texture = LoadTextureChecked(Assets::Wall_Anomaly::Crack4);
@@ -128,14 +187,13 @@ void Wall_Load()
     drawing3Texture = LoadTextureChecked(Assets::Wall_Anomaly::Drawing3);
 
     leftHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::LeftHand);
-    rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);
+    rightHandTexture = LoadTextureChecked(Assets::Wall_Anomaly::RightHand);*/
 }
 
 void Wall_Initialize()
 {
-    wallBgMesh = CreateSquareMesh(0xFFFFFFFF);
-
-    crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
+    wallMesh = CreateSquareMesh(0xFFFFFFFF);
+    /*crack1Mesh = CreateSquareMesh(0xFFFFFFFF);
     crack2Mesh = CreateSquareMesh(0xFFFFFFFF);
     crack3Mesh = CreateSquareMesh(0xFFFFFFFF);
     crack4Mesh = CreateSquareMesh(0xFFFFFFFF);
@@ -145,7 +203,7 @@ void Wall_Initialize()
     drawing3Mesh = CreateSquareMesh(0xFFFFFFFF);
 
     leftHandMesh = CreateSquareMesh(0xFFFFFFFF);
-    rightHandMesh = CreateSquareMesh(0xFFFFFFFF);
+    rightHandMesh = CreateSquareMesh(0xFFFFFFFF);*/
 
     srand((unsigned)std::time(nullptr));
 
@@ -158,6 +216,24 @@ void Wall_Initialize()
         gWallPick[i] = ANOMALYID::None;
         gWallPicked[i] = false;
     }
+
+    currentImage = 0;
+    imageDuration = 0.5f;
+    wallTimer = 0.5f;
+}
+
+void Wall_Update(f32 dt) {
+    wallTimer += dt;
+
+    if (wallTimer >= imageDuration)
+    {
+        wallTimer = 0.0f;
+        currentImage++;
+
+        if (currentImage >= MAX_IMG)
+            currentImage = 0; // loop animation
+    }
+
 }
 
 void Wall_Draw(f32 camX, s8 floorNum)
@@ -167,7 +243,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
     if (idx >= MAX_FLOORS) idx = MAX_FLOORS - 1;
 
     // ---- WALL BACKGROUND (world-anchored tiling) ----
-    if (wallBgTexture && wallBgMesh)
+    if (wallBgTexture && wallMesh)
     {
         const float TILE_W = 1600.0f;
         const float TILE_H = 900.0f;
@@ -183,7 +259,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
         for (float wx = firstTileWorldX; wx <= worldRight + TILE_W; wx += TILE_W)
         {
             float sx = wx + camX;
-            DrawTextureMesh(wallBgMesh, wallBgTexture, sx, 0.0f, TILE_W, TILE_H, 1.0f);
+            DrawTextureMesh(wallMesh, wallBgTexture, sx, 0.0f, TILE_W, TILE_H, 1.0f);
         }
     }
 
@@ -215,31 +291,42 @@ void Wall_Draw(f32 camX, s8 floorNum)
     switch (gWallPick[idx])
     {
     case ANOMALYID::Wall_Paranoia:
-        DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
+        //DrawTextureMesh(crack1Mesh, crack1Texture, wallX, wallY, 200.0f, 179.0f, 1.0f);
+        /*for (int i{ ; i < 2; ++i) {
+            DrawTextureMesh(wallMesh, paranoiaTexture[i], wallX, wallY, 200.0f, 179.0f, 1.0f);
+                }*/
         break;
     case ANOMALYID::Wall_Mania:
-        DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
+        //DrawTextureMesh(crack2Mesh, crack2Texture, wallX, wallY, 200.0f, 279.0f, 1.0f);
+            DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_Depression:
-        DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
+        //DrawTextureMesh(crack3Mesh, crack3Texture, wallX, wallY, 200.0f, 167.0f, 1.0f);
+            DrawTextureMesh(wallMesh, depressionTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_Dementia:
-        DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
+        //DrawTextureMesh(crack4Mesh, crack4Texture, wallX, wallY, 10.0f, 119.0f, 1.0f);
+            DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_Schizophernia:
-        DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
+        //DrawTextureMesh(drawing1Mesh, drawing1Texture, wallX, wallY, 300.0f, 246.0f, 1.0f);
+            DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_AIW:
-        DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
+        //DrawTextureMesh(drawing2Mesh, drawing2Texture, wallX, wallY, 400.0f, 300.0f, 1.0f);
+            DrawTextureMesh(wallMesh, aiwTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_Insomnia:
-        DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
+        //DrawTextureMesh(drawing3Mesh, drawing3Texture, wallX, wallY, 300.0f, 181.0f, 1.0f);
+            DrawTextureMesh(wallMesh, insomniaTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_OCD:
-        DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+        //DrawTextureMesh(leftHandMesh, leftHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+            DrawTextureMesh(wallMesh, ocdTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
     case ANOMALYID::Wall_Scotophobia:
-        DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+        //DrawTextureMesh(rightHandMesh, rightHandTexture, wallX, wallY, 100.0f, 100.0f, 1.0f);
+            DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 200.0f, 279.0f, 1.0f);
         break;
 
     case ANOMALYID::None:
@@ -250,9 +337,9 @@ void Wall_Draw(f32 camX, s8 floorNum)
 
 void Wall_Unload()
 {
-    FreeMeshSafe(wallBgMesh);
+    FreeMeshSafe(wallMesh);
 
-    FreeMeshSafe(crack1Mesh);
+    /*FreeMeshSafe(crack1Mesh);
     FreeMeshSafe(crack2Mesh);
     FreeMeshSafe(crack3Mesh);
     FreeMeshSafe(crack4Mesh);
@@ -262,11 +349,11 @@ void Wall_Unload()
     FreeMeshSafe(drawing3Mesh);
 
     FreeMeshSafe(leftHandMesh);
-    FreeMeshSafe(rightHandMesh);
+    FreeMeshSafe(rightHandMesh);*/
 
     UnloadTextureSafe(wallBgTexture);
 
-    UnloadTextureSafe(crack1Texture);
+    /*UnloadTextureSafe(crack1Texture);
     UnloadTextureSafe(crack2Texture);
     UnloadTextureSafe(crack3Texture);
     UnloadTextureSafe(crack4Texture);
@@ -276,14 +363,31 @@ void Wall_Unload()
     UnloadTextureSafe(drawing3Texture);
 
     UnloadTextureSafe(leftHandTexture);
-    UnloadTextureSafe(rightHandTexture);
+    UnloadTextureSafe(rightHandTexture);*/
+
+    for (int i{}; i < 2; ++i) {
+        UnloadTextureSafe(paranoiaTexture[i]);
+    }
+
+    for (int i{}; i < MAX_IMG; ++i) {
+        UnloadTextureSafe(maniaTexture[i]);
+        UnloadTextureSafe(depressionTexture[i]);
+        UnloadTextureSafe(dementiaTexture[i]);
+        UnloadTextureSafe(schizoTexture[i]);
+        UnloadTextureSafe(aiwTexture[i]);
+        UnloadTextureSafe(insomniaTexture[i]);
+        UnloadTextureSafe(ocdTexture[i]);
+        UnloadTextureSafe(scotoTexture[i]);
+    }
+
 }
 
-std::vector<AEGfxTexture*> Wall_GetAnomalies()
-{
-    return {
-        crack1Texture, crack2Texture, crack3Texture, crack4Texture,
-        drawing1Texture, drawing2Texture, drawing3Texture,
-        leftHandTexture, rightHandTexture
-    };
-}
+//std::vector<AEGfxTexture*> Wall_GetAnomalies()
+//{
+//    return {
+//        //maniaTexture
+//        crack1Texture, crack2Texture, crack3Texture, crack4Texture,
+//        drawing1Texture, drawing2Texture, drawing3Texture,
+//        leftHandTexture, rightHandTexture
+//    };
+//}
