@@ -28,11 +28,16 @@ static float panelOffsetY = 800.0f; // Starts off-screen (high up)
 static constexpr float SETTINGS_FADE_SPEED = 4.0f;
 static constexpr float SETTINGS_SLIDE_SPEED = 12.0f;
 
+static AEGfxTexture* settingsBgOn;
+//static AEGfxTexture* settingsBgOff;
+
 void Settings_Load()
 {
     // Load the assets specifically needed for the Settings Panel
     settingsCloseTex = LoadTextureChecked(Assets::Main_Menu::CloseButton);
     settingsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    settingsBgOn = LoadTextureChecked(Assets::Main_Menu::SettingsBgOn);
+    //settingsBgOff = LoadTextureChecked(Assets::Main_Menu::SettingsBgOff);
 }
 
 void Settings_Initialize()
@@ -165,11 +170,19 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
     DrawBlackOverlay(squareMesh, optionsOverlayAlpha);
 
     // 2. Draw UI Elements
-    AEGfxSetTransparency(1.0f);
+    //AEGfxSetTransparency(1.0f);
 
     // Solid Backing Panel (extended to fit toggle below the sliders)
-    DrawSquareMesh(squareMesh, 0.0f, panelOffsetY, 600.0f, 500.0f, 0xFF2A2A2A);
-    DrawSquareMesh(squareMesh, 0.0f, 175.0f + panelOffsetY, 600.0f, 100.0f, 0xFF3A3A3A); // Header bar
+    //DrawSquareMesh(squareMesh, 0.0f, panelOffsetY, 600.0f, 500.0f, 0xFF2A2A2A);
+    //DrawSquareMesh(squareMesh, 0.0f, 175.0f + panelOffsetY, 600.0f, 100.0f, 0xFF3A3A3A); // Header bar
+
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+    if (settingsBgOn) {
+        DrawTextureMesh(squareMesh, settingsBgOn, 0.0f, panelOffsetY, 800.0f, 680.0f, 1.0f);
+    }
 
     // Close Button
     if (settingsCloseTex) {
@@ -213,6 +226,8 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
 void Settings_Unload()
 {
     UnloadTextureSafe(settingsCloseTex);
+    UnloadTextureSafe(settingsBgOn);
+	//UnloadTextureSafe(settingsBgOff);
     if (settingsFontId >= 0) {
         AEGfxDestroyFont(settingsFontId);
         settingsFontId = -1;

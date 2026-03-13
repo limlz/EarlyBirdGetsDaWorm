@@ -91,7 +91,7 @@ void Notifications_Trigger()
 void Notifications_Update(bool liftActive, f32 dt)
 {
 	// Toggles the pager when user press Q, pager will not be displayed if lift is active
-	if (AEInputCheckTriggered(AEVK_Q) && !liftActive)
+	if (AEInputCheckTriggered(AEVK_TAB) && !liftActive)
 	{
 		isPagerOpen = !isPagerOpen;
 	}
@@ -138,7 +138,7 @@ void Notifications_Update(bool liftActive, f32 dt)
 	}
 
 	if (pagerFirstPop) {
-		if (AEInputCheckTriggered(AEVK_Q) && !liftActive) {
+		if (AEInputCheckTriggered(AEVK_TAB) && !liftActive) {
 			pagerFirstPop = false;
 		}
 	}
@@ -208,7 +208,7 @@ void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8
 		if (pagerFirstPop) {
 			f32 infoX{ textPosition(-220.0f, -380.0f).first },
 				infoY{ textPosition(-220.0f, -380.0f).second };
-			AEGfxPrint(lineID, "PRESS [Q] TO CLOSE PAGER", infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxPrint(lineID, "PRESS [TAB] TO CLOSE PAGER", infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 		}
 	}
 

@@ -97,6 +97,9 @@ void Tutorial_Load() {
 	yesTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
 	noButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
 	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
+	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
+	//tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
 }
 
 void Tutorial_Initialize() {
@@ -134,9 +137,9 @@ void Tutorial_Initialize() {
 	tutFinished = false;
 
 	// Tutorial Dialogue Box
-	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f, false};
+	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 25.0f, false};
 	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
-		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f, false };
+		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 25.0f, false };
 	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
 	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
 		"This lift can travel from\nBasement 1 to Level 9.\nTo go to a level,\nClick [B1-9] to select a floor.", 25.0f, false };
@@ -148,6 +151,29 @@ void Tutorial_Initialize() {
 	tutSpacePress = false;
 }
 
+/*!*****************************************************************************
+\brief
+	Updates a tutorial dialogue box.
+
+	Handles the animation and behaviour of a dialogue box including:
+	- Fade-in animation
+	- Sliding movement to its destination position
+	- Typing text effect
+	- Typing sound playback
+	- Spacebar logic to instantly reveal the full text
+
+\param[in,out] dialogue
+	Reference to the dialogue box being updated.
+
+\param[in] dt
+	Delta time representing the time elapsed since the previous frame.
+
+\param[in] destX
+	The target x-position the dialogue box will slide toward.
+
+\return
+	None.
+*******************************************************************************/
 void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 	// Fading in from the right
 	if (!dialogue.dialogueShown) {
@@ -231,8 +257,8 @@ void Tutorial_Update(f32 dt) {
 	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) },
 		noButtonHover{ IsAreaClicked(200.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) };
 
-	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);
-	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
+	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
+	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
 
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
 	if (tutPopUpShown) {
@@ -258,7 +284,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_START: {
 				tutStarted = true;
 				DialogueBox_Update(tutStartedBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_TAB)) {
 					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE;
 					tutStarted = false;
 				}
@@ -267,7 +293,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
 				tutPagerOpened = true;
 				DialogueBox_Update(tutPagerOpenedBox, dt, 350.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_TAB)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_OPEN;
 					tutPagerOpened = false;
 				}
@@ -285,8 +311,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				tutLiftOpened = true;
 				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
-				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
-					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9))) {
+				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (Lift_IsFloorPressed())) {
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
 					tutLiftOpened = false;
 				}
@@ -314,7 +339,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_END: {
 				tutPatientDelivered = true;
 				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
 					tutFinished = true;
 				}
 				break;
@@ -329,6 +354,28 @@ bool Tutorial_Prompt_Answered() { return promptAnswered; }
 bool IsTutorialActive() { return tutPopUpShown; }
 
 // Helper function for typing effect
+/*!*****************************************************************************
+\brief
+	Draws tutorial text with support for multiple lines.
+
+	The function processes newline characters in the string and
+	renders each line individually with proper vertical spacing.
+
+\param[in] str
+	The text string to render.
+
+\param[in] tutTextX
+	The x-position where the text should be drawn.
+
+\param[in] tutTextY
+	The y-position where the text should be drawn.
+
+\param[in] alpha
+	Transparency value used when rendering the text.
+
+\return
+	None.
+*******************************************************************************/
 void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) {
 	f32 winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 	f32 lineHeight{ 100.0f / winH};
@@ -336,8 +383,9 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) 
 	const char* lineStart{ str };
 
 	for (int i{};; ++i) {
+		// This basically checks the end of the line, if it reaches the end, line will be copied and printed
 		if (str[i] == '\n' || str[i] == '\0') {
-			std::string line(lineStart, &str[i]); // copy line
+			std::string line(lineStart, &str[i]); 
 			AEGfxPrint(promptFontID, line.c_str(), textPosition(tutTextX, tutTextY).first, textPosition(tutTextX, tutTextY).second - lineHeight * lineNum, 700.0f / winH, 1.0f, 1.0f, 1.0f, alpha);
 			++lineNum;
 			if (str[i] == '\0') {
@@ -350,12 +398,24 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) 
 }
 
 // Helper function for dialogue
+/*!*****************************************************************************
+\brief
+	Renders the background for a tutorial dialogue box.
+
+	The background uses a semi-transparent colored rectangle and
+	fades in based on the dialogue box alpha value.
+
+\param[in] dialogue
+	Reference to the dialogue box whose background will be drawn.
+
+\return
+	None.
+*******************************************************************************/
 void DrawDialogueBoxBackground(DialogueBox& dialogue) {
 	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Apply black fade like the guide
-	//u32 colorBG = (0x000000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
 	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
 	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
 }
@@ -377,16 +437,14 @@ void Tutorial_Draw() {
 
 		// Draws the buttons
 		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
-		DrawTextureMesh(yesTextMesh, yesTextTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
 		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
-		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
 	if (doTutorial && !tutFinished) {
-		const char* infoText{ "PRESS [SPACE] TO CONTINUE" };
+		const char* infoText{ "PRESS [SPACE] TO SKIP TEXT" };
 		// Change text when tutorial is ending
 		if (curTutStage == TUTORIAL_END) {
-			infoText = "PRESS [Q] TO END TUTORIAL";
+			infoText = "PRESS [TAB] TO END TUTORIAL";
 		}
 		f32 infoX{ textPosition(-220.0f, -380.0f).first },
 			infoY{ textPosition(-220.0f, -380.0f).second };
@@ -398,7 +456,7 @@ void Tutorial_Draw() {
 				tutStartedBox.tutFullText,
 				(size_t)tutStartedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
+			Tutorial_Text_Draw(visibleText.c_str(), -240.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerOpened) {
 			DrawDialogueBoxBackground(tutPagerOpenedBox);
@@ -406,7 +464,7 @@ void Tutorial_Draw() {
 				tutPagerOpenedBox.tutFullText,
 				(size_t)tutPagerOpenedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
+			Tutorial_Text_Draw(visibleText.c_str(), -280.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerClosed) {
 			DrawDialogueBoxBackground(tutPagerClosedBox);
