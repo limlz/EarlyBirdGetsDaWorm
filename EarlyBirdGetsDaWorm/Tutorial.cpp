@@ -148,6 +148,29 @@ void Tutorial_Initialize() {
 	tutSpacePress = false;
 }
 
+/*!*****************************************************************************
+\brief
+	Updates a tutorial dialogue box.
+
+	Handles the animation and behaviour of a dialogue box including:
+	- Fade-in animation
+	- Sliding movement to its destination position
+	- Typing text effect
+	- Typing sound playback
+	- Spacebar logic to instantly reveal the full text
+
+\param[in,out] dialogue
+	Reference to the dialogue box being updated.
+
+\param[in] dt
+	Delta time representing the time elapsed since the previous frame.
+
+\param[in] destX
+	The target x-position the dialogue box will slide toward.
+
+\return
+	None.
+*******************************************************************************/
 void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 	// Fading in from the right
 	if (!dialogue.dialogueShown) {
@@ -231,8 +254,8 @@ void Tutorial_Update(f32 dt) {
 	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) },
 		noButtonHover{ IsAreaClicked(200.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) };
 
-	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);
-	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);
+	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
+	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
 
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
 	if (tutPopUpShown) {
@@ -329,6 +352,28 @@ bool Tutorial_Prompt_Answered() { return promptAnswered; }
 bool IsTutorialActive() { return tutPopUpShown; }
 
 // Helper function for typing effect
+/*!*****************************************************************************
+\brief
+	Draws tutorial text with support for multiple lines.
+
+	The function processes newline characters in the string and
+	renders each line individually with proper vertical spacing.
+
+\param[in] str
+	The text string to render.
+
+\param[in] tutTextX
+	The x-position where the text should be drawn.
+
+\param[in] tutTextY
+	The y-position where the text should be drawn.
+
+\param[in] alpha
+	Transparency value used when rendering the text.
+
+\return
+	None.
+*******************************************************************************/
 void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) {
 	f32 winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 	f32 lineHeight{ 100.0f / winH};
@@ -336,8 +381,9 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) 
 	const char* lineStart{ str };
 
 	for (int i{};; ++i) {
+		// This basically checks the end of the line, if it reaches the end, line will be copied and printed
 		if (str[i] == '\n' || str[i] == '\0') {
-			std::string line(lineStart, &str[i]); // copy line
+			std::string line(lineStart, &str[i]); 
 			AEGfxPrint(promptFontID, line.c_str(), textPosition(tutTextX, tutTextY).first, textPosition(tutTextX, tutTextY).second - lineHeight * lineNum, 700.0f / winH, 1.0f, 1.0f, 1.0f, alpha);
 			++lineNum;
 			if (str[i] == '\0') {
@@ -350,12 +396,24 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) 
 }
 
 // Helper function for dialogue
+/*!*****************************************************************************
+\brief
+	Renders the background for a tutorial dialogue box.
+
+	The background uses a semi-transparent colored rectangle and
+	fades in based on the dialogue box alpha value.
+
+\param[in] dialogue
+	Reference to the dialogue box whose background will be drawn.
+
+\return
+	None.
+*******************************************************************************/
 void DrawDialogueBoxBackground(DialogueBox& dialogue) {
 	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Apply black fade like the guide
-	//u32 colorBG = (0x000000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
 	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
 	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
 }
@@ -383,7 +441,7 @@ void Tutorial_Draw() {
 	}
 
 	if (doTutorial && !tutFinished) {
-		const char* infoText{ "PRESS [SPACE] TO CONTINUE" };
+		const char* infoText{ "PRESS [SPACE] TO SKIP TEXT" };
 		// Change text when tutorial is ending
 		if (curTutStage == TUTORIAL_END) {
 			infoText = "PRESS [Q] TO END TUTORIAL";
