@@ -7,4 +7,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=DOOR TBC
 SYMPTOM5=Some buttons suddenly grow or shrink
-SYMPTOM6=Giant thuds echo, then faint mouse-like steps
+SYMPTOM6=Massive thuds and tiny scurrying steps distort my sense of size

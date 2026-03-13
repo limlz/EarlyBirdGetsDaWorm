@@ -7,4 +7,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=A hand suddenly slams against the window
 SYMPTOM5=Every button trembles in place
-SYMPTOM6=Sharp scratching, sudden loud spikes, or restless whispers
+SYMPTOM6=Sharp scratching and frantic whispers burst out without warning

@@ -13,24 +13,35 @@ namespace Assets
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
         constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
-        constexpr const char* DoorSlam = "Assets/Equipment/evidence/DoorSlam.png";
+        constexpr const char* Sound = "Assets/Equipment/evidence/Sound.png";
+
+        constexpr const char* DoorHand = "Assets/Equipment/evidence/DoorSlam.png";
 		constexpr const char* DoorLight = "Assets/Equipment/evidence/DoorLight.png";
+        constexpr const char* DoorOCD = "Assets/Equipment/evidence/DoorOCD.png";
 
         constexpr const char* FrameGlitch = "Assets/Equipment/evidence/FrameGlitch.png";
         constexpr const char* FrameShift = "Assets/Equipment/evidence/FrameShift.png";
         constexpr const char* FrameDistort = "Assets/Equipment/evidence/FrameDistort.png";
 
+        constexpr const char* LightParanoia = "Assets/Equipment/evidence/LightParanoia.png";
         constexpr const char* LightMania = "Assets/Equipment/evidence/LightMania.png";
         constexpr const char* LightDepression = "Assets/Equipment/evidence/LightDepression.png";
         constexpr const char* LightDementia = "Assets/Equipment/evidence/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/evidence/LightSchizophrenia.png";
-        constexpr const char* Light = "Assets/Equipment/evidence/Light.png";
+        constexpr const char* LightAIW = "Assets/Equipment/evidence/LightAIW.png";
+        constexpr const char* LightOCD = "Assets/Equipment/evidence/Light.png";
+        constexpr const char* LightInsomnia = "Assets/Equipment/evidence/Light.png";
+        constexpr const char* LightScotophobia = "Assets/Equipment/evidence/Light.png";
 
+        constexpr const char* LiftParanoia = "Assets/Equipment/evidence/LiftParanoia.png";
         constexpr const char* LiftMania = "Assets/Equipment/evidence/LiftMania.png";
         constexpr const char* LiftDepression = "Assets/Equipment/evidence/LiftDepression.png";
         constexpr const char* LiftDementia = "Assets/Equipment/evidence/LiftDementia.png";
+        constexpr const char* LiftSchizophrenia = "Assets/Equipment/evidence/LiftSchizophrenia.png";
         constexpr const char* LiftAIW = "Assets/Equipment/evidence/LiftAIW.png";
         constexpr const char* LiftOCD = "Assets/Equipment/evidence/LiftOCD.png";
+        constexpr const char* LiftInsomnia = "Assets/Equipment/evidence/LiftInsomnia.png";
+        constexpr const char* LiftScotophobia = "Assets/Equipment/evidence/LiftScotophobia.png";
 
         constexpr const char* WallParanoia = "Assets/Equipment/evidence/WallParanoia.png";
         constexpr const char* WallMania = "Assets/Equipment/evidence/WallMania.png";

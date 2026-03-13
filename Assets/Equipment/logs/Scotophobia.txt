@@ -7,4 +7,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=Everything suddenly goes pitch black in the lift
-SYMPTOM6=A whisper follows me in the dark, gone in the light
+SYMPTOM6=A whisper follows me in the dark and dies the moment light returns

@@ -7,4 +7,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The doors start to open then suddenly slam shut
-SYMPTOM6=A fast heartbeat then a piercing ringing sound
+SYMPTOM6=A racing heartbeat builds until a piercing ring cuts through

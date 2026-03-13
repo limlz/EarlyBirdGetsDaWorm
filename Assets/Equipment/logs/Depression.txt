@@ -7,4 +7,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=DOOR TBC
 SYMPTOM5=The buttons sink lower than usual
-SYMPTOM6=The music dulls, heavy breathing, muffled sobs, or distant knocking
+SYMPTOM6=Heavy breathing, muffled sobs, and distant knocks weigh down the air
