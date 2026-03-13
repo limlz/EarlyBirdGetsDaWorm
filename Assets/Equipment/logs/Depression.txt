@@ -1,6 +1,7 @@
 TITLE=Depression
 
-DESC=A persistent feeling of sadness and hopelessness
+DESC=A persistent feeling of sadness and 
+DESC2=hopelessness.
 
 SYMPTOM1=A dark cloud follows me wherever I go
 SYMPTOM2=LIGHTING TBC

@@ -1,6 +1,7 @@
 TITLE=Dementia
 
-DESC=A condition that causes memory loss and confusion
+DESC=A condition that causes memory loss and 
+DESC2=confusion.
 
 SYMPTOM1=A long crack slowly spreads across the wall
 SYMPTOM2=LIGHTING TBC

@@ -1,6 +1,7 @@
 TITLE=OCD
 
-DESC=A disorder that causes repetitive thoughts and compulsive actions
+DESC=A disorder that causes repetitive  
+DESC2=thoughts and compulsive actions.
 
 SYMPTOM1=A crack spreads across the wall
 SYMPTOM2=LIGHTING TBC

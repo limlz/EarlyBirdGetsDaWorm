@@ -9,6 +9,7 @@
 // ============================================================
 
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
+static s8 arrowFontId = -1;
 const float UI_SCALE = 0.7f;        // tweak this to make the journal UI bigger or smaller
 
 static bool gOpen = false;
@@ -210,6 +211,7 @@ struct JournalTextData
 {
     std::string title;
     std::string desc;
+    std::string desc2;
     std::string symptomText[6];
 };
 
@@ -245,17 +247,22 @@ static bool LoadJournalTextFile(const char* filePath, JournalTextData& outData)
     while (std::getline(file, line))
     {
         if (line.empty())
+        {
             continue;
+        }
 
         size_t eq = line.find('=');
         if (eq == std::string::npos)
+        {
             continue;
+        }
 
         std::string key = line.substr(0, eq);
         std::string value = line.substr(eq + 1);
 
         if (key == "TITLE")         outData.title = value;
         else if (key == "DESC")     outData.desc = value;
+        else if (key == "DESC2")    outData.desc2 = value;
         else if (key == "SYMPTOM1") outData.symptomText[0] = value;
         else if (key == "SYMPTOM2") outData.symptomText[1] = value;
         else if (key == "SYMPTOM3") outData.symptomText[2] = value;
@@ -293,21 +300,22 @@ static const char* IllnessText(ILLNESSES i)
 {
     switch (i)                                            
     {
-    case ILLNESSES::PARANOIA:       return "PARANOIA";      
-    case ILLNESSES::MANIA:          return "MANIA";         
-    case ILLNESSES::DEPRESSION:     return "DEPRESSION";    
-    case ILLNESSES::DEMENTIA:       return "DEMENTIA";      
-    case ILLNESSES::SCHIZOPHRENIA:  return "SCHIZOPHRENIA"; 
-	case ILLNESSES::AIW_SYNDROME:   return "AIW SYNDROME";  
-	case ILLNESSES::INSOMNIA:       return "INSOMNIA";      
+    case ILLNESSES::PARANOIA:       return "Paranoia";
+    case ILLNESSES::MANIA:          return "Mania";         
+    case ILLNESSES::DEPRESSION:     return "Depression";    
+    case ILLNESSES::DEMENTIA:       return "Dementia";      
+    case ILLNESSES::SCHIZOPHRENIA:  return "Schizophrenia"; 
+	case ILLNESSES::AIW_SYNDROME:   return "AIW Syndrome";  
+	case ILLNESSES::INSOMNIA:       return "Insomnia";      
     case ILLNESSES::OCD:            return "OCD";          
-	case ILLNESSES::SCOTOPHOBIA:    return "SCOTOPHOBIA";   
-    default:                        return "UNKNOWN";       
+	case ILLNESSES::SCOTOPHOBIA:    return "Scotophobia";   
+    default:                        return "Unknown";       
     }
 }
 
 void Journal_Load()
 {
+    arrowFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     journalFontId = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
     JournalBook = LoadTextureChecked(Assets::Equipment::JournalBook);
 
@@ -436,8 +444,6 @@ bool Journal_HasObserved(ANOMALYID id)
 
 void Journal_Clear()
 {
-    // (keep your existing clears)
-    //gExtraGhostAnoms = 0;
     gObserved.clear();
 }
 
@@ -489,7 +495,7 @@ void Journal_Update()
 
     ClampSelected();
 
-    if (AEInputCheckTriggered(AEVK_LEFT))
+    if (AEInputCheckTriggered(AEVK_A))
     {
         if (gRightPage > 0)
         {
@@ -498,7 +504,7 @@ void Journal_Update()
         }
     }
 
-    if (AEInputCheckTriggered(AEVK_RIGHT))
+    if (AEInputCheckTriggered(AEVK_D))
     {
         if (gRightPage < 1)
         {
@@ -532,42 +538,51 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     // Dimensions -----------------------------------------------------------------------------------------
     float HeaderY       = 380.0f;
-    float SubHeaderY    = 200.0f;
+    float SubHeaderY    = 170.0f;
 
     // Pages X positions
     float LeftStartX    = -700.0f;
     float RightStartX   = 80.0f;
 
     // Anomalies list
-    float ListY         = 250.0f;
+    float ListY         = 230.0f;
     float ListStep      = 70.0f;
 
     // 2x2 grid layout
-    float imgW          = 190.0f;
-    float imgH          = 210.0f;
+    float imgW          = 200.0f;
+    float imgH          = 220.0f;
 
     float colGap        = 220.0f;
     float rowGap        = 220.0f;
 
-    float gridStartX    = (RightStartX - 20.0f) + imgW * 0.5f;
+    float gridStartX    = (RightStartX - 30.0f) + imgW * 0.5f;
     float gridStartY    = (ListY)-imgH * 0.5f;
 
     float tiltAngle     = 0.12f;
 
     // Sizing -----------------------------------------------------------------------------------------
-    float Header        = 1.0f;
-    float SubHeader     = 0.75f;
-    float text          = 0.50f;
+    float Header        = 1.2f;
+    float SubHeader     = 0.90f;
+    float text          = 0.55f;
     float list          = 0.90f;
     float listSelected  = 0.80f;
 
     // ============================================================
     // LEFT SIDE
     // ============================================================
-    // Header & Subheader
-    AEGfxPrint(journalFontId, "Illnesses", X(LeftStartX), Y(HeaderY),
+    
+    // Header 
+    AEGfxPrint(journalFontId, "Illnesses", 
+        X(LeftStartX), Y(HeaderY),
         Header,
         0, 0, 0, // black
+        1);
+
+	// Description
+    AEGfxPrint(journalFontId, "Use arrow keys to select an illness",
+        X(LeftStartX), Y(HeaderY - 60.0f),
+        text,
+        0.2f, 0.2f, 0.2f,
         1);
 
     for (int i = 0; i < (int)gIllnessList.size(); ++i)
@@ -577,14 +592,16 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
         if (i == gSelected)
         {
-            AEGfxPrint(journalFontId, name, X(LeftStartX), Y(IllnessY),
+            AEGfxPrint(journalFontId, name, 
+                X(LeftStartX), Y(IllnessY),
                 list,
                 0.55f, 0.05f, 0.05f, // bright red
                 1);
         }
         else
         {
-            AEGfxPrint(journalFontId, name, X(LeftStartX), Y(IllnessY),
+            AEGfxPrint(journalFontId, name, 
+                X(LeftStartX), Y(IllnessY),
                 listSelected,
                 0.2f, 0.2f, 0.2f, // dark gray
                 1);
@@ -600,16 +617,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     ILLNESSES chosen = gIllnessList[gSelected];
     JournalTextData& textData = gJournalTextData[gSelected];
 
-    hasHovered = false;
-    hoveredIndex = -1;
-
-    // Header
-    AEGfxPrint(journalFontId, textData.title.c_str(), 
-        X(RightStartX), Y(HeaderY),
-        Header,
-        0, 0, 0,
-        1);
-
     // Mouse position
     s32 mouseX = 0, mouseY = 0;
     AEInputGetCursorPosition(&mouseX, &mouseY);
@@ -617,15 +624,31 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
     float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
 
+	// Hover state reset
+    hasHovered = false;
+    hoveredIndex = -1;
+
+    // Header
+    AEGfxPrint(journalFontId, textData.title.c_str(), 
+        X(RightStartX), Y(HeaderY),
+        Header,
+        0.55f, 0.05f, 0.05f, // bright red
+        1);
+
     // ---------------------------------------------------------------------------
     // PAGE 1
     if (gRightPage == 0)
     {
         // Description
         AEGfxPrint(journalFontId, textData.desc.c_str(),
-            X(RightStartX), Y(HeaderY - 55.0f),
+            X(RightStartX), Y(HeaderY - 60.0f),
             text,
-            0, 0, 0,
+            0.2f, 0.2f, 0.2f,
+            1);
+        AEGfxPrint(journalFontId, textData.desc2.c_str(),
+            X(RightStartX), Y(HeaderY - 100.0f),
+            text,
+            0.2f, 0.2f, 0.2f,
             1);
 
         // Subheader
@@ -638,7 +661,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         AEGfxPrint(journalFontId, "Only 3 out of all will occur during a shift",
             X(RightStartX), Y(SubHeaderY - 55.0f),
             text,
-            0, 0., 0,
+            0.2f, 0.2f, 0.2f,
             1);
 
         // Draw anomalies in a 2x2 grid
@@ -650,7 +673,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             int row = i / 2;
 
             float x = gridStartX + col * colGap;
-            float y = (SubHeaderY - 220.0f);
+            float y = (SubHeaderY - 240.0f);
 
             bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
 
@@ -674,25 +697,11 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             }
         } // ----------------------------------------------------------------------------
 
-        // Hover info area
-        const char* hoverText = "Hover an image";
-
-        if (hoveredIndex >= 0 && hoveredIndex < 6)
-        {
-            hoverText = textData.symptomText[hoveredIndex].c_str();
-        }
-
-        AEGfxPrint(journalFontId, hoverText,
-            X(RightStartX), Y(-300.0f),
-            text,
-            0.2f, 0.2f, 0.2f,
-            1);
-
         // Navigate to next page controls
-        AEGfxPrint(journalFontId, "[D] >",
-            X(520.0f), Y(-350.0f),
+        AEGfxPrint(arrowFontId, "[D]>",
+            X(600.0f), Y(-370.0f),
             SubHeader,
-            0.2f, 0.2f, 0.2f,
+            0, 0, 0,
             1);
     }
 
@@ -733,26 +742,26 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             }
         }
 
-        // Hover info area
-        const char* hoverText = "Hover an image";
-
-        if (hoveredIndex >= 0 && hoveredIndex < 6)
-        {
-            hoverText = textData.symptomText[hoveredIndex].c_str();
-        }
-
-        AEGfxPrint(journalFontId, hoverText,
-            X(RightStartX), Y(-300.0f),
-            text,
-            0.2f, 0.2f, 0.2f,
-            1);
-
         // Navigate to previous page controls
-        AEGfxPrint(journalFontId, "< [A]",
-            X(520.0f), Y(-350.0f),
+        AEGfxPrint(arrowFontId, "<[A]",
+            X(600.0f), Y(-370.0f),
             SubHeader,
-            0.2f, 0.2f, 0.2f,
+            0, 0, 0,
             1);
 
     }
+
+    // Hover info area
+    const char* hoverText = "Hover an image";
+
+    if (hoveredIndex >= 0 && hoveredIndex < 6)
+    {
+        hoverText = textData.symptomText[hoveredIndex].c_str();
+    }
+
+    AEGfxPrint(journalFontId, hoverText,
+        X(RightStartX), Y(-300.0f),
+        text,
+        0, 0, 0,
+        1);
 }

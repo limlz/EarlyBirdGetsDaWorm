@@ -1,6 +1,7 @@
 TITLE=Mania
 
-DESC=A state of uncontrollable energy and racing thoughts
+DESC=A state of uncontrollable energy and  
+DESC2=racing thoughts.
 
 SYMPTOM1=The clock begins spinning wildly
 SYMPTOM2=LIGHTING TBC

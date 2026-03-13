@@ -1,6 +1,7 @@
 TITLE=AIW Syndrome
 
-DESC=A disorder that distorts perception of size and space
+DESC=A disorder that distorts perception of 
+DESC2=size and space.
 
 SYMPTOM1=The cat gets smaller and smaller
 SYMPTOM2=LIGHTING TBC

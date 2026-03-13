@@ -1,6 +1,7 @@
 TITLE=Paranoia
 
-DESC=An intense feeling of fear and distrust toward others
+DESC=An intense feeling of fear and distrust
+DESC2=toward others.
 
 SYMPTOM1=The eyes follow wherever I move
 SYMPTOM2=LIGHTING TBC

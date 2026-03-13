@@ -1,6 +1,7 @@
 TITLE=Schizophrenia
 
-DESC=A disorder that causes hallucinations and distorted reality
+DESC=A disorder that causes hallucinations and 
+DESC2=distorted reality.
 
 SYMPTOM1=The child and the dark figure walk through the park
 SYMPTOM2=LIGHTING TBC
