@@ -65,6 +65,8 @@ namespace Assets
         constexpr const char* CloseButton = "Assets/Main_Menu/cross.png";
         constexpr const char* TitleFramePrefix = "Assets/Main_Menu/title_sheets/title_";
         constexpr const char* TitleFrameSuffix = ".png";
+        constexpr const char* SettingsBgOn = "Assets/Main_Menu/settings_bgON.png";
+        constexpr const char* SettingsBgOff = "Assets/Main_Menu/settings_bgOFF.png";
     }
     namespace Wall_Anomaly
     {
@@ -158,8 +160,8 @@ namespace Assets
     }
     namespace Tutorial
     {
-        constexpr const char* YesButton = "Assets/Tutorial/yes-placeholder.jpg";
-        constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.jpg";
+        constexpr const char* YesButton = "Assets/Tutorial/yes-placeholder.png";
+        constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.png";
         constexpr const char* tutBG = "Assets/Tutorial/textbg-placeholder.jpg";
     }
     namespace Guide

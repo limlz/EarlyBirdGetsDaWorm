@@ -99,8 +99,8 @@ void Tutorial_Load() {
 	yesTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
 	noButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
 	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	/*yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
-	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);*/
+	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
+	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
 	//tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
 }
 
@@ -398,9 +398,7 @@ void Tutorial_Draw() {
 
 		// Draws the buttons
 		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
-		DrawTextureMesh(yesTextMesh, yesTextTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
 		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
-		DrawTextureMesh(noTextMesh, noTextTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
 	if (doTutorial && !tutFinished) {
