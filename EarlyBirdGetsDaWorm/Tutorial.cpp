@@ -311,8 +311,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				tutLiftOpened = true;
 				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
-				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (AEInputCheckTriggered(AEVK_0) || AEInputCheckTriggered(AEVK_1) || AEInputCheckTriggered(AEVK_2) || AEInputCheckTriggered(AEVK_3) || AEInputCheckTriggered(AEVK_4) || AEInputCheckTriggered(AEVK_5)
-					|| AEInputCheckTriggered(AEVK_6) || AEInputCheckTriggered(AEVK_7) || AEInputCheckTriggered(AEVK_8) || AEInputCheckTriggered(AEVK_9))) {
+				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (Lift_IsFloorPressed())) {
 					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
 					tutLiftOpened = false;
 				}
