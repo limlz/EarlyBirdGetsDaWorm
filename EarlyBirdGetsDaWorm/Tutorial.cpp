@@ -137,9 +137,9 @@ void Tutorial_Initialize() {
 	tutFinished = false;
 
 	// Tutorial Dialogue Box
-	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [Q] to open your pager.", 25.0f, false};
+	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 25.0f, false};
 	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
-		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [Q] again to close the pager.", 25.0f, false };
+		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 25.0f, false };
 	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
 	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
 		"This lift can travel from\nBasement 1 to Level 9.\nTo go to a level,\nClick [B1-9] to select a floor.", 25.0f, false };
@@ -284,7 +284,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_START: {
 				tutStarted = true;
 				DialogueBox_Update(tutStartedBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_TAB)) {
 					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE;
 					tutStarted = false;
 				}
@@ -293,7 +293,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
 				tutPagerOpened = true;
 				DialogueBox_Update(tutPagerOpenedBox, dt, 350.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_TAB)) {
 					curTutStage = TUTORIAL_WAIT_FOR_LIFT_OPEN;
 					tutPagerOpened = false;
 				}
@@ -339,7 +339,7 @@ void Tutorial_Update(f32 dt) {
 			case TUTORIAL_END: {
 				tutPatientDelivered = true;
 				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_Q)) {
+				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
 					tutFinished = true;
 				}
 				break;
@@ -444,7 +444,7 @@ void Tutorial_Draw() {
 		const char* infoText{ "PRESS [SPACE] TO SKIP TEXT" };
 		// Change text when tutorial is ending
 		if (curTutStage == TUTORIAL_END) {
-			infoText = "PRESS [Q] TO END TUTORIAL";
+			infoText = "PRESS [TAB] TO END TUTORIAL";
 		}
 		f32 infoX{ textPosition(-220.0f, -380.0f).first },
 			infoY{ textPosition(-220.0f, -380.0f).second };
@@ -456,7 +456,7 @@ void Tutorial_Draw() {
 				tutStartedBox.tutFullText,
 				(size_t)tutStartedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
+			Tutorial_Text_Draw(visibleText.c_str(), -240.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerOpened) {
 			DrawDialogueBoxBackground(tutPagerOpenedBox);
@@ -464,7 +464,7 @@ void Tutorial_Draw() {
 				tutPagerOpenedBox.tutFullText,
 				(size_t)tutPagerOpenedBox.tutVisibleCharCount
 			);
-			Tutorial_Text_Draw(visibleText.c_str(), -270.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
+			Tutorial_Text_Draw(visibleText.c_str(), -280.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerClosed) {
 			DrawDialogueBoxBackground(tutPagerClosedBox);
