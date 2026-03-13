@@ -230,15 +230,14 @@ void Game_Update()
         return;
     }
 
+    Journal_Update();
+    if (Journal_IsOpen()) return;
+
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive())
     {
         Tutorial_Update(dt);
         return;
     }
-
-    Journal_Update();
-    if (Journal_IsOpen()) return;
-
     // ------------------------------------------------------------
     // PHASE 4: TIME TRACKING & DAY ADVANCEMENT
     // ------------------------------------------------------------
@@ -533,7 +532,6 @@ void Game_Draw()
     Timer_DrawDayOverlay(squareMesh);
     Guide_Draw();
     Lift_Draw(squareMesh);
-    Tutorial_Draw();
 
     DebugInfo info;
     info.camX = camX;
@@ -569,6 +567,7 @@ void Game_Draw()
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     Journal_Draw(squareMesh);
+    Tutorial_Draw();
     PauseMenu_Draw(squareMesh);
     Debug_Draw(info);
 }

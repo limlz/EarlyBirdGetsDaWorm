@@ -30,7 +30,7 @@ namespace Assets
         constexpr const char* LiftDepression = "Assets/Equipment/Journal/LiftDepression.png";
         constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
         constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
-        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LightOCD.png";
+        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LiftOCD.png";
 
         constexpr const char* WallParanoia = "Assets/Equipment/Journal/WallMania.png";
         constexpr const char* WallMania = "Assets/Equipment/Journal/WallMania.png";
@@ -82,7 +82,7 @@ namespace Assets
         constexpr const char* RightHand = "Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png";
 
         constexpr const char* PARANOIA_BACKGROUND = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
-        constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
+        constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_TOP.png";
 
         constexpr const char* MANIA_1 = "Assets/Wall_Anomaly/MANIA_1.png";
         constexpr const char* MANIA_2 = "Assets/Wall_Anomaly/MANIA_2.png";

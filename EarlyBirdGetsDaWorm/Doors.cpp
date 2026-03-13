@@ -150,17 +150,6 @@ static void ClearDoorEvent(int doorIdx)
 // ANOMALY TRIGGERS
 // ============================================================
 
-static void TriggerKnock(int doorIdx)
-{
-    DoorState& s = gDoorState[doorIdx];
-    ClearDoorEvent(doorIdx);
-
-    s.anomaly = ANOMALYID::Door_Knock;
-    s.eventCooldown = 1.0f;
-
-    AudioManager_PlaySFX(SFX_DOOR_KNOCK, 0.35f, 1.0f, 0);
-}
-
 static void TriggerHandprintSlam(int doorIdx)
 {
     DoorState& s = gDoorState[doorIdx];
@@ -203,10 +192,9 @@ static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 
 static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
 {
-    // Pools to match dictionary exactly
-    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_Knock };
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_HandSlam };
     static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Door_HandSlam };
-    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Door_Knock };
+    static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Door_LightChange };
     static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Door_HandSlam, ANOMALYID::Door_LightChange };
     static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Door_LightChange };
 
@@ -217,7 +205,7 @@ static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
     case ILLNESSES::INSOMNIA:      return PickFromPool(insomniaPool);
     case ILLNESSES::OCD:           return PickFromPool(ocdPool);
     case ILLNESSES::SCOTOPHOBIA:   return PickFromPool(scotophobiaPool);
-    default:             return ANOMALYID::None;
+    default:                       return ANOMALYID::None;
     }
 }
 
@@ -334,9 +322,8 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
 
     switch (chosen)
     {
-    case ANOMALYID::Door_HandSlam:   TriggerHandprintSlam(doorNearPlayer); break;
-    case ANOMALYID::Door_Knock:      TriggerKnock(doorNearPlayer); break;
-    case ANOMALYID::Door_LightChange:TriggerLightChange(doorNearPlayer); break;
+    case ANOMALYID::Door_HandSlam:    TriggerHandprintSlam(doorNearPlayer); break;
+    case ANOMALYID::Door_LightChange: TriggerLightChange(doorNearPlayer); break;
     default: break;
     }
 
@@ -368,10 +355,9 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
             {
                 switch (extraEvent)
                 {
-                case ANOMALYID::Door_HandSlam:    TriggerHandprintSlam(doorNearPlayer); break;
-                case ANOMALYID::Door_Knock:       TriggerKnock(doorNearPlayer); break;
-                case ANOMALYID::Door_LightChange: TriggerLightChange(doorNearPlayer); break;
-                default: break;
+                    case ANOMALYID::Door_HandSlam:    TriggerHandprintSlam(doorNearPlayer); break;
+                    case ANOMALYID::Door_LightChange: TriggerLightChange(doorNearPlayer); break;
+                    default: break;
                 }
             }
         }
