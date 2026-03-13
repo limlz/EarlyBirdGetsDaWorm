@@ -1,0 +1,10 @@
+TITLE=OCD
+
+DESC=A disorder that causes repetitive thoughts and compulsive actions
+
+SYMPTOM1=A single yellow eye watches me
+SYMPTOM2=LIGHTING TBC
+SYMPTOM3=FRAME TBC
+SYMPTOM4=The door window shifts out of place
+SYMPTOM5=One button is slightly out of place
+SYMPTOM6=A ticking grows louder when I stop moving

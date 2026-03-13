@@ -27,7 +27,7 @@ static AEGfxTexture* gWallOCD = nullptr;
 static AEGfxTexture* gWallScotophobia = nullptr;
 
 static AEGfxTexture* gDoorSlam = nullptr;
-static AEGfxTexture* gLightChange = nullptr;
+static AEGfxTexture* gDoorLight = nullptr;
 
 static AEGfxTexture* gLightParanoia = nullptr;
 static AEGfxTexture* gLightMania = nullptr;
@@ -61,7 +61,7 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Wall_Scotophobia:       return gWallScotophobia;
 
     case ANOMALYID::Door_HandSlam:          return gDoorSlam;
-    case ANOMALYID::Door_LightChange:       return gLightChange;
+    case ANOMALYID::Door_LightChange:       return gLight;
 
     case ANOMALYID::Light_Mania:            return gLightMania;
     case ANOMALYID::Light_Depression:       return gLightDepression;
@@ -70,7 +70,6 @@ AEGfxTexture* GetAnomalyJournalTexture(ANOMALYID id)
     case ANOMALYID::Light_AIW:              return gLight;
     case ANOMALYID::Light_Insomnia:         return gLight;
     case ANOMALYID::Light_Scotophobia:      return gLight;
-
 
     case ANOMALYID::Lift_Mania:             return gLiftMania;
     case ANOMALYID::Lift_Depression:        return gLiftDepression;
@@ -104,7 +103,7 @@ struct IllnessInfo
 
 static const std::vector<IllnessInfo> gIllnessDictionary =
 {
-    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Shift,     ANOMALYID::Door_HandSlam,       ANOMALYID::Wall_Paranoia },     "WHISPERING" },
+    { ILLNESSES::PARANOIA,      { ANOMALYID::Door_LightChange,  ANOMALYID::Frame_Glitch,    ANOMALYID::Door_HandSlam,       ANOMALYID::Wall_Paranoia },     "WHISPERING" },
     { ILLNESSES::MANIA,         { ANOMALYID::Lift_Mania,        ANOMALYID::Frame_Glitch,    ANOMALYID::Light_Mania,         ANOMALYID::Wall_Mania },        "SCREAMING" },
     { ILLNESSES::DEPRESSION,    { ANOMALYID::Lift_Depression,   ANOMALYID::Frame_Shift,     ANOMALYID::Light_Depression,    ANOMALYID::Wall_Depression },   "KNOCKING" },
     { ILLNESSES::DEMENTIA,      { ANOMALYID::Lift_Dementia,     ANOMALYID::Frame_Shift,     ANOMALYID::Light_Dementia,      ANOMALYID::Wall_Dementia },     "THUD" },
@@ -245,7 +244,7 @@ static const char* AnomalyDescription(ANOMALYID id)
     case ANOMALYID::Door_LightChange:    return "The door window light changes unnaturally.";
     case ANOMALYID::Door_Knock:          return "Knocking can be heard from the door.";
 
-    case ANOMALYID::Light_Mania:         return "Rapid Pulse (Warm)";
+    case ANOMALYID::Light_Mania:         return "Red and Green rapid pulse";
     case ANOMALYID::Light_Depression:    return "Slow Pulse (Blue)";
     case ANOMALYID::Light_Dementia:      return "Slow Pulse (Warm)";
     case ANOMALYID::Light_Schizophrenia: return "Eratic Flashes (Teal)";
@@ -355,6 +354,7 @@ void Journal_Load()
 	gWallScotophobia = LoadTextureChecked(Assets::Equipment::WallScotophobia);
 
 	gDoorSlam = LoadTextureChecked(Assets::Equipment::DoorSlam);
+    gDoorLight = LoadTextureChecked(Assets::Equipment::DoorLight);
 
     gLightMania = LoadTextureChecked(Assets::Equipment::LightMania);
     gLightDepression = LoadTextureChecked(Assets::Equipment::LightDepression);
@@ -389,7 +389,7 @@ void Journal_Unload()
     UnloadTextureSafe(gWallScotophobia);
 
     UnloadTextureSafe(gDoorSlam);
-    UnloadTextureSafe(gLightChange);
+    UnloadTextureSafe(gLight);
 
     UnloadTextureSafe(gLightMania);
     UnloadTextureSafe(gLightDepression);

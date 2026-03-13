@@ -1,0 +1,10 @@
+TITLE=Insomnia
+
+DESC=A condition that prevents a person from sleeping properly
+
+SYMPTOM1=A single yellow eye watches me
+SYMPTOM2=LIGHTING TBC
+SYMPTOM3=FRAME TBC
+SYMPTOM4=Window door lights flicker on
+SYMPTOM5=The doors start to open then suddenly slam shut
+SYMPTOM6=A fast heartbeat then a piercing ringing sound

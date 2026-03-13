@@ -1,0 +1,10 @@
+TITLE=Dementia
+
+DESC=A condition that causes memory loss and confusion
+
+SYMPTOM1=A long crack slowly spreads across the wall
+SYMPTOM2=LIGHTING TBC
+SYMPTOM3=FRAME TBC
+SYMPTOM4=DOOR TBC
+SYMPTOM5=The buttons are all mixed up
+SYMPTOM6=A lift sound echoes down the hall, and the wheelchair squeak stutters

@@ -1,0 +1,10 @@
+TITLE=AIW Syndrome
+
+DESC=A disorder that distorts perception of size and space
+
+SYMPTOM1=The cat gets smaller and smaller
+SYMPTOM2=LIGHTING TBC
+SYMPTOM3=FRAME TBC
+SYMPTOM4=DOOR TBC
+SYMPTOM5=Some buttons suddenly grow or shrink
+SYMPTOM6=Giant thuds echo, then faint mouse-like steps

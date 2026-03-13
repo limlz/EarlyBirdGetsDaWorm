@@ -192,10 +192,10 @@ static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 
 static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
 {
-    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_HandSlam };
+    static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_LightChange };
     static const std::vector<ANOMALYID> schizophreniaPool{ ANOMALYID::Door_HandSlam };
     static const std::vector<ANOMALYID> insomniaPool{ ANOMALYID::Door_LightChange };
-    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Door_HandSlam, ANOMALYID::Door_LightChange };
+    static const std::vector<ANOMALYID> ocdPool{ ANOMALYID::Door_HandSlam };
     static const std::vector<ANOMALYID> scotophobiaPool{ ANOMALYID::Door_LightChange };
 
     switch (illness)

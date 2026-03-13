@@ -13,34 +13,34 @@ namespace Assets
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
         constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
-        constexpr const char* DoorSlam = "Assets/Equipment/Journal/DoorSlam.png";
-		constexpr const char* DoorLight = "Assets/Equipment/Journal/DoorLight.png";
+        constexpr const char* DoorSlam = "Assets/Equipment/evidence/DoorSlam.png";
+		constexpr const char* DoorLight = "Assets/Equipment/evidence/DoorLight.png";
 
-        constexpr const char* FrameGlitch = "Assets/Equipment/Journal/FrameGlitch.png";
-        constexpr const char* FrameShift = "Assets/Equipment/Journal/FrameShift.png";
-        constexpr const char* FrameDistort = "Assets/Equipment/Journal/FrameDistort.png";
+        constexpr const char* FrameGlitch = "Assets/Equipment/evidence/FrameGlitch.png";
+        constexpr const char* FrameShift = "Assets/Equipment/evidence/FrameShift.png";
+        constexpr const char* FrameDistort = "Assets/Equipment/evidence/FrameDistort.png";
 
-        constexpr const char* LightMania = "Assets/Equipment/Journal/LightMania.png";
-        constexpr const char* LightDepression = "Assets/Equipment/Journal/LightDepression.png";
-        constexpr const char* LightDementia = "Assets/Equipment/Journal/LightDementia.png";
-        constexpr const char* LightSchizophrenia = "Assets/Equipment/Journal/LightSchizophrenia.png";
-        constexpr const char* Light = "Assets/Equipment/Journal/Light.png";
+        constexpr const char* LightMania = "Assets/Equipment/evidence/LightMania.png";
+        constexpr const char* LightDepression = "Assets/Equipment/evidence/LightDepression.png";
+        constexpr const char* LightDementia = "Assets/Equipment/evidence/LightDementia.png";
+        constexpr const char* LightSchizophrenia = "Assets/Equipment/evidence/LightSchizophrenia.png";
+        constexpr const char* Light = "Assets/Equipment/evidence/Light.png";
 
-        constexpr const char* LiftMania = "Assets/Equipment/Journal/LiftMania.png";
-        constexpr const char* LiftDepression = "Assets/Equipment/Journal/LiftDepression.png";
-        constexpr const char* LiftDementia = "Assets/Equipment/Journal/LiftDementia.png";
-        constexpr const char* LiftAIW = "Assets/Equipment/Journal/LiftAIW.png";
-        constexpr const char* LiftOCD = "Assets/Equipment/Journal/LiftOCD.png";
+        constexpr const char* LiftMania = "Assets/Equipment/evidence/LiftMania.png";
+        constexpr const char* LiftDepression = "Assets/Equipment/evidence/LiftDepression.png";
+        constexpr const char* LiftDementia = "Assets/Equipment/evidence/LiftDementia.png";
+        constexpr const char* LiftAIW = "Assets/Equipment/evidence/LiftAIW.png";
+        constexpr const char* LiftOCD = "Assets/Equipment/evidence/LiftOCD.png";
 
-        constexpr const char* WallParanoia = "Assets/Equipment/Journal/WallMania.png";
-        constexpr const char* WallMania = "Assets/Equipment/Journal/WallMania.png";
-        constexpr const char* WallDepression = "Assets/Equipment/Journal/WallDepression.png";
-        constexpr const char* WallDementia = "Assets/Equipment/Journal/WallDementia.png";
-        constexpr const char* WallSchizophrenia = "Assets/Equipment/Journal/WallSchizophrenia.png";
-        constexpr const char* WallAIW = "Assets/Equipment/Journal/WallAIW.png";
-        constexpr const char* WallOCD = "Assets/Equipment/Journal/WallOCD.png";
-        constexpr const char* WallInsomnia = "Assets/Equipment/Journal/WallInsomnia.png";
-        constexpr const char* WallScotophobia = "Assets/Equipment/Journal/WallScotophobia.png";
+        constexpr const char* WallParanoia = "Assets/Equipment/evidence/WallParanoia.png";
+        constexpr const char* WallMania = "Assets/Equipment/evidence/WallMania.png";
+        constexpr const char* WallDepression = "Assets/Equipment/evidence/WallDepression.png";
+        constexpr const char* WallDementia = "Assets/Equipment/evidence/WallDementia.png";
+        constexpr const char* WallSchizophrenia = "Assets/Equipment/evidence/WallSchizophrenia.png";
+        constexpr const char* WallAIW = "Assets/Equipment/evidence/WallAIW.png";
+        constexpr const char* WallOCD = "Assets/Equipment/evidence/WallOCD.png";
+        constexpr const char* WallInsomnia = "Assets/Equipment/evidence/WallInsomnia.png";
+        constexpr const char* WallScotophobia = "Assets/Equipment/evidence/WallScotophobia.png";
     }
     namespace Boss_Fight
     {

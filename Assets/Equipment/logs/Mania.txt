@@ -1,0 +1,10 @@
+TITLE=Mania
+
+DESC=A state of uncontrollable energy and racing thoughts
+
+SYMPTOM1=The clock begins spinning wildly
+SYMPTOM2=LIGHTING TBC
+SYMPTOM3=FRAME TBC
+SYMPTOM4=A hand suddenly slams against the window
+SYMPTOM5=Every button trembles in place
+SYMPTOM6=Sharp scratching, sudden loud spikes, or restless whispers
