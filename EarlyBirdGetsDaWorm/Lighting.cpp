@@ -237,10 +237,6 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
 
         fd.isVisible = !fd.isVisible;
 
-        // PARANOIA and SCOTOPHOBIA sync the frame overlay to the light so the whole screen pulses with it
-        if (effIllness == ILLNESSES::PARANOIA || effIllness == ILLNESSES::SCOTOPHOBIA)
-            Frames_SyncToLight(floorNum, i, fd.isVisible);
-
         float lightWx = i * 600.0f + 300.0f;
 
         // Dementia wraps light world positions so the corridor appears to repeat infinitely

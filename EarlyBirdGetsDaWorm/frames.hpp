@@ -1,55 +1,91 @@
 #pragma once
-#include "pch.hpp"
 
-// ============================================================
-// FRAMES MODULE (Frames.hpp)
-// - Paintings/frames that glitch based on the carried patient's illness.
-// - GHOST: illness can be ILLNESSES::GHOST (use mimic illness inside Frames.cpp).
-// ============================================================
+/*********************************** DATA STRUCTURES *************************************/
 
-// Frame glitch timing state machine
+/******************************************************************************************
+	@brief	State machine phases for the global frame glitch timing.
+******************************************************************************************/
 enum FRAME_TIMING_STATE
 {
-    STATE_NORMAL = 0,    // normal painting
-    STATE_GLITCHING,     // anomaly active (wrong texture + offsets)
-    STATE_COOLDOWN       // brief reset pause
+	STATE_NORMAL = 0,    // Normal painting, no anomalies active
+	STATE_GLITCHING,     // Anomaly active (wrong texture + physical offsets)
+	STATE_COOLDOWN       // Brief reset pause before returning to normal
 };
 
-// What the frame "belongs to" (kept from your code)
+/******************************************************************************************
+	@brief	Identifiers for the entity type a frame is currently reacting to.
+******************************************************************************************/
 enum ENTITIES
 {
-    HUMAN = 0,
-    GHOST_ENTITY        // renamed from GHOST to avoid clashing with ILLNESSES::GHOST
+	HUMAN = 0,
+	GHOST_ENTITY         // Renamed from GHOST to avoid clashing with ILLNESSES::GHOST
 };
 
-// Per-frame data stored in levelMap[floor][frame]
+/******************************************************************************************
+	@brief	Holds the persistent state, positional data, and design mapping for a single frame.
+******************************************************************************************/
 struct FrameAnomaly
 {
-    ENTITIES entity = HUMAN;
+	ENTITIES entity = HUMAN;
 
-    float posX = 0.0f;
-    float posY = 0.0f;
+	float posX = 0.0f;
+	float posY = 0.0f;
 
-    f32   width = 0.0f;
-    f32   height = 0.0f;
+	f32   width = 0.0f;
+	f32   height = 0.0f;
 
-    int   designID = 1;       // 1..3
-    int   currentState = 0;   // 0..(FRAME_STATES-1)
+	int   designID = 1;       // Base poster design (0..4 based on updated logic)
+	int   currentState = 0;   // The specific texture state (0 = normal, 1+ = scary states)
 };
 
-// ============================================================
-// PUBLIC API
-// ============================================================
+/***************************************** LOAD ******************************************/
 
-// Sync nearby frames when a specific light toggles on/off
-void Frames_SyncToLight(s8 floor, int lightIndex, bool isLightOn);
-
-// Resets all frames to normal (optional public; keep if other modules call it)
-void Frames_ResetAll();
-
-// Asset + lifetime
+/******************************************************************************************
+	@brief	Loads all textures and assets required for the Frames anomaly system.
+******************************************************************************************/
 void Frames_Load();
+
+/*************************************** INITIALIZE **************************************/
+
+/******************************************************************************************
+	@brief	Initializes the base state, positions, and standard designs for all frames.
+******************************************************************************************/
 void Frames_Initialize();
-void Frames_Update(float dt);
+
+/***************************************** UPDATE ****************************************/
+
+/******************************************************************************************
+	@brief	Updates the state machine and physics for frame anomalies based on current illness.
+
+	@param	dt
+			The delta time for the current frame.
+	@param	camX
+			The current X position of the camera to check proximity for gaze/distance mechanics.
+******************************************************************************************/
+void Frames_Update(float dt, float camX);
+
+/***************************************** DRAW ******************************************/
+
+/******************************************************************************************
+	@brief	Draws the frames for the current floor, applying current states, offsets, and scales.
+
+	@param	currentLevel
+			The index of the floor the player is currently on.
+	@param	camX
+			The current X position of the camera to correctly offset world rendering.
+******************************************************************************************/
 void Frames_Draw(int currentLevel, f32 camX);
+
+/**************************************** UNLOAD *****************************************/
+
+/******************************************************************************************
+	@brief	Unloads all frame textures and frees memory to prevent leaks.
+******************************************************************************************/
 void Frames_Unload();
+
+/************************************ UTILITY / LOGIC ************************************/
+
+/******************************************************************************************
+	@brief	Safely resets all frames across all floors back to their perfectly normal states.
+******************************************************************************************/
+void Frames_ResetAll();

@@ -351,7 +351,7 @@ void Game_Update()
     Lift_HandleInput(floorNum);
 
     Lighting_Update(floorNum, camX, dementia);
-    Frames_Update(dt);
+    Frames_Update(dt, camX);
     SoundAnomaly_Update(dt, camX, floorNum);
 
     // ------------------------------------------------------------

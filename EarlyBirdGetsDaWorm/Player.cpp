@@ -74,10 +74,14 @@ void Player_GenerateMission() {
 
     PickupDoor = (s8)(rand() % 10) + 1;
     PickupFloor = (s8)(rand() % 9) + 1;
+
+    // Door can be rolled once since the floor will guarantee they are different locations
+    DestDoor = (s8)(rand() % 10) + 1;
+
+    // Keep rolling the destination floor until it is strictly different from the pickup floor
     do {
-        DestDoor = (s8)(rand() % 10) + 1;
         DestFloor = (s8)(rand() % 9) + 1;
-    } while (DestDoor == PickupDoor && DestFloor == PickupFloor);
+    } while (DestFloor == PickupFloor);
 }
 
 void SetPatientScaryByDay(int day) {

@@ -1,5 +1,6 @@
 #include "pch.hpp"
 
+// --- Config ---
 const f32 FRAME_WIDTH = 100.0f;
 const f32 FRAME_HEIGHT = 130.0f;
 const f32 FRAME_SPACING = DIST_BETWEEN_DOORS * 2.0f;
@@ -9,8 +10,10 @@ const int FRAMES_PERLVL = 6;
 const int TOTAL_DESIGNS = 5;
 const int MAX_FRAME_STATES = 5;
 
+// --- Render & State Data ---
 static int DesignStateCounts[TOTAL_DESIGNS] = { 5, 5, 5, 3, 3 };
 static AEGfxTexture* AllFrameDesigns[TOTAL_DESIGNS][MAX_FRAME_STATES]{};
+
 enum PosterType {
     POSTER_EVERYDAY = 0,
     POSTER_HOPE,
@@ -24,8 +27,8 @@ static FrameAnomaly levelMap[NUM_OF_FLOOR][FRAMES_PERLVL]{};
 
 /******************************* FRAMES LOGIC **********************************/
 
-// Determines which illness the frames should react to.
-// If the patient is a GHOST, it asks the Player module for the illness it is pretending to have.
+// Checks the player's current illness. If the patient is a GHOST, 
+// it extracts the fake illness the ghost is pretending to have.
 static ILLNESSES Frames_GetEffectiveIllness() {
     ILLNESSES current = Player_GetTrueDiagnosis();
     if (current == ILLNESSES::GHOST) {
@@ -43,154 +46,114 @@ static int Frames_GetExtraAnomalyCount() {
     return 0;
 }
 
-// Tells the game exactly which state a poster should switch to.
-// Returns 0 if the poster should NOT glitch for this illness.
+/******************************************** ANOMALY TEXTURE MAPPING   *******************************************/
+// Dictionary lookup: Tells the game exactly which texture index a specific poster 
+// should switch to based on the current illness. Returns 0 if it shouldn't react.
+// The integers correspond to the indices in the `framePaths` array in Frames_Load().
+/******************************************** ANOMALY TEXTURE MAPPING   *******************************************/
 static int GetSpecificGlitchState(ILLNESSES illness, int designID) {
     switch (illness) {
-
     case ILLNESSES::PARANOIA:
-        if (designID == POSTER_EVERYDAY) return 2; // EverydayEye
-        if (designID == POSTER_HOPE)     return 4; // HopeEye
-        if (designID == POSTER_SIGNS)    return 1; // SignsBlood
+        if (designID == POSTER_EVERYDAY) return 2; // EverydayEye: Subtle eyes watching the player
+        if (designID == POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
+        if (designID == POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
         break;
-
     case ILLNESSES::MANIA:
-        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt
-        if (designID == POSTER_COLOR)    return 2; // ColorBloody
-        if (designID == POSTER_RECOVERY) return 2; // RecoveryScary
+		if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
+        if (designID == POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
+		if (designID == POSTER_RECOVERY) return 2; // RecoveryScary: Scribbled over with frantic, aggressive lines
         break;
-
     case ILLNESSES::DEPRESSION:
-        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative
-        if (designID == POSTER_HOPE)     return 2; // HopeTear
-        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking
+		if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
+		if (designID == POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
+        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
         break;
-
     case ILLNESSES::DEMENTIA:
-        if (designID == POSTER_HOPE)     return 1; // HopePlain
-        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain
-        if (designID == POSTER_RECOVERY) return 4; // RecoveryMemLoss
-        if (designID == POSTER_COLOR)    return 1; // ColorFaces
+        if (designID == POSTER_HOPE)     return 1; // HopePlain: Details erased
+        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
+        if (designID == POSTER_RECOVERY) return 4; // RecoveryMemLoss: Severely degraded image
+        if (designID == POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
         break;
-
     case ILLNESSES::SCHIZOPHRENIA:
-        if (designID == POSTER_SIGNS)    return 2; // SignsBeware
-        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative
-        if (designID == POSTER_HOPE)     return 4; // HopeEye
+        if (designID == POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
+        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
+        if (designID == POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
         break;
-
     case ILLNESSES::AIW_SYNDROME:
-        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking
-        if (designID == POSTER_HOPE)     return 2; // HopeTear
+        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
+        if (designID == POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
         break;
-
     case ILLNESSES::INSOMNIA:
-        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain
-        if (designID == POSTER_HOPE)     return 3; // HopeFear
-        if (designID == POSTER_COLOR)    return 1; // ColorFaces
-        if (designID == POSTER_SIGNS)    return 1; // SignsBlood
+        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
+		if (designID == POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
+        if (designID == POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
+        if (designID == POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
         break;
-
     case ILLNESSES::OCD:
-        if (designID == POSTER_RECOVERY) return 1; // RecoveryPlain
-        if (designID == POSTER_HOPE)     return 1; // HopePlain
-        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt
-
+        if (designID == POSTER_RECOVERY) return 1; // RecoveryPlain: Details erased
+        if (designID == POSTER_HOPE)     return 1; // HopePlain: Details erased
+        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
         break;
-
     case ILLNESSES::SCOTOPHOBIA:
-        if (designID == POSTER_SIGNS)    return 2; // SignsBeware
-        if (designID == POSTER_HOPE)     return 3; // HopeFear
-        if (designID == POSTER_COLOR)    return 2; // ColorBloody
+        if (designID == POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
+        if (designID == POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
+        if (designID == POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
         break;
     }
-    return 0;
+    return 0; // Return 0 (Normal State) if this poster design doesn't react to this illness
 }
 
-
-
-// Called by the Lighting system. If a nearby light turns off, the frame jumpscares.
-void Frames_SyncToLight(s8 floor, int lightIndex, bool isLightOn) {
-
-    if (!CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)) return;
-
-    // Calculate the world X position of the light bulb
-    float lightX = lightIndex * 600.0f + 300.0f;
-
-    for (int f = 0; f < FRAMES_PERLVL; ++f) {
-        FrameAnomaly& frame = levelMap[floor][f];
-
-        // Only affect frames that are physically close to this specific light
-        if (fabs(frame.posX - lightX) < 350.0f) {
-            if (!isLightOn) {
-                // LIGHTS OUT: Pick a random scary texture, pop it upwards, and jitter its X position
-                frame.currentState = (rand() % (MAX_FRAME_STATES - 1)) + 1;
-                frame.posY = 30.0f;
-                frame.posX += (rand() % 20) - 10.0f;
-            }
-            else {
-                // LIGHTS ON: Reset the frame to perfectly normal immediately
-                frame.currentState = 0;
-                frame.posY = 0.0f;
-
-                // Recalculate its original base position
-                frame.posX = f * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
-            }
-        }
-    }
-}
-
+/******************************************** ANOMALY TIMINGS   *******************************************/
 // Calculates how many seconds a frame spends glitching, or how many seconds it waits before glitching again.
+// MANIA/SCHIZO: Quick bursts (2s), frequent waits (2s-7s).
+// DEPRESSION/DEMENTIA: Long bursts (4s), long waits (6s-10s).
+// AIW/INSOMNIA/OCD: Fixed, persistent rhythms.
+/******************************************** ANOMALY TIMINGS   *******************************************/
 static float GetFrameTimerByIllness(ILLNESSES illness, bool isGlitchingPhase, int extraAnomalyCount) {
     float t = 1.0f;
 
     switch (illness) {
     case ILLNESSES::MANIA:
     case ILLNESSES::SCHIZOPHRENIA:
-        // High energy: Glitches are extremely brief (0.05s-0.25s) and happen very often
-        if (isGlitchingPhase) t = (float)((rand() % 20) + 5) / 100.0f;
-        else                  t = (float)((rand() % 50) + 10) / 100.0f;
+        t = isGlitchingPhase ? 2.0f : ((rand() % 500) + 200) / 100.0f;
         break;
-
     case ILLNESSES::DEPRESSION:
-    case ILLNESSES::INSOMNIA:
-        // Low energy: Glitches last a very long time (1.0s-3.0s), but happen frequently
-        if (isGlitchingPhase) t = (float)((rand() % 200) + 100) / 100.0f;
-        else                  t = (float)((rand() % 50) + 10) / 100.0f;
-        break;
-
     case ILLNESSES::DEMENTIA:
-    case ILLNESSES::OCD:
-        // Mid-paced: Moderate glitch times, long wait times between glitches
-        if (isGlitchingPhase) t = (float)((rand() % 150) + 50) / 100.0f;
-        else                  t = (float)((rand() % 300) + 100) / 100.0f;
+        t = isGlitchingPhase ? 4.0f : ((rand() % 400) + 600) / 100.0f;
         break;
-
+    case ILLNESSES::AIW_SYNDROME:
+        t = 5.0f; // 5s Normal, 5s Glitching
+        break;
+    case ILLNESSES::INSOMNIA:
+        t = 8.0f; // 8s Normal, 8s Glitching
+        break;
+    case ILLNESSES::OCD:
+        t = 6.0f; // Changes every 6 seconds
+        break;
+    case ILLNESSES::PARANOIA:
+        t = isGlitchingPhase ? 3.0f : 5.0f;
+        break;
     default:
-        t = 1.0f;
+        t = 3.0f;
         break;
     }
 
-    // GHOST MODIFIER: Speeds up the pacing by 10-15% to make the environment feel slightly more frantic
+    // GHOST MODIFIER: Speeds up the pacing by 10-15% to make the environment feel frantic
     if (extraAnomalyCount >= 1) {
         t *= isGlitchingPhase ? 0.85f : 0.90f;
-
-        // Prevent the timer from hitting zero, which would cause an infinite loop freeze
         if (t < 0.05f) t = 0.05f;
     }
-
     return t;
 }
 
+// Safely resets all frames across all floors back to their perfectly normal, original states
 static void Frames_ResetAll() {
     for (int level = 0; level < NUM_OF_FLOOR; ++level) {
         for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
             FrameAnomaly& currentFrame = levelMap[level][frame];
-            currentFrame.currentState = 0; // Everything is normal
+            currentFrame.currentState = 0;
 
-            // Cycle through all 5 normal posters sequentially (0, 1, 2, 3, 4)
             currentFrame.designID = (frame + level) % TOTAL_DESIGNS;
-
             currentFrame.posX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
             currentFrame.posY = 0.0f;
             currentFrame.width = FRAME_WIDTH;
@@ -201,63 +164,18 @@ static void Frames_ResetAll() {
 
 /***************************************** LOAD ******************************************/
 void Frames_Load() {
-    Frames_Unload(); // Clean up old textures before loading new ones
+    Frames_Unload();
 
-    // --- 1. THE PATH MAP ---
     const char* framePaths[TOTAL_DESIGNS][MAX_FRAME_STATES] = {
-
-        // POSTER_EVERYDAY (5 states)
-        {
-            Assets::Frame_Anomaly::EverydayNormal,
-            Assets::Frame_Anomaly::EverydayPlain,
-            Assets::Frame_Anomaly::EverydayEye,
-            Assets::Frame_Anomaly::EverydayHaunt,
-            Assets::Frame_Anomaly::EverydayNegative
-        },
-
-        // POSTER_HOPE (5 states)
-        {
-            Assets::Frame_Anomaly::HopeNormal,
-            Assets::Frame_Anomaly::HopePlain,
-            Assets::Frame_Anomaly::HopeTear,
-            Assets::Frame_Anomaly::HopeFear,
-            Assets::Frame_Anomaly::HopeEye
-        },
-
-        // POSTER_RECOVERY (5 states)
-        {
-            Assets::Frame_Anomaly::RecoveryNormal,
-            Assets::Frame_Anomaly::RecoveryPlain,
-            Assets::Frame_Anomaly::RecoveryScary,
-            Assets::Frame_Anomaly::RecoverySinking,
-            Assets::Frame_Anomaly::RecoveryMemLoss
-        },
-
-        // POSTER_SIGNS (3 states)
-        {
-            Assets::Frame_Anomaly::SignsNormal,
-            Assets::Frame_Anomaly::SignsBlood,
-            Assets::Frame_Anomaly::SignsBeware,
-            nullptr,
-            nullptr
-        },
-
-        // POSTER_COLOR (3 states)
-        {
-            Assets::Frame_Anomaly::ColorNormal,
-            Assets::Frame_Anomaly::ColorFaces,
-            Assets::Frame_Anomaly::ColorBloody,
-            nullptr,
-            nullptr
-        }
+        { Assets::Frame_Anomaly::EverydayNormal, Assets::Frame_Anomaly::EverydayPlain, Assets::Frame_Anomaly::EverydayEye, Assets::Frame_Anomaly::EverydayHaunt, Assets::Frame_Anomaly::EverydayNegative },
+        { Assets::Frame_Anomaly::HopeNormal, Assets::Frame_Anomaly::HopePlain, Assets::Frame_Anomaly::HopeTear, Assets::Frame_Anomaly::HopeFear, Assets::Frame_Anomaly::HopeEye },
+        { Assets::Frame_Anomaly::RecoveryNormal, Assets::Frame_Anomaly::RecoveryPlain, Assets::Frame_Anomaly::RecoveryScary, Assets::Frame_Anomaly::RecoverySinking, Assets::Frame_Anomaly::RecoveryMemLoss },
+        { Assets::Frame_Anomaly::SignsNormal, Assets::Frame_Anomaly::SignsBlood, Assets::Frame_Anomaly::SignsBeware, nullptr, nullptr },
+        { Assets::Frame_Anomaly::ColorNormal, Assets::Frame_Anomaly::ColorFaces, Assets::Frame_Anomaly::ColorBloody, nullptr, nullptr }
     };
 
-    // --- 2. LOAD THE TEXTURES ---
     for (int design = 0; design < TOTAL_DESIGNS; design++) {
-        // Only loop up to the specific number of states this design actually has
         for (int state = 0; state < DesignStateCounts[design]; state++) {
-
-            // Safety check: Only load if the path isn't a nullptr
             if (framePaths[design][state] != nullptr) {
                 AllFrameDesigns[design][state] = LoadTextureChecked(framePaths[design][state]);
             }
@@ -265,33 +183,38 @@ void Frames_Load() {
     }
 }
 
-// Sets up the initial positions and assigns a design (1, 2, or 3) to each frame
+/*************************************** INITIALIZE **************************************/
 void Frames_Initialize() {
     for (int level = 0; level < NUM_OF_FLOOR; ++level) {
         for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
             FrameAnomaly& currentFrame = levelMap[level][frame];
-
             currentFrame.entity = HUMAN;
             currentFrame.posX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
             currentFrame.posY = 0.0f;
             currentFrame.width = FRAME_WIDTH;
             currentFrame.height = FRAME_HEIGHT;
             currentFrame.currentState = 0;
-
-            // Mathematical trick: stagger the design IDs based on the floor level (even vs odd)
-            // This ensures vertical variety so frames don't look identical across floors.
-            if (level % 2 == 0) currentFrame.designID = ((frame + level) % 3) + 1;
-            else                currentFrame.designID = 3 - ((frame + level) % 3);
+            currentFrame.designID = (frame + level) % TOTAL_DESIGNS;
         }
     }
-
-    // Create the square geometry we will paint the frame textures onto
     if (frameMesh == nullptr) frameMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
+/******************************************** ANOMALY DESCRIPTIONS   *******************************************/
+// 1. PARANOIA:     Glitching becomes slower as the player approaches; snaps to normal if too close (Weeping Angel).
+// 2. MANIA:        Brief, hyperactive glitches where the frame slowly drifts in one direction.
+// 3. DEPRESSION:   Frame slowly stretches downwards over time, like it's melting or heavy.
+// 4. DEMENTIA:     Frame locks into a scary state and jitters continuously for several seconds.
+// 5. SCHIZOPHRENIA:Violent, aggressive jittering for a brief period.
+// 6. AIW_SYNDROME: Frame gently breathes (scales) and offsets in a wavy pattern when "normal".
+// 7. INSOMNIA:     Frame stretches drastically when far away, flips to face player, acts normal when close.
+// 8. OCD:          Frame becomes persistently misaligned/off-center, swapping states every few seconds.
+// 9. SCOTOPHOBIA:  Frame glitches in peripheral vision but snaps to normal when looked at directly.
+// 10. GHOST:       Frames have a constant 15% chance to micro-stutter regardless of current behavior.
+/******************************************** ANOMALY DESCRIPTIONS   *******************************************/
+
 /***************************************** UPDATE ****************************************/
-void Frames_Update(float dt) {
-    
+void Frames_Update(float dt, float camX) {
     if (!Player_HasPatient() || !CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)) {
         Frames_ResetAll();
         return;
@@ -300,125 +223,234 @@ void Frames_Update(float dt) {
     const ILLNESSES effIllness = Frames_GetEffectiveIllness();
     const int extraAnoms = Frames_GetExtraAnomalyCount();
 
-    // Static variables act as a simple internal state machine for the glitch timing
     static int timerState = STATE_NORMAL;
     static float timer = 2.0f;
     static float animTime = 0.0f;
 
-    timer -= dt; // Tick down the clock
+    // Boolean map determining if a frame will jitter (true) or stay statically in place (false) during a glitch
+    static bool frameJitterMap[NUM_OF_FLOOR][FRAMES_PERLVL]{};
 
-    // Only progress the animation timer if we are actively glitching
+    // Tracks total elapsed time for smooth sin/cos wave calculations (e.g., AIW Syndrome breathing)
+    static float totalElapsedTime = 0.0f;
+    totalElapsedTime += dt;
+
+    // --- 1. TIMER LOGIC ---
+    timer -= dt;
     if (timerState == STATE_GLITCHING) animTime += dt;
-    else                               animTime = 0.0f;
+    else animTime = 0.0f;
 
     switch (timerState) {
     case STATE_NORMAL:
-        // We have waited long enough. Start a glitch!
+        // Normal phase is over. Transition to glitching phase.
         if (timer <= 0.0f) {
             timerState = STATE_GLITCHING;
             timer = GetFrameTimerByIllness(effIllness, true, extraAnoms);
+
+            // Initialize the glitch states and roll the physical behaviors for this phase
+            for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+                for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
+                    FrameAnomaly& f = levelMap[level][frame];
+                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+
+                    // 50% chance for Event 1 (Static) or Event 2 (Jitter/Physical Movement)
+                    frameJitterMap[level][frame] = (rand() % 2 == 0);
+                }
+            }
         }
         break;
 
     case STATE_GLITCHING:
-        for (int level = 0; level < NUM_OF_FLOOR; ++level) {
-            for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
-                FrameAnomaly& f = levelMap[level][frame];
-
-                // If this frame hasn't picked a scary texture yet, assign it one
-                if (f.currentState == 0) {
-                    // Ask the dictionary exactly which state this poster should become
-                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
-
-                    // Ghost override: 25% chance to force it to its absolute scariest state
-                    if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < 25) {
-                        f.currentState = DesignStateCounts[f.designID] - 1;
-                    }
-                }
-
-                // MANIA OVERRIDE: Ignore the assigned texture and rapidly cycle through all valid textures
-                if (effIllness == ILLNESSES::MANIA && f.currentState > 0) {
-                    float speed = 20.0f; // Cycle 20 times per second
-
-                    // SAFE CYCLING: Only cycle up to the max states THIS specific poster has!
-                    int maxScaryStates = DesignStateCounts[f.designID] - 1;
-                    f.currentState = (int)(fmodf(animTime * speed, (float)maxScaryStates)) + 1;
-                }
-                // Calculate where the frame *should* be
-                float baseX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
-                float baseY = 0.0f;
-
-                // Apply physical shifts and scaling based on the illness
-                switch (effIllness) {
-                case ILLNESSES::DEMENTIA:
-                case ILLNESSES::MANIA:
-                    // Violent, erratic vibrating in all directions
-                    f.posX = baseX + ((rand() % 60) - 30);
-                    f.posY = baseY + ((rand() % 60) - 30);
-                    break;
-
-                case ILLNESSES::AIW_SYNDROME: {
-                    // Alice in Wonderland: Frames throb and breathe smoothly
-                    // sine wave oscillates between 0.5 and 1.5 multiplier
-                    float scale = 1.0f + (sinf(animTime * 3.0f) * 0.5f);
-                    float newWidth = FRAME_WIDTH * scale;
-                    float newHeight = FRAME_HEIGHT * scale;
-
-                    // Adjust the X and Y so the frame scales from the center, not from the corner
-                    f.posX = baseX - ((newWidth - FRAME_WIDTH) / 2.0f);
-                    f.posY = baseY - ((newHeight - FRAME_HEIGHT) / 2.0f);
-                    f.width = newWidth;
-                    f.height = newHeight;
-                } break;
-
-                case ILLNESSES::SCHIZOPHRENIA:
-                    // Paranoid shifting: Frames snap hard to the left or right, and sometimes jump up
-                    if (rand() % 10 > 7) f.posX = baseX + 20.0f;
-                    else                 f.posX = baseX - 20.0f;
-
-                    if (rand() % 100 > 95) f.posY = baseY + 50.0f;
-                    break;
-
-                case ILLNESSES::DEPRESSION:
-                    // Frames feel heavy and slowly slide down the wall
-                    f.posY = baseY - (animTime * 40.0f);
-                    // Add a tiny, weak shudder
-                    f.posX = baseX + ((rand() % 4) - 2);
-                    break;
-
-                default:
-                    // Default light jittering for unhandled illnesses
-                    f.posX = baseX + ((rand() % 10) - 5);
-                    f.posY = baseY + ((rand() % 10) - 5);
-                    break;
-                }
-
-                // GHOST MODIFIER: Adds violent micro-stutters to the frame on top of its normal behavior
-                if (extraAnoms >= 1 && (rand() % 100) < 20) {
-                    f.posX += (rand() % 8) - 4;
-                    f.posY += (rand() % 8) - 4;
-                }
-            }
-        }
-
-        // The glitch duration is over. Move to the cooldown phase.
+        // Glitch phase is over. Transition to the brief 0.1s cooldown phase to snap things back.
         if (timer <= 0.0f) {
             timerState = STATE_COOLDOWN;
-            // Force a fixed 0.1 second snap-back to normal before picking the next timer
             timer = 0.1f;
         }
         break;
 
     case STATE_COOLDOWN:
-        // Snap everything back to normal
-        Frames_ResetAll();
+        // DO NOT reset everything for OCD or AIW, let their physical offset persist continuously
+        if (effIllness != ILLNESSES::AIW_SYNDROME && effIllness != ILLNESSES::OCD) {
+            Frames_ResetAll();
+        }
 
-        // Cooldown finished. Determine how long to wait until the next glitch.
+        // Cooldown over. Transition back to normal waiting phase.
         if (timer <= 0.0f) {
             timerState = STATE_NORMAL;
             timer = GetFrameTimerByIllness(effIllness, false, extraAnoms);
         }
         break;
+    }
+
+    // --- 2. CONTINUOUS PHYSICAL EFFECTS ---
+    // This loop applies continuous math (vibration, stretching, drifting) every single frame
+    // based on the specific illness currently active.
+    for (int level = 0; level < NUM_OF_FLOOR; ++level) {
+        for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
+            FrameAnomaly& f = levelMap[level][frame];
+
+            float baseX = frame * FRAME_SPACING + (DIST_BETWEEN_DOORS / 2);
+            float baseY = 0.0f;
+            float distToPlayer = fabs(baseX + camX); // Absolute distance from screen center
+
+            // -------------------------------------------------------------
+            // SPECIFIC ILLNESS BEHAVIORS
+            // -------------------------------------------------------------
+
+            if (effIllness == ILLNESSES::PARANOIA) {
+                // --- PARANOIA: THE WEEPING ANGEL ---
+                // If the player is too close (within 250px), the frame acts completely normal, gaslighting them.
+                if (distToPlayer < 250.0f) {
+                    f.currentState = 0; // Hide anomaly!
+                    f.posX = baseX;
+                    f.posY = baseY;
+                }
+                else if (f.currentState > 0) {
+                    // Calculate panic from 0.0 (calm/close) to 1.0 (freaking out/far away)
+                    // Scales down aggressively as the player moves from 600px to 250px away
+                    float panicSpeed = (distToPlayer - 250.0f) / 350.0f;
+                    panicSpeed = AEClamp(panicSpeed, 0.05f, 1.0f);
+
+                    if (frameJitterMap[level][frame]) {
+                        // Probability to pick a NEW random position scales with distance.
+                        // If it fails the roll, it keeps its previous offset, creating a sluggish "low FPS" stutter as you approach!
+                        if ((rand() % 100) < (panicSpeed * 100)) {
+                            // Scale how violently it jumps (intensity) based on distance too
+                            int intensity = (int)(10.0f * panicSpeed);
+                            if (intensity < 2) intensity = 2; // Ensure it still moves at least 1 pixel
+
+                            f.posX = baseX + ((rand() % intensity) - (intensity / 2));
+                            f.posY = baseY + ((rand() % intensity) - (intensity / 2));
+                        }
+                    }
+                    else {
+                        // Static Event (Event 1): Just sit perfectly still
+                        f.posX = baseX;
+                        f.posY = baseY;
+                    }
+                }
+            }
+            else if (effIllness == ILLNESSES::MANIA) {
+                // --- MANIA: HYPERACTIVE DRIFT ---
+                if (f.currentState > 0) {
+                    // Slowly drift in a single continuous direction based on their grid index
+                    int dir = (level + frame) % 4;
+                    float drift = animTime * 30.0f; // Drift distance increases over time
+
+                    f.posX = baseX + ((dir == 0) ? -drift : (dir == 1) ? drift : 0.0f);
+                    f.posY = baseY + ((dir == 2) ? drift : (dir == 3) ? -drift : 0.0f);
+
+                    // Add brief rapid stutters on top of the smooth drift to simulate hyperactivity
+                    if ((rand() % 100) < 30) {
+                        f.posX += ((rand() % 8) - 4);
+                        f.posY += ((rand() % 8) - 4);
+                    }
+                }
+            }
+            else if (effIllness == ILLNESSES::DEPRESSION) {
+                // --- DEPRESSION: MELTING/SINKING ---
+                if (f.currentState > 0) {
+                    // Slowly stretches downwards over 4 seconds, giving a melting or heavy feel
+                    float stretch = AEClamp(animTime / 4.0f, 0.0f, 1.0f);
+                    f.height = FRAME_HEIGHT + (stretch * 100.0f); // Stretch texture down
+                    f.posY = baseY - (stretch * 50.0f);           // Offset Y to keep top edge anchored
+                    f.posX = baseX;
+                }
+            }
+            else if (effIllness == ILLNESSES::DEMENTIA) {
+                // --- DEMENTIA: PERSISTENT CONFUSION ---
+                if (f.currentState > 0) {
+                    // Constant static jitter locked in place for the full 4 second burst
+                    f.posX = baseX + ((rand() % 6) - 3);
+                    f.posY = baseY + ((rand() % 6) - 3);
+                }
+            }
+            else if (effIllness == ILLNESSES::SCHIZOPHRENIA) {
+                // --- SCHIZOPHRENIA: AGGRESSIVE HALLUCINATION ---
+                if (f.currentState > 0) {
+                    // Violent, wide jittering for a very brief 2 second window
+                    f.posX = baseX + ((rand() % 14) - 7);
+                    f.posY = baseY + ((rand() % 14) - 7);
+                }
+            }
+            else if (effIllness == ILLNESSES::AIW_SYNDROME) {
+                // --- ALICE IN WONDERLAND: SPATIAL DISTORTION ---
+                // Frame gently breathes and floats off-center when normal, but snaps perfectly in place when glitching
+                if (timerState == STATE_NORMAL) {
+                    f.currentState = 0;
+                    // Mild wavy circular offset using a combination of sine and cosine over total elapsed time
+                    f.posX = baseX + (sinf(totalElapsedTime * 2.0f + frame) * 15.0f);
+                    f.posY = baseY + (cosf(totalElapsedTime * 2.0f + frame) * 15.0f);
+                }
+                else {
+                    f.posX = baseX;     // Locked perfectly in place during glitch
+                    f.posY = baseY;
+                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+                }
+            }
+            else if (effIllness == ILLNESSES::INSOMNIA) {
+                // --- INSOMNIA: EXHAUSTION DISTORTION ---
+                // The frame's width flips negative based on player position so it "faces" the player
+                f.width = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
+
+                if (distToPlayer > 300.0f) {
+                    // If far away, stretch wildly either vertically or horizontally
+                    if (frameJitterMap[level][frame]) f.height = FRAME_HEIGHT * 1.5f;
+                    else                              f.width *= 1.5f;
+                }
+                else {
+                    // Close proximity snaps it out of the hallucination: Stays perfectly still and normal sized
+                    f.height = FRAME_HEIGHT;
+                    f.width = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
+                }
+            }
+            else if (effIllness == ILLNESSES::OCD) {
+                // --- OCD: IMPERFECTION/MISALIGNMENT ---
+                // The frame persistently sits off-center to break the perfect hallway alignment
+                if (timerState == STATE_GLITCHING) {
+                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+
+                    // Generate an annoying off-center position based on its grid coordinates
+                    float annoyingOffsetX = (frame % 2 == 0) ? 14.0f : -11.0f;
+                    float annoyingOffsetY = (level % 2 == 0) ? -9.0f : 13.0f;
+                    f.posX = baseX + annoyingOffsetX;
+                    f.posY = baseY + annoyingOffsetY;
+                }
+                else {
+                    f.currentState = 0;
+                    f.posX = baseX;
+                    f.posY = baseY;
+                }
+            }
+            else if (effIllness == ILLNESSES::SCOTOPHOBIA) {
+                // --- SCOTOPHOBIA: PERIPHERAL GAZE MECHANIC ---
+                // Frame acts completely normal if in the center 400 pixels of the screen.
+                if (distToPlayer < 200.0f) {
+                    f.currentState = 0;
+                    f.posX = baseX;
+                    f.posY = baseY;
+                }
+                // The moment it hits peripheral vision (edges of the screen), it violently glitches out.
+                else if (f.currentState > 0) {
+                    f.posX = baseX + ((rand() % 12) - 6);
+                    f.posY = baseY + ((rand() % 12) - 6);
+                }
+            }
+            else {
+                // Safety Fallback for unhandled states
+                f.posX = baseX;
+                f.posY = baseY;
+                f.width = FRAME_WIDTH;
+                f.height = FRAME_HEIGHT;
+            }
+
+            // --- GHOST OVERRIDE ---
+            // If the patient is a ghost, add a constant 15% chance for a violent micro-stutter
+            // to occur on top of any other physics/logic currently happening.
+            if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < 15) {
+                f.posX += (rand() % 8) - 4;
+                f.posY += (rand() % 8) - 4;
+            }
+        }
     }
 }
 
@@ -430,7 +462,6 @@ void Frames_Draw(int currentLevel, f32 camX) {
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
         FrameAnomaly& currentFrame = levelMap[currentLevel][i];
 
-        // Pull directly from the 2D array!
         AEGfxTexture* Tex = AllFrameDesigns[currentFrame.designID][currentFrame.currentState];
 
         if (Tex) {
@@ -438,17 +469,15 @@ void Frames_Draw(int currentLevel, f32 camX) {
             DrawTextureMesh(frameMesh, Tex, drawX, currentFrame.posY, currentFrame.width, currentFrame.height, 1.0f);
         }
     }
-} 
+}
 
 /**************************************** UNLOAD *****************************************/
-// Called when the game shuts down or restarts to clean up video memory
 void Frames_Unload() {
     if (frameMesh) {
         FreeMeshSafe(frameMesh);
         frameMesh = nullptr;
     }
 
-    // Safely unload everything in the grid
     for (int design = 0; design < TOTAL_DESIGNS; design++) {
         for (int state = 0; state < MAX_FRAME_STATES; state++) {
             if (AllFrameDesigns[design][state] != nullptr) {
