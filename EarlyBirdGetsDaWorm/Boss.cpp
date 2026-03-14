@@ -271,6 +271,7 @@ bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float o
 {
     if (!boss.active) return false;
 
+
     // Define the 4 custom hitboxes that wrap tightly around the monster's drawing
     // 1. Head & Torso
     float h1X = boss.x + 20.0f, h1Y = boss.y + 80.0f, h1W = 100.0f, h1H = 240.0f;

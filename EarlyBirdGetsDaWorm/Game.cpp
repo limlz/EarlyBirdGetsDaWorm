@@ -131,8 +131,15 @@ void Game_Initialize()
     // Always enter a new floor with a fade-in; boss fade-out starts clean
     isFadingToBoss = false;
     bossFadeAlpha = 0.0f;
-    isFadingFromBoss = true;
-    returnFadeAlpha = 1.0f;
+    // Skip the return-fade when the day overlay is already covering the screen;
+    // using both would hide "DAY X" behind a second black overlay.
+    if (Timer_IsDayOverlayActive()) {
+        isFadingFromBoss = false;
+        returnFadeAlpha = 0.0f;
+    } else {
+        isFadingFromBoss = true;
+        returnFadeAlpha = 1.0f;
+    }
 
     Doors_Initialize();
     Lift_Initialize();

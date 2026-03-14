@@ -60,6 +60,8 @@ namespace Assets
         constexpr const char* Bullet2 = "Assets/Boss/boss_bullet1.png";
         constexpr const char* PlayerShooting1 = "Assets/Player/player_shooting_1.png";
         constexpr const char* PlayerShooting2 = "Assets/Player/player_shooting_2.png";
+		constexpr const char* PlayerCrouch = "Assets/Player/nurse_crouch.png";
+        constexpr const char* PlayerArmGun    = "Assets/Player/player_arm_gun.png";
     }
     namespace Main_Menu
     {

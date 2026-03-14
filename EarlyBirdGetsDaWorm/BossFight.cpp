@@ -8,6 +8,7 @@ static AEGfxTexture* wallBgTexture = nullptr;
 static AEGfxTexture* player_walk1 = nullptr;
 static AEGfxTexture* player_walk2 = nullptr;
 static AEGfxTexture* player_crouch = nullptr;
+static AEGfxTexture* player_arm_gun = nullptr;
 
 // --- PLAYER PHYSICS SETTINGS ---
 static f32 playerX, playerY;
@@ -37,6 +38,13 @@ const float PLAYER_ANIM_SPEED = 0.15f; // Time in seconds per frame
 static float fireCooldown = 0.0f;
 const float FIRE_RATE = 0.02f; // Fires a particle every 0.02 seconds for a continuous stream
 static float bossDodgeCooldown = 0.0f;
+
+// --- ARM / GUN ---
+static float armAngle = 0.0f; // angle from shoulder to mouse (radians)
+const float ARM_LENGTH = 45.0f;
+const float ARM_WIDTH  = 24.0f;
+const float GUN_LENGTH = 32.0f;
+const float GUN_WIDTH  = 10.0f;
 
 // --- BOSS INSTANCE ---
 static Boss myBoss;
@@ -86,9 +94,10 @@ void Boss_Fight_Load()
     wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
 
     // Load player textures
-    player_walk1 = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting1);
-    player_walk2 = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting2);
-    player_crouch = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting1); // Placeholder for crouch texture
+    player_walk1   = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting1);
+    player_walk2   = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting2);
+    player_crouch  = LoadTextureChecked(Assets::Boss_Fight::PlayerCrouch); // Placeholder for crouch texture
+    player_arm_gun = LoadTextureChecked(Assets::Boss_Fight::PlayerArmGun);
 
     Boss_Load();
     PauseMenu_Load();
@@ -123,6 +132,7 @@ void Boss_Fight_Initialize()
 
     fireCooldown = 0.0f;
     bossDodgeCooldown = 0.0f;
+    armAngle = 0.0f;
 }
 
 void Boss_Fight_Update()
@@ -166,6 +176,23 @@ void Boss_Fight_Update()
     // --- DETERMINE CROUCH STATE ---
     isCrouching = AEInputCheckCurr(AEVK_S);
 
+    // --- ARM: TRACK MOUSE ---
+    {
+        s32 cursorX, cursorY;
+        AEInputGetCursorPosition(&cursorX, &cursorY);
+        float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth()  / 2.0f);
+        float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
+
+        // Flip to face whichever side the gun is pointing
+        facingRight = (worldMouseX >= playerX);
+
+        float drawY     = isCrouching ? playerY - 30.0f : playerY;
+        float shoulderX = playerX - 7.0f;
+        float shoulderY = drawY + 20.0f;
+        armAngle = atan2f(worldMouseY - shoulderY, worldMouseX - shoulderX);
+    }
+
+
     // Only allow movement, animation, and shooting if NOT crouching
     if (!isCrouching) {
 
@@ -202,27 +229,15 @@ void Boss_Fight_Update()
             if (fireCooldown <= 0.0f) {
                 fireCooldown = FIRE_RATE; // Reset timer
 
-                s32 cursorX, cursorY;
-                AEInputGetCursorPosition(&cursorX, &cursorY);
+                // Bullet spawns from the gun tip
+                float drawY     = isCrouching ? playerY - 30.0f : playerY;
+                float shoulderX = playerX - 7.0f;
+                float shoulderY = drawY + 20.0f;
+                float startX = shoulderX + cosf(armAngle) * (ARM_LENGTH + GUN_LENGTH);
+                float startY = shoulderY + sinf(armAngle) * (ARM_LENGTH + GUN_LENGTH);
 
-                float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth() / 2.0f);
-                float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
-
-                float startX = playerX;
-                float startY = playerY + 15.0f;
-
-                float dirX = worldMouseX - startX;
-                float dirY = worldMouseY - startY;
-
-                float length = sqrtf((dirX * dirX) + (dirY * dirY));
-                if (length > 0.0001f) {
-                    dirX /= length;
-                    dirY /= length;
-                }
-                else {
-                    dirX = facingRight ? 1.0f : -1.0f;
-                    dirY = 0.0f;
-                }
+                float dirX = cosf(armAngle);
+                float dirY = sinf(armAngle);
 
                 // Add a slight randomized spread to simulate spraying liquid
                 float spreadX = ((rand() % 100 - 50) / 1000.0f); // Random spread value between -0.05 and 0.05
@@ -231,11 +246,8 @@ void Boss_Fight_Update()
                 dirY += spreadY;
 
                 // Re-normalize direction vector after adding spread
-                length = sqrtf((dirX * dirX) + (dirY * dirY));
-                if (length > 0.0001f) {
-                    dirX /= length;
-                    dirY /= length;
-                }
+                float length = sqrtf((dirX * dirX) + (dirY * dirY));
+                if (length > 0.0001f) { dirX /= length; dirY /= length; }
 
                 Fire_Bullet(startX, startY, dirX, dirY);
 
@@ -265,8 +277,8 @@ void Boss_Fight_Update()
 
     // Only accept left/right input if NOT crouching
     if (!isCrouching) {
-        if (AEInputCheckCurr(AEVK_D)) { targetVelX = PLAYER_SPEED; facingRight = true; }
-        if (AEInputCheckCurr(AEVK_A)) { targetVelX = -PLAYER_SPEED; facingRight = false; }
+        if (AEInputCheckCurr(AEVK_D)) { targetVelX = PLAYER_SPEED; }
+        if (AEInputCheckCurr(AEVK_A)) { targetVelX = -PLAYER_SPEED; }
     }
 
     if (isGrounded) {
@@ -319,8 +331,8 @@ void Boss_Fight_Update()
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (myBoss.bullets[i].active) {
                 // Adjust player physical hitbox dynamically based on crouch state
-                float currentHitboxY = isCrouching ? playerY - 60.0f : playerY;
-                float currentHitboxH = isCrouching ? 60.0f : 120.0f;
+                float currentHitboxY = isCrouching ? playerY - 15.0f : playerY;
+                float currentHitboxH = isCrouching ? 105.0f : 120.0f;
 
                 // Expanded hitbox to fully match the new 140x360 dimensions
                 if (abs(myBoss.bullets[i].x - playerX) < 46.66f &&
@@ -368,11 +380,11 @@ void Boss_Fight_Draw()
         AEMtx33 scale, trans, transform;
 
         // Flip texture horizontally based on facing direction
-        float dirScale = facingRight ? 93.33f : -93.33f;
+        float dirScale = facingRight ? 70.0f : -70.0f;
 
         // Dynamically adjust visual scaling and Y position based on crouch state
-        float drawHeight = isCrouching ? 120.0f : 240.0f;
-        float drawY = isCrouching ? playerY - 60.0f : playerY;
+        float drawHeight = isCrouching ? 210.0f : 240.0f;
+        float drawY = isCrouching ? playerY - 15.0f : playerY;
 
         AEMtx33Scale(&scale, dirScale, drawHeight);
         AEMtx33Trans(&trans, playerX, drawY);
@@ -393,10 +405,31 @@ void Boss_Fight_Draw()
     else
     {
         // Fallback to drawing a colored rectangle if texture fails to load
-        float drawHeight = isCrouching ? 120.0f : 240.0f;
-        float drawY = isCrouching ? playerY - 60.0f : playerY;
+        float drawHeight = isCrouching ? 210.0f : 240.0f;
+        float drawY = isCrouching ? playerY - 15.0f : playerY;
         u32 playerColor = isPlayerHit ? 0xFFFF00FF : COLOR_WHITE;
-        DrawSquareMesh(squareMesh, playerX, drawY, 93.33f, drawHeight, playerColor);
+        DrawSquareMesh(squareMesh, playerX, drawY, 70.0f, drawHeight, playerColor);
+    }
+
+    // --- DRAW ARM AND GUN (single texture) ---
+    if (player_arm_gun)
+    {
+        const float TOTAL_LENGTH = ARM_LENGTH + GUN_LENGTH; // texture spans shoulder -> gun tip
+
+        float drawY     = isCrouching ? playerY - 30.0f : playerY;
+        float shoulderX = playerX - 7.0f; // fixed offset so shoulder stays inside the body on both sides
+        float shoulderY = drawY + 20.0f;
+
+        // The texture pivot is its center, so offset half the total length along the aim direction
+        float texCX = shoulderX + cosf(armAngle) * (TOTAL_LENGTH * 0.5f);
+        float texCY = shoulderY + sinf(armAngle) * (TOTAL_LENGTH * 0.5f);
+
+        // V-flip when facing left: V-flip + 180° arm rotation = correct mirrored arm without upside-down artifact
+        float texHeight = facingRight ? ARM_WIDTH : -ARM_WIDTH;
+
+        if (isPlayerHit) AEGfxSetColorToMultiply(1.0f, 0.0f, 1.0f, 1.0f);
+        DrawTextureMeshRotated(squareMesh, player_arm_gun, texCX, texCY, TOTAL_LENGTH, texHeight, armAngle, 1.0f);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
@@ -466,6 +499,7 @@ void Boss_Fight_Unload() {
     UnloadTextureSafe(player_walk1);
     UnloadTextureSafe(player_walk2);
     UnloadTextureSafe(player_crouch);
+    UnloadTextureSafe(player_arm_gun);
 
     if (victoryFontId >= 0) {
         AEGfxDestroyFont(victoryFontId);

@@ -12,7 +12,7 @@ struct CreditLine {
 };
 
 static constexpr float FADE_IN_DURATION = 0.3f;
-static constexpr float FADE_OUT_SPEED = 3.0f;
+static constexpr float FADE_OUT_SPEED = 6.0f;
 static constexpr int   NUM_TITLE_FRAMES = 13;
 static constexpr float TITLE_ANIM_SPEED = 0.2f;
 
