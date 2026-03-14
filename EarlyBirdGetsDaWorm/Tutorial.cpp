@@ -207,6 +207,7 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 		}
 		if (dialogue.finishedTyping && dialogue.tutSoundPlayed) {
 			AudioManager_StopSFX();
+			dialogue.tutSoundPlayed = false;
 		}
 
 		// Text typing effect

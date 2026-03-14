@@ -102,7 +102,7 @@ void Notifications_Update(bool liftActive, f32 dt)
 	if (answeredTutorial && !wantTutorial && !popUpShown) {
 		popupTimer += dt;
 
-		if (popupTimer >= 0.5f) {
+		if (popupTimer >= 1.3f) {
 			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
 			if (!IsTutorialActive() && !Doing_Tutorial()) { pagerFirstPop = true; }
 			
@@ -126,7 +126,7 @@ void Notifications_Update(bool liftActive, f32 dt)
 	if (waitTaskPopUp) {
 		taskTimer += dt;
 
-		if (taskTimer >= 0.5f) {
+		if (taskTimer >= 1.3f) {
 			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
 
 			isPagerOpen = true;

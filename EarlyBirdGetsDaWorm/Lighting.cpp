@@ -212,7 +212,16 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
     static float ramp = 0.0f;
     bool hasPatient = Player_HasPatient();
 
-    if (hasPatient && !prevHasPatient) ramp = 0.0f;
+    // --- ANOMALY TRIGGER ---
+    if (hasPatient && !prevHasPatient) {
+        ramp = 0.0f;
+
+        // Reset all light timers to 0 immediately when a patient is picked up. 
+        for (int i = 0; i < 11; i++) {
+            flickerMem[floorNum][i].timer = 0.0f;
+        }
+    }
+
     if (!hasPatient) ramp = 0.0f;
 
     ramp += 2.0f * dt;

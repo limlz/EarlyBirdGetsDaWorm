@@ -398,6 +398,7 @@ void Game_Update()
             // Only a genuine GHOST patient should reach the basement disposal; trigger boss fight
             if (disposalSuccess)
             {
+                Player_StopSounds();
                 isFadingToBoss = true;
                 return;
             }
@@ -561,6 +562,8 @@ void Game_Draw()
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
     }
 
+    Player_DrawBlinkOverlay(squareMesh);
+
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetTransparency(1.0f);
@@ -570,6 +573,7 @@ void Game_Draw()
     Tutorial_Draw();
     PauseMenu_Draw(squareMesh);
     Debug_Draw(info);
+
 }
 
 // ============================================================

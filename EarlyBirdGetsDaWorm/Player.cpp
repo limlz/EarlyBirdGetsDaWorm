@@ -33,6 +33,19 @@ static int PlayerPool[6][5] = {
     {0,1,1,1,0}
 };
 
+// --- Blink Transition State ---
+static bool IsBlinking = false;
+static float BlinkTimer = 0.0f;
+static constexpr float BLINK_DURATION = 1.0f;
+static float TopLidY = 1000.0f;
+static float BottomLidY = -1000.0f;
+
+// NEW: Trackers to delay the game logic until eyes are closed
+static bool PendingPickup = false;
+static bool PendingDelivery = false;
+static int PendingDay = 0;
+static bool StateChangedDuringBlink = false;
+
 /******************************* PLAYER & PATIENT LOGIC **********************************/
 static ILLNESSES PatientRandomIllness() {
     const std::vector<ILLNESSES>& activePool = AllAnomalies_CurrentRun();
@@ -102,16 +115,29 @@ void SetPatientScaryByDay(int day) {
 }
 
 bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
+    // Prevent interacting again if we are already in the middle of a transition!
+    if (IsBlinking) return false;
+
     if (!PatientPickedUp) {
         if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
-            PatientPickedUp = true;
-            SetPatientScaryByDay(day);
+            // Start the blink, but DELAY the actual pickup logic
+            IsBlinking = true;
+            BlinkTimer = 0.0f;
+            PendingPickup = true;
+            PendingDay = day;
+            StateChangedDuringBlink = false;
+
             return true;
         }
     }
     else {
         if (currentFloor == DestFloor && doorNumAtPlayer == DestDoor) {
-            Player_GenerateMission();
+            // Start the blink, but DELAY the actual delivery logic
+            IsBlinking = true;
+            BlinkTimer = 0.0f;
+            PendingDelivery = true;
+            StateChangedDuringBlink = false;
+
             return true;
         }
     }
@@ -152,8 +178,59 @@ void Player_Load() {
     NoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
-/***************************************** UPDATE ****************************************/ 
+/***************************************** UPDATE ****************************************/
 void Player_Update(float dt, bool walkKey) {
+    // --- HEAVY EYE-BLINK LOGIC ---
+    if (IsBlinking) {
+        BlinkTimer += dt;
+
+        // The exact midpoint of the blink (when screen is pitch black)
+        float midPoint = BLINK_DURATION * 0.5f;
+
+        // --- APPLY DEFERRED LOGIC WHEN EYES ARE SHUT ---
+        if (BlinkTimer >= midPoint && !StateChangedDuringBlink) {
+            if (PendingPickup) {
+                PatientPickedUp = true;
+                SetPatientScaryByDay(PendingDay);
+                PendingPickup = false;
+            }
+            else if (PendingDelivery) {
+                Player_GenerateMission();
+                PendingDelivery = false;
+            }
+            StateChangedDuringBlink = true;
+        }
+
+        float progress = 0.0f;
+        // Eyelids take 35% of the total time to close, hold black for 30%, and take 35% to open
+        float slideTime = BLINK_DURATION * 0.35f;
+
+        // Phase 1: Eyelids sliding closed
+        if (BlinkTimer <= slideTime) {
+            progress = BlinkTimer / slideTime;
+        }
+        // Phase 2: Eyes tightly shut (pitch black)
+        else if (BlinkTimer <= BLINK_DURATION - slideTime) {
+            progress = 1.0f;
+        }
+        // Phase 3: Eyelids heavily sliding open
+        else if (BlinkTimer <= BLINK_DURATION) {
+            float timeOpening = BlinkTimer - (BLINK_DURATION - slideTime);
+            progress = 1.0f - (timeOpening / slideTime);
+        }
+        // Phase 4: Blink finished
+        else {
+            IsBlinking = false;
+            progress = 0.0f;
+        }
+
+        // Apply a sine wave easing so the eyelids slow down smoothly as they close
+        float easedProgress = sinf(progress * 1.570796f);
+
+        TopLidY = 1000.0f - (easedProgress * 500.0f);
+        BottomLidY = -1000.0f + (easedProgress * 500.0f);
+    }
+
     if (walkKey) {
         Timer += dt;
         if (Timer >= FRAME_TIME) {
@@ -201,6 +278,39 @@ void Player_Update(float dt, bool walkKey) {
             WheelchairSoundPlaying = false;
         }
     }
+
+}
+
+/***************************************** DRAW UI ***************************************/void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
+    if (!IsBlinking || squareMesh == nullptr) return;
+
+    // 1. Tell the engine we are drawing solid geometry, no transparency needed
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+
+    // Set color to solid pitch black
+    AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+    AEGfxSetTransparency(1.0f);
+
+    // 2. Draw the Top Eyelid (A massive 2000x1000 box sliding down)
+    AEMtx33 scaleTop, transTop, transformTop;
+    AEMtx33Scale(&scaleTop, 2000.0f, 1000.0f);
+    AEMtx33Trans(&transTop, 0.0f, TopLidY);
+    AEMtx33Concat(&transformTop, &transTop, &scaleTop);
+    AEGfxSetTransform(transformTop.m);
+    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+    // 3. Draw the Bottom Eyelid (A massive 2000x1000 box sliding up)
+    AEMtx33 scaleBot, transBot, transformBot;
+    AEMtx33Scale(&scaleBot, 2000.0f, 1000.0f);
+    AEMtx33Trans(&transBot, 0.0f, BottomLidY);
+    AEMtx33Concat(&transformBot, &transBot, &scaleBot);
+    AEGfxSetTransform(transformBot.m);
+    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+
+    // 4. Clean up the engine state
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 }
 
 /***************************************** DRAW ******************************************/
@@ -250,6 +360,12 @@ void Player_ForceHumanPatient() {
 void Player_ForceGhostPatient() {
     ApplyNewPatientFromTruth(true);
     VisualBluff = true;
+}
+
+void Player_StopSounds() {
+    AudioManager_StopWalkingSFX();
+    WalkingSoundPlaying = false;
+    WheelchairSoundPlaying = false;
 }
 
 void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = illness; }

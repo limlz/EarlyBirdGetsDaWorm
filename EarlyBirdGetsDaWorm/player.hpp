@@ -44,6 +44,7 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day);
 ******************************************************************************************/
 void ResetPatientCounter(int day);
 
+
 /********************************* CORE LIFECYCLE ****************************************/
 
 /******************************************************************************************
@@ -53,8 +54,8 @@ void ResetPatientCounter(int day);
 void Player_Load();
 
 /******************************************************************************************
-    @brief  Updates player logic, including walking animations and dynamic
-            audio playback.
+    @brief  Updates player logic, including walking animations, eye-blink transitions,
+            and dynamic audio playback.
 
     @param  dt
             The delta time for the current frame.
@@ -75,10 +76,19 @@ void Player_Update(float dt, bool walkKey);
 void Player_Draw(float x, float y);
 
 /******************************************************************************************
+    @brief  Draws a heavy eye-blink transition overlay on top of the screen.
+
+    @param  squareMesh
+            The generic square mesh used to draw the solid black eyelids.
+******************************************************************************************/
+void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh);
+
+/******************************************************************************************
     @brief  Frees all allocated memory, unloads textures, and destroys meshes
             used by the player.
 ******************************************************************************************/
 void Player_Unload();
+
 
 /*************************************** MODIFIERS ***************************************/
 
@@ -109,6 +119,13 @@ void Player_SetIllness(ILLNESSES illness);
             A positive number to face right, or a negative number to face left.
 ******************************************************************************************/
 void Player_SetFacing(int dir);
+
+/******************************************************************************************
+    @brief  Instantly stops the player's walking and wheelchair sound effects.
+            Useful for silencing footsteps during transitions or jumpscares.
+******************************************************************************************/
+void Player_StopSounds();
+
 
 /*************************************** ACCESSORS ***************************************/
 
