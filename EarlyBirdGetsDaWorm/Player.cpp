@@ -368,7 +368,12 @@ void Player_StopSounds() {
     WheelchairSoundPlaying = false;
 }
 
-void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = illness; }
+void Player_DebugFulfillPatientQuota() {
+    // Ensures PatientsHandled >= 5 so the day-end check passes when debug-skipping a day
+    if (PatientsHandled < 5) PatientsHandled = 5;
+}
+
+void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = AnomalyIllness = illness; }
 void Player_SetFacing(int dir) { FacingDir = (dir >= 0) ? 1 : -1; }
 
 /*************************************** ACCESSORS ***************************************/

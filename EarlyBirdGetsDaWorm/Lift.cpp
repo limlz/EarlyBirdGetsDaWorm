@@ -28,6 +28,7 @@ static int   OcdClickCount      = 0;            // Tracks how many times a butto
 
 // --- General State ---
 static bool LiftActive = false;
+static bool LiftWasActive = false; // tracks previous frame state so Timer_SetPaused is only called on change
 static bool NearLift = false;
 
 // --- State Machine Variables ---
@@ -338,7 +339,12 @@ void Lift_Update(float /*dt*/, float camX, float maxDist) {
         PendingFloor = -1;
     }
 
-    Timer_SetPaused(LiftActive);
+    // Only call Timer_SetPaused when LiftActive actually changes state,
+    // so it doesn't constantly override the F4 debug pause every frame.
+    if (LiftActive != LiftWasActive) {
+        Timer_SetPaused(LiftActive);
+        LiftWasActive = LiftActive;
+    }
 }
 
 /********************************************   ANOMALY DESCRIPTIONS   *******************************************/

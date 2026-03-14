@@ -285,7 +285,7 @@ int Doors_Update(float camX)
 
 void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
 {
-    if (!gDoorsEnabled) return;
+    if (!CentralPool_IsSystemActive(AnomalyFiles::Doors_isActive)) return;
     if (!Player_HasPatient()) return;
 
     // Tick cooldowns / clear finished events

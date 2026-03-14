@@ -20,8 +20,8 @@ static constexpr int   END_MIN = START_MIN + 60 * 6; // 6 in-game hours
 static constexpr float MIN_PER_SEC = 2.0f;              // 2 in-game minutes per 1 real second
 
 // Day overlay settings
-static constexpr float DAY_HOLD_TIME = 1.0f; // seconds to hold full black
-static constexpr float DAY_FADE_SPEED = 1.0f; // alpha decrease per second (1.0 = ~1 sec fade)
+static constexpr float DAY_HOLD_TIME = 1.5f; // seconds to hold full black
+static constexpr float DAY_FADE_SPEED = 0.6f; // alpha decrease per second (1.0 = ~1 sec fade)
 
 // ============================================================================
 // STATE
@@ -122,6 +122,13 @@ int Timer_GetGameMinutes()
     return (int)gGameMinutes;
 }
 
+// Debug helper: immediately end the current shift (triggers day transition)
+void Timer_ForceTimeUp()
+{
+    gGameMinutes = (float)END_MIN;
+    gTimeUp = true;
+}
+
 // Debug helper: set current time directly for testing
 void Timer_DebugSetTime(float minutes)
 {
@@ -169,7 +176,7 @@ void Timer_Draw(float ndcX, float ndcY)
     char timeBuf[16]{};
 
     // NOTE: This prints "AM" always (your original behavior).
-    // If you want a real 12-hour clock + AM/PM, tell me and I’ll swap it.
+    // If you want a real 12-hour clock + AM/PM, tell me and Iï¿½ll swap it.
     sprintf_s(timeBuf, "%02d:%02d AM", hours, minutes);
 
     if (gClockFontId >= 0)

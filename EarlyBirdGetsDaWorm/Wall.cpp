@@ -242,7 +242,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
         }
     }
 
-    if (!gWallEnabled) { return; }                              // If wall anomalies are disabled, stop here
+    if (!CentralPool_IsSystemActive(AnomalyFiles::Wall_isActive)) { return; } // If wall anomalies are disabled, stop here
     if (!Player_HasPatient()) { return; }                       // If the player has no patient, anomalies should not appear
 
     ILLNESSES TrueDiagnosis = Player_GetTrueDiagnosis();        // Get the player's actual diagnosis
@@ -275,7 +275,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
     paranoiaY = 0.0f;
 
     f32 camMin{ -3692.0f }, camMax{ -2778.0f };
-    f32 t{ (camX - camMin) / (camMax - camMin) };   // Normalize camera position to 0–1 range
+    f32 t{ (camX - camMin) / (camMax - camMin) };   // Normalize camera position to 0ï¿½1 range
     t = AEClamp(t, 0.0f, 1.0f);
 
     t = 1.0f - t; // flip direction

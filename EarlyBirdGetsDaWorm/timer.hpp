@@ -30,9 +30,10 @@ bool Timer_IsPaused();
 void Timer_Reset();
 
 // ------------------------------
-// DEBUG: Skip timer to 5:58 AM
+// DEBUG: Skip timer to 5:58 AM / Force time up immediately
 // ------------------------------
 void Timer_DebugSetTime(float minutes);
+void Timer_ForceTimeUp();
 
 // ------------------------------
 // DAY OVERLAY (FADE IN/OUT)

@@ -25,29 +25,28 @@ static bool  horrorLessMode = false;
 // --- Slide Animation Variable ---
 static float panelOffsetY = 800.0f; // Starts off-screen (high up)
 
-static constexpr float SETTINGS_FADE_SPEED = 4.0f;
+static constexpr float SETTINGS_FADE_SPEED  = 4.0f;
 static constexpr float SETTINGS_SLIDE_SPEED = 12.0f;
 
-static AEGfxTexture* settingsBgOn;
-//static AEGfxTexture* settingsBgOff;
+static AEGfxTexture* settingsBgOn  = nullptr;
+static AEGfxTexture* settingsBgOff = nullptr;
 
 void Settings_Load()
 {
-    // Load the assets specifically needed for the Settings Panel
     settingsCloseTex = LoadTextureChecked(Assets::Main_Menu::CloseButton);
-    settingsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
-    settingsBgOn = LoadTextureChecked(Assets::Main_Menu::SettingsBgOn);
-    //settingsBgOff = LoadTextureChecked(Assets::Main_Menu::SettingsBgOff);
+    settingsFontId   = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    settingsBgOn     = LoadTextureChecked(Assets::Main_Menu::SettingsBgOn);
+    settingsBgOff    = LoadTextureChecked(Assets::Main_Menu::SettingsBgOff);
 }
 
 void Settings_Initialize()
 {
-    isOptionsOpen = false;
+    isOptionsOpen       = false;
     optionsOverlayAlpha = 0.0f;
 
     isDraggingMaster = false;
-    isDraggingBGM = false;
-    isDraggingSFX = false;
+    isDraggingBGM    = false;
+    isDraggingSFX    = false;
 
     panelOffsetY = 800.0f;
     // horrorLessMode intentionally NOT reset so it persists across game sessions
@@ -70,54 +69,53 @@ void Settings_Update(float dt)
     float mouseX = Input_GetMouseX();
     float mouseY = Input_GetMouseY();
 
-    // Close Button Hitbox
-    bool hoverClose = IsAreaClicked(250.0f, 150.0f + panelOffsetY, 50.0f, 50.0f, mouseX, mouseY);
+    // Slider Hitboxes (raised +20 from previous positions)
+    bool hoverMaster = IsAreaClicked(0.0f,  40.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverBGM    = IsAreaClicked(0.0f, -20.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverSFX    = IsAreaClicked(0.0f, -80.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
 
-    // Slider Hitboxes (Stacked vertically)
-    // Master is at Y = 20, BGM is at Y = -40, SFX is at Y = -100
-    bool hoverMaster = IsAreaClicked(0.0f,  20.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverBGM    = IsAreaClicked(0.0f, -40.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverSFX    = IsAreaClicked(0.0f,-100.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    // Horror-Less inline pill switch
+    bool hoverHorrorToggle = IsAreaClicked(0.0f, -140.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
 
-    // Horror-Less toggle button at Y = -160
-    bool hoverHorrorToggle = IsAreaClicked(100.0f, -160.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
+    // CRT power button — closes settings and switches texture
+    bool hoverPowerBtn = IsAreaClicked(310.0f, -290.0f + panelOffsetY, 50.0f, 50.0f, mouseX, mouseY);
 
     // --- INPUT LOGIC ---
     if (isOptionsOpen) {
 
-        // Handle Closing
-        if (AEInputCheckTriggered(AEVK_ESCAPE) || (AEInputCheckTriggered(AEVK_LBUTTON) && hoverClose)) {
+        // Close via Escape or CRT power button
+        if (AEInputCheckTriggered(AEVK_ESCAPE)
+            || (AEInputCheckTriggered(AEVK_LBUTTON) && hoverPowerBtn)) {
             Settings_Close();
         }
 
-        // Handle Horror-Less toggle
+        // Horror-Less pill switch
         if (AEInputCheckTriggered(AEVK_LBUTTON) && hoverHorrorToggle) {
             horrorLessMode = !horrorLessMode;
         }
 
-        // Handle Drag Initiation
+        // Drag initiation
         if (AEInputCheckTriggered(AEVK_LBUTTON)) {
-            if (hoverMaster) isDraggingMaster = true;
-            else if (hoverBGM) isDraggingBGM = true;
-            else if (hoverSFX) isDraggingSFX = true;
+            if      (hoverMaster) isDraggingMaster = true;
+            else if (hoverBGM)    isDraggingBGM    = true;
+            else if (hoverSFX)    isDraggingSFX    = true;
         }
 
-        // Handle Drag Release
+        // Drag release
         if (AEInputCheckReleased(AEVK_LBUTTON)) {
             isDraggingMaster = false;
-            isDraggingBGM = false;
-            isDraggingSFX = false;
+            isDraggingBGM    = false;
+            isDraggingSFX    = false;
         }
 
-        // Handle Drag Updates
+        // Drag updates
         if (isDraggingMaster || isDraggingBGM || isDraggingSFX) {
-            // Convert screen X to a 0.0 to 1.0 ratio
             float normalizedVolume = AEClamp((mouseX + 150.0f) / 300.0f, 0.0f, 1.0f);
 
             if (isDraggingMaster) {
                 masterVolume = normalizedVolume;
-				AudioManager_SetBGMVolume(bgmVolume * masterVolume);
-				AudioManager_SetSFXVolume(sfxVolume * masterVolume);
+                AudioManager_SetBGMVolume(bgmVolume * masterVolume);
+                AudioManager_SetSFXVolume(sfxVolume * masterVolume);
                 AudioManager_SetWalkingVolume(sfxVolume * masterVolume);
             }
             else if (isDraggingBGM) {
@@ -133,117 +131,112 @@ void Settings_Update(float dt)
     }
 }
 
-// Helper function to draw a single slider
-static void DrawSlider(AEGfxVertexList* squareMesh, float currentVolume, float yOffset, const char* labelStr, s8 fontId, float panelOffsetY)
+// Helper: draw a single labeled slider
+static void DrawSlider(AEGfxVertexList* squareMesh, float currentVolume, float yOffset,
+                       const char* labelStr, s8 fontId, float panelOffsetY)
 {
     float sliderY = yOffset + panelOffsetY;
 
-    // Draw the text label just above the slider
+    // Centered label above slider
     if (fontId >= 0) {
-        float labelNdcX = (-150.0f) / 800.0f;
-        float labelNdcY = (yOffset + 25.0f + panelOffsetY) / 450.0f;
-        AEGfxPrint(fontId, labelStr, labelNdcX, labelNdcY, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+        float labelNdcY = (yOffset + 28.0f + panelOffsetY) / 450.0f;
+        AEGfxPrintCentered(fontId, labelStr, 0.0f, labelNdcY, 0.8f, 0.75f, 0.95f, 0.75f, 1.0f);
     }
 
-    // Calculate dynamic slider math
-    float fillWidth = 300.0f * currentVolume;
-    float fillStartX = -150.0f + (fillWidth / 2.0f);
-    float handleX = -150.0f + (300.0f * currentVolume);
+    float fillWidth  = 300.0f * currentVolume;
+    float fillStartX = -150.0f + (fillWidth * 0.5f);
+    float handleX    = -150.0f + (300.0f * currentVolume);
 
-    // Track Background (Dark)
-    DrawSquareMesh(squareMesh, 0.0f, sliderY, 300.0f, 15.0f, 0xFF111111);
+    // Track — slightly taller and brighter for visibility
+    DrawSquareMesh(squareMesh, 0.0f, sliderY, 300.0f, 20.0f, 0xFF1A3A1A);
 
-    // Fill Bar (White)
-    if (fillWidth > 0.0f) {
-        DrawSquareMesh(squareMesh, fillStartX, sliderY, fillWidth, 15.0f, COLOR_WHITE);
-    }
+    // Fill bar
+    if (fillWidth > 0.0f)
+        DrawSquareMesh(squareMesh, fillStartX, sliderY, fillWidth, 20.0f, 0xFF5FAF5F);
 
-    // Draggable Knob (Blue)
-    DrawSquareMesh(squareMesh, handleX, sliderY, 15.0f, 30.0f, 0xFF0000FF);
+    // Knob (red, matches CRT accent)
+    DrawSquareMesh(squareMesh, handleX, sliderY, 16.0f, 32.0f, 0xFFCC2222);
 }
 
 void Settings_Draw(AEGfxVertexList* squareMesh)
 {
     if (optionsOverlayAlpha <= 0.0f) return;
 
-    // 1. Draw Black Backdrop
+    // Black backdrop
     DrawBlackOverlay(squareMesh, optionsOverlayAlpha);
 
-    // 2. Draw UI Elements
-    //AEGfxSetTransparency(1.0f);
-
-    // Solid Backing Panel (extended to fit toggle below the sliders)
-    //DrawSquareMesh(squareMesh, 0.0f, panelOffsetY, 600.0f, 500.0f, 0xFF2A2A2A);
-    //DrawSquareMesh(squareMesh, 0.0f, 175.0f + panelOffsetY, 600.0f, 100.0f, 0xFF3A3A3A); // Header bar
-
+    // Background texture: On while open, Off while closing
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
     AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
-    if (settingsBgOn) {
-        DrawTextureMesh(squareMesh, settingsBgOn, 0.0f, panelOffsetY, 800.0f, 680.0f, 1.0f);
-    }
+    AEGfxTexture* bgTex = isOptionsOpen ? settingsBgOn : settingsBgOff;
+    if (bgTex)
+        DrawTextureMesh(squareMesh, bgTex, 0.0f, panelOffsetY, 800.0f, 680.0f, 1.0f);
 
-    // Close Button
-    if (settingsCloseTex) {
-        DrawTextureMesh(squareMesh, settingsCloseTex, 250.0f, 175.0f + panelOffsetY, 40.0f, 40.0f, 1.0f);
-    }
-    else {
-        DrawSquareMesh(squareMesh, 250.0f, 175.0f + panelOffsetY, 40.0f, 40.0f, 0xFFD32F2F);
-    }
-
-    // Title Text
+    // Title (centered)
     if (settingsFontId >= 0) {
         float titleNdcY = (160.0f + panelOffsetY) / 450.0f;
-        AEGfxPrint(settingsFontId, "SETTINGS", (-100.0f / 800.0f), titleNdcY, 1.5f, 1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxPrintCentered(settingsFontId, "SETTINGS", 0.0f, titleNdcY, 1.5f, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    // Draw the 3 Sliders using the helper function
-    DrawSlider(squareMesh, masterVolume,  20.0f, "Master Volume",           settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, bgmVolume,    -40.0f, "Background Music Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, sfxVolume,   -100.0f, "Sound Effect Volume",     settingsFontId, panelOffsetY);
+    // Three sliders (raised +20 from previous positions)
+    DrawSlider(squareMesh, masterVolume,  40.0f, "Master Volume",           settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, bgmVolume,    -20.0f, "Background Music Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, sfxVolume,    -80.0f, "Sound Effect Volume",     settingsFontId, panelOffsetY);
 
-    // --- Horror-Less Mode Toggle ---
+    // --- Horror-Less Mode label + inline pill switch ---
     if (settingsFontId >= 0) {
-        // Label
-        float labelNdcX = (-150.0f) / 800.0f;
-        float labelNdcY = (-135.0f + panelOffsetY) / 450.0f;
-        AEGfxPrint(settingsFontId, "Horror-Less Mode", labelNdcX, labelNdcY, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+        float labelNdcY = (-115.0f + panelOffsetY) / 450.0f;
+        AEGfxPrintCentered(settingsFontId, "Horror-Less Mode", 0.0f, labelNdcY, 0.8f, 0.75f, 0.95f, 0.75f, 1.0f);
     }
 
-    // Toggle button background: green when ON, dark gray when OFF
-    u32 btnColor = horrorLessMode ? 0xFF2E7D32 : 0xFF444444;
-    DrawSquareMesh(squareMesh, 100.0f, -160.0f + panelOffsetY, 80.0f, 30.0f, btnColor);
+    // Pill track
+    const float swX = 0.0f, swY = -140.0f + panelOffsetY;
+    u32 trackColor = horrorLessMode ? 0xFF228B22 : 0xFF2A2A2A;
+    DrawSquareMesh(squareMesh, swX, swY, 80.0f, 26.0f, trackColor);
 
-    // Toggle button text (ON / OFF)
+    // Pill nub slides right (ON) or left (OFF)
+    float nubX = swX + (horrorLessMode ? 22.0f : -22.0f);
+    DrawSquareMesh(squareMesh, nubX, swY, 28.0f, 28.0f, 0xFFEEEEEE);
+
+    // ON / OFF label on the opposite side of the nub
     if (settingsFontId >= 0) {
-        float btnNdcY = (-167.0f + panelOffsetY) / 450.0f;
+        float swNdcY  = (swY - 7.0f) / 450.0f;
+        float textNdcX = (swX + (horrorLessMode ? -18.0f : 18.0f)) / 800.0f;
         AEGfxPrintCentered(settingsFontId, horrorLessMode ? "ON" : "OFF",
-            100.0f / 800.0f, btnNdcY, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+            textNdcX, swNdcY, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
     }
+
+    // --- CRT power button indicator (closes settings) ---
+    // Glow ring
+    DrawSquareMesh(squareMesh, 310.0f, -290.0f + panelOffsetY, 54.0f, 54.0f, 0xFF551111);
+    // Button face (always red since it's the OFF/close button)
+    DrawSquareMesh(squareMesh, 310.0f, -290.0f + panelOffsetY, 44.0f, 44.0f, 0xFF881111);
 }
 
 void Settings_Unload()
 {
     UnloadTextureSafe(settingsCloseTex);
     UnloadTextureSafe(settingsBgOn);
-	//UnloadTextureSafe(settingsBgOff);
+    UnloadTextureSafe(settingsBgOff);
     if (settingsFontId >= 0) {
         AEGfxDestroyFont(settingsFontId);
         settingsFontId = -1;
     }
 }
 
-bool Settings_IsOpen() { return isOptionsOpen; }
-void Settings_Open() { isOptionsOpen = true; }
-void Settings_Close() {
-    isOptionsOpen = false;
+bool Settings_IsOpen()  { return isOptionsOpen; }
+void Settings_Open()    { isOptionsOpen = true; }
+void Settings_Close()
+{
+    isOptionsOpen    = false;
     isDraggingMaster = false;
-    isDraggingBGM = false;
-    isDraggingSFX = false;
+    isDraggingBGM    = false;
+    isDraggingSFX    = false;
 }
 
-float Settings_GetMasterVolume()    { return masterVolume; }
-float Settings_GetBGMVolume()       { return bgmVolume; }
-float Settings_GetSFXVolume()       { return sfxVolume; }
-bool  Settings_IsHorrorLessEnabled(){ return horrorLessMode; }
+float Settings_GetMasterVolume()     { return masterVolume; }
+float Settings_GetBGMVolume()        { return bgmVolume; }
+float Settings_GetSFXVolume()        { return sfxVolume; }
+bool  Settings_IsHorrorLessEnabled() { return horrorLessMode; }

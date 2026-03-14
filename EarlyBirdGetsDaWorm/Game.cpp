@@ -131,8 +131,15 @@ void Game_Initialize()
     // Always enter a new floor with a fade-in; boss fade-out starts clean
     isFadingToBoss = false;
     bossFadeAlpha = 0.0f;
-    isFadingFromBoss = true;
-    returnFadeAlpha = 1.0f;
+    // Skip the return-fade when the day overlay is already covering the screen;
+    // using both would hide "DAY X" behind a second black overlay.
+    if (Timer_IsDayOverlayActive()) {
+        isFadingFromBoss = false;
+        returnFadeAlpha = 0.0f;
+    } else {
+        isFadingFromBoss = true;
+        returnFadeAlpha = 1.0f;
+    }
 
     Doors_Initialize();
     Lift_Initialize();
@@ -299,9 +306,7 @@ void Game_Update()
         if (moveLeft) { targetVelX = Config::playerSpeed; left_right = false; }
         if (moveRight) { targetVelX = -Config::playerSpeed; left_right = true; }
 
-        if (AEInputCheckTriggered(AEVK_O)) dementia = !dementia;
         if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
-        if (AEInputCheckTriggered(AEVK_K))   Timer_DebugSetTime(5 * 60 + 58);
     }
 
     // Apply velocity
@@ -316,22 +321,53 @@ void Game_Update()
 
     Player_Update(dt, isWalking);
 
-    // Debug: force illness + sound system active (only when debug overlay is on and carrying a patient)
+    // Debug: force illness (only when debug overlay is on and carrying a patient)
     if (Debug_IsActive() && Player_HasPatient())
     {
         bool illnessSwitched = false;
-        if (AEInputCheckTriggered(AEVK_1)) { Player_SetIllness(ILLNESSES::PARANOIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_2)) { Player_SetIllness(ILLNESSES::MANIA);         CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_3)) { Player_SetIllness(ILLNESSES::DEPRESSION);    CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_4)) { Player_SetIllness(ILLNESSES::DEMENTIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_5)) { Player_SetIllness(ILLNESSES::SCHIZOPHRENIA); CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_6)) { Player_SetIllness(ILLNESSES::AIW_SYNDROME);  CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_7)) { Player_SetIllness(ILLNESSES::INSOMNIA);      CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_8)) { Player_SetIllness(ILLNESSES::OCD);           CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
-        if (AEInputCheckTriggered(AEVK_9)) { Player_SetIllness(ILLNESSES::SCOTOPHOBIA);   CentralPool_ForceSystemActive(AnomalyFiles::Sound_isActive); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_1)) { Player_SetIllness(ILLNESSES::PARANOIA);      illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_2)) { Player_SetIllness(ILLNESSES::MANIA);         illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_3)) { Player_SetIllness(ILLNESSES::DEPRESSION);    illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_4)) { Player_SetIllness(ILLNESSES::DEMENTIA);      illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_5)) { Player_SetIllness(ILLNESSES::SCHIZOPHRENIA); illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_6)) { Player_SetIllness(ILLNESSES::AIW_SYNDROME);  illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_7)) { Player_SetIllness(ILLNESSES::INSOMNIA);      illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_8)) { Player_SetIllness(ILLNESSES::OCD);           illnessSwitched = true; }
+        if (AEInputCheckTriggered(AEVK_9)) { Player_SetIllness(ILLNESSES::SCOTOPHOBIA);   illnessSwitched = true; }
         // Reset sound state so audio levels restore and OnPatientPickup re-fires for the new illness
         if (illnessSwitched) SoundAnomaly_Initialize();
+
+        // 0: Re-roll the central pool anomaly assignment for the current patient
+        if (AEInputCheckTriggered(AEVK_0)) {
+            CentralPool_GeneratePatientAnomalies(Player_GetAnomalyIllness(), Player_GetGhostExtraAnomalies());
+        }
     }
+
+    // Debug-only controls that don't require a patient
+    if (Debug_IsActive())
+    {
+        // K: Force the current shift to end, satisfying the patient quota → triggers next-day transition
+        if (AEInputCheckTriggered(AEVK_K)) {
+            Player_DebugFulfillPatientQuota();
+            Timer_ForceTimeUp();
+        }
+
+        // P: Auto collect patient (if idle) or auto deliver (if carrying)
+        if (AEInputCheckTriggered(AEVK_P)) {
+            s8 tFloor, tDoor, dFloor, dDoor;
+            Player_GetTargetRoom(tFloor, tDoor, dFloor, dDoor);
+            if (!Player_HasPatient()) {
+                Player_HandleInteraction(tFloor, tDoor, CurrentDay);
+                SoundAnomaly_Initialize();
+            } else {
+                if (Player_HandleInteraction(dFloor, dDoor, CurrentDay))
+                    liftActive = false;
+            }
+        }
+    }
+
+    // Endless hallway: active whenever the lighting anomaly is running
+    dementia = CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive);
 
     // Clamp camera so the player can't scroll past either end of the corridor.
     // Also kill velocity at each boundary so it doesn't fight against the clamp.

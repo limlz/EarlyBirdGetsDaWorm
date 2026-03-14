@@ -110,38 +110,21 @@ static int GetSpecificGlitchState(ILLNESSES illness, int designID) {
 // AIW/INSOMNIA/OCD: Fixed, persistent rhythms.
 /******************************************** ANOMALY TIMINGS   *******************************************/
 static float GetFrameTimerByIllness(ILLNESSES illness, bool isGlitchingPhase, int extraAnomalyCount) {
-    float t = 1.0f;
+    const auto& ft = Config::frameTimesTable[static_cast<int>(illness)];
 
-    switch (illness) {
-    case ILLNESSES::MANIA:
-    case ILLNESSES::SCHIZOPHRENIA:
-        t = isGlitchingPhase ? 2.0f : ((rand() % 500) + 200) / 100.0f;
-        break;
-    case ILLNESSES::DEPRESSION:
-    case ILLNESSES::DEMENTIA:
-        t = isGlitchingPhase ? 4.0f : ((rand() % 400) + 600) / 100.0f;
-        break;
-    case ILLNESSES::AIW_SYNDROME:
-        t = 5.0f; // 5s Normal, 5s Glitching
-        break;
-    case ILLNESSES::INSOMNIA:
-        t = 8.0f; // 8s Normal, 8s Glitching
-        break;
-    case ILLNESSES::OCD:
-        t = 6.0f; // Changes every 6 seconds
-        break;
-    case ILLNESSES::PARANOIA:
-        t = isGlitchingPhase ? 3.0f : 5.0f;
-        break;
-    default:
-        t = 3.0f;
-        break;
+    float t;
+    if (isGlitchingPhase) {
+        t = ft.glitchDuration;
+    } else {
+        t = ft.waitMin;
+        if (ft.waitRandMax > 0.0f)
+            t += (float)(rand() % (int)(ft.waitRandMax * 100)) / 100.0f;
     }
 
-    // GHOST MODIFIER: Speeds up the pacing by 10-15% to make the environment feel frantic
+    // GHOST MODIFIER: speeds up pacing to make the environment feel frantic
     if (extraAnomalyCount >= 1) {
-        t *= isGlitchingPhase ? 0.85f : 0.90f;
-        if (t < 0.05f) t = 0.05f;
+        t *= isGlitchingPhase ? Config::frameGhostGlitchSpeedMult : Config::frameGhostWaitSpeedMult;
+        if (t < Config::frameGhostMinTimer) t = Config::frameGhostMinTimer;
     }
     return t;
 }
@@ -298,25 +281,23 @@ void Frames_Update(float dt, float camX) {
 
             if (effIllness == ILLNESSES::PARANOIA) {
                 // --- PARANOIA: THE WEEPING ANGEL ---
-                // If the player is too close (within 250px), the frame acts completely normal, gaslighting them.
-                if (distToPlayer < 250.0f) {
+                // If the player is too close, the frame acts completely normal, gaslighting them.
+                if (distToPlayer < Config::frameParanoiaCloseRange) {
                     f.currentState = 0; // Hide anomaly!
                     f.posX = baseX;
                     f.posY = baseY;
                 }
                 else if (f.currentState > 0) {
                     // Calculate panic from 0.0 (calm/close) to 1.0 (freaking out/far away)
-                    // Scales down aggressively as the player moves from 600px to 250px away
-                    float panicSpeed = (distToPlayer - 250.0f) / 350.0f;
+                    float panicSpeed = (distToPlayer - Config::frameParanoiaCloseRange) / Config::frameParanoiaPanicRange;
                     panicSpeed = AEClamp(panicSpeed, 0.05f, 1.0f);
 
                     if (frameJitterMap[level][frame]) {
                         // Probability to pick a NEW random position scales with distance.
-                        // If it fails the roll, it keeps its previous offset, creating a sluggish "low FPS" stutter as you approach!
+                        // If it fails the roll, it keeps its previous offset, creating a sluggish stutter as you approach!
                         if ((rand() % 100) < (panicSpeed * 100)) {
-                            // Scale how violently it jumps (intensity) based on distance too
-                            int intensity = (int)(10.0f * panicSpeed);
-                            if (intensity < 2) intensity = 2; // Ensure it still moves at least 1 pixel
+                            int intensity = (int)(Config::frameParanoiaIntensityScale * panicSpeed);
+                            if (intensity < Config::frameParanoiaMinIntensity) intensity = Config::frameParanoiaMinIntensity;
 
                             f.posX = baseX + ((rand() % intensity) - (intensity / 2));
                             f.posY = baseY + ((rand() % intensity) - (intensity / 2));
@@ -332,57 +313,52 @@ void Frames_Update(float dt, float camX) {
             else if (effIllness == ILLNESSES::MANIA) {
                 // --- MANIA: HYPERACTIVE DRIFT ---
                 if (f.currentState > 0) {
-                    // Slowly drift in a single continuous direction based on their grid index
                     int dir = (level + frame) % 4;
-                    float drift = animTime * 30.0f; // Drift distance increases over time
+                    float drift = animTime * Config::frameManiaDriftSpeed;
 
                     f.posX = baseX + ((dir == 0) ? -drift : (dir == 1) ? drift : 0.0f);
                     f.posY = baseY + ((dir == 2) ? drift : (dir == 3) ? -drift : 0.0f);
 
                     // Add brief rapid stutters on top of the smooth drift to simulate hyperactivity
-                    if ((rand() % 100) < 30) {
-                        f.posX += ((rand() % 8) - 4);
-                        f.posY += ((rand() % 8) - 4);
+                    if ((rand() % 100) < Config::frameManiaSutterChance) {
+                        f.posX += ((rand() % Config::frameManiaSutterRange) - (Config::frameManiaSutterRange / 2));
+                        f.posY += ((rand() % Config::frameManiaSutterRange) - (Config::frameManiaSutterRange / 2));
                     }
                 }
             }
             else if (effIllness == ILLNESSES::DEPRESSION) {
                 // --- DEPRESSION: MELTING/SINKING ---
                 if (f.currentState > 0) {
-                    // Slowly stretches downwards over 4 seconds, giving a melting or heavy feel
-                    float stretch = AEClamp(animTime / 4.0f, 0.0f, 1.0f);
-                    f.height = FRAME_HEIGHT + (stretch * 100.0f); // Stretch texture down
-                    f.posY = baseY - (stretch * 50.0f);           // Offset Y to keep top edge anchored
-                    f.posX = baseX;
+                    float stretch = AEClamp(animTime / Config::frameDepressionStretchDuration, 0.0f, 1.0f);
+                    f.height = FRAME_HEIGHT + (stretch * Config::frameDepressionMaxHeightIncrease);
+                    f.posY   = baseY - (stretch * Config::frameDepressionYOffset);
+                    f.posX   = baseX;
                 }
             }
             else if (effIllness == ILLNESSES::DEMENTIA) {
                 // --- DEMENTIA: PERSISTENT CONFUSION ---
                 if (f.currentState > 0) {
-                    // Constant static jitter locked in place for the full 4 second burst
-                    f.posX = baseX + ((rand() % 6) - 3);
-                    f.posY = baseY + ((rand() % 6) - 3);
+                    f.posX = baseX + ((rand() % Config::frameDementiaJitterRange) - (Config::frameDementiaJitterRange / 2));
+                    f.posY = baseY + ((rand() % Config::frameDementiaJitterRange) - (Config::frameDementiaJitterRange / 2));
                 }
             }
             else if (effIllness == ILLNESSES::SCHIZOPHRENIA) {
                 // --- SCHIZOPHRENIA: AGGRESSIVE HALLUCINATION ---
                 if (f.currentState > 0) {
-                    // Violent, wide jittering for a very brief 2 second window
-                    f.posX = baseX + ((rand() % 14) - 7);
-                    f.posY = baseY + ((rand() % 14) - 7);
+                    f.posX = baseX + ((rand() % Config::frameSchizophreniJitterRange) - (Config::frameSchizophreniJitterRange / 2));
+                    f.posY = baseY + ((rand() % Config::frameSchizophreniJitterRange) - (Config::frameSchizophreniJitterRange / 2));
                 }
             }
             else if (effIllness == ILLNESSES::AIW_SYNDROME) {
                 // --- ALICE IN WONDERLAND: SPATIAL DISTORTION ---
-                // Frame gently breathes and floats off-center when normal, but snaps perfectly in place when glitching
+                // Frame gently breathes and floats off-center when normal, snaps perfectly in place when glitching
                 if (timerState == STATE_NORMAL) {
                     f.currentState = 0;
-                    // Mild wavy circular offset using a combination of sine and cosine over total elapsed time
-                    f.posX = baseX + (sinf(totalElapsedTime * 2.0f + frame) * 15.0f);
-                    f.posY = baseY + (cosf(totalElapsedTime * 2.0f + frame) * 15.0f);
+                    f.posX = baseX + (sinf(totalElapsedTime * Config::frameAIWOscillationFreq + frame) * Config::frameAIWOscillationAmp);
+                    f.posY = baseY + (cosf(totalElapsedTime * Config::frameAIWOscillationFreq + frame) * Config::frameAIWOscillationAmp);
                 }
                 else {
-                    f.posX = baseX;     // Locked perfectly in place during glitch
+                    f.posX = baseX;
                     f.posY = baseY;
                     f.currentState = GetSpecificGlitchState(effIllness, f.designID);
                 }
@@ -392,26 +368,24 @@ void Frames_Update(float dt, float camX) {
                 // The frame's width flips negative based on player position so it "faces" the player
                 f.width = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
 
-                if (distToPlayer > 300.0f) {
+                if (distToPlayer > Config::frameInsomniaFarDist) {
                     // If far away, stretch wildly either vertically or horizontally
-                    if (frameJitterMap[level][frame]) f.height = FRAME_HEIGHT * 1.5f;
-                    else                              f.width *= 1.5f;
+                    if (frameJitterMap[level][frame]) f.height  = FRAME_HEIGHT * Config::frameInsomniaStretchMult;
+                    else                              f.width  *= Config::frameInsomniaStretchMult;
                 }
                 else {
-                    // Close proximity snaps it out of the hallucination: Stays perfectly still and normal sized
+                    // Close proximity snaps it out of the hallucination
                     f.height = FRAME_HEIGHT;
-                    f.width = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
+                    f.width  = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
                 }
             }
             else if (effIllness == ILLNESSES::OCD) {
                 // --- OCD: IMPERFECTION/MISALIGNMENT ---
-                // The frame persistently sits off-center to break the perfect hallway alignment
                 if (timerState == STATE_GLITCHING) {
                     f.currentState = GetSpecificGlitchState(effIllness, f.designID);
 
-                    // Generate an annoying off-center position based on its grid coordinates
-                    float annoyingOffsetX = (frame % 2 == 0) ? 14.0f : -11.0f;
-                    float annoyingOffsetY = (level % 2 == 0) ? -9.0f : 13.0f;
+                    float annoyingOffsetX = (frame % 2 == 0) ? Config::frameOCDOffsetXEven : Config::frameOCDOffsetXOdd;
+                    float annoyingOffsetY = (level % 2 == 0) ? Config::frameOCDOffsetYEven : Config::frameOCDOffsetYOdd;
                     f.posX = baseX + annoyingOffsetX;
                     f.posY = baseY + annoyingOffsetY;
                 }
@@ -423,16 +397,14 @@ void Frames_Update(float dt, float camX) {
             }
             else if (effIllness == ILLNESSES::SCOTOPHOBIA) {
                 // --- SCOTOPHOBIA: PERIPHERAL GAZE MECHANIC ---
-                // Frame acts completely normal if in the center 400 pixels of the screen.
-                if (distToPlayer < 200.0f) {
+                if (distToPlayer < Config::frameScotophobiaCloseRange) {
                     f.currentState = 0;
                     f.posX = baseX;
                     f.posY = baseY;
                 }
-                // The moment it hits peripheral vision (edges of the screen), it violently glitches out.
                 else if (f.currentState > 0) {
-                    f.posX = baseX + ((rand() % 12) - 6);
-                    f.posY = baseY + ((rand() % 12) - 6);
+                    f.posX = baseX + ((rand() % Config::frameScotophobiaJitterRange) - (Config::frameScotophobiaJitterRange / 2));
+                    f.posY = baseY + ((rand() % Config::frameScotophobiaJitterRange) - (Config::frameScotophobiaJitterRange / 2));
                 }
             }
             else {
@@ -444,11 +416,10 @@ void Frames_Update(float dt, float camX) {
             }
 
             // --- GHOST OVERRIDE ---
-            // If the patient is a ghost, add a constant 15% chance for a violent micro-stutter
-            // to occur on top of any other physics/logic currently happening.
-            if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < 15) {
-                f.posX += (rand() % 8) - 4;
-                f.posY += (rand() % 8) - 4;
+            // If the patient is a ghost, add a chance for a violent micro-stutter on top of all other logic.
+            if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < Config::frameGhostStutterChance) {
+                f.posX += (rand() % Config::frameGhostStutterRange) - (Config::frameGhostStutterRange / 2);
+                f.posY += (rand() % Config::frameGhostStutterRange) - (Config::frameGhostStutterRange / 2);
             }
         }
     }

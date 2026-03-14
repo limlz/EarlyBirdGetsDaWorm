@@ -1,27 +1,29 @@
 // ==========================================
 // MASTER GAMEPLAY SETTINGS
 // ==========================================
-PLAYER_SPEED=400.0
-DOOR_DETECTION_RANGE=150.0
-LIGHT_FLICKER_SPEED=1.0
+PLAYER_SPEED=400.0              // How fast the player walks (world units per second)
+DOOR_DETECTION_RANGE=150.0      // Distance (world units) within which a door can be interacted with
+LIGHT_FLICKER_SPEED=1.0         // Global multiplier on all light flicker timers (higher = faster flicker overall)
 
 // ==========================================
 // LIGHTING GLOBALS
 // ==========================================
-FLOOR_NORMAL_CHANCE=70
-FLOOR_FUCKED_CHANCE=60
-STANDALONE_BRIGHTNESS=0.15
+FLOOR_NORMAL_CHANCE=70          // Percent chance a floor gets normal lighting (out of 100)
+FLOOR_FUCKED_CHANCE=60          // Percent chance a floor gets anomaly lighting when a patient is present (out of 100)
+STANDALONE_BRIGHTNESS=0.15      // Baseline ambient brightness added on top of illness-specific brightness
 
 // ==========================================
 // JUMPSCARE
 // ==========================================
-JUMPSCARE_DURATION=1.0
-JUMPSCARE_SCREEN_SHAKE=35.0
-JUMPSCARE_IMAGE_SHAKE=18.0
-JUMPSCARE_FLASH_DURATION=0.08
+JUMPSCARE_DURATION=1.0          // Total duration of the jumpscare event (seconds)
+JUMPSCARE_SCREEN_SHAKE=35.0     // Intensity of the screen shake during a jumpscare (pixels)
+JUMPSCARE_IMAGE_SHAKE=18.0      // Additional shake applied to the jumpscare image itself (pixels)
+JUMPSCARE_FLASH_DURATION=0.08   // Duration of the white flash at the peak of the jumpscare (seconds)
 
 // ==========================================
-// ILLNESS OVERLAY ALPHA (0.0 = clear, 1.0 = black)
+// ILLNESS OVERLAY ALPHA (0.0 = fully clear, 1.0 = fully black)
+// Controls how dark the full-screen vignette overlay is for each illness.
+// Higher = darker / more oppressive atmosphere.
 // ==========================================
 NONE_OVERLAY_ALPHA=0.50
 PARANOIA_OVERLAY_ALPHA=0.65
@@ -36,6 +38,14 @@ SCOTOPHOBIA_OVERLAY_ALPHA=0.75
 
 // ==========================================
 // ILLNESS LIGHTING PROFILES
+// Per-illness light colour, brightness, cone size, and flicker timing.
+// PREFIX_R / _G / _B    = light colour tint (0.0 - 1.0 each channel)
+// PREFIX_BRIGHTNESS     = ambient brightness contribution of this light
+// PREFIX_CONE           = size of the light cone (1.0 = normal, <1 = narrower, >1 = wider)
+// PREFIX_ON_MIN         = minimum milliseconds the light stays ON before it can flicker off
+// PREFIX_ON_RANGE       = random extra milliseconds added to ON_MIN (actual on-time = ON_MIN + rand(0..ON_RANGE))
+// PREFIX_OFF_MIN        = minimum milliseconds the light stays OFF
+// PREFIX_OFF_RANGE      = random extra milliseconds added to OFF_MIN
 // ==========================================
 
 // --- NONE (Baseline / no illness) ---
@@ -226,3 +236,115 @@ GHOST_SOUND_MIN=6.0
 GHOST_SOUND_MAX=12.0
 GHOST_SOUND_VOL=0.175
 GHOST_SOUND_GHOST_MULT=1.0
+
+// ==========================================
+// FRAME / POSTER ANOMALY TIMINGS (per illness)
+// Controls how long each poster spends glitching and how long it waits before glitching again.
+//
+// PREFIX_FRAME_GLITCH_DUR = seconds the poster stays in its glitched state
+// PREFIX_FRAME_WAIT_MIN   = minimum idle seconds between glitches (also the fixed cycle for AIW/Insomnia/OCD)
+// PREFIX_FRAME_WAIT_RAND  = maximum extra random seconds added on top of WAIT_MIN
+//                           (0 = fixed cycle with no randomness; >0 = random range up to this value)
+// ==========================================
+
+// --- NONE (default fallback) ---
+NONE_FRAME_GLITCH_DUR=3.0
+NONE_FRAME_WAIT_MIN=3.0
+NONE_FRAME_WAIT_RAND=0.0
+
+// --- PARANOIA: brief glitch, then a calm fixed wait (Weeping Angel pacing) ---
+PARANOIA_FRAME_GLITCH_DUR=3.0
+PARANOIA_FRAME_WAIT_MIN=5.0
+PARANOIA_FRAME_WAIT_RAND=0.0
+
+// --- MANIA: short bursts, frequent random waits (hyperactive pacing) ---
+MANIA_FRAME_GLITCH_DUR=2.0
+MANIA_FRAME_WAIT_MIN=2.0
+MANIA_FRAME_WAIT_RAND=5.0       // wait = 2.0 + rand(0..5.0) seconds
+
+// --- DEPRESSION: long slow melts, long slow recovery ---
+DEPRESSION_FRAME_GLITCH_DUR=4.0
+DEPRESSION_FRAME_WAIT_MIN=6.0
+DEPRESSION_FRAME_WAIT_RAND=4.0  // wait = 6.0 + rand(0..4.0) seconds
+
+// --- DEMENTIA: same slow confused rhythm as Depression ---
+DEMENTIA_FRAME_GLITCH_DUR=4.0
+DEMENTIA_FRAME_WAIT_MIN=6.0
+DEMENTIA_FRAME_WAIT_RAND=4.0    // wait = 6.0 + rand(0..4.0) seconds
+
+// --- SCHIZOPHRENIA: same fast bursts as Mania ---
+SCHIZOPHRENIA_FRAME_GLITCH_DUR=2.0
+SCHIZOPHRENIA_FRAME_WAIT_MIN=2.0
+SCHIZOPHRENIA_FRAME_WAIT_RAND=5.0
+
+// --- AIW_SYNDROME: fixed 5-second cycle both phases (predictable spatial rhythm) ---
+AIW_SYNDROME_FRAME_GLITCH_DUR=5.0
+AIW_SYNDROME_FRAME_WAIT_MIN=5.0
+AIW_SYNDROME_FRAME_WAIT_RAND=0.0
+
+// --- INSOMNIA: fixed 8-second cycle (slow exhausted rhythm) ---
+INSOMNIA_FRAME_GLITCH_DUR=8.0
+INSOMNIA_FRAME_WAIT_MIN=8.0
+INSOMNIA_FRAME_WAIT_RAND=0.0
+
+// --- OCD: fixed 6-second cycle (metronomic, annoyingly predictable) ---
+OCD_FRAME_GLITCH_DUR=6.0
+OCD_FRAME_WAIT_MIN=6.0
+OCD_FRAME_WAIT_RAND=0.0
+
+// --- SCOTOPHOBIA: default fallback ---
+SCOTOPHOBIA_FRAME_GLITCH_DUR=3.0
+SCOTOPHOBIA_FRAME_WAIT_MIN=3.0
+SCOTOPHOBIA_FRAME_WAIT_RAND=0.0
+
+// ==========================================
+// FRAME / POSTER BEHAVIOR CONSTANTS
+// Fine-tunes per-illness visual effects on posters (proximity thresholds, jitter, drift, etc.)
+// ==========================================
+
+// --- PARANOIA (Weeping Angel effect) ---
+FRAME_PARANOIA_CLOSE_RANGE=250.0        // Within this distance (px) frames look perfectly normal
+FRAME_PARANOIA_PANIC_RANGE=350.0        // Distance range over which panic speed scales up (closeRange to closeRange+panicRange)
+FRAME_PARANOIA_INTENSITY_SCALE=10.0     // Multiplier converting panic speed to jitter intensity
+FRAME_PARANOIA_MIN_INTENSITY=2          // Minimum jitter intensity (ensures it always moves at least 1px)
+
+// --- MANIA (hyperactive drift + stutter) ---
+FRAME_MANIA_DRIFT_SPEED=30.0            // Pixels of drift accumulated per second of animation time
+FRAME_MANIA_STUTTER_CHANCE=30           // Percent chance (0-100) of a rapid stutter each update tick
+FRAME_MANIA_STUTTER_RANGE=8             // Total pixel range of the stutter (applied as ±half this value)
+
+// --- DEPRESSION (melting/sinking stretch) ---
+FRAME_DEPRESSION_STRETCH_DURATION=4.0   // Seconds over which the frame fully stretches downward
+FRAME_DEPRESSION_MAX_HEIGHT=100.0       // Maximum extra pixels added to frame height at full stretch
+FRAME_DEPRESSION_Y_OFFSET=50.0          // Y offset to keep the top edge visually anchored while stretching
+
+// --- DEMENTIA (persistent confusion jitter) ---
+FRAME_DEMENTIA_JITTER_RANGE=6           // Total jitter pixel range (applied as ±half, so ±3px)
+
+// --- SCHIZOPHRENIA (aggressive hallucination jitter) ---
+FRAME_SCHIZO_JITTER_RANGE=14            // Total jitter pixel range (applied as ±half, so ±7px — wider than Dementia)
+
+// --- AIW SYNDROME (floating spatial distortion) ---
+FRAME_AIW_OSCILLATION_FREQ=2.0          // Oscillation speed in radians per second (higher = faster floating)
+FRAME_AIW_OSCILLATION_AMP=15.0          // Radius of the circular floating offset in pixels
+
+// --- INSOMNIA (exhaustion size distortion) ---
+FRAME_INSOMNIA_FAR_DIST=300.0           // Distance (px) beyond which frames stretch wildly
+FRAME_INSOMNIA_STRETCH_MULT=1.5         // Size multiplier applied to width or height when player is far away
+
+// --- OCD (grid misalignment offsets) ---
+FRAME_OCD_OFFSET_X_EVEN=14.0            // X offset for even-column frames during glitch phase
+FRAME_OCD_OFFSET_X_ODD=-11.0            // X offset for odd-column frames during glitch phase
+FRAME_OCD_OFFSET_Y_EVEN=-9.0            // Y offset for even-row frames during glitch phase
+FRAME_OCD_OFFSET_Y_ODD=13.0             // Y offset for odd-row frames during glitch phase
+
+// --- SCOTOPHOBIA (peripheral gaze mechanic) ---
+FRAME_SCOTOPHOBIA_CLOSE_RANGE=200.0     // Within this distance (px) of screen center frames look normal
+FRAME_SCOTOPHOBIA_JITTER_RANGE=12       // Total jitter pixel range in peripheral vision (applied as ±half, so ±6px)
+
+// --- GHOST (overlay stutter applied on top of all illness logic) ---
+FRAME_GHOST_STUTTER_CHANCE=15           // Percent chance (0-100) of a ghost micro-stutter each update tick
+FRAME_GHOST_STUTTER_RANGE=8             // Total pixel range of the ghost stutter (applied as ±half this value)
+FRAME_GHOST_GLITCH_SPEED_MULT=0.85      // Multiplier on glitch phase duration when a ghost patient is present (< 1 = shorter)
+FRAME_GHOST_WAIT_SPEED_MULT=0.90        // Multiplier on wait phase duration when a ghost patient is present (< 1 = more frequent)
+FRAME_GHOST_MIN_TIMER=0.05              // Minimum timer value after ghost multiplier (prevents frames from updating every tick)
