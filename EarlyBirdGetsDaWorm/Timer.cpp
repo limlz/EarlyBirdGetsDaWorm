@@ -122,6 +122,13 @@ int Timer_GetGameMinutes()
     return (int)gGameMinutes;
 }
 
+// Debug helper: immediately end the current shift (triggers day transition)
+void Timer_ForceTimeUp()
+{
+    gGameMinutes = (float)END_MIN;
+    gTimeUp = true;
+}
+
 // Debug helper: set current time directly for testing
 void Timer_DebugSetTime(float minutes)
 {

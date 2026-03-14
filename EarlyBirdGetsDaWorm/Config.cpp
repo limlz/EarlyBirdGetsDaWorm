@@ -54,6 +54,60 @@ namespace Config {
         /* 10: GHOST        */ 0.55f,
     };
 
+    // Frame/poster glitch cycle timing per illness (index matches ILLNESSES enum)
+    FrameTimes frameTimesTable[11] = {
+        /* 0: NONE          */ { 3.0f, 3.0f, 0.0f }, // Default: 3s glitch, 3s wait, fixed
+        /* 1: PARANOIA      */ { 3.0f, 5.0f, 0.0f }, // 3s glitch, always 5s wait
+        /* 2: MANIA         */ { 2.0f, 2.0f, 5.0f }, // 2s glitch, 2-7s random wait
+        /* 3: DEPRESSION    */ { 4.0f, 6.0f, 4.0f }, // 4s glitch, 6-10s random wait
+        /* 4: DEMENTIA      */ { 4.0f, 6.0f, 4.0f }, // 4s glitch, 6-10s random wait
+        /* 5: SCHIZOPHRENIA */ { 2.0f, 2.0f, 5.0f }, // 2s glitch, 2-7s random wait
+        /* 6: AIW_SYNDROME  */ { 5.0f, 5.0f, 0.0f }, // Fixed 5s cycle both phases
+        /* 7: INSOMNIA      */ { 8.0f, 8.0f, 0.0f }, // Fixed 8s cycle both phases
+        /* 8: OCD           */ { 6.0f, 6.0f, 0.0f }, // Fixed 6s cycle both phases
+        /* 9: SCOTOPHOBIA   */ { 3.0f, 3.0f, 0.0f }, // Default fallback
+        /* 10: GHOST        */ { 3.0f, 3.0f, 0.0f }, // Default; ghost modifier applied separately
+    };
+
+    // --- FRAME BEHAVIOR CONSTANTS ---
+    // Paranoia
+    float frameParanoiaCloseRange     = 250.0f;
+    float frameParanoiaPanicRange     = 350.0f;
+    float frameParanoiaIntensityScale = 10.0f;
+    int   frameParanoiaMinIntensity   = 2;
+    // Mania
+    float frameManiaDriftSpeed   = 30.0f;
+    int   frameManiaSutterChance = 30;
+    int   frameManiaSutterRange  = 8;
+    // Depression
+    float frameDepressionStretchDuration   = 4.0f;
+    float frameDepressionMaxHeightIncrease = 100.0f;
+    float frameDepressionYOffset           = 50.0f;
+    // Dementia
+    int frameDementiaJitterRange    = 6;
+    // Schizophrenia
+    int frameSchizophreniJitterRange = 14;
+    // AIW
+    float frameAIWOscillationFreq = 2.0f;
+    float frameAIWOscillationAmp  = 15.0f;
+    // Insomnia
+    float frameInsomniaFarDist     = 300.0f;
+    float frameInsomniaStretchMult = 1.5f;
+    // OCD
+    float frameOCDOffsetXEven = 14.0f;
+    float frameOCDOffsetXOdd  = -11.0f;
+    float frameOCDOffsetYEven = -9.0f;
+    float frameOCDOffsetYOdd  = 13.0f;
+    // Scotophobia
+    float frameScotophobiaCloseRange  = 200.0f;
+    int   frameScotophobiaJitterRange = 12;
+    // Ghost overlay
+    int   frameGhostStutterChance   = 15;
+    int   frameGhostStutterRange    = 8;
+    float frameGhostGlitchSpeedMult = 0.85f;
+    float frameGhostWaitSpeedMult   = 0.90f;
+    float frameGhostMinTimer        = 0.05f;
+
     // Sound anomaly timing and volume per illness (index matches ILLNESSES enum)
     SoundTimes soundTable[11] = {
         /* 0: NONE          */ {  8.0f, 15.0f, 0.30f, 0.70f },
@@ -94,11 +148,14 @@ namespace Config {
         if (key == prefix + "_B") { visualsTable[idx].b = val; return true; }
         if (key == prefix + "_BRIGHTNESS") { visualsTable[idx].baseBrightness = val; return true; }
         if (key == prefix + "_CONE") { visualsTable[idx].baseConeAngle = val; return true; }
-        if (key == prefix + "_ON_MIN") { flickerTable[idx].onMin = (int)val; return true; }
-        if (key == prefix + "_ON_RANGE") { flickerTable[idx].onRange = (int)val; return true; }
-        if (key == prefix + "_OFF_MIN") { flickerTable[idx].offMin = (int)val; return true; }
-        if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange = (int)val; return true; }
+        if (key == prefix + "_ON_MIN")    { flickerTable[idx].onMin   = (int)val; return true; }
+        if (key == prefix + "_ON_RANGE")  { flickerTable[idx].onRange  = (int)val; return true; }
+        if (key == prefix + "_OFF_MIN")   { flickerTable[idx].offMin   = (int)val; return true; }
+        if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange  = (int)val; return true; }
         if (key == prefix + "_OVERLAY_ALPHA") { overlayAlphaTable[idx] = val; return true; }
+        if (key == prefix + "_FRAME_GLITCH_DUR") { frameTimesTable[idx].glitchDuration = val; return true; }
+        if (key == prefix + "_FRAME_WAIT_MIN")   { frameTimesTable[idx].waitMin        = val; return true; }
+        if (key == prefix + "_FRAME_WAIT_RAND")  { frameTimesTable[idx].waitRandMax    = val; return true; }
         return false; // Key didn't match this illness
     }
 
@@ -138,6 +195,35 @@ namespace Config {
                 else if (key == "FLOOR_NORMAL_CHANCE") floorNormalChance = (int)val;
                 else if (key == "FLOOR_FUCKED_CHANCE") floorFuckedChance = (int)val;
                 else if (key == "STANDALONE_BRIGHTNESS") standaloneBrightness = val;
+
+                // --- FRAME BEHAVIOR CONSTANTS ---
+                else if (key == "FRAME_PARANOIA_CLOSE_RANGE")       frameParanoiaCloseRange     = val;
+                else if (key == "FRAME_PARANOIA_PANIC_RANGE")        frameParanoiaPanicRange     = val;
+                else if (key == "FRAME_PARANOIA_INTENSITY_SCALE")    frameParanoiaIntensityScale = val;
+                else if (key == "FRAME_PARANOIA_MIN_INTENSITY")      frameParanoiaMinIntensity   = (int)val;
+                else if (key == "FRAME_MANIA_DRIFT_SPEED")           frameManiaDriftSpeed        = val;
+                else if (key == "FRAME_MANIA_STUTTER_CHANCE")        frameManiaSutterChance      = (int)val;
+                else if (key == "FRAME_MANIA_STUTTER_RANGE")         frameManiaSutterRange       = (int)val;
+                else if (key == "FRAME_DEPRESSION_STRETCH_DURATION") frameDepressionStretchDuration   = val;
+                else if (key == "FRAME_DEPRESSION_MAX_HEIGHT")       frameDepressionMaxHeightIncrease = val;
+                else if (key == "FRAME_DEPRESSION_Y_OFFSET")         frameDepressionYOffset           = val;
+                else if (key == "FRAME_DEMENTIA_JITTER_RANGE")       frameDementiaJitterRange         = (int)val;
+                else if (key == "FRAME_SCHIZO_JITTER_RANGE")         frameSchizophreniJitterRange     = (int)val;
+                else if (key == "FRAME_AIW_OSCILLATION_FREQ")        frameAIWOscillationFreq          = val;
+                else if (key == "FRAME_AIW_OSCILLATION_AMP")         frameAIWOscillationAmp           = val;
+                else if (key == "FRAME_INSOMNIA_FAR_DIST")           frameInsomniaFarDist             = val;
+                else if (key == "FRAME_INSOMNIA_STRETCH_MULT")       frameInsomniaStretchMult         = val;
+                else if (key == "FRAME_OCD_OFFSET_X_EVEN")           frameOCDOffsetXEven              = val;
+                else if (key == "FRAME_OCD_OFFSET_X_ODD")            frameOCDOffsetXOdd               = val;
+                else if (key == "FRAME_OCD_OFFSET_Y_EVEN")           frameOCDOffsetYEven              = val;
+                else if (key == "FRAME_OCD_OFFSET_Y_ODD")            frameOCDOffsetYOdd               = val;
+                else if (key == "FRAME_SCOTOPHOBIA_CLOSE_RANGE")     frameScotophobiaCloseRange       = val;
+                else if (key == "FRAME_SCOTOPHOBIA_JITTER_RANGE")    frameScotophobiaJitterRange      = (int)val;
+                else if (key == "FRAME_GHOST_STUTTER_CHANCE")        frameGhostStutterChance          = (int)val;
+                else if (key == "FRAME_GHOST_STUTTER_RANGE")         frameGhostStutterRange           = (int)val;
+                else if (key == "FRAME_GHOST_GLITCH_SPEED_MULT")     frameGhostGlitchSpeedMult        = val;
+                else if (key == "FRAME_GHOST_WAIT_SPEED_MULT")       frameGhostWaitSpeedMult          = val;
+                else if (key == "FRAME_GHOST_MIN_TIMER")             frameGhostMinTimer               = val;
 
                 // --- JUMPSCARE SETTINGS ---
                 else if (key == "JUMPSCARE_DURATION")       jumpscareDuration = val;

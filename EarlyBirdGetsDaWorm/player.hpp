@@ -156,6 +156,12 @@ bool Player_HasPatient();
 int Player_GetPatientsHandled();
 
 /******************************************************************************************
+    @brief  Debug helper: bumps PatientsHandled to 5 so the day-end quota check passes
+            when a day skip is forced via the debug menu.
+******************************************************************************************/
+void Player_DebugFulfillPatientQuota();
+
+/******************************************************************************************
     @brief  Retrieves the target room coordinates for the current mission.
 
     @param  patientFloor

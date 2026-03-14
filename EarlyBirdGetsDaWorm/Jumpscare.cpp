@@ -126,8 +126,8 @@ void JumpScare_Start()
 
 bool JumpScare_Update(float dt)
 {
-    // Press J to test (debug trigger)
-    if (!gActive && AEInputCheckTriggered(AEVK_J))
+    // Press J to test (debug only)
+    if (!gActive && Debug_IsActive() && AEInputCheckTriggered(AEVK_J))
         JumpScare_Start();
 
     if (!gActive)
