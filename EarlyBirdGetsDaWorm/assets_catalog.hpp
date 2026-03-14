@@ -144,6 +144,41 @@ namespace Assets
         constexpr const char* DoorBg = "Assets/Background/Door_bg.png";
 
         constexpr const char* JumpScare = "Assets/Background/Jumpscare.png";
+
+        constexpr const char* OutsidePersonaGrave[] =
+        {
+            "Assets/Background/OutsideWorld/GRAVE_1.png",
+            "Assets/Background/OutsideWorld/GRAVE_2.png",
+        };
+
+        constexpr const char* OutsidePersonaNad[] =
+        {
+            "Assets/Background/OutsideWorld/NADIAKAWA_1.png",
+            "Assets/Background/OutsideWorld/NADIAKAWA_2.png",
+            "Assets/Background/OutsideWorld/NADIAKAWA_3.png",
+            "Assets/Background/OutsideWorld/NADIAKAWA_4.png",
+        };
+        constexpr const char* OutsidePersonaLZ[] =
+        {
+            "Assets/Background/OutsideWorld/LZKAWA_1.png",
+            "Assets/Background/OutsideWorld/LZKAWA_2.png",
+            "Assets/Background/OutsideWorld/LZKAWA_3.png",
+            "Assets/Background/OutsideWorld/LZKAWA_4.png",
+        };
+        constexpr const char* OutsidePersonaSya[] =
+        {
+            "Assets/Background/OutsideWorld/SYAKAWA_1.png",
+            "Assets/Background/OutsideWorld/SYAKAWA_2.png",
+            "Assets/Background/OutsideWorld/SYAKAWA_3.png",
+            "Assets/Background/OutsideWorld/SYAKAWA_4.png",
+        };
+        constexpr const char* OutsidePersonaAra[] =
+        {
+            "Assets/Background/OutsideWorld/ARAKAWA_1.png",
+            "Assets/Background/OutsideWorld/ARAKAWA_2.png",
+            "Assets/Background/OutsideWorld/ARAKAWA_3.png",
+            "Assets/Background/OutsideWorld/ARAKAWA_4.png",
+        };
     }
     namespace Door_Anomaly
     {

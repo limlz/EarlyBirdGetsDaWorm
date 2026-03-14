@@ -86,6 +86,23 @@ static float ComputeSpawnYFromBorder()
 }
 
 // ============================================================
+//  OUTSIDE WORLD PERSONA
+// ============================================================
+static AEGfxTexture* OutsideGraveTex[2]{}; // Grave Textures
+static AEGfxTexture* OutsideNadTex[4]{}; // Persona Textures
+static AEGfxTexture* OutsideLZTex[4]{};
+static AEGfxTexture* OutsideSyaTex[4]{};
+static AEGfxTexture* OutsideAraTex[4]{};
+
+// --- Outside Animation State ---
+static s32 currentImage;                        // Current animation image index
+static f32 imageDuration;                       // How long the image will be drawn
+static f32 imageTimer;                          // Timer used to track when to switch images
+static f32 floatingTimer;                       // Timer used to track floating time
+
+
+
+// ============================================================
 //  LOAD
 // ============================================================
 
@@ -106,6 +123,23 @@ void Game_Load()
     Guide_Load();
     JumpScare_Load();
     AllAnomalies_Load();
+
+    // Grave + Persona Loading Textures
+    for (int i = 0; i < 2; i++) {
+        OutsideGraveTex[i] = AEGfxTextureLoad(Assets::Background::OutsidePersonaGrave[i]);
+    }
+    for (int i = 0; i < 4; i++) {
+        OutsideNadTex[i] = AEGfxTextureLoad(Assets::Background::OutsidePersonaNad[i]);
+    }
+    for (int i = 0; i < 4; i++) {
+        OutsideLZTex[i] = AEGfxTextureLoad(Assets::Background::OutsidePersonaLZ[i]);
+    }
+    for (int i = 0; i < 4; i++) {
+        OutsideSyaTex[i] = AEGfxTextureLoad(Assets::Background::OutsidePersonaSya[i]);
+    }
+    for (int i = 0; i < 4; i++) {
+        OutsideAraTex[i] = AEGfxTextureLoad(Assets::Background::OutsidePersonaAra[i]);
+    }
 
     // gSessionStarted prevents this block from re-running on floor transitions or reloads mid-session
     if (!gSessionStarted)
@@ -149,6 +183,12 @@ void Game_Initialize()
     Tutorial_Initialize();
     Guide_Initialize();
     AllAnomalies_Initialize();
+
+    // Initialize animation variables
+    currentImage = 0;
+    imageDuration = 0.4f;
+    imageTimer = 0.5f;
+    floatingTimer = 0.0f;
 
     ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
@@ -499,12 +539,39 @@ void Game_Draw()
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
     AEGfxSetTransparency(1.0f);
 
+    // Outside World Persona // Persona Movement + Anim
+    f32 personaDt{ (f32)AEFrameRateControllerGetFrameTime() };
+    imageTimer += personaDt;
+
+    if (imageTimer >= imageDuration) // Switch frame when duration is exceeded
+    {
+        imageTimer = 0.0f;
+        currentImage++;
+
+        if (currentImage >= 4) {
+            currentImage = 0; // loops the animation
+        }
+    }
+
+    floatingTimer += personaDt; // Different floating movement
+    f32 floatOffset1{ sinf(floatingTimer * 2.0f) * 20.0f };
+    f32 floatOffset2{ sinf(floatingTimer * 2.0f + 1.5f) * 20.0f };
+
     // Left lift only renders when the camera is close enough to the left end of the corridor
     if (camX > -(2 * DIST_BETWEEN_DOORS))
     {
         DrawSquareMesh(squareMesh, -600.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
         Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, floorNum);
+
+        f32 personaX{ -700.0f + camX - 100.0f }, personaY{ 0.0f };
+        if (floorNum == 1) {
+            DrawTextureMesh(squareMesh, OutsideGraveTex[0], personaX + 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+        }
+        if (floorNum >= 2) {
+            DrawTextureMesh(squareMesh, OutsideNadTex[currentImage], personaX + 300.0f, personaY + 150.0f + floatOffset1, 100.0f, 106.0f, 0.35f);
+            DrawTextureMesh(squareMesh, OutsideLZTex[currentImage], personaX + 100.0f, personaY - 120.0f + floatOffset2, 132.0f, 106.0f, 0.35f);
+        }
     }
 
     // Right lift only renders near the right end; suppressed entirely in dementia mode where the corridor is infinite
@@ -516,6 +583,15 @@ void Game_Draw()
         DrawSquareMesh(squareMesh, endOffset + camX + 100.0f, 0.0f, 800.0f, 900.0f, COLOR_BLACK);
         Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, floorNum);
+
+        f32 personaX{ endOffset + camX + 200.0f }, personaY{ 0.0f };
+        if (floorNum == 1) {
+            DrawTextureMesh(squareMesh, OutsideGraveTex[1], personaX - 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+        }
+        if (floorNum >= 2) {
+            DrawTextureMesh(squareMesh, OutsideSyaTex[currentImage], personaX - 100.0f, personaY - 150.0f + floatOffset2, 86.0f, 106.0f, 0.35f);
+            DrawTextureMesh(squareMesh, OutsideAraTex[currentImage], personaX - 280.0f, personaY + 150.0f + floatOffset1, 160.0f, 133.0f, 0.35f);
+        }
     }
 
     AEMtx33 scale;
@@ -636,6 +712,32 @@ void Game_Unload()
     Tutorial_Free();
     Guide_Free();
     Journal_Unload();
+
+    // Grave + Persona Unloading
+    for (int i{}; i < 2; i++) {
+        if (OutsideGraveTex[i]) {
+            AEGfxTextureUnload(OutsideGraveTex[i]);
+            OutsideGraveTex[i] = nullptr;
+        }
+    }
+    for (int i{}; i < 4; i++) {
+        if (OutsideNadTex[i]) {
+            AEGfxTextureUnload(OutsideNadTex[i]);
+            OutsideNadTex[i] = nullptr;
+        }
+        if (OutsideLZTex[i]) {
+            AEGfxTextureUnload(OutsideLZTex[i]);
+            OutsideLZTex[i] = nullptr;
+        }
+        if (OutsideSyaTex[i]) {
+            AEGfxTextureUnload(OutsideSyaTex[i]);
+            OutsideSyaTex[i] = nullptr;
+        }
+        if (OutsideAraTex[i]) {
+            AEGfxTextureUnload(OutsideAraTex[i]);
+            OutsideAraTex[i] = nullptr;
+        }
+    }
 
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);
