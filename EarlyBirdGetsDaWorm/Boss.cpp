@@ -2,6 +2,7 @@
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
+static AEGfxTexture* bossShieldTex[3]    = { nullptr, nullptr, nullptr };
 static AEGfxTexture* bossBulletFrames[2] = { nullptr, nullptr };
 
 // --- Boss Animation Variables ---
@@ -9,6 +10,7 @@ static int   currentBossFrame  = 0;
 static int   bossAnimDir       = 1;   // +1 = forward, -1 = reverse (ping-pong)
 static float bossAnimTimer     = 0.0f;
 const  float BOSS_ANIM_SPEED   = 0.35f;
+
 
 // --- Bullet Animation Variables ---
 static int   currentBulletFrame = 0;
@@ -24,6 +26,9 @@ void Boss_Load()
     bossTex[0] = LoadTextureChecked(Assets::Boss_Fight::Boss1);
     bossTex[1] = LoadTextureChecked(Assets::Boss_Fight::Boss2);
     bossTex[2] = LoadTextureChecked(Assets::Boss_Fight::Boss3);
+    bossShieldTex[0] = LoadTextureChecked(Assets::Boss_Fight::Shield1);
+    bossShieldTex[1] = LoadTextureChecked(Assets::Boss_Fight::Shield2);
+    bossShieldTex[2] = LoadTextureChecked(Assets::Boss_Fight::Shield3);
     bossBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
     bossBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
 }
@@ -52,6 +57,7 @@ void Boss_Initialize(Boss& boss)
     currentBossFrame   = 0;
     bossAnimDir        = 1;
     bossAnimTimer      = 0.0f;
+
     currentBulletFrame = 0;
     bulletAnimTimer    = 0.0f;
 
@@ -221,19 +227,13 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 {
     if (!boss.active) return;
 
-    // --- DRAW DEFENSE SHIELD ---
-    if (boss.shieldActive) {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetTransparency(0.5f);
+    // --- DRAW BOSS (animated) — shield textures replace body textures during shield phase ---
+    AEGfxTexture* activeTex = boss.shieldActive
+        ? bossShieldTex[currentBossFrame]
+        : bossTex[currentBossFrame];
 
-        DrawSquareMesh(mesh, boss.x, boss.y, boss.w + 60.0f, boss.h + 60.0f, 0xFF0088FF);
-        AEGfxSetTransparency(1.0f);
-    }
-
-    // --- DRAW BOSS (animated) ---
-    if (bossTex[currentBossFrame]) {
-        DrawTextureMesh(mesh, bossTex[currentBossFrame], boss.x, boss.y, boss.w, boss.h, 1.0f);
+    if (activeTex) {
+        DrawTextureMesh(mesh, activeTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
     }
     else {
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -322,8 +322,10 @@ bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float o
 
 void Boss_Unload()
 {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
         UnloadTextureSafe(bossTex[i]);
+        UnloadTextureSafe(bossShieldTex[i]);
+    }
     UnloadTextureSafe(bossBulletFrames[0]);
     UnloadTextureSafe(bossBulletFrames[1]);
 }
