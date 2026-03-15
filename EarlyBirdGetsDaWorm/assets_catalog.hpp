@@ -11,13 +11,14 @@ namespace Assets
     {
         constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
-        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
+        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
+		constexpr const char* Undiscovered = "Assets/Equipment/evidence/Undiscovered.png";
         constexpr const char* Sound = "Assets/Equipment/evidence/Sound.png";
 
         constexpr const char* DoorHand = "Assets/Equipment/evidence/DoorSlam.png";
 		constexpr const char* DoorLight = "Assets/Equipment/evidence/DoorLight.png";
-        constexpr const char* DoorOCD = "Assets/Equipment/evidence/DoorOCD.png";
+        constexpr const char* DoorPosition = "Assets/Equipment/evidence/DoorPosition.png";
 
         constexpr const char* FrameGlitch = "Assets/Equipment/evidence/FrameGlitch.png";
         constexpr const char* FrameShift = "Assets/Equipment/evidence/FrameShift.png";

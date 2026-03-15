@@ -206,6 +206,21 @@ void Frames_Update(float dt, float camX) {
     const ILLNESSES effIllness = Frames_GetEffectiveIllness();
     const int extraAnoms = Frames_GetExtraAnomalyCount();
 
+    // Report the anomaly to the journal
+    switch (effIllness)
+    {
+    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    default: break;
+    }
+
     static int timerState = STATE_NORMAL;
     static float timer = 2.0f;
     static float animTime = 0.0f;

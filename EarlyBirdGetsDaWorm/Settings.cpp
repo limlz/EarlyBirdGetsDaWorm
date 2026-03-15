@@ -21,6 +21,7 @@ static bool  isDraggingSFX = false;
 
 // --- Toggle States ---
 static bool  horrorLessMode = false;
+static bool  isFullscreen   = false;
 
 // --- Slide Animation Variable ---
 static float panelOffsetY = 800.0f; // Starts off-screen (high up)
@@ -37,6 +38,7 @@ void Settings_Load()
     settingsFontId   = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     settingsBgOn     = LoadTextureChecked(Assets::Main_Menu::SettingsBgOn);
     settingsBgOff    = LoadTextureChecked(Assets::Main_Menu::SettingsBgOff);
+    isFullscreen     = AESysIsFullScreen() != 0;
 }
 
 void Settings_Initialize()
@@ -69,13 +71,16 @@ void Settings_Update(float dt)
     float mouseX = Input_GetMouseX();
     float mouseY = Input_GetMouseY();
 
-    // Slider Hitboxes (raised +20 from previous positions)
-    bool hoverMaster = IsAreaClicked(0.0f,  40.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverBGM    = IsAreaClicked(0.0f, -20.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
-    bool hoverSFX    = IsAreaClicked(0.0f, -80.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    // Slider Hitboxes
+    bool hoverMaster = IsAreaClicked(0.0f,  90.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverBGM    = IsAreaClicked(0.0f,  30.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
+    bool hoverSFX    = IsAreaClicked(0.0f, -30.0f + panelOffsetY, 320.0f, 40.0f, mouseX, mouseY);
 
     // Horror-Less inline pill switch
-    bool hoverHorrorToggle = IsAreaClicked(0.0f, -140.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
+    bool hoverHorrorToggle = IsAreaClicked(0.0f, -90.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
+
+    // Fullscreen inline pill switch
+    bool hoverFullscreenToggle = IsAreaClicked(0.0f, -150.0f + panelOffsetY, 80.0f, 30.0f, mouseX, mouseY);
 
     // CRT power button — closes settings and switches texture
     bool hoverPowerBtn = IsAreaClicked(310.0f, -290.0f + panelOffsetY, 50.0f, 50.0f, mouseX, mouseY);
@@ -92,6 +97,12 @@ void Settings_Update(float dt)
         // Horror-Less pill switch
         if (AEInputCheckTriggered(AEVK_LBUTTON) && hoverHorrorToggle) {
             horrorLessMode = !horrorLessMode;
+        }
+
+        // Fullscreen pill switch
+        if (AEInputCheckTriggered(AEVK_LBUTTON) && hoverFullscreenToggle) {
+            isFullscreen = !isFullscreen;
+            AESysSetFullScreen(isFullscreen ? 1 : 0);
         }
 
         // Drag initiation
@@ -180,19 +191,19 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
         AEGfxPrintCentered(settingsFontId, "SETTINGS", 0.0f, titleNdcY, 1.5f, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    // Three sliders (raised +20 from previous positions)
-    DrawSlider(squareMesh, masterVolume,  40.0f, "Master Volume",           settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, bgmVolume,    -20.0f, "Background Music Volume", settingsFontId, panelOffsetY);
-    DrawSlider(squareMesh, sfxVolume,    -80.0f, "Sound Effect Volume",     settingsFontId, panelOffsetY);
+    // Three sliders
+    DrawSlider(squareMesh, masterVolume,  90.0f, "Master Volume",           settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, bgmVolume,     30.0f, "Background Music Volume", settingsFontId, panelOffsetY);
+    DrawSlider(squareMesh, sfxVolume,    -30.0f, "Sound Effect Volume",     settingsFontId, panelOffsetY);
 
     // --- Horror-Less Mode label + inline pill switch ---
     if (settingsFontId >= 0) {
-        float labelNdcY = (-115.0f + panelOffsetY) / 450.0f;
+        float labelNdcY = (-65.0f + panelOffsetY) / 450.0f;
         AEGfxPrintCentered(settingsFontId, "Horror-Less Mode", 0.0f, labelNdcY, 0.8f, 0.75f, 0.95f, 0.75f, 1.0f);
     }
 
     // Pill track
-    const float swX = 0.0f, swY = -140.0f + panelOffsetY;
+    const float swX = 0.0f, swY = -90.0f + panelOffsetY;
     u32 trackColor = horrorLessMode ? 0xFF228B22 : 0xFF2A2A2A;
     DrawSquareMesh(squareMesh, swX, swY, 80.0f, 26.0f, trackColor);
 
@@ -202,10 +213,30 @@ void Settings_Draw(AEGfxVertexList* squareMesh)
 
     // ON / OFF label on the opposite side of the nub
     if (settingsFontId >= 0) {
-        float swNdcY  = (swY - 7.0f) / 450.0f;
+        float swNdcY   = (swY - 7.0f) / 450.0f;
         float textNdcX = (swX + (horrorLessMode ? -18.0f : 18.0f)) / 800.0f;
         AEGfxPrintCentered(settingsFontId, horrorLessMode ? "ON" : "OFF",
             textNdcX, swNdcY, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    // --- Fullscreen Mode label + inline pill switch ---
+    if (settingsFontId >= 0) {
+        float labelNdcY = (-125.0f + panelOffsetY) / 450.0f;
+        AEGfxPrintCentered(settingsFontId, "Fullscreen", 0.0f, labelNdcY, 0.8f, 0.75f, 0.95f, 0.75f, 1.0f);
+    }
+
+    const float fsX = 0.0f, fsY = -150.0f + panelOffsetY;
+    u32 fsTrackColor = isFullscreen ? 0xFF228B22 : 0xFF2A2A2A;
+    DrawSquareMesh(squareMesh, fsX, fsY, 80.0f, 26.0f, fsTrackColor);
+
+    float fsNubX = fsX + (isFullscreen ? 22.0f : -22.0f);
+    DrawSquareMesh(squareMesh, fsNubX, fsY, 28.0f, 28.0f, 0xFFEEEEEE);
+
+    if (settingsFontId >= 0) {
+        float fsNdcY = (fsY - 7.0f) / 450.0f;
+        float fsNdcX = (fsX + (isFullscreen ? -18.0f : 18.0f)) / 800.0f;
+        AEGfxPrintCentered(settingsFontId, isFullscreen ? "ON" : "OFF",
+            fsNdcX, fsNdcY, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     // --- CRT power button indicator (closes settings) ---

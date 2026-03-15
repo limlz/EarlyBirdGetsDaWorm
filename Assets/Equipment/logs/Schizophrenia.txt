@@ -5,7 +5,7 @@ DESC2=distorted reality.
 
 SYMPTOM1=The child and the dark figure walk through the park
 SYMPTOM2=LIGHTING TBC
-SYMPTOM3=FRAME TBC
+SYMPTOM3=Frame shaking violently
 SYMPTOM4=A hand suddenly slams against the window
 SYMPTOM5=The lift takes me to the wrong floor
 SYMPTOM6=Whispers erupt into a scream that vanishes into dead silence

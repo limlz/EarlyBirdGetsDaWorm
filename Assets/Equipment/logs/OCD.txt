@@ -5,7 +5,7 @@ DESC2=thoughts and compulsive actions.
 
 SYMPTOM1=A crack spreads across the wall
 SYMPTOM2=LIGHTING TBC
-SYMPTOM3=FRAME TBC
+SYMPTOM3=Frame never properly aligned
 SYMPTOM4=The door window shifts out of place
 SYMPTOM5=One button is slightly out of place
 SYMPTOM6=A ticking repeats with perfect rhythm and grows louder when I stop

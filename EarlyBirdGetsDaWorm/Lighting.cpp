@@ -417,6 +417,21 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
     const ILLNESSES effIllness = GetEffectiveIllness();
     const int ghostExtra = GetGhostExtraCount();
 
+    // Report anomaly to journal
+    switch (effIllness)
+    {
+    case ILLNESSES::PARANOIA:       Journal_ReportAnomaly(ANOMALYID::Light_Paranoia);       break;
+    case ILLNESSES::MANIA:          Journal_ReportAnomaly(ANOMALYID::Light_Mania);          break;
+    case ILLNESSES::DEPRESSION:     Journal_ReportAnomaly(ANOMALYID::Light_Depression);     break;
+    case ILLNESSES::DEMENTIA:       Journal_ReportAnomaly(ANOMALYID::Light_Dementia);       break;
+    case ILLNESSES::SCHIZOPHRENIA:  Journal_ReportAnomaly(ANOMALYID::Light_Schizophrenia);  break;
+    case ILLNESSES::AIW_SYNDROME:   Journal_ReportAnomaly(ANOMALYID::Light_AIW);            break;
+    case ILLNESSES::INSOMNIA:       Journal_ReportAnomaly(ANOMALYID::Light_Insomnia);       break;
+    case ILLNESSES::OCD:            Journal_ReportAnomaly(ANOMALYID::Light_OCD);            break;
+    case ILLNESSES::SCOTOPHOBIA:    Journal_ReportAnomaly(ANOMALYID::Light_Scotophobia);    break;
+    default:break;
+    }
+
     // Dementia iterates 1000 lights to fill the infinitely repeating corridor; normal mode only needs 11
     int max_iter = dementia ? 1000 : 11;
 

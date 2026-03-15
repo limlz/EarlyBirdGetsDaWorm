@@ -5,7 +5,7 @@ DESC2=confusion.
 
 SYMPTOM1=A long crack slowly spreads across the wall
 SYMPTOM2=LIGHTING TBC
-SYMPTOM3=FRAME TBC
+SYMPTOM3=Frame locked, jittering endlessly
 SYMPTOM4=DOOR TBC
 SYMPTOM5=The buttons are all mixed up
 SYMPTOM6=Lost lift sounds and stuttering squeaks echo from the wrong place

@@ -1,6 +1,6 @@
 #include "pch.hpp"
 
-static constexpr float FRAME_TIME = 0.4f;
+static constexpr float FRAME_TIME = 0.3f;
 
 static AEGfxVertexList* SpriteMesh = nullptr;
 static AEGfxTexture* HumanTex[2]{};
@@ -281,7 +281,8 @@ void Player_Update(float dt, bool walkKey) {
 
 }
 
-/***************************************** DRAW UI ***************************************/void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
+/***************************************** DRAW UI ***************************************/
+void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
     if (!IsBlinking || squareMesh == nullptr) return;
 
     // 1. Tell the engine we are drawing solid geometry, no transparency needed

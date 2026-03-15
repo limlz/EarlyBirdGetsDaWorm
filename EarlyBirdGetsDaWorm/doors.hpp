@@ -13,4 +13,6 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 
 void Doors_Unload();
 
+void Doors_ResetAllLocks();
+
 bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare);

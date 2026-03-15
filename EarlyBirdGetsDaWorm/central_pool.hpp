@@ -33,7 +33,7 @@ enum class ANOMALYID : int
     // ---- DOOR ----
     Door_HandSlam,
     Door_LightChange,
-    Door_OCD,
+    Door_Position,
 
     // ---- LIGHTING ----
     Light_Paranoia,
@@ -61,6 +61,17 @@ enum class ANOMALYID : int
 	Lift_Schizophrenia,
 	Lift_Insomnia,
 	Lift_Scotophobia,
+
+	// ---- SOUND ----
+    Sound_Mania,
+    Sound_Depression,
+    Sound_Dementia,
+    Sound_OCD,
+    Sound_AIW,
+    Sound_Paranoia,
+    Sound_Schizophrenia,
+    Sound_Insomnia,
+    Sound_Scotophobia,
 
     None,
 };

@@ -514,15 +514,15 @@ void SoundAnomaly_Update(float dt, float camX, s8 floorNum)
     // ── Per-illness behaviour ────────────────────────────────────
     switch (effective)
     {
-    case ILLNESSES::PARANOIA:      UpdateParanoia(dt);      break;
-    case ILLNESSES::MANIA:         UpdateMania(dt);         break;
-    case ILLNESSES::DEPRESSION:    UpdateDepression(dt);    break;
-    case ILLNESSES::DEMENTIA:      UpdateDementia(dt);      break;
-    case ILLNESSES::SCHIZOPHRENIA: UpdateSchizophrenia(dt); break;
-    case ILLNESSES::AIW_SYNDROME:  UpdateAIW(dt);           break;
-    case ILLNESSES::INSOMNIA:      UpdateInsomnia(dt);      break;
-    case ILLNESSES::OCD:           UpdateOCD(dt);           break;
-    case ILLNESSES::SCOTOPHOBIA:   UpdateScotophobia(dt, camX, floorNum);   break;
+    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Paranoia);        UpdateParanoia(dt);      break;
+    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Sound_Mania);           UpdateMania(dt);         break;
+    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Sound_Depression);      UpdateDepression(dt);    break;
+    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Dementia);        UpdateDementia(dt);      break;
+    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Sound_Schizophrenia);   UpdateSchizophrenia(dt); break;
+    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Sound_AIW);             UpdateAIW(dt);           break;
+    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Insomnia);        UpdateInsomnia(dt);      break;
+    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Sound_OCD);             UpdateOCD(dt);           break;
+    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Sound_Scotophobia);     UpdateScotophobia(dt, camX, floorNum);   break;
     default: break;
     }
 

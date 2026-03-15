@@ -12,13 +12,8 @@ void Journal_Unload();
 void Journal_Clear();
 void Journal_ReportAnomaly(ANOMALYID id);
 bool Journal_HasObserved(ANOMALYID id);
-bool Journal_TryDeduceHumanIllness(ILLNESSES& outIllness);
-bool Journal_IsGhostEvidence();
 
 // UI (the “book”)
 void Journal_Update();  // handles I toggle + selection
 void Journal_Draw(AEGfxVertexList* squareMesh);
 bool Journal_IsOpen();
-
-void Journal_AddExtraGhostAnomaly();   // +1 extra clue (ghost-only)
-int  Journal_GetExtraGhostAnomalies(); // optional helper
