@@ -145,6 +145,7 @@ void Game_Load()
     if (!gSessionStarted)
     {
         CurrentDay = 1;
+        floorNum = 1;
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
         camX = 0.0f;
