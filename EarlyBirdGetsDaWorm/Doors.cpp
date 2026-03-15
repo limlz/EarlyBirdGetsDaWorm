@@ -406,19 +406,25 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         AEGfxTexture* windowTex = gWindow0Tex;
 
         if (s.anomaly == ANOMALYID::Door_LightChange)
+        {
             windowTex = gWindow1Tex;
+            Journal_ReportAnomaly(ANOMALYID::Door_LightChange); // Report the anomaly to the journal
+        }
 
         if (windowTex)
+        {
             DrawTextureMesh(gQuadMesh, windowTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
+        }
 
-        // =====================================================
-        // OVERLAY ANOMALY
-        // =====================================================
         if (s.anomaly == ANOMALYID::Door_HandSlam && gHandprintTex)
+        {
             DrawTextureMesh(gQuadMesh, gHandprintTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
+			Journal_ReportAnomaly(ANOMALYID::Door_HandSlam); // Report the anomaly to the journal
+        }
 
 		// Boarded doors get drawn on top of everything else to fully obscure the window and any anomalies behind it
-        if (isBoarded) {
+        if (isBoarded) 
+        {
             DrawTextureMesh(gQuadMesh, gDoorBoardedTex, doorX, DOOR_Y, 300.0f, 200.0f, 1.0f);
         }
 

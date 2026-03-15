@@ -8,4 +8,4 @@ SYMPTOM2=LIGHTING TBC
 SYMPTOM3=FRAME TBC
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The buttons pull away when I try to press them
-SYMPTOM6=Footsteps trail behind me, then whispers creep in when I stop
+SYMPTOM6=Footsteps, Whispers

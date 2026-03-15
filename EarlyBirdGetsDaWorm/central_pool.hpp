@@ -62,6 +62,17 @@ enum class ANOMALYID : int
 	Lift_Insomnia,
 	Lift_Scotophobia,
 
+	// ---- SOUND ----
+    Sound_Mania,
+    Sound_Depression,
+    Sound_Dementia,
+    Sound_OCD,
+    Sound_AIW,
+    Sound_Paranoia,
+    Sound_Schizophrenia,
+    Sound_Insomnia,
+    Sound_Scotophobia,
+
     None,
 };
 

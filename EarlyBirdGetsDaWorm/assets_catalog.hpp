@@ -11,8 +11,9 @@ namespace Assets
     {
         constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
-        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
 
+        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
+		constexpr const char* Undiscovered = "Assets/Equipment/evidence/Undiscovered.png";
         constexpr const char* Sound = "Assets/Equipment/evidence/Sound.png";
 
         constexpr const char* DoorHand = "Assets/Equipment/evidence/DoorSlam.png";

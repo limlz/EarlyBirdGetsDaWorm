@@ -304,32 +304,39 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
         coneAngle += 0.02f * sinf(time * 3.0f);
         brightness += 0.01f * sinf(time * 10.0f);
         g -= 0.02f * sinf(time * 2.0f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Mania); // Report the anomaly to the journal
         break;
     case ILLNESSES::DEPRESSION:
         coneAngle -= 0.01f * sinf(time * 0.5f);
         brightness += 0.01f * sinf(time * 0.8f);
         b += 0.02f * sinf(time * 0.3f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Depression); // Report the anomaly to the journal
         break;
     case ILLNESSES::DEMENTIA:
         coneAngle += 0.02f * sinf(time * 0.2f);
         brightness -= 0.01f * sinf(time * 0.4f);
         g -= 0.02f * sinf(time * 0.3f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Dementia); // Report the anomaly to the journal
         break;
     case ILLNESSES::SCHIZOPHRENIA:
         // Two overlapping frequencies create a beating/chaotic shimmer
         coneAngle += 0.01f * sinf(time * 15.0f) * sinf(time * 1.5f);
         brightness += 0.01f * sinf(time * 12.0f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Schizophrenia);
         break;
     case ILLNESSES::AIW_SYNDROME:
         coneAngle += 0.05f * sinf(time * 0.6f);
+        Journal_ReportAnomaly(ANOMALYID::Light_AIW); // Report the anomaly to the journal
         break;
     case ILLNESSES::INSOMNIA:
         // Brief spike only when sin crosses 0.98, producing rare sharp flashes rather than a smooth wave
         brightness += (sinf(time * 20.0f) > 0.98f ? 0.015f : 0.0f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Insomnia); // Report the anomaly to the journal
         break;
     case ILLNESSES::PARANOIA:
     case ILLNESSES::SCOTOPHOBIA:
         coneAngle += 0.01f * sinf(time * 15.0f);
+        Journal_ReportAnomaly(ANOMALYID::Light_Scotophobia); // Report the anomaly to the journal
         break;
     case ILLNESSES::OCD:
     case ILLNESSES::NONE:

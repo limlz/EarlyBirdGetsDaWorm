@@ -9,7 +9,7 @@
 // ============================================================
 
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
-static s8 arrowFontId = -1;
+static s8 symbolsFontId = -1;
 const float UI_SCALE = 0.7f;        // tweak this to make the journal UI bigger or smaller
 
 static bool gOpen = false;
@@ -19,11 +19,14 @@ static int  gRightPage = 0;         // 0 = page 1, 1 = page 2
 bool        hasHovered = false;
 int         hoveredIndex = -1;
 
+constexpr int ILLNESS_COUNT = 9;
+constexpr int SYMPTOM_COUNT = 6;
+
 // ============================================================
 // TEXTURES
 // ============================================================
 static AEGfxTexture* JournalBook = nullptr;
-
+static AEGfxTexture* Undiscovered = nullptr;
 static AEGfxTexture* gSound = nullptr;
 
 static AEGfxTexture* gWallParanoia = nullptr;
@@ -62,135 +65,24 @@ static AEGfxTexture* gLiftScotophobia = nullptr;
 
 static AEGfxTexture* gFrameGlitch = nullptr;
 static AEGfxTexture* gFrameShift = nullptr;
-static AEGfxTexture* gFrame_Distort = nullptr;
-
-// ------------------------------------------------------------------------------
-// Syncing each index to image
-// case 0: Wall 
-// case 1: Light
-// case 2: Frames
-// case 3: Door
-// case 4: Lift
-// case 5: Sound
-static AEGfxTexture* GetJournalSymptomTexture(ILLNESSES illness, int index)
-{
-    switch (illness)
-    {
-    case ILLNESSES::PARANOIA:
-        switch (index)
-        {
-        case 0: return gWallParanoia;
-        case 1: return gLightParanoia;
-        case 2: return nullptr;
-        case 3: return gDoorLight;
-        case 4: return gLiftParanoia; 
-        case 5: return gSound; 
-        default: return nullptr;
-        }
-
-    case ILLNESSES::MANIA:
-        switch (index)
-        {
-        case 0: return gWallMania;
-        case 1: return gLightMania;
-        case 2: return nullptr;
-        case 3: return gDoorHand;
-        case 4: return gLiftMania;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::DEPRESSION:
-        switch (index)
-        {
-        case 0: return gWallDepression;
-        case 1: return gLightDepression;
-        case 2: return nullptr;
-        case 3: return nullptr;
-        case 4: return gLiftDepression;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-    case ILLNESSES::DEMENTIA:
-        switch (index)
-        {
-        case 0: return gWallDementia;
-        case 1: return gLightDementia;
-        case 2: return nullptr;
-        case 3: return nullptr;
-        case 4: return gLiftDementia;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::SCHIZOPHRENIA:
-        switch (index)
-        {
-        case 0: return gWallSchizophrenia;
-        case 1: return gLightSchizophrenia;
-        case 2: return nullptr;
-        case 3: return gDoorHand;
-        case 4: return gLiftSchizophrenia;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::AIW_SYNDROME:
-        switch (index)
-        {
-        case 0: return gWallAIW;
-        case 1: return gLightAIW;
-        case 2: return nullptr;
-        case 3: return nullptr;
-        case 4: return gLiftAIW;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::INSOMNIA:
-        switch (index)
-        {
-        case 0: return gWallInsomnia;
-        case 1: return gLightInsomnia;
-        case 2: return nullptr;
-        case 3: return gDoorLight;
-        case 4: return gLiftInsomnia;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::OCD:
-        switch (index)
-        {
-        case 0: return gWallOCD;
-        case 1: return gLightOCD;
-        case 2: return nullptr;
-        case 3: return gDoorOCD;
-        case 4: return gLiftOCD;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    case ILLNESSES::SCOTOPHOBIA:
-        switch (index)
-        {
-        case 0: return gWallScotophobia;
-        case 1: return gLightScotophobia;
-        case 2: return nullptr;
-        case 3: return gDoorLight;
-        case 4: return gLiftScotophobia;
-        case 5: return gSound;
-        default: return nullptr;
-        }
-
-    default:
-        return nullptr;
-    }
-}
+static AEGfxTexture* gFrameDistort = nullptr;
 
 // ============================================================
 // HELPERS
 // ============================================================
+
+static const std::vector<ILLNESSES> IllnessList =
+{
+    ILLNESSES::PARANOIA,
+    ILLNESSES::MANIA,
+    ILLNESSES::DEPRESSION,
+    ILLNESSES::DEMENTIA,
+    ILLNESSES::SCHIZOPHRENIA,
+    ILLNESSES::AIW_SYNDROME,
+    ILLNESSES::INSOMNIA,
+    ILLNESSES::OCD,
+    ILLNESSES::SCOTOPHOBIA
+};
 
 // Is the mouse point within the rectangle centered?
 static bool Journal_PointInRect(float px, float py, float cx, float cy, float w, float h)
@@ -203,19 +95,38 @@ static bool Journal_PointInRect(float px, float py, float cx, float cy, float w,
     return (px >= left && px <= right && py >= bottom && py <= top);
 }
 
+// Clamp the selected illness index to valid range
+static void ClampSelected()
+{
+    if (gSelected < 0) gSelected = 0;
+    if (gSelected >= (int)IllnessList.size()) gSelected = (int)IllnessList.size() - 1;
+}
+
+bool Journal_IsOpen()
+{
+    return gOpen;
+}
+
 // ============================================================
-// LOADING FROM TXT FILE
+// JOURNAL ENTRIES [100 - 199]
+// ------------------------------------------------------------
+// 
 // ============================================================
 
-struct JournalTextData
+// **********************************
+// 1) LINKING ILLNESSES TO TEXT FILES
+
+// Each illness now contains...
+// - a title
+// - a description
+// - 6 symptom text entries
+struct TextStruct
 {
     std::string title;
     std::string desc;
     std::string desc2;
     std::string symptomText[6];
 };
-
-static JournalTextData gJournalTextData[9];
 
 // Convert illness enum to the corresponding text file path in Assets/Journal/logs
 // The text files are formatted as follows:
@@ -237,7 +148,7 @@ static const char* GetJournalTextFilePath(ILLNESSES illness)
 }
 
 // Load the journal text data for a given illness from its corresponding text file
-static bool LoadJournalTextFile(const char* filePath, JournalTextData& outData)
+static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
 {
     std::ifstream file(filePath);
     if (!file.is_open())
@@ -273,52 +184,201 @@ static bool LoadJournalTextFile(const char* filePath, JournalTextData& outData)
 
     return true;
 }
-// ============================================================
-// STORAGE: observed anomalies
-// ============================================================
 
-static std::vector<ANOMALYID> gObserved;
+// Each illness has a corresponding GetFromTXT struct containing its journal text data
+// This is populated at load time by reading the text files above
+static TextStruct GetFromText[ILLNESS_COUNT];
 
-static const std::vector<ILLNESSES> gIllnessList =
+// *********************************************
+// 2) LINKING SYMPTOMS TO TEXTURES + ANOMALY IDS
+
+// Each Symptom slot
+// - has a texture 
+// - anomaly ID
+struct SymptomStruct
 {
-    ILLNESSES::PARANOIA,
-    ILLNESSES::MANIA,
-    ILLNESSES::DEPRESSION,
-    ILLNESSES::DEMENTIA,
-    ILLNESSES::SCHIZOPHRENIA,
-    ILLNESSES::AIW_SYNDROME,
-    ILLNESSES::INSOMNIA,
-    ILLNESSES::OCD,
-    ILLNESSES::SCOTOPHOBIA
+    AEGfxTexture* texture;
+    ANOMALYID anomalyId;
 };
 
+// Matching each illness and symptom index to the corresponding journal entry data 
+static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
+{
+    switch (illness)
+    {
+    case ILLNESSES::PARANOIA:
+        switch (index)
+        {
+        case 0: return { gWallParanoia,       ANOMALYID::Wall_Paranoia };
+        case 1: return { gLightParanoia,      ANOMALYID::Light_Paranoia };
+        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,          ANOMALYID::Door_LightChange };
+        case 4: return { gLiftParanoia,       ANOMALYID::Lift_Paranoia };
+        case 5: return { gSound,              ANOMALYID::Sound_Paranoia };
+        default: return { nullptr,            ANOMALYID::None };
+        }
+
+    case ILLNESSES::MANIA:
+        switch (index)
+        {
+        case 0: return { gWallMania,          ANOMALYID::Wall_Mania };
+        case 1: return { gLightMania,         ANOMALYID::Light_Mania };
+        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorHand,           ANOMALYID::Door_HandSlam };
+        case 4: return { gLiftMania,          ANOMALYID::Lift_Mania };
+        case 5: return { gSound,              ANOMALYID::Sound_Mania };
+        default: return { nullptr,            ANOMALYID::None };
+        }
+    case ILLNESSES::DEPRESSION:
+        switch (index)
+        {
+        case 0: return { gWallDepression,      ANOMALYID::Wall_Depression };
+        case 1: return { gLightDepression,     ANOMALYID::Light_Depression };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 4: return { gLiftDepression,      ANOMALYID::Lift_Depression };
+        case 5: return { gSound,               ANOMALYID::Sound_Depression };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::DEMENTIA:
+        switch (index)
+        {
+        case 0: return { gWallDementia,        ANOMALYID::Wall_Dementia };
+        case 1: return { gLightDementia,       ANOMALYID::Light_Dementia };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 4: return { gLiftDementia,        ANOMALYID::Lift_Dementia };
+        case 5: return { gSound,               ANOMALYID::Sound_Dementia };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::SCHIZOPHRENIA:
+        switch (index)
+        {
+        case 0: return { gWallSchizophrenia,   ANOMALYID::Wall_Schizophrenia };
+        case 1: return { gLightSchizophrenia,  ANOMALYID::Light_Schizophrenia };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorHand,            ANOMALYID::Door_HandSlam };
+        case 4: return { gLiftSchizophrenia,   ANOMALYID::Lift_Schizophrenia };
+        case 5: return { gSound,               ANOMALYID::Sound_Schizophrenia };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::AIW_SYNDROME:
+        switch (index)
+        {
+        case 0: return { gWallAIW,             ANOMALYID::Wall_AIW };
+        case 1: return { gLightAIW,            ANOMALYID::Light_AIW };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 4: return { gLiftAIW,             ANOMALYID::Lift_AIW };
+        case 5: return { gSound,               ANOMALYID::Sound_AIW };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::INSOMNIA:
+        switch (index)
+        {
+        case 0: return { gWallInsomnia,        ANOMALYID::Wall_Insomnia };
+        case 1: return { gLightInsomnia,       ANOMALYID::Light_Insomnia };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
+        case 4: return { gLiftInsomnia,        ANOMALYID::Lift_Insomnia };
+        case 5: return { gSound,               ANOMALYID::Sound_Insomnia };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::OCD:
+        switch (index)
+        {
+        case 0: return { gWallOCD,             ANOMALYID::Wall_OCD };
+        case 1: return { gLightOCD,            ANOMALYID::Light_OCD };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorOCD,             ANOMALYID::Door_OCD };
+        case 4: return { gLiftOCD,             ANOMALYID::Lift_OCD };
+        case 5: return { gSound,               ANOMALYID::Sound_OCD };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    case ILLNESSES::SCOTOPHOBIA:
+        switch (index)
+        {
+        case 0: return { gWallScotophobia,     ANOMALYID::Wall_Scotophobia };
+        case 1: return { gLightScotophobia,    ANOMALYID::Light_Scotophobia };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
+        case 4: return { gLiftScotophobia,     ANOMALYID::Lift_Scotophobia };
+        case 5: return { gSound,               ANOMALYID::Sound_Scotophobia };
+        default: return { nullptr,             ANOMALYID::None };
+        }
+
+    default:
+        return { nullptr, ANOMALYID::None };
+
+    }
+}
+
+// Each illness has 6 symptom slots
+// Each slot has an anomaly ID + texture
+static SymptomStruct JournalEntries[ILLNESS_COUNT][SYMPTOM_COUNT];
+
 // ============================================================
-// MATCHING LOGIC: observed anomalies -> illness OR ghost
+// OBSERVED ANOMALIES
 // ============================================================
 
-static const char* IllnessText(ILLNESSES i)
+static std::vector<bool> gObserved((int)ANOMALYID::None + 1, false);
+
+// Check if an anomaly has been observed 
+bool Journal_HasObserved(ANOMALYID id)
 {
-    switch (i)                                            
+    if (id == ANOMALYID::None)
     {
-    case ILLNESSES::PARANOIA:       return "Paranoia";
-    case ILLNESSES::MANIA:          return "Mania";         
-    case ILLNESSES::DEPRESSION:     return "Depression";    
-    case ILLNESSES::DEMENTIA:       return "Dementia";      
-    case ILLNESSES::SCHIZOPHRENIA:  return "Schizophrenia"; 
-	case ILLNESSES::AIW_SYNDROME:   return "AIW Syndrome";  
-	case ILLNESSES::INSOMNIA:       return "Insomnia";      
-    case ILLNESSES::OCD:            return "OCD";          
-	case ILLNESSES::SCOTOPHOBIA:    return "Scotophobia";   
-    default:                        return "Unknown";       
+        return false;
     }
+
+    int index = (int)id;
+    if (index < 0 || index >= (int)gObserved.size())
+    {
+        return false;
+    }
+
+    return gObserved[index];
+}
+
+// Mark an anomaly as observed in the journal
+void Journal_ReportAnomaly(ANOMALYID id)
+{
+    if (id == ANOMALYID::None)
+    {
+        return;
+    }
+
+    int index = (int)id;
+
+    if (index < 0 || index >= (int)gObserved.size())
+    {
+        return;
+    }
+
+    if (!gObserved[index])
+    {
+        gObserved[index] = true;
+    }
+}
+
+void Journal_Clear()
+{
+    std::fill(gObserved.begin(), gObserved.end(), false);
 }
 
 void Journal_Load()
 {
-    arrowFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    symbolsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     journalFontId = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
-    JournalBook = LoadTextureChecked(Assets::Equipment::JournalBook);
 
+    JournalBook = LoadTextureChecked(Assets::Equipment::JournalBook);
+	Undiscovered = LoadTextureChecked(Assets::Equipment::Undiscovered);
     gSound = LoadTextureChecked(Assets::Equipment::Sound);
 
 	gWallParanoia = LoadTextureChecked(Assets::Equipment::WallParanoia);
@@ -333,7 +393,7 @@ void Journal_Load()
 
     gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
     gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
-    gFrame_Distort = LoadTextureChecked(Assets::Equipment::FrameDistort);
+    gFrameDistort = LoadTextureChecked(Assets::Equipment::FrameDistort);
 
 	gDoorHand = LoadTextureChecked(Assets::Equipment::DoorHand);
     gDoorLight = LoadTextureChecked(Assets::Equipment::DoorLight);
@@ -360,107 +420,23 @@ void Journal_Load()
     gLightScotophobia = LoadTextureChecked(Assets::Equipment::LightScotophobia);
 
 	// Load journal text data for each illness
-    for (int i = 0; i < (int)gIllnessList.size(); ++i)
+    for (int i = 0; i < (int)IllnessList.size(); ++i)
     {
-        ILLNESSES illness = gIllnessList[i];
-        const char* path = GetJournalTextFilePath(illness);
+        ILLNESSES illness = IllnessList[i];
+        const char* FilePath = GetJournalTextFilePath(illness);
 
-        if (LoadJournalTextFile(path, gJournalTextData[i]))
+        if (LoadJournalTextFile(FilePath, GetFromText[i]))
         {
-            std::cout << "Loaded journal: " << gJournalTextData[i].title << std::endl;
+            std::cout << "Loaded journal: "
+                << GetFromText[i].title
+                << std::endl;
         }
     }
 }
 
-void Journal_Unload()
-{
-    // unload textures
-    UnloadTextureSafe(JournalBook);
-
-    UnloadTextureSafe(gWallParanoia);
-    UnloadTextureSafe(gWallMania);
-    UnloadTextureSafe(gWallSchizophrenia);
-    UnloadTextureSafe(gWallDepression);
-    UnloadTextureSafe(gWallDementia);
-    UnloadTextureSafe(gWallAIW);
-    UnloadTextureSafe(gWallInsomnia);
-    UnloadTextureSafe(gWallOCD);
-    UnloadTextureSafe(gWallScotophobia);
-
-    UnloadTextureSafe(gDoorHand);
-    UnloadTextureSafe(gDoorLight);
-    UnloadTextureSafe(gDoorOCD);
-
-    UnloadTextureSafe(gLiftParanoia);
-    UnloadTextureSafe(gLiftMania);
-    UnloadTextureSafe(gLiftSchizophrenia);
-    UnloadTextureSafe(gLiftDepression);
-    UnloadTextureSafe(gLiftDementia);
-    UnloadTextureSafe(gLiftAIW);
-    UnloadTextureSafe(gLiftInsomnia);
-    UnloadTextureSafe(gLiftOCD);
-    UnloadTextureSafe(gLiftScotophobia);
-
-    UnloadTextureSafe(gLightParanoia);
-    UnloadTextureSafe(gLightMania);
-    UnloadTextureSafe(gLightSchizophrenia);
-    UnloadTextureSafe(gLightDepression);
-    UnloadTextureSafe(gLightDementia);
-    UnloadTextureSafe(gLightAIW);
-    UnloadTextureSafe(gLightInsomnia);
-    UnloadTextureSafe(gLightOCD);
-    UnloadTextureSafe(gLightScotophobia);
-
-    UnloadTextureSafe(gFrameGlitch);
-    UnloadTextureSafe(gFrameShift);
-    UnloadTextureSafe(gFrame_Distort);
-
-    // destroy font
-    if (journalFontId >= 0)
-    {
-        AEGfxDestroyFont(journalFontId);
-        journalFontId = -1;
-    }
-
-    // reset UI state
-    gOpen = false;
-    gSelected = 0;
-}
-
 // ============================================================
-// CORE JOURNAL API
+// KEYS & NAVIGATION 
 // ============================================================
-
-void Journal_ReportAnomaly(ANOMALYID id)
-{
-    if (!Journal_HasObserved(id))
-        gObserved.push_back(id);
-}
-
-bool Journal_HasObserved(ANOMALYID id)
-{
-    return std::find(gObserved.begin(), gObserved.end(), id) != gObserved.end();
-}
-
-void Journal_Clear()
-{
-    gObserved.clear();
-}
-
-// ============================================================
-// BOOK UI STATE 
-// ============================================================
-
-bool Journal_IsOpen()
-{
-    return gOpen;
-}
-
-static void ClampSelected()
-{
-    if (gSelected < 0) gSelected = 0;
-    if (gSelected >= (int)gIllnessList.size()) gSelected = (int)gIllnessList.size() - 1;
-}
 
 void Journal_Update()
 {
@@ -495,7 +471,7 @@ void Journal_Update()
 
     ClampSelected();
 
-    if (AEInputCheckTriggered(AEVK_A))
+    if (AEInputCheckTriggered(AEVK_LEFT))
     {
         if (gRightPage > 0)
         {
@@ -504,7 +480,7 @@ void Journal_Update()
         }
     }
 
-    if (AEInputCheckTriggered(AEVK_D))
+    if (AEInputCheckTriggered(AEVK_RIGHT))
     {
         if (gRightPage < 1)
         {
@@ -548,7 +524,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     float ListY         = 230.0f;
     float ListStep      = 70.0f;
 
-    // 2x2 grid layout
+    // Image grid layout
     float imgW          = 200.0f;
     float imgH          = 220.0f;
 
@@ -585,9 +561,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         0.2f, 0.2f, 0.2f,
         1);
 
-    for (int i = 0; i < (int)gIllnessList.size(); ++i)
+    for (int i = 0; i < (int)IllnessList.size(); ++i)
     {
-        const char* name = IllnessText(gIllnessList[i]);
+        const char* name = GetFromText[i].title.c_str();
         float IllnessY = ListY - i * ListStep;
 
         if (i == gSelected)
@@ -611,11 +587,11 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     // ============================================================
     // RIGHT SIDE
-    // Consists of 2 pages. Toggle [A] [D] keys.
+    // Consists of 2 pages. Toggle RIGHT LEFT ARROW keys.
     // ============================================================
     ClampSelected();
-    ILLNESSES chosen = gIllnessList[gSelected];
-    JournalTextData& textData = gJournalTextData[gSelected];
+    ILLNESSES chosen = IllnessList[gSelected];
+    TextStruct& TextData = GetFromText[gSelected];
 
     // Mouse position
     s32 mouseX = 0, mouseY = 0;
@@ -629,7 +605,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     hoveredIndex = -1;
 
     // Header
-    AEGfxPrint(journalFontId, textData.title.c_str(), 
+    AEGfxPrint(journalFontId, TextData.title.c_str(),
         X(RightStartX), Y(HeaderY),
         Header,
         0.55f, 0.05f, 0.05f, // bright red
@@ -640,12 +616,12 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     if (gRightPage == 0)
     {
         // Description
-        AEGfxPrint(journalFontId, textData.desc.c_str(),
+        AEGfxPrint(journalFontId, TextData.desc.c_str(),
             X(RightStartX), Y(HeaderY - 60.0f),
             text,
             0.2f, 0.2f, 0.2f,
             1);
-        AEGfxPrint(journalFontId, textData.desc2.c_str(),
+        AEGfxPrint(journalFontId, TextData.desc2.c_str(),
             X(RightStartX), Y(HeaderY - 100.0f),
             text,
             0.2f, 0.2f, 0.2f,
@@ -664,10 +640,12 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             0.2f, 0.2f, 0.2f,
             1);
 
-        // Draw anomalies in a 2x2 grid
+        // Draw anomalies in a 1x2 grid
         for (int i = 0; i < 2; ++i)
         {
-            AEGfxTexture* tex = GetJournalSymptomTexture(chosen, i);
+            SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
+            AEGfxTexture* SymptomImages = entry.texture;
+            ANOMALYID SymptomID         = entry.anomalyId;
 
             int col = i % 2;
             int row = i / 2;
@@ -675,31 +653,40 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             float x = gridStartX + col * colGap;
             float y = (SubHeaderY - 240.0f);
 
-            bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool observed   = Journal_HasObserved(SymptomID);
 
-            if (tex)
+            if (observed && SymptomImages)
             {
                 if (hovered)
                 {
                     hasHovered = true;
                     hoveredIndex = i;
 
-                    DrawTextureMeshRotated(squareMesh, tex, x, y, imgW, imgH, tiltAngle, 1.0f);
+                    DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
                 }
                 else
                 {
-                    DrawTextureMesh(squareMesh, tex, x, y, imgW, imgH, 1.0f);
+                    DrawTextureMesh(squareMesh, SymptomImages, x, y, imgW, imgH, 1.0f);
                 }
             }
             else
             {
-                DrawSquareMesh(squareMesh, x, y, imgW, imgH, 0xFFBBBBBB);
+                // draw the image
+                DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
+
+                // draw ??? on top
+                AEGfxPrint(symbolsFontId, "???",
+                    X(x - 10.0f), Y(y),       
+                    1.0f,
+                    0, 0, 0,   // black text
+                    1.0f);
             }
         } // ----------------------------------------------------------------------------
 
         // Navigate to next page controls
-        AEGfxPrint(arrowFontId, "[D]>",
-            X(600.0f), Y(-370.0f),
+        AEGfxPrint(symbolsFontId, ">",
+            X(650.0f), Y(-370.0f),
             SubHeader,
             0, 0, 0,
             1);
@@ -712,7 +699,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         // Draw anomalies in a 2x2 grid
         for (int i = 2; i < 6; ++i)
         {
-            AEGfxTexture* tex = GetJournalSymptomTexture(chosen, i);
+            SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
+            AEGfxTexture* SymptomImages = entry.texture;
+            ANOMALYID SymptomID         = entry.anomalyId;
 
             int col = (i - 2) % 2;
             int row = (i - 2) / 2;
@@ -720,31 +709,40 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             float x = gridStartX + col * colGap;
             float y = (150.0f) - row * rowGap;
 
-            bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool observed   = Journal_HasObserved(SymptomID);
 
-            if (tex)
+            if (observed && SymptomImages)
             {
                 if (hovered)
                 {
                     hasHovered = true;
-                    hoveredIndex = i;   // keep real index here
+                    hoveredIndex = i;
 
-                    DrawTextureMeshRotated(squareMesh, tex, x, y, imgW, imgH, tiltAngle, 1.0f);
+                    DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
                 }
                 else
                 {
-                    DrawTextureMesh(squareMesh, tex, x, y, imgW, imgH, 1.0f);
+                    DrawTextureMesh(squareMesh, SymptomImages, x, y, imgW, imgH, 1.0f);
                 }
             }
             else
             {
-                DrawSquareMesh(squareMesh, x, y, imgW, imgH, 0xFFBBBBBB);
+                // draw the image
+                DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
+
+                // draw ??? on top
+                AEGfxPrint(symbolsFontId, "???",
+                    X(x - 10.0f), Y(y),
+                    1.0f,
+                    0, 0, 0,   // black text
+                    1.0f);
             }
-        }
+        } //----------------------------------------------------------------------------
 
         // Navigate to previous page controls
-        AEGfxPrint(arrowFontId, "<[A]",
-            X(600.0f), Y(-370.0f),
+        AEGfxPrint(symbolsFontId, "<",
+            X(650.0f), Y(-370.0f),
             SubHeader,
             0, 0, 0,
             1);
@@ -752,16 +750,84 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     }
 
     // Hover info area
-    const char* hoverText = "Hover an image";
+    const char* HoverText = "Hover an image";
 
     if (hoveredIndex >= 0 && hoveredIndex < 6)
     {
-        hoverText = textData.symptomText[hoveredIndex].c_str();
+        SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, hoveredIndex);
+
+        if (hoveredEntry.anomalyId != ANOMALYID::None &&
+            Journal_HasObserved(hoveredEntry.anomalyId))
+        {
+            HoverText = TextData.symptomText[hoveredIndex].c_str();
+        }
+        else
+        {
+            HoverText = "???";
+        }
     }
 
-    AEGfxPrint(journalFontId, hoverText,
+    AEGfxPrint(journalFontId, HoverText,
         X(RightStartX), Y(-300.0f),
         text,
         0, 0, 0,
         1);
+}
+
+
+void Journal_Unload()
+{
+    // unload textures
+    UnloadTextureSafe(JournalBook);
+    UnloadTextureSafe(Undiscovered);
+    UnloadTextureSafe(gSound);
+
+    UnloadTextureSafe(gWallParanoia);
+    UnloadTextureSafe(gWallMania);
+    UnloadTextureSafe(gWallSchizophrenia);
+    UnloadTextureSafe(gWallDepression);
+    UnloadTextureSafe(gWallDementia);
+    UnloadTextureSafe(gWallAIW);
+    UnloadTextureSafe(gWallInsomnia);
+    UnloadTextureSafe(gWallOCD);
+    UnloadTextureSafe(gWallScotophobia);
+
+    UnloadTextureSafe(gDoorHand);
+    UnloadTextureSafe(gDoorLight);
+    UnloadTextureSafe(gDoorOCD);
+
+    UnloadTextureSafe(gLiftParanoia);
+    UnloadTextureSafe(gLiftMania);
+    UnloadTextureSafe(gLiftSchizophrenia);
+    UnloadTextureSafe(gLiftDepression);
+    UnloadTextureSafe(gLiftDementia);
+    UnloadTextureSafe(gLiftAIW);
+    UnloadTextureSafe(gLiftInsomnia);
+    UnloadTextureSafe(gLiftOCD);
+    UnloadTextureSafe(gLiftScotophobia);
+
+    UnloadTextureSafe(gLightParanoia);
+    UnloadTextureSafe(gLightMania);
+    UnloadTextureSafe(gLightSchizophrenia);
+    UnloadTextureSafe(gLightDepression);
+    UnloadTextureSafe(gLightDementia);
+    UnloadTextureSafe(gLightAIW);
+    UnloadTextureSafe(gLightInsomnia);
+    UnloadTextureSafe(gLightOCD);
+    UnloadTextureSafe(gLightScotophobia);
+
+    UnloadTextureSafe(gFrameGlitch);
+    UnloadTextureSafe(gFrameShift);
+    UnloadTextureSafe(gFrameDistort);
+
+    // destroy font
+    if (journalFontId >= 0)
+    {
+        AEGfxDestroyFont(journalFontId);
+        journalFontId = -1;
+    }
+
+    // reset UI state
+    gOpen = false;
+    gSelected = 0;
 }
