@@ -1,13 +1,19 @@
 #include "pch.hpp"
 
 // --- Boss Textures ---
-static AEGfxTexture* bossTex = nullptr;
+static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
 static AEGfxTexture* bossBulletFrames[2] = { nullptr, nullptr };
 
+// --- Boss Animation Variables ---
+static int   currentBossFrame  = 0;
+static int   bossAnimDir       = 1;   // +1 = forward, -1 = reverse (ping-pong)
+static float bossAnimTimer     = 0.0f;
+const  float BOSS_ANIM_SPEED   = 0.35f;
+
 // --- Bullet Animation Variables ---
-static int currentBulletFrame = 0;
-static float bulletAnimTimer = 0.0f;
-const float BULLET_ANIM_SPEED = 0.1f;
+static int   currentBulletFrame = 0;
+static float bulletAnimTimer    = 0.0f;
+const  float BULLET_ANIM_SPEED  = 0.1f;
 
 // --- Define Max Health ---
 const int BOSS_MAX_HEALTH = 500;
@@ -15,7 +21,9 @@ const int BOSS_MAX_HEALTH = 500;
 
 void Boss_Load()
 {
-    bossTex = LoadTextureChecked(Assets::Boss_Fight::Boss);
+    bossTex[0] = LoadTextureChecked(Assets::Boss_Fight::Boss1);
+    bossTex[1] = LoadTextureChecked(Assets::Boss_Fight::Boss2);
+    bossTex[2] = LoadTextureChecked(Assets::Boss_Fight::Boss3);
     bossBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
     bossBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
 }
@@ -40,6 +48,13 @@ void Boss_Initialize(Boss& boss)
     boss.stateTimer = 4.0f;
     boss.shieldActive = false;
 
+    // Reset static animation state so replays start from frame 0
+    currentBossFrame   = 0;
+    bossAnimDir        = 1;
+    bossAnimTimer      = 0.0f;
+    currentBulletFrame = 0;
+    bulletAnimTimer    = 0.0f;
+
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         boss.bullets[i].active = false;
     }
@@ -48,6 +63,16 @@ void Boss_Initialize(Boss& boss)
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
 
+    // Boss body animation — ping-pong: 0→1→2→1→0→1→2…
+    bossAnimTimer += dt;
+    if (bossAnimTimer >= BOSS_ANIM_SPEED) {
+        bossAnimTimer -= BOSS_ANIM_SPEED;
+        currentBossFrame += bossAnimDir;
+        if (currentBossFrame >= 2) { currentBossFrame = 2; bossAnimDir = -1; }
+        else if (currentBossFrame <= 0) { currentBossFrame = 0; bossAnimDir =  1; }
+    }
+
+    // Bullet sprite animation
     bulletAnimTimer += dt;
     if (bulletAnimTimer >= BULLET_ANIM_SPEED) {
         bulletAnimTimer = 0.0f;
@@ -206,9 +231,9 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
         AEGfxSetTransparency(1.0f);
     }
 
-    // --- DRAW BOSS ---
-    if (bossTex) {
-        DrawTextureMesh(mesh, bossTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
+    // --- DRAW BOSS (animated) ---
+    if (bossTex[currentBossFrame]) {
+        DrawTextureMesh(mesh, bossTex[currentBossFrame], boss.x, boss.y, boss.w, boss.h, 1.0f);
     }
     else {
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -297,7 +322,8 @@ bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float o
 
 void Boss_Unload()
 {
-    UnloadTextureSafe(bossTex);
+    for (int i = 0; i < 3; i++)
+        UnloadTextureSafe(bossTex[i]);
     UnloadTextureSafe(bossBulletFrames[0]);
     UnloadTextureSafe(bossBulletFrames[1]);
 }

@@ -347,7 +347,7 @@ void Game_Update()
         if (moveLeft) { targetVelX = Config::playerSpeed; left_right = false; }
         if (moveRight) { targetVelX = -Config::playerSpeed; left_right = true; }
 
-        if (AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
+        if (Debug_IsActive() && AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
     }
 
     // Apply velocity

@@ -153,6 +153,9 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
                         myBoss.health -= 2;
                         bullets[i].active = false;
 
+                        // Roll dodge chance on actual hit, not on bullet fire
+                        Boss_Fight_TryDodge();
+
                         if (myBoss.health <= 0) {
                             myBoss.active = false;
                         }
