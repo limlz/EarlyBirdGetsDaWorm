@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <cmath>
 
 struct CreditLine {
     std::string text;
@@ -33,6 +34,47 @@ static bool  isCreditsOpen           = false;
 static float creditsOverlayAlpha     = 0.0f;
 static float creditsScrollY          = -500.0f;
 static float totalCreditsHeight      = 0.0f;
+
+// ============================================================
+//  SCENE CHARACTERS
+// ============================================================
+
+static constexpr int   WALKER_COUNT      = 3;
+static constexpr float SCENE_LEFT        = -850.0f;
+static constexpr float SCENE_RIGHT       =  850.0f;
+static constexpr float WALKER_Y          = -360.0f;
+static constexpr float ARA_BASE_Y        = -230.0f;
+static constexpr float ARA_FLY_AMPLITUDE = 45.0f;
+static constexpr float ARA_FLY_FREQ      = 1.8f;    // radians/sec
+
+struct SceneChar {
+    AEGfxTexture* frames[4] = {};
+    int   frameCount   = 0;
+    int   currentFrame = 0;
+    float animTimer    = 0.0f;
+    float animSpeed    = 0.18f; // seconds per frame
+    float x            = 0.0f;
+    float speedX       = 80.0f;
+    float w            = 80.0f;
+    float h            = 120.0f;
+};
+
+static SceneChar walkers[WALKER_COUNT]; // Nad, LZ, Sya
+static SceneChar araChar;
+static AEGfxTexture* graveTex[2] = {};
+static float araFlyTimer = 0.0f;
+
+static void UpdateSceneChar(SceneChar& c, float dt)
+{
+    c.animTimer += dt;
+    if (c.animTimer >= c.animSpeed) {
+        c.animTimer -= c.animSpeed;
+        c.currentFrame = (c.currentFrame + 1) % c.frameCount;
+    }
+    c.x += c.speedX * dt;
+    if (c.x > SCENE_RIGHT + c.w)
+        c.x = SCENE_LEFT - c.w;
+}
 
 // ============================================================
 //  INTERNAL HELPERS
@@ -103,6 +145,45 @@ void Credits_Load()
     close_btn_tex = LoadTextureChecked(Assets::Main_Menu::CloseButton);
     creditsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     LoadCreditsFile();
+
+    // Walkers: Nad, LZ, Sya
+    const char* const* walkerSources[WALKER_COUNT] = {
+        Assets::Background::OutsidePersonaNad,
+        Assets::Background::OutsidePersonaLZ,
+        Assets::Background::OutsidePersonaSya,
+    };
+    const float walkerSpeeds[WALKER_COUNT]  = { 90.0f, 75.0f, 105.0f };
+    const float walkerStartX[WALKER_COUNT]  = { -650.0f, -150.0f, 300.0f };
+    const float walkerAnimSp[WALKER_COUNT]  = { 0.18f, 0.22f, 0.16f };
+
+    for (int i = 0; i < WALKER_COUNT; i++) {
+        walkers[i].frameCount   = 4;
+        walkers[i].currentFrame = i; // stagger starting frames
+        walkers[i].animTimer    = 0.0f;
+        walkers[i].animSpeed    = walkerAnimSp[i];
+        walkers[i].x            = walkerStartX[i];
+        walkers[i].speedX       = walkerSpeeds[i];
+        walkers[i].w            = 80.0f;
+        walkers[i].h            = 120.0f;
+        for (int j = 0; j < 4; j++)
+            walkers[i].frames[j] = LoadTextureChecked(walkerSources[i][j]);
+    }
+
+    // Ara (flyer)
+    araChar.frameCount   = 4;
+    araChar.currentFrame = 0;
+    araChar.animTimer    = 0.0f;
+    araChar.animSpeed    = 0.12f;
+    araChar.x            = -500.0f;
+    araChar.speedX       = 140.0f;
+    araChar.w            = 110.0f;
+    araChar.h            = 90.0f;
+    for (int j = 0; j < 4; j++)
+        araChar.frames[j] = LoadTextureChecked(Assets::Background::OutsidePersonaAra[j]);
+
+    // Graves (static, bottom right)
+    graveTex[0] = LoadTextureChecked(Assets::Background::OutsidePersonaGrave[0]);
+    graveTex[1] = LoadTextureChecked(Assets::Background::OutsidePersonaGrave[1]);
 }
 
 void Credits_Unload()
@@ -111,6 +192,16 @@ void Credits_Unload()
     UnloadTextureSafe(credits_guy2);
     UnloadTextureSafe(close_btn_tex);
     if (creditsFontId >= 0) { AEGfxDestroyFont(creditsFontId); creditsFontId = -1; }
+
+    for (int i = 0; i < WALKER_COUNT; i++)
+        for (int j = 0; j < 4; j++)
+            UnloadTextureSafe(walkers[i].frames[j]);
+
+    for (int j = 0; j < 4; j++)
+        UnloadTextureSafe(araChar.frames[j]);
+
+    UnloadTextureSafe(graveTex[0]);
+    UnloadTextureSafe(graveTex[1]);
 }
 
 // ============================================================
@@ -144,6 +235,12 @@ void Credits_Update(float dt)
 
         if (AEInputCheckTriggered(AEVK_ESCAPE) || (AEInputCheckTriggered(AEVK_LBUTTON) && hoverCreditsClose))
             isCreditsOpen = false;
+
+        // Update scene characters
+        for (int i = 0; i < WALKER_COUNT; i++)
+            UpdateSceneChar(walkers[i], dt);
+        UpdateSceneChar(araChar, dt);
+        araFlyTimer += dt;
 
         return;
     }
@@ -216,6 +313,22 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh)
 
             currentY -= 40.0f * line.scale;
         }
+
+        // Graves — stationary at bottom right
+        if (graveTex[0]) DrawTextureMesh(mesh, graveTex[0], 560.0f, WALKER_Y, 80.0f, 110.0f, 1.0f);
+        if (graveTex[1]) DrawTextureMesh(mesh, graveTex[1], 660.0f, WALKER_Y, 80.0f, 110.0f, 1.0f);
+
+        // Walkers along the bottom
+        for (int i = 0; i < WALKER_COUNT; i++) {
+            const SceneChar& c = walkers[i];
+            if (c.frames[c.currentFrame])
+                DrawTextureMesh(mesh, c.frames[c.currentFrame], c.x, WALKER_Y, c.w, c.h, 1.0f);
+        }
+
+        // Ara — flying with sine wave altitude
+        float araY = ARA_BASE_Y + sinf(araFlyTimer * ARA_FLY_FREQ) * ARA_FLY_AMPLITUDE;
+        if (araChar.frames[araChar.currentFrame])
+            DrawTextureMesh(mesh, araChar.frames[araChar.currentFrame], araChar.x, araY, araChar.w, araChar.h, 1.0f);
     }
 }
 
@@ -223,11 +336,12 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh)
 //  API
 // ============================================================
 
-bool Credits_IsOpen()    { return isCreditsOpen; }
+bool Credits_IsOpen()     { return isCreditsOpen; }
 bool Credits_IsHovering() { return isHoveringCredits; }
 
 void Credits_Open()
 {
     isCreditsOpen  = true;
     creditsScrollY = -600.0f;
+    araFlyTimer    = 0.0f;
 }
