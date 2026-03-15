@@ -206,6 +206,21 @@ void Frames_Update(float dt, float camX) {
     const ILLNESSES effIllness = Frames_GetEffectiveIllness();
     const int extraAnoms = Frames_GetExtraAnomalyCount();
 
+    // Report the anomaly to the journal
+    switch (effIllness)
+    {
+    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+    default: break;
+    }
+
     static int timerState = STATE_NORMAL;
     static float timer = 2.0f;
     static float animTime = 0.0f;
@@ -280,7 +295,6 @@ void Frames_Update(float dt, float camX) {
             // -------------------------------------------------------------
 
             if (effIllness == ILLNESSES::PARANOIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Glitch); // Report the anomaly to the journal
                 // --- PARANOIA: THE WEEPING ANGEL ---
                 // If the player is too close, the frame acts completely normal, gaslighting them.
                 if (distToPlayer < Config::frameParanoiaCloseRange) {
@@ -312,7 +326,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::MANIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Glitch); // Report the anomaly to the journal
                 // --- MANIA: HYPERACTIVE DRIFT ---
                 if (f.currentState > 0) {
                     int dir = (level + frame) % 4;
@@ -329,7 +342,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::DEPRESSION) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Distort); // Report the anomaly to the journal
                 // --- DEPRESSION: MELTING/SINKING ---
                 if (f.currentState > 0) {
                     float stretch = AEClamp(animTime / Config::frameDepressionStretchDuration, 0.0f, 1.0f);
@@ -339,7 +351,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::DEMENTIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Glitch); // Report the anomaly to the journal
                 // --- DEMENTIA: PERSISTENT CONFUSION ---
                 if (f.currentState > 0) {
                     f.posX = baseX + ((rand() % Config::frameDementiaJitterRange) - (Config::frameDementiaJitterRange / 2));
@@ -347,7 +358,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::SCHIZOPHRENIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Glitch); // Report the anomaly to the journal
                 // --- SCHIZOPHRENIA: AGGRESSIVE HALLUCINATION ---
                 if (f.currentState > 0) {
                     f.posX = baseX + ((rand() % Config::frameSchizophreniJitterRange) - (Config::frameSchizophreniJitterRange / 2));
@@ -355,7 +365,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::AIW_SYNDROME) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Distort); // Report the anomaly to the journal
                 // --- ALICE IN WONDERLAND: SPATIAL DISTORTION ---
                 // Frame gently breathes and floats off-center when normal, snaps perfectly in place when glitching
                 if (timerState == STATE_NORMAL) {
@@ -370,7 +379,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::INSOMNIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Distort); // Report the anomaly to the journal
                 // --- INSOMNIA: EXHAUSTION DISTORTION ---
                 // The frame's width flips negative based on player position so it "faces" the player
                 f.width = (baseX + camX > 0) ? -FRAME_WIDTH : FRAME_WIDTH;
@@ -387,7 +395,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::OCD) {
-				Journal_ReportAnomaly(ANOMALYID::Frame_Shift); // Report the anomaly to the journal
                 // --- OCD: IMPERFECTION/MISALIGNMENT ---
                 if (timerState == STATE_GLITCHING) {
                     f.currentState = GetSpecificGlitchState(effIllness, f.designID);
@@ -404,7 +411,6 @@ void Frames_Update(float dt, float camX) {
                 }
             }
             else if (effIllness == ILLNESSES::SCOTOPHOBIA) {
-                Journal_ReportAnomaly(ANOMALYID::Frame_Glitch); // Report the anomaly to the journal                
                 // --- SCOTOPHOBIA: PERIPHERAL GAZE MECHANIC ---
                 if (distToPlayer < Config::frameScotophobiaCloseRange) {
                     f.currentState = 0;

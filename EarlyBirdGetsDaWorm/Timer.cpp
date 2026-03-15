@@ -35,7 +35,7 @@ static bool  gTimerPaused = false;
 // (Currently unused, safe to remove if you want)
 static float gAccum = 0.0f;
 
-// Fonts (int to avoid s8 issues)
+// Fonts
 static int gClockFontId = -1; // digital clock font
 static int gOverlayFontId = -1; // "DAY X" overlay font
 

@@ -41,7 +41,7 @@ static AEGfxTexture* gWallScotophobia = nullptr;
 
 static AEGfxTexture* gDoorHand = nullptr;
 static AEGfxTexture* gDoorLight = nullptr;
-static AEGfxTexture* gDoorOCD = nullptr;
+static AEGfxTexture* gDoorPosition = nullptr;
 
 static AEGfxTexture* gLightParanoia = nullptr;
 static AEGfxTexture* gLightMania = nullptr;
@@ -223,7 +223,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallMania,          ANOMALYID::Wall_Mania };
         case 1: return { gLightMania,         ANOMALYID::Light_Mania };
-        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Shift };
         case 3: return { gDoorHand,           ANOMALYID::Door_HandSlam };
         case 4: return { gLiftMania,          ANOMALYID::Lift_Mania };
         case 5: return { gSound,              ANOMALYID::Sound_Mania };
@@ -234,8 +234,8 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallDepression,      ANOMALYID::Wall_Depression };
         case 1: return { gLightDepression,     ANOMALYID::Light_Depression };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
-        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
+        case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftDepression,      ANOMALYID::Lift_Depression };
         case 5: return { gSound,               ANOMALYID::Sound_Depression };
         default: return { nullptr,             ANOMALYID::None };
@@ -247,7 +247,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         case 0: return { gWallDementia,        ANOMALYID::Wall_Dementia };
         case 1: return { gLightDementia,       ANOMALYID::Light_Dementia };
         case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
-        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftDementia,        ANOMALYID::Lift_Dementia };
         case 5: return { gSound,               ANOMALYID::Sound_Dementia };
         default: return { nullptr,             ANOMALYID::None };
@@ -270,8 +270,8 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallAIW,             ANOMALYID::Wall_AIW };
         case 1: return { gLightAIW,            ANOMALYID::Light_AIW };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
-        case 3: return { gDoorLight,           ANOMALYID::None };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
+        case 3: return { gDoorPosition,        ANOMALYID::Door_Position };
         case 4: return { gLiftAIW,             ANOMALYID::Lift_AIW };
         case 5: return { gSound,               ANOMALYID::Sound_AIW };
         default: return { nullptr,             ANOMALYID::None };
@@ -282,7 +282,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallInsomnia,        ANOMALYID::Wall_Insomnia };
         case 1: return { gLightInsomnia,       ANOMALYID::Light_Insomnia };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
         case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftInsomnia,        ANOMALYID::Lift_Insomnia };
         case 5: return { gSound,               ANOMALYID::Sound_Insomnia };
@@ -294,8 +294,8 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallOCD,             ANOMALYID::Wall_OCD };
         case 1: return { gLightOCD,            ANOMALYID::Light_OCD };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
-        case 3: return { gDoorOCD,             ANOMALYID::Door_OCD };
+        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Shift };
+        case 3: return { gDoorPosition,        ANOMALYID::Door_Position };
         case 4: return { gLiftOCD,             ANOMALYID::Lift_OCD };
         case 5: return { gSound,               ANOMALYID::Sound_OCD };
         default: return { nullptr,             ANOMALYID::None };
@@ -397,7 +397,7 @@ void Journal_Load()
 
 	gDoorHand = LoadTextureChecked(Assets::Equipment::DoorHand);
     gDoorLight = LoadTextureChecked(Assets::Equipment::DoorLight);
-    gDoorOCD = LoadTextureChecked(Assets::Equipment::DoorOCD);
+    gDoorPosition = LoadTextureChecked(Assets::Equipment::DoorPosition);
 
     gLiftParanoia = LoadTextureChecked(Assets::Equipment::LiftParanoia);
     gLiftMania = LoadTextureChecked(Assets::Equipment::LiftMania);
@@ -613,6 +613,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     // ---------------------------------------------------------------------------
     // PAGE 1
+    // ---------------------------------------------------------------------------
     if (gRightPage == 0)
     {
         // Description
@@ -656,13 +657,19 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
             bool observed   = Journal_HasObserved(SymptomID);
 
+            // Check if mouse is over this image slot
+            if (hovered)
+            {
+                hasHovered = true;
+                hoveredIndex = i;
+            }
+
             if (observed && SymptomImages)
             {
+                // Discovered anomaly image
+                // Rotate slightly when hovered
                 if (hovered)
                 {
-                    hasHovered = true;
-                    hoveredIndex = i;
-
                     DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
                 }
                 else
@@ -672,15 +679,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             }
             else
             {
-                // draw the image
+                // Undiscovered anomaly image
+                // Still allow hover detection, but do not rotate
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
-
-                // draw ??? on top
-                AEGfxPrint(symbolsFontId, "???",
-                    X(x - 10.0f), Y(y),       
-                    1.0f,
-                    0, 0, 0,   // black text
-                    1.0f);
             }
         } // ----------------------------------------------------------------------------
 
@@ -694,6 +695,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     // ---------------------------------------------------------------------------
     // PAGE 2
+    // ---------------------------------------------------------------------------
     else
     {
         // Draw anomalies in a 2x2 grid
@@ -712,13 +714,19 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
             bool observed   = Journal_HasObserved(SymptomID);
 
+            // Check if mouse is over this image slot
+            if (hovered)
+            {
+                hasHovered = true;
+                hoveredIndex = i;
+            }
+
             if (observed && SymptomImages)
             {
+                // Discovered anomaly image
+                // Rotate slightly when hovered
                 if (hovered)
                 {
-                    hasHovered = true;
-                    hoveredIndex = i;
-
                     DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
                 }
                 else
@@ -728,15 +736,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             }
             else
             {
-                // draw the image
+                // Undiscovered anomaly image
+                // Still allow hover detection, but do not rotate
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
-
-                // draw ??? on top
-                AEGfxPrint(symbolsFontId, "???",
-                    X(x - 10.0f), Y(y),
-                    1.0f,
-                    0, 0, 0,   // black text
-                    1.0f);
             }
         } //----------------------------------------------------------------------------
 
@@ -749,20 +751,31 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     }
 
-    // Hover info area
-    const char* HoverText = "Hover an image";
+    // ------------------------------------------------------------
+    // Hover Info Area
+    // Displays text describing the anomaly when the player hovers
+    // over a discovered image in the journal grid.
+    // ------------------------------------------------------------
 
+    // Default text shown when nothing is hovered
+    const char* HoverText = "Hover an entry to inspect";
+
+    // Check if the mouse is hovering over a valid grid slot
     if (hoveredIndex >= 0 && hoveredIndex < 6)
     {
+        // Retrieve the anomaly entry for this illness + slot
         SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, hoveredIndex);
 
+        // If the anomaly exists AND the player has discovered it
         if (hoveredEntry.anomalyId != ANOMALYID::None &&
             Journal_HasObserved(hoveredEntry.anomalyId))
         {
+            // Show the anomaly description text
             HoverText = TextData.symptomText[hoveredIndex].c_str();
         }
         else
         {
+            // Undiscovered anomaly -> hide the description
             HoverText = "???";
         }
     }
@@ -794,7 +807,7 @@ void Journal_Unload()
 
     UnloadTextureSafe(gDoorHand);
     UnloadTextureSafe(gDoorLight);
-    UnloadTextureSafe(gDoorOCD);
+    UnloadTextureSafe(gDoorPosition);
 
     UnloadTextureSafe(gLiftParanoia);
     UnloadTextureSafe(gLiftMania);

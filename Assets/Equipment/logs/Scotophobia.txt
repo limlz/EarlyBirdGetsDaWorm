@@ -4,7 +4,7 @@ DESC=An intense fear of darkness
 
 SYMPTOM1=Dark scribbles
 SYMPTOM2=LIGHTING TBC
-SYMPTOM3=FRAME TBC
+SYMPTOM3=Moves when unseen
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=Everything suddenly goes pitch black in the lift
 SYMPTOM6=A whisper follows me in the dark and dies the moment light returns

@@ -18,7 +18,7 @@ namespace Assets
 
         constexpr const char* DoorHand = "Assets/Equipment/evidence/DoorSlam.png";
 		constexpr const char* DoorLight = "Assets/Equipment/evidence/DoorLight.png";
-        constexpr const char* DoorOCD = "Assets/Equipment/evidence/DoorOCD.png";
+        constexpr const char* DoorPosition = "Assets/Equipment/evidence/DoorPosition.png";
 
         constexpr const char* FrameGlitch = "Assets/Equipment/evidence/FrameGlitch.png";
         constexpr const char* FrameShift = "Assets/Equipment/evidence/FrameShift.png";
