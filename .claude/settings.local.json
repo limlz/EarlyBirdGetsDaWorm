@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(find 'C:/Users/Liang Zhou/Documents/School Stuff/Trimester 2/csd1451/repos/EarlyBirdGetsDaWorm/Assets' -iname *arm* -o -iname *gun* -o -iname *boss*)",
-      "Bash(xargs grep:*)"
-    ]
-  }
-}
