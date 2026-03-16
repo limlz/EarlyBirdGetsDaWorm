@@ -220,23 +220,10 @@ void JumpScare_Draw()
     // 2) Main image
     // --------------------------------------------
     DrawTextureMesh(gQuadMesh, gJumpScareTex, baseX, baseY, W, H, 1.0f);
-
-    // --------------------------------------------
-    // 3) Optional flash overlay (quick white flash)
-    // --------------------------------------------
-    if (gFlashTimer > 0.0f)
-    {
-        float a = Clamp01(gFlashTimer / Config::jumpscareFlashDuration); // 1 -> 0
-        // If your DrawSquareMesh supports alpha in the color, use your own helper.
-        // Otherwise you can draw a semi-transparent white using AEGfxSetTransparency.
-        AEGfxSetTransparency(0.65f * a);
-        DrawSquareMesh(gQuadMesh, 0.0f, 0.0f, W, H, 0xFFFFFFFF);
-        AEGfxSetTransparency(1.0f);
-    }
 }
 
 // ============================================================
-// GETTERS
+// PUBLIC GETTERS
 // ============================================================
 
 bool JumpScare_IsActive()

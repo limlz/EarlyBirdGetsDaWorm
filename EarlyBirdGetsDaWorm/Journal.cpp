@@ -10,7 +10,7 @@
 
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
 static s8 symbolsFontId = -1;
-const float UI_SCALE = 0.7f;        // tweak this to make the journal UI bigger or smaller
+const float UI_SCALE = 0.7f;        // journal UI bigger or smaller
 
 static bool gOpen = false;
 static bool gPrevI = false;
@@ -102,24 +102,18 @@ static void ClampSelected()
     if (gSelected >= (int)IllnessList.size()) gSelected = (int)IllnessList.size() - 1;
 }
 
-bool Journal_IsOpen()
-{
-    return gOpen;
-}
-
 // ============================================================
-// JOURNAL ENTRIES [100 - 199]
-// ------------------------------------------------------------
-// 
+// JOURNAL ENTRIES [100 - 319]
 // ============================================================
 
-// **********************************
+// ---------------------------------------------
 // 1) LINKING ILLNESSES TO TEXT FILES
-
+// ---------------------------------------------
 // Each illness now contains...
 // - a title
 // - a description
 // - 6 symptom text entries
+// ---------------------------------------------
 struct TextStruct
 {
     std::string title;
@@ -128,7 +122,7 @@ struct TextStruct
     std::string symptomText[6];
 };
 
-// Convert illness enum to the corresponding text file path in Assets/Journal/logs
+// Map each illness to a text file
 // The text files are formatted as follows:
 static const char* GetJournalTextFilePath(ILLNESSES illness)
 {
@@ -148,29 +142,44 @@ static const char* GetJournalTextFilePath(ILLNESSES illness)
 }
 
 // Load the journal text data for a given illness from its corresponding text file
+// Input    : file path (from GetJournalTextFilePath)
+// Output   : fills data into the provided TextStruct reference
+// Return   : true if loaded successfully, false if file couldn't be opened
 static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
-{
-    std::ifstream file(filePath);
+{   
+    // Open the file for reading
+	// If file doesntt exist or fails to open, return false
+	std::ifstream file(filePath);   
     if (!file.is_open())
         return false;
 
+	// Read the file line by line and parse key-value pairs
     std::string line;
     while (std::getline(file, line))
     {
+		// Skip empty lines
         if (line.empty())
         {
             continue;
         }
 
+		// Find "=" to split key and value
+        // Example:
+		// TITLE=Paranoia
         size_t eq = line.find('=');
         if (eq == std::string::npos)
         {
             continue;
         }
 
+		// Extract key and value, then store in the appropriate field of outData
+		// Example:
+		// key = "TITLE"
+        // value = "Paranoia" 
         std::string key = line.substr(0, eq);
         std::string value = line.substr(eq + 1);
 
+		// Map the key to the corresponding field in TextStruct
         if (key == "TITLE")         outData.title = value;
         else if (key == "DESC")     outData.desc = value;
         else if (key == "DESC2")    outData.desc2 = value;
@@ -185,16 +194,20 @@ static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
     return true;
 }
 
-// Each illness has a corresponding GetFromTXT struct containing its journal text data
-// This is populated at load time by reading the text files above
-static TextStruct GetFromText[ILLNESS_COUNT];
+// Store one TextStruct for each illness, loaded from the corresponding text files
+// Example:
+// GetFromText[0] will give you the title, description, and symptom texts for Paranoia
+// GetFromText[1] will give you the title, description, and symptom texts for Mania
+// etc.
+static TextStruct GetFromText[ILLNESS_COUNT];   // illness_count = 9
 
-// *********************************************
+// ---------------------------------------------
 // 2) LINKING SYMPTOMS TO TEXTURES + ANOMALY IDS
-
+// ---------------------------------------------
 // Each Symptom slot
 // - has a texture 
 // - anomaly ID
+// ---------------------------------------------
 struct SymptomStruct
 {
     AEGfxTexture* texture;
@@ -319,34 +332,31 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
     }
 }
 
-// Each illness has 6 symptom slots
-// Each slot has an anomaly ID + texture
+// Stores the anomaly entries
+// Example:
+// Illness Count      Symptom
+// ------------------------------------------------
+// [0] (Paranoia)     6 symptoms [1][2][3][4][5][6]
+// [1] (Mania)        6 symptoms [1][2][3][4][5][6]
+// [2] (Depression)   ...
+// Usage:
+// JournalEntries[0][0] -> texture and anomaly ID for Paranoia Light
+// JournalEntries[0][1] -> texture and anomaly ID for Paranoia Frames
 static SymptomStruct JournalEntries[ILLNESS_COUNT][SYMPTOM_COUNT];
 
 // ============================================================
 // OBSERVED ANOMALIES
 // ============================================================
 
-static std::vector<bool> gObserved((int)ANOMALYID::None + 1, false);
+// Create a list of true/false values
+// (int)ANOMALYID::None + 1 :   The total number of anomaly IDs, including None
+// false                    :   Initialize all entries to false (not observed)
+// ---------------------------------------------------------------------------------
+// Usage:
+// Journal_HasObserved(ANOMALYID::Wall_Paranoia) -> gObserved[(int)id] = true;
+static std::vector<bool> gObserved ((int)ANOMALYID::None + 1, false);
 
-// Check if an anomaly has been observed 
-bool Journal_HasObserved(ANOMALYID id)
-{
-    if (id == ANOMALYID::None)
-    {
-        return false;
-    }
-
-    int index = (int)id;
-    if (index < 0 || index >= (int)gObserved.size())
-    {
-        return false;
-    }
-
-    return gObserved[index];
-}
-
-// Mark an anomaly as observed in the journal
+// Used in all anomly files to report that the player has observed a specific anomaly
 void Journal_ReportAnomaly(ANOMALYID id)
 {
     if (id == ANOMALYID::None)
@@ -354,22 +364,37 @@ void Journal_ReportAnomaly(ANOMALYID id)
         return;
     }
 
-    int index = (int)id;
+    int index = (int)id; // index for the gObserved vector, based on the anomaly ID enum value
 
+    // Ensure index is within bounds
     if (index < 0 || index >= (int)gObserved.size())
     {
         return;
     }
 
-    if (!gObserved[index])
-    {
-        gObserved[index] = true;
-    }
+	// Mark the anomaly as observed in the gObserved vector
+    gObserved[index] = true;
 }
 
-void Journal_Clear()
+// Check if an anomaly has been observed 
+bool Journal_HasObserved(ANOMALYID id)
 {
-    std::fill(gObserved.begin(), gObserved.end(), false);
+	// If there isnt any anomaly, return false
+    if (id == ANOMALYID::None)
+    {
+        return false;
+    }
+
+	int index = (int)id; // index for the gObserved vector, based on the anomaly ID enum value
+
+    // Ensure index is within bounds
+    if (index < 0 || index >= (int)gObserved.size())
+    {
+        return false;
+    }
+
+	// Return the observed status of the anomaly from the gObserved vector
+    return gObserved[index];
 }
 
 void Journal_Load()
@@ -644,7 +669,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         // Draw anomalies in a 1x2 grid
         for (int i = 0; i < 2; ++i)
         {
-            SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
+			SymptomStruct entry = GetJournalSymptomEntry(chosen, i); // chosen illness, symptom index
             AEGfxTexture* SymptomImages = entry.texture;
             ANOMALYID SymptomID         = entry.anomalyId;
 
@@ -843,4 +868,18 @@ void Journal_Unload()
     // reset UI state
     gOpen = false;
     gSelected = 0;
+}
+
+// ============================================================
+// PUBLIC GETTERS
+// ============================================================
+
+bool Journal_IsOpen()
+{
+    return gOpen;
+}
+
+void Journal_Clear()
+{
+    std::fill(gObserved.begin(), gObserved.end(), false);
 }
