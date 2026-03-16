@@ -56,7 +56,7 @@ namespace Analytics {
             outFile << "Date_Time,Day_Reached,End_Reason,Illness_Active,Mimic_Illness,Was_Carrying_Ghost,Patients_Handled,Time_Survived_Seconds\n";
         }
 
-        // localtime_s is the MSVC-safe alternative to localtime; avoids C4996 deprecation warning
+        // localtime_s is the MSVC-safe alternative to localtime; avoids deprecation warning
         std::time_t now = std::time(nullptr);
         struct tm timeinfo;
         localtime_s(&timeinfo, &now);

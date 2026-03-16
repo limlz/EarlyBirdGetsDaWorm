@@ -1,4 +1,5 @@
 #include "pch.hpp"
+#include "BossDebug.hpp"
 
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
@@ -100,6 +101,7 @@ void Boss_Fight_Load()
     player_arm_gun = LoadTextureChecked(Assets::Boss_Fight::PlayerArmGun);
 
     Boss_Load();
+    BossDebug_Load();
     PauseMenu_Load();
     squareMesh = CreateSquareMesh(COLOR_WHITE);
     circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
@@ -139,6 +141,7 @@ void Boss_Fight_Update()
 {
     float dt = (f32)AEFrameRateControllerGetFrameTime();
 
+    BossDebug_Update(myBoss);
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
 
@@ -329,12 +332,12 @@ void Boss_Fight_Update()
                 if (abs(myBoss.bullets[i].x - playerX) < 46.66f &&
                     abs(myBoss.bullets[i].y - currentHitboxY) < currentHitboxH)
                 {
-                    playerHP--;
+                    if (!BossDebug_IsGodMode()) playerHP--;
                     myBoss.bullets[i].active = false;
                     isPlayerHit = true;
                     hitTimer = 0.2f;
 
-                    if (playerHP <= 0) {
+                    if (playerHP <= 0 && !BossDebug_IsGodMode()) {
                         Player_StopSounds(); // prevent walking SFX persisting into endgame
                         currentEndReason = REASON_DIED_TO_BOSS;
                         Analytics::LogRun(currentEndReason, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
@@ -474,6 +477,34 @@ void Boss_Fight_Draw()
     }
     AEGfxSetTransparency(1.0f);
 
+    // --- BOSS DEBUG OVERLAY ---
+    {
+        int active_count = 0;
+        for (int i = 0; i < MAX_BOSS_BULLETS; i++)
+            if (myBoss.bullets[i].active) active_count++;
+
+        BossDebugInfo dbg{};
+        dbg.player_x           = playerX;
+        dbg.player_y           = playerY;
+        dbg.player_vel_x       = playerVelX;
+        dbg.player_vel_y       = playerVelY;
+        dbg.player_hp          = playerHP;
+        dbg.player_hp_max      = MAX_PLAYER_HP;
+        dbg.is_grounded        = isGrounded;
+        dbg.is_crouching       = isCrouching;
+        dbg.boss_health        = myBoss.health;
+        dbg.boss_max_health    = BOSS_MAX_HEALTH;
+        dbg.boss_x             = myBoss.x;
+        dbg.boss_y             = myBoss.y;
+        dbg.boss_base_y        = myBoss.baseY;
+        dbg.boss_state         = myBoss.currentState;
+        dbg.boss_state_timer   = myBoss.stateTimer;
+        dbg.boss_shield_active = myBoss.shieldActive;
+        dbg.boss_dodge_cooldown = bossDodgeCooldown;
+        dbg.active_bullet_count = active_count;
+        BossDebug_Draw(dbg);
+    }
+
     PauseMenu_Draw(squareMesh);
 }
 
@@ -481,6 +512,7 @@ void Boss_Fight_Free() {
 }
 
 void Boss_Fight_Unload() {
+    BossDebug_Unload();
     Boss_Unload();
     FreeMeshSafe(squareMesh);
     FreeMeshSafe(circleMesh);

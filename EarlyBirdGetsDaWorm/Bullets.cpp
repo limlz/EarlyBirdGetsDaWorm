@@ -150,7 +150,7 @@ void Bullets_Update(float dt, float camX, Boss& myBoss)
                         bullets[i].speed = 1800.0f;
                     }
                     else {
-                        myBoss.health -= 2;
+                        myBoss.health -= 5;
                         bullets[i].active = false;
 
                         // Roll dodge chance on actual hit, not on bullet fire

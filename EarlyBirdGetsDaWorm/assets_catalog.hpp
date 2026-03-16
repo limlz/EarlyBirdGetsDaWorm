@@ -64,6 +64,8 @@ namespace Assets
         constexpr const char* Shield3 = "Assets/Boss/boss_shield3.png";
         constexpr const char* Bullet1 = "Assets/Boss/boss_bullet.png";
         constexpr const char* Bullet2 = "Assets/Boss/boss_bullet1.png";
+        constexpr const char* ScatterBullet1 = "Assets/Boss/scatter_bullet.PNG";
+        constexpr const char* ScatterBullet2 = "Assets/Boss/scatter_bullet1.PNG";
         constexpr const char* PlayerShooting1 = "Assets/Player/player_shooting_1.png";
         constexpr const char* PlayerShooting2 = "Assets/Player/player_shooting_2.png";
 		constexpr const char* PlayerCrouch = "Assets/Player/nurse_crouch.png";

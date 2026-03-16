@@ -3,7 +3,8 @@
 // --- Boss Textures ---
 static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
 static AEGfxTexture* bossShieldTex[3]    = { nullptr, nullptr, nullptr };
-static AEGfxTexture* bossBulletFrames[2] = { nullptr, nullptr };
+static AEGfxTexture* bossBulletFrames[2]        = { nullptr, nullptr };
+static AEGfxTexture* bossScatterBulletFrames[2] = { nullptr, nullptr };
 
 // --- Boss Animation Variables ---
 static int   currentBossFrame  = 0;
@@ -17,8 +18,6 @@ static int   currentBulletFrame = 0;
 static float bulletAnimTimer    = 0.0f;
 const  float BULLET_ANIM_SPEED  = 0.1f;
 
-// --- Define Max Health ---
-const int BOSS_MAX_HEALTH = 500;
 
 
 void Boss_Load()
@@ -29,8 +28,10 @@ void Boss_Load()
     bossShieldTex[0] = LoadTextureChecked(Assets::Boss_Fight::Shield1);
     bossShieldTex[1] = LoadTextureChecked(Assets::Boss_Fight::Shield2);
     bossShieldTex[2] = LoadTextureChecked(Assets::Boss_Fight::Shield3);
-    bossBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
-    bossBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
+    bossBulletFrames[0]        = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
+    bossBulletFrames[1]        = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
+    bossScatterBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet1);
+    bossScatterBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet2);
 }
 
 void Boss_Initialize(Boss& boss)
@@ -129,9 +130,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
-                boss.bullets[i].active = true;
-                boss.bullets[i].hp = 15;
-                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].active    = true;
+                boss.bullets[i].is_scatter = false;
+                boss.bullets[i].hp        = 15;
+                boss.bullets[i].x         = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
                 float diffX = playerX - handX;
@@ -157,9 +159,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         int bulletsFired = 0;
         for (int i = 0; i < MAX_BOSS_BULLETS && bulletsFired < 5; i++) {
             if (!boss.bullets[i].active) {
-                boss.bullets[i].active = true;
-                boss.bullets[i].hp = 10;
-                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].active     = true;
+                boss.bullets[i].is_scatter = true;
+                boss.bullets[i].hp         = 10;
+                boss.bullets[i].x          = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
                 float spreadAngle = baseAngle + ((bulletsFired - 2) * 0.2f);
@@ -175,7 +178,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     else if (boss.currentState == 2 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 0.5f;
         if (boss.health < BOSS_MAX_HEALTH) {
-            boss.health += 1;
+            boss.health += 15;
         }
     }
 
@@ -255,13 +258,12 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     //AEGfxSetTransparency(1.0f);
     
 
-    // Get the current frame texture
-    // Get the current frame texture
-    AEGfxTexture* currentTex = bossBulletFrames[currentBulletFrame];
-
     // Draw Boss Bullets
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         if (boss.bullets[i].active) {
+            AEGfxTexture* currentTex = boss.bullets[i].is_scatter
+                ? bossScatterBulletFrames[currentBulletFrame]
+                : bossBulletFrames[currentBulletFrame];
             if (currentTex) {
                 float angle = atan2f(boss.bullets[i].dirY, boss.bullets[i].dirX);
 
@@ -328,4 +330,6 @@ void Boss_Unload()
     }
     UnloadTextureSafe(bossBulletFrames[0]);
     UnloadTextureSafe(bossBulletFrames[1]);
+    UnloadTextureSafe(bossScatterBulletFrames[0]);
+    UnloadTextureSafe(bossScatterBulletFrames[1]);
 }

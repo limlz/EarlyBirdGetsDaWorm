@@ -407,8 +407,9 @@ void Game_Update()
         }
     }
 
-    // Endless hallway: active whenever the lighting anomaly is running
-    dementia = CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive);
+    // Endless hallway: only active when the lighting anomaly is running AND the current illness is Dementia
+    dementia = CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive)
+            && (Player_GetAnomalyIllness() == ILLNESSES::DEMENTIA);
 
     // Clamp camera so the player can't scroll past either end of the corridor.
     // Also kill velocity at each boundary so it doesn't fight against the clamp.
