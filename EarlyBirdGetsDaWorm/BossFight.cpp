@@ -251,16 +251,7 @@ void Boss_Fight_Update()
 
                 Fire_Bullet(startX, startY, dirX, dirY);
 
-                // Interaction: If sprayed, boss occasionally dodges
-                if (myBoss.active && !myBoss.shieldActive && bossDodgeCooldown <= 0.0f) {
-                    if (rand() % 100 < 15) { // 15% chance to dodge per drop hitting near the boss
-                        if (myBoss.baseY > 0) myBoss.baseY = -200.0f;
-                        else myBoss.baseY = 200.0f;
-
-                        // Prevent dodging again for 1.5 seconds to avoid rapid teleportation
-                        bossDodgeCooldown = 1.5f;
-                    }
-                }
+                // Dodge check moved to Bullets.cpp hit detection (Boss_Fight_TryDodge)
             }
         }
     }
@@ -344,6 +335,7 @@ void Boss_Fight_Update()
                     hitTimer = 0.2f;
 
                     if (playerHP <= 0) {
+                        Player_StopSounds(); // prevent walking SFX persisting into endgame
                         currentEndReason = REASON_DIED_TO_BOSS;
                         Analytics::LogRun(currentEndReason, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
                             static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
@@ -506,4 +498,18 @@ void Boss_Fight_Unload() {
         victoryFontId = -1;
     }
     PauseMenu_Unload();
+}
+
+void Boss_Fight_TryDodge()
+{
+    // Only dodge when the boss is active, unshielded, and the cooldown has expired.
+    // Called from bullet hit detection so the chance is per bullet that LANDS, not per bullet fired.
+    if (!myBoss.active || myBoss.shieldActive || bossDodgeCooldown > 0.0f)
+        return;
+
+    if (rand() % 100 < 15) // 15% chance per hit
+    {
+        myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
+        bossDodgeCooldown = 3.0f; // Longer cooldown so the boss has time to reach the new position
+    }
 }

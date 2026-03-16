@@ -42,10 +42,11 @@ static float totalCreditsHeight      = 0.0f;
 static constexpr int   WALKER_COUNT      = 3;
 static constexpr float SCENE_LEFT        = -850.0f;
 static constexpr float SCENE_RIGHT       =  850.0f;
-static constexpr float WALKER_Y          = -360.0f;
-static constexpr float ARA_BASE_Y        = -230.0f;
-static constexpr float ARA_FLY_AMPLITUDE = 45.0f;
-static constexpr float ARA_FLY_FREQ      = 1.8f;    // radians/sec
+static constexpr float WALKER_Y          = -360.0f;  // closer to ground
+static constexpr float ARA_BASE_Y        = -190.0f;  // flies higher
+static constexpr float ARA_FLY_AMPLITUDE = 35.0f;    // reduced to prevent top-clip
+static constexpr float ARA_FLY_FREQ      = 1.8f;
+static constexpr float SCENE_CHAR_ALPHA  = 0.85f;    // slight transparency to blend with overlay
 
 struct SceneChar {
     AEGfxTexture* frames[4] = {};
@@ -72,8 +73,11 @@ static void UpdateSceneChar(SceneChar& c, float dt)
         c.currentFrame = (c.currentFrame + 1) % c.frameCount;
     }
     c.x += c.speedX * dt;
-    if (c.x > SCENE_RIGHT + c.w)
+    // Wrap in whichever direction the character travels
+    if (c.speedX > 0.0f && c.x > SCENE_RIGHT + c.w)
         c.x = SCENE_LEFT - c.w;
+    else if (c.speedX < 0.0f && c.x < SCENE_LEFT - c.w)
+        c.x = SCENE_RIGHT + c.w;
 }
 
 // ============================================================
@@ -152,9 +156,16 @@ void Credits_Load()
         Assets::Background::OutsidePersonaLZ,
         Assets::Background::OutsidePersonaSya,
     };
-    const float walkerSpeeds[WALKER_COUNT]  = { 90.0f, 75.0f, 105.0f };
-    const float walkerStartX[WALKER_COUNT]  = { -650.0f, -150.0f, 300.0f };
+    // Nad and LZ walk right; Sya walks left (counter-direction for variety)
+    const float walkerSpeeds[WALKER_COUNT]  = { 90.0f, 75.0f, -105.0f };
+    // Evenly spread so all 3 are visible immediately when credits open
+    const float walkerStartX[WALKER_COUNT]  = { -400.0f, 100.0f, 600.0f };
     const float walkerAnimSp[WALKER_COUNT]  = { 0.18f, 0.22f, 0.16f };
+    // Slight Y offset per walker gives a sense of depth (back → front)
+    const float walkerOffsetY[WALKER_COUNT] = { 20.0f, 0.0f, -15.0f };
+    // Per-character explicit sizes: Nad, LZ, Sya
+    const float walkerW[WALKER_COUNT]       = { 110.0f, 160.0f, 110.0f };
+    const float walkerH[WALKER_COUNT]       = { 160.0f, 170.0f, 160.0f };
 
     for (int i = 0; i < WALKER_COUNT; i++) {
         walkers[i].frameCount   = 4;
@@ -163,25 +174,25 @@ void Credits_Load()
         walkers[i].animSpeed    = walkerAnimSp[i];
         walkers[i].x            = walkerStartX[i];
         walkers[i].speedX       = walkerSpeeds[i];
-        walkers[i].w            = 80.0f;
-        walkers[i].h            = 120.0f;
+        walkers[i].w            = walkerW[i];
+        walkers[i].h            = walkerH[i];
         for (int j = 0; j < 4; j++)
             walkers[i].frames[j] = LoadTextureChecked(walkerSources[i][j]);
     }
 
-    // Ara (flyer)
+    // Ara (flyer) — moves RIGHT TO LEFT so the left-facing sprite is correct
     araChar.frameCount   = 4;
     araChar.currentFrame = 0;
     araChar.animTimer    = 0.0f;
-    araChar.animSpeed    = 0.12f;
-    araChar.x            = -500.0f;
-    araChar.speedX       = 140.0f;
-    araChar.w            = 110.0f;
-    araChar.h            = 90.0f;
+    araChar.animSpeed    = 0.17f;  // slowed to better match travel speed
+    araChar.x            = 850.0f;   // start from right edge
+    araChar.speedX       = -160.0f;  // negative = flies left
+    araChar.w            = 140.0f;
+    araChar.h            = 110.0f;
     for (int j = 0; j < 4; j++)
         araChar.frames[j] = LoadTextureChecked(Assets::Background::OutsidePersonaAra[j]);
 
-    // Graves (static, bottom right)
+    // Graves (static, bottom right) — larger so they read clearly
     graveTex[0] = LoadTextureChecked(Assets::Background::OutsidePersonaGrave[0]);
     graveTex[1] = LoadTextureChecked(Assets::Background::OutsidePersonaGrave[1]);
 }
@@ -303,6 +314,27 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh)
         if (close_btn_tex)
             DrawTextureMesh(mesh, close_btn_tex, 730.0f, 390.0f, 60.0f, 60.0f, 1.0f);
 
+        // Draw order: graves → walkers → Ara → text
+        // Graves behind, walkers walk in front of them
+
+        // Graves — drawn first so walkers pass in front
+        if (graveTex[0]) DrawTextureMesh(mesh, graveTex[0], 400.0f, WALKER_Y, 190.0f, 150.0f, SCENE_CHAR_ALPHA);
+        if (graveTex[1]) DrawTextureMesh(mesh, graveTex[1], 600.0f, WALKER_Y, 190.0f, 150.0f, SCENE_CHAR_ALPHA);
+
+        // Walkers — in front of graves
+        static const float kWalkerOffsetY[WALKER_COUNT] = { 20.0f, 0.0f, -15.0f };
+        for (int i = 0; i < WALKER_COUNT; i++) {
+            const SceneChar& c = walkers[i];
+            if (c.frames[c.currentFrame])
+                DrawTextureMesh(mesh, c.frames[c.currentFrame], c.x, WALKER_Y + kWalkerOffsetY[i], c.w, c.h, SCENE_CHAR_ALPHA);
+        }
+
+        // Ara — flying with sine wave altitude, above walkers and graves
+        float araY = ARA_BASE_Y + sinf(araFlyTimer * ARA_FLY_FREQ) * ARA_FLY_AMPLITUDE;
+        if (araChar.frames[araChar.currentFrame])
+            DrawTextureMesh(mesh, araChar.frames[araChar.currentFrame], araChar.x, araY, araChar.w, araChar.h, SCENE_CHAR_ALPHA);
+
+        // Scrolling credits text drawn ON TOP of scene characters
         float currentY = creditsScrollY;
 
         for (const auto& line : parsedCredits) {
@@ -313,22 +345,6 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh)
 
             currentY -= 40.0f * line.scale;
         }
-
-        // Graves — stationary at bottom right
-        if (graveTex[0]) DrawTextureMesh(mesh, graveTex[0], 560.0f, WALKER_Y, 80.0f, 110.0f, 1.0f);
-        if (graveTex[1]) DrawTextureMesh(mesh, graveTex[1], 660.0f, WALKER_Y, 80.0f, 110.0f, 1.0f);
-
-        // Walkers along the bottom
-        for (int i = 0; i < WALKER_COUNT; i++) {
-            const SceneChar& c = walkers[i];
-            if (c.frames[c.currentFrame])
-                DrawTextureMesh(mesh, c.frames[c.currentFrame], c.x, WALKER_Y, c.w, c.h, 1.0f);
-        }
-
-        // Ara — flying with sine wave altitude
-        float araY = ARA_BASE_Y + sinf(araFlyTimer * ARA_FLY_FREQ) * ARA_FLY_AMPLITUDE;
-        if (araChar.frames[araChar.currentFrame])
-            DrawTextureMesh(mesh, araChar.frames[araChar.currentFrame], araChar.x, araY, araChar.w, araChar.h, 1.0f);
     }
 }
 

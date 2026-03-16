@@ -56,7 +56,12 @@ namespace Assets
     }
     namespace Boss_Fight
     {
-        constexpr const char* Boss = "Assets/Boss/boss.png";
+        constexpr const char* Boss1 = "Assets/Boss/boss1.png";
+        constexpr const char* Boss2 = "Assets/Boss/boss2.png";
+        constexpr const char* Boss3 = "Assets/Boss/boss3.png";
+        constexpr const char* Shield1 = "Assets/Boss/boss_shield1.png";
+        constexpr const char* Shield2 = "Assets/Boss/boss_shield2.png";
+        constexpr const char* Shield3 = "Assets/Boss/boss_shield3.png";
         constexpr const char* Bullet1 = "Assets/Boss/boss_bullet.png";
         constexpr const char* Bullet2 = "Assets/Boss/boss_bullet1.png";
         constexpr const char* PlayerShooting1 = "Assets/Player/player_shooting_1.png";
