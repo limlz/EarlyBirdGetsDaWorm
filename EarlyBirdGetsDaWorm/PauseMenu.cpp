@@ -92,7 +92,8 @@ void PauseMenu_Update(float dt)
     // --- ESCAPE KEY LOGIC ---
     if (AEInputCheckTriggered(AEVK_ESCAPE)) {
         if (!gamePaused) {
-            // Start Pause
+            // Start Pause — stop walking SFX immediately so it doesn't loop while frozen
+            Player_StopSounds();
             gamePaused = true;
             isUnpausing = false;
             pauseMenuTimer = 0.0f;

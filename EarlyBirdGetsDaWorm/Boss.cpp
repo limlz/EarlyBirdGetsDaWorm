@@ -1,23 +1,37 @@
 #include "pch.hpp"
 
 // --- Boss Textures ---
-static AEGfxTexture* bossTex = nullptr;
-static AEGfxTexture* bossBulletFrames[2] = { nullptr, nullptr };
+static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
+static AEGfxTexture* bossShieldTex[3]    = { nullptr, nullptr, nullptr };
+static AEGfxTexture* bossBulletFrames[2]        = { nullptr, nullptr };
+static AEGfxTexture* bossScatterBulletFrames[2] = { nullptr, nullptr };
+
+// --- Boss Animation Variables ---
+static int   currentBossFrame  = 0;
+static int   bossAnimDir       = 1;   // +1 = forward, -1 = reverse (ping-pong)
+static float bossAnimTimer     = 0.0f;
+const  float BOSS_ANIM_SPEED   = 0.35f;
+
 
 // --- Bullet Animation Variables ---
-static int currentBulletFrame = 0;
-static float bulletAnimTimer = 0.0f;
-const float BULLET_ANIM_SPEED = 0.1f;
+static int   currentBulletFrame = 0;
+static float bulletAnimTimer    = 0.0f;
+const  float BULLET_ANIM_SPEED  = 0.1f;
 
-// --- Define Max Health ---
-const int BOSS_MAX_HEALTH = 500;
 
 
 void Boss_Load()
 {
-    bossTex = LoadTextureChecked(Assets::Boss_Fight::Boss);
-    bossBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
-    bossBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
+    bossTex[0] = LoadTextureChecked(Assets::Boss_Fight::Boss1);
+    bossTex[1] = LoadTextureChecked(Assets::Boss_Fight::Boss2);
+    bossTex[2] = LoadTextureChecked(Assets::Boss_Fight::Boss3);
+    bossShieldTex[0] = LoadTextureChecked(Assets::Boss_Fight::Shield1);
+    bossShieldTex[1] = LoadTextureChecked(Assets::Boss_Fight::Shield2);
+    bossShieldTex[2] = LoadTextureChecked(Assets::Boss_Fight::Shield3);
+    bossBulletFrames[0]        = LoadTextureChecked(Assets::Boss_Fight::Bullet1);
+    bossBulletFrames[1]        = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
+    bossScatterBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet1);
+    bossScatterBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet2);
 }
 
 void Boss_Initialize(Boss& boss)
@@ -40,6 +54,14 @@ void Boss_Initialize(Boss& boss)
     boss.stateTimer = 4.0f;
     boss.shieldActive = false;
 
+    // Reset static animation state so replays start from frame 0
+    currentBossFrame   = 0;
+    bossAnimDir        = 1;
+    bossAnimTimer      = 0.0f;
+
+    currentBulletFrame = 0;
+    bulletAnimTimer    = 0.0f;
+
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         boss.bullets[i].active = false;
     }
@@ -48,6 +70,16 @@ void Boss_Initialize(Boss& boss)
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
 
+    // Boss body animation — ping-pong: 0→1→2→1→0→1→2…
+    bossAnimTimer += dt;
+    if (bossAnimTimer >= BOSS_ANIM_SPEED) {
+        bossAnimTimer -= BOSS_ANIM_SPEED;
+        currentBossFrame += bossAnimDir;
+        if (currentBossFrame >= 2) { currentBossFrame = 2; bossAnimDir = -1; }
+        else if (currentBossFrame <= 0) { currentBossFrame = 0; bossAnimDir =  1; }
+    }
+
+    // Bullet sprite animation
     bulletAnimTimer += dt;
     if (bulletAnimTimer >= BULLET_ANIM_SPEED) {
         bulletAnimTimer = 0.0f;
@@ -98,9 +130,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
-                boss.bullets[i].active = true;
-                boss.bullets[i].hp = 15;
-                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].active    = true;
+                boss.bullets[i].is_scatter = false;
+                boss.bullets[i].hp        = 15;
+                boss.bullets[i].x         = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
                 float diffX = playerX - handX;
@@ -126,9 +159,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         int bulletsFired = 0;
         for (int i = 0; i < MAX_BOSS_BULLETS && bulletsFired < 5; i++) {
             if (!boss.bullets[i].active) {
-                boss.bullets[i].active = true;
-                boss.bullets[i].hp = 10;
-                boss.bullets[i].x = handX; // Spawn at Hand
+                boss.bullets[i].active     = true;
+                boss.bullets[i].is_scatter = true;
+                boss.bullets[i].hp         = 10;
+                boss.bullets[i].x          = handX; // Spawn at Hand
                 boss.bullets[i].y = handY;
 
                 float spreadAngle = baseAngle + ((bulletsFired - 2) * 0.2f);
@@ -144,7 +178,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     else if (boss.currentState == 2 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 0.5f;
         if (boss.health < BOSS_MAX_HEALTH) {
-            boss.health += 1;
+            boss.health += 15;
         }
     }
 
@@ -196,19 +230,13 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 {
     if (!boss.active) return;
 
-    // --- DRAW DEFENSE SHIELD ---
-    if (boss.shieldActive) {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetTransparency(0.5f);
+    // --- DRAW BOSS (animated) — shield textures replace body textures during shield phase ---
+    AEGfxTexture* activeTex = boss.shieldActive
+        ? bossShieldTex[currentBossFrame]
+        : bossTex[currentBossFrame];
 
-        DrawSquareMesh(mesh, boss.x, boss.y, boss.w + 60.0f, boss.h + 60.0f, 0xFF0088FF);
-        AEGfxSetTransparency(1.0f);
-    }
-
-    // --- DRAW BOSS ---
-    if (bossTex) {
-        DrawTextureMesh(mesh, bossTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
+    if (activeTex) {
+        DrawTextureMesh(mesh, activeTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
     }
     else {
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -230,13 +258,12 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     //AEGfxSetTransparency(1.0f);
     
 
-    // Get the current frame texture
-    // Get the current frame texture
-    AEGfxTexture* currentTex = bossBulletFrames[currentBulletFrame];
-
     // Draw Boss Bullets
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         if (boss.bullets[i].active) {
+            AEGfxTexture* currentTex = boss.bullets[i].is_scatter
+                ? bossScatterBulletFrames[currentBulletFrame]
+                : bossBulletFrames[currentBulletFrame];
             if (currentTex) {
                 float angle = atan2f(boss.bullets[i].dirY, boss.bullets[i].dirX);
 
@@ -297,7 +324,12 @@ bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float o
 
 void Boss_Unload()
 {
-    UnloadTextureSafe(bossTex);
+    for (int i = 0; i < 3; i++) {
+        UnloadTextureSafe(bossTex[i]);
+        UnloadTextureSafe(bossShieldTex[i]);
+    }
     UnloadTextureSafe(bossBulletFrames[0]);
     UnloadTextureSafe(bossBulletFrames[1]);
+    UnloadTextureSafe(bossScatterBulletFrames[0]);
+    UnloadTextureSafe(bossScatterBulletFrames[1]);
 }

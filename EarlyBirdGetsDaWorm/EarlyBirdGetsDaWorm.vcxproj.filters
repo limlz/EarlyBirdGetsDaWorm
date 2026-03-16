@@ -123,6 +123,12 @@
     <ClCompile Include="SoundAnomaly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Credits.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BossDebug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mesh_creation.hpp">
@@ -234,6 +240,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sound_anomaly.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Credits.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BossDebug.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,29 +1,28 @@
 #include "pch.hpp"
-#include <vector>
-#include <algorithm>
-#include <random>
-#include <ctime>
 
 // ============================================================
-// GLOBALS
+// GLOBALS & CONSTANTS
 // ============================================================
 
-// Illnesses selected for the current run
+// Stores the 6 specific illnesses chosen for the current full game run
 static std::vector<ILLNESSES>   currentRunILLNESSES;
 
+// A boolean array acting as a truth table. It maps to the AnomalyFiles enum.
+// If index 2 (e.g., Lift_isActive) is true, the elevator is allowed to glitch for this patient.
 static std::vector<bool>        currentPatientANOMALYFILES((int)AnomalyFiles::Count, false);
 
-// Random generator
+// --- ADVANCED RNG ---
+// Mersenne Twister RNG provides a much higher quality, even distribution of randomness 
+// compared to standard C rand(), preventing identical runs.
 static std::mt19937             gRng((unsigned)std::time(nullptr));
 
-// Maximum illnesses in a run
+// Game Balance Constants
 static const int                MAX_ILLNESSES_PER_RUN = 6;
-
-static const int				MAX_ANOMALIES_PER_ILLNESS = 3;
+static const int                MAX_ANOMALIES_PER_ILLNESS = 3;
 
 
 // ============================================================
-// LOAD
+// LIFECYCLE MANAGEMENT
 // ============================================================
 
 void AllAnomalies_Load()
@@ -31,11 +30,6 @@ void AllAnomalies_Load()
     Wall_Load();
     Frames_Load();
 }
-
-
-// ============================================================
-// INITIALIZE
-// ============================================================
 
 void AllAnomalies_Initialize()
 {
@@ -46,15 +40,18 @@ void AllAnomalies_Initialize()
 }
 
 
-// ============================================================
-// GENERATE RUN (random illnesses)
-// ============================================================
+/******************************* GLOBAL RUN LOGIC ********************************/
 
+/*****************************************************************************************/
+// Generates the overarching "Rules" for the playthrough.
+// Uses a "Deck Shuffle" algorithm to guarantee exactly 6 unique illnesses are chosen 
+// without needing messy do-while collision checks.
+/*****************************************************************************************/
 void AllAnomalies_GenerateRun()
 {
     currentRunILLNESSES.clear();
 
-    // Pool of all illnesses
+    // Create the "Deck" of all possible illnesses
     std::vector<ILLNESSES> illnessPool =
     {
         ILLNESSES::PARANOIA,
@@ -68,69 +65,88 @@ void AllAnomalies_GenerateRun()
         ILLNESSES::SCOTOPHOBIA     // Fear of darkness
     };
 
-    // Shuffle pool
+    // Shuffle the deck perfectly using the Mersenne Twister RNG
     std::shuffle(illnessPool.begin(), illnessPool.end(), gRng);
 
-    // Pick the first 7
+    // "Deal" the first 6 cards (illnesses) into the active run pool
     for (int i = 0; i < MAX_ILLNESSES_PER_RUN && i < (int)illnessPool.size(); ++i)
     {
         currentRunILLNESSES.push_back(illnessPool[i]);
     }
 }
 
-
-// ============================================================
-// GET CURRENT RUN
-// ============================================================
-
 const std::vector<ILLNESSES>& AllAnomalies_CurrentRun()
 {
+    // Safety Check: Generate a run immediately if one doesn't exist yet
     if (currentRunILLNESSES.empty())
     {
         AllAnomalies_GenerateRun();
     }
-
     return currentRunILLNESSES;
 }
 
+
+/****************************** PATIENT LEVEL LOGIC ******************************/
+
+/*****************************************************************************************/
+// Determines exactly WHICH game systems (Frames, Lift, Audio, etc.) are allowed to 
+// actively glitch for the current patient being carried.
+/*****************************************************************************************/
 void CentralPool_GeneratePatientAnomalies(ILLNESSES illness, int ghostExtraAnomalies)
 {
+    // Instead of deleting and reallocating arrays, std::fill instantly recycles 
+    // the existing vector back to false
     std::fill(currentPatientANOMALYFILES.begin(), currentPatientANOMALYFILES.end(), false);
 
     if (illness == ILLNESSES::NONE) return;
 
+    // --- DYNAMIC SCALING ---
+    // Standard patients get 3 systems. Ghosts mathematically scale up by adding `ghostExtraAnomalies`
     int totalSystemsToActivate = MAX_ANOMALIES_PER_ILLNESS + ghostExtraAnomalies;
 
+    // Safety clamp to prevent out-of-bounds if we ask for more systems than actually exist
     if (totalSystemsToActivate > (int)AnomalyFiles::Count) {
         totalSystemsToActivate = (int)AnomalyFiles::Count;
     }
 
+    // Build a temporary pool of all available system indices (0 through Count)
     std::vector<int> availableSystems;
     for (int i = 0; i < (int)AnomalyFiles::Count; ++i) {
         availableSystems.push_back(i);
     }
 
-    // Shuffle the systems randomly
+    // Deck-Shuffle the available systems
     unsigned seed = (unsigned)std::time(nullptr) + rand();
     std::shuffle(availableSystems.begin(), availableSystems.end(), std::default_random_engine(seed));
 
+    // Activate the first N systems in the shuffled deck
     for (int i = 0; i < totalSystemsToActivate; ++i) {
         int chosenSystem = availableSystems[i];
         currentPatientANOMALYFILES[chosenSystem] = true;
     }
 }
+
 void CentralPool_ClearPatientAnomalies()
 {
+    // Fast boolean wipe
     std::fill(currentPatientANOMALYFILES.begin(), currentPatientANOMALYFILES.end(), false);
 }
 
-// The function other files will call to check their status
+
+/*********************************** ACCESSORS ***********************************/
+
+/*****************************************************************************************/
+// --- DECOUPLING ARCHITECTURE ---
+// Other files (Lift.cpp, Frames.cpp) DO NOT calculate their own RNG or patient logic.
+// They simply ping this central function to ask, "Am I allowed to activate my anomalies?"
+// This prevents spaghetti code and centralizes all game logic in one place.
+/*****************************************************************************************/
 bool CentralPool_IsSystemActive(AnomalyFiles systemFile)
 {
     return currentPatientANOMALYFILES[static_cast<int>(systemFile)];
 }
 
-// Debug only: forces a specific anomaly system on for the current patient
+// Debug only: safely forces a specific anomaly system ON for the current patient during testing
 void CentralPool_ForceSystemActive(AnomalyFiles systemFile)
 {
     currentPatientANOMALYFILES[static_cast<int>(systemFile)] = true;

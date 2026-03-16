@@ -1,14 +1,15 @@
 #pragma once
 // --- CONSTANTS ---
 const int MAX_BOSS_BULLETS = 20;
+const int BOSS_MAX_HEALTH  = 500;
 
 // --- STRUCTS ---
 struct BossBullet {
     float x, y;
     float dirX, dirY;
     bool active;
-
-    int hp; // <--- ADD THIS LINE!
+    bool is_scatter; // true = spread shot, uses scatter bullet texture
+    int hp;
 };
 
 struct Boss {

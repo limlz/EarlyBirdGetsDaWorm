@@ -22,15 +22,17 @@ static ILLNESSES AnomalyIllness{};
 static s8 PickupDoor = 0, PickupFloor = 0;
 static s8 DestDoor = 0, DestFloor = 0;
 
+// Tracks the daily quota and random pool of normal vs ghost patients
 static int CurrentDayPool[5]{};
 static int PatientsHandled = 0;
+// 2D Array acting as a truth table for predetermined patient scares based on the Day (1-5)
 static int PlayerPool[6][5] = {
-    {0,0,0,0,0},
-    {0,1,0,0,0},
-    {0,1,0,0,1},
-    {0,1,1,0,0},
-    {0,1,1,1,0},
-    {0,1,1,1,0}
+    {0,0,0,0,0}, // Day 0 (Padding)
+    {0,1,0,0,0}, // Day 1
+    {0,1,0,0,1}, // Day 2
+    {0,1,1,0,0}, // Day 3
+    {0,1,1,1,0}, // Day 4
+    {0,1,1,1,0}  // Day 5
 };
 
 // --- Blink Transition State ---
@@ -40,13 +42,17 @@ static constexpr float BLINK_DURATION = 1.0f;
 static float TopLidY = 1000.0f;
 static float BottomLidY = -1000.0f;
 
-// NEW: Trackers to delay the game logic until eyes are closed
+// Trackers to delay the game logic until eyes are closed
 static bool PendingPickup = false;
 static bool PendingDelivery = false;
 static int PendingDay = 0;
 static bool StateChangedDuringBlink = false;
 
+
 /******************************* PLAYER & PATIENT LOGIC **********************************/
+/*****************************************************************************************/
+// Selects a random illness from the actively generated Central Pool run.
+/*****************************************************************************************/
 static ILLNESSES PatientRandomIllness() {
     const std::vector<ILLNESSES>& activePool = AllAnomalies_CurrentRun();
     if (activePool.empty()) { return ILLNESSES::NONE; }
@@ -54,24 +60,30 @@ static ILLNESSES PatientRandomIllness() {
     return activePool[randomIndex];
 }
 
+/*****************************************************************************************/
+// Determines the actual identity of the patient (Ghost vs Human) and assigns the
+// appropriate illness anomalies. Ghosts secretly mimic human illnesses but add an extra modifier.
+/*****************************************************************************************/
 static void ApplyNewPatientFromTruth(bool isGhostTruth) {
     CarriedPatientIsGhost = isGhostTruth;
     AnomalyIllness = PatientRandomIllness();
-	//AnomalyIllness = ILLNESSES::DEPRESSION; // TESTING
+    //AnomalyIllness = ILLNESSES::DEPRESSION; // TESTING
 
     if (CarriedPatientIsGhost) {
-        TrueDiagnosis = ILLNESSES::GHOST;
-        GhostExtraAnomalies = 1;
+        TrueDiagnosis = ILLNESSES::GHOST;   // according to the ILLNESSES enum in central_pool.hpp
+        GhostExtraAnomalies = 1;            // Ghost Patients +1 extra anomaly, instead of the regular three
     }
     else {
-        TrueDiagnosis = AnomalyIllness;
+        TrueDiagnosis = AnomalyIllness;     // keep current ILLNESS as chosen by central_pool.hpp
         GhostExtraAnomalies = 0;
     }
 
+    // 50% chance the patient visually looks like a monster, purely to bluff the player
     VisualBluff = (std::rand() % 2 == 0);
     Frame = 0;
     Timer = 0.0f;
 
+    // Send the data to the central pool so other files know which anomalies to activate
     CentralPool_GeneratePatientAnomalies(AnomalyIllness, GhostExtraAnomalies);
 }
 
@@ -91,7 +103,9 @@ void Player_GenerateMission() {
     // Door can be rolled once since the floor will guarantee they are different locations
     DestDoor = (s8)(rand() % 10) + 1;
 
-    // Keep rolling the destination floor until it is strictly different from the pickup floor
+    // --- CONSTRAINED RANDOMIZATION ---
+    // Keep rolling the destination floor until it is strictly different from the pickup floor.
+    // This forces the player to actually navigate the hospital rather than walking next door.
     do {
         DestFloor = (s8)(rand() % 9) + 1;
     } while (DestFloor == PickupFloor);
@@ -101,10 +115,13 @@ void SetPatientScaryByDay(int day) {
     int Day = (day < 1) ? 1 : (day > 5 ? 5 : day);
     bool IsScary = false;
 
+    // Use the predetermined shuffled pool for the first 5 patients of the day
     if (PatientsHandled < 5) {
         IsScary = (CurrentDayPool[PatientsHandled] == 1);
     }
     else {
+        // --- DIFFICULTY SCALING ---
+        // If the player exceeds the quota, use a percentage roll that gets harder each day.
         static constexpr float extraRollProb[] = { 0.0f, 0.20f, 0.20f, 0.35f, 0.35f, 0.40f };
         float roll = (float)(std::rand() % 101) / 100.0f;
         IsScary = (roll < extraRollProb[Day]);
@@ -114,13 +131,18 @@ void SetPatientScaryByDay(int day) {
     PatientsHandled++;
 }
 
+/*****************************************************************************************/
+// Validates door interaction. Triggers the cinematic Eye-Blink transition and sets flags
+// to securely defer the actual level swapping until the screen is fully black.
+/*****************************************************************************************/
 bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
     // Prevent interacting again if we are already in the middle of a transition!
     if (IsBlinking) return false;
 
     if (!PatientPickedUp) {
         if (currentFloor == PickupFloor && doorNumAtPlayer == PickupDoor) {
-            // Start the blink, but DELAY the actual pickup logic
+            // --- DEFERRED STATE LOGIC ---
+            // Start the blink, but DELAY the actual pickup logic. 
             IsBlinking = true;
             BlinkTimer = 0.0f;
             PendingPickup = true;
@@ -132,7 +154,8 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
     }
     else {
         if (currentFloor == DestFloor && doorNumAtPlayer == DestDoor) {
-            // Start the blink, but DELAY the actual delivery logic
+            // --- DEFERRED STATE LOGIC ---
+            // Start the blink, but DELAY the actual delivery logic.
             IsBlinking = true;
             BlinkTimer = 0.0f;
             PendingDelivery = true;
@@ -152,6 +175,7 @@ void ResetPatientCounter(int day) {
         CurrentDayPool[i] = PlayerPool[CurrentDay][i];
     }
 
+    // Shuffle the array so the player can't memorize the order of Ghost/Human spawns
     unsigned seed = (unsigned)time(NULL);
     std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
 }
@@ -160,6 +184,7 @@ static AEGfxTexture* GetActiveFrameTex() {
     if (!PatientPickedUp) return NoPatientTex[Frame];
     return VisualBluff ? ScaryTex[Frame] : HumanTex[Frame];
 }
+
 
 /***************************************** LOAD ******************************************/
 void Player_Load() {
@@ -178,8 +203,10 @@ void Player_Load() {
     NoPatientTex[1] = LoadTextureChecked(Assets::Player::Nurse2);
 }
 
+
 /***************************************** UPDATE ****************************************/
 void Player_Update(float dt, bool walkKey) {
+
     // --- HEAVY EYE-BLINK LOGIC ---
     if (IsBlinking) {
         BlinkTimer += dt;
@@ -188,6 +215,7 @@ void Player_Update(float dt, bool walkKey) {
         float midPoint = BLINK_DURATION * 0.5f;
 
         // --- APPLY DEFERRED LOGIC WHEN EYES ARE SHUT ---
+        // This guarantees the level and patient swap happens invisibly behind the black screen
         if (BlinkTimer >= midPoint && !StateChangedDuringBlink) {
             if (PendingPickup) {
                 PatientPickedUp = true;
@@ -224,7 +252,9 @@ void Player_Update(float dt, bool walkKey) {
             progress = 0.0f;
         }
 
-        // Apply a sine wave easing so the eyelids slow down smoothly as they close
+        // --- SINE WAVE EASING ---
+        // Using sine wave (sinf) to create a smooth, cinematic ease-out.
+        // The eyelids will slide fast initially, then smoothly slow down as they meet in the middle.
         float easedProgress = sinf(progress * 1.570796f);
 
         TopLidY = 1000.0f - (easedProgress * 500.0f);
@@ -243,7 +273,9 @@ void Player_Update(float dt, bool walkKey) {
         Timer = 0.0f;
     }
 
-    // --- AUDIO LOGIC ---
+    // --- AUDIO STATE MACHINE ---
+    // Safely toggles between footstep and wheelchair sounds depending on the player's inventory,
+    // and forcefully stops looping audio if the player stops moving or is interrupted.
     if (!walkKey) {
         if (WalkingSoundPlaying || WheelchairSoundPlaying) {
             AudioManager_StopWalkingSFX();
@@ -281,11 +313,11 @@ void Player_Update(float dt, bool walkKey) {
 
 }
 
+
 /***************************************** DRAW UI ***************************************/
 void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
     if (!IsBlinking || squareMesh == nullptr) return;
 
-    // 1. Tell the engine we are drawing solid geometry, no transparency needed
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 
@@ -293,7 +325,10 @@ void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
     AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
     AEGfxSetTransparency(1.0f);
 
-    // 2. Draw the Top Eyelid (A massive 2000x1000 box sliding down)
+    // --- MATRIX TRANSFORMATIONS (EYELIDS) ---
+    // Draws two massive 2000x1000 black rectangles that slide together based on TopLidY / BottomLidY
+
+    // Draw the Top Eyelid (sliding down)
     AEMtx33 scaleTop, transTop, transformTop;
     AEMtx33Scale(&scaleTop, 2000.0f, 1000.0f);
     AEMtx33Trans(&transTop, 0.0f, TopLidY);
@@ -301,7 +336,7 @@ void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
     AEGfxSetTransform(transformTop.m);
     AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-    // 3. Draw the Bottom Eyelid (A massive 2000x1000 box sliding up)
+    // Draw the Bottom Eyelid (sliding up)
     AEMtx33 scaleBot, transBot, transformBot;
     AEMtx33Scale(&scaleBot, 2000.0f, 1000.0f);
     AEMtx33Trans(&transBot, 0.0f, BottomLidY);
@@ -314,9 +349,14 @@ void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh) {
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 }
 
+
 /***************************************** DRAW ******************************************/
 void Player_Draw(float x, float y) {
     AEMtx33 scale, trans, transform;
+
+    // --- DYNAMIC MATRIX TRANSFORMATIONS ---
+    // Dynamically scales the player's width (sx) depending on whether they are pushing a wheelchair,
+    // and flips the sprite horizontally based on FacingDir (1 or -1).
     float widthMultiplier = PatientPickedUp ? 1.0f : 0.3f;
     float sx = (PLAYER_WIDTH * widthMultiplier) * (float)FacingDir;
     float sy = PLAYER_HEIGHT;
@@ -337,6 +377,7 @@ void Player_Draw(float x, float y) {
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 }
 
+
 /**************************************** UNLOAD *****************************************/
 void Player_Unload() {
     for (int i = 0; i < 2; ++i) {
@@ -351,6 +392,7 @@ void Player_Unload() {
     }
     FreeMeshSafe(SpriteMesh);
 }
+
 
 /*************************************** MODIFIERS ***************************************/
 void Player_ForceHumanPatient() {
@@ -377,6 +419,7 @@ void Player_DebugFulfillPatientQuota() {
 void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = AnomalyIllness = illness; }
 void Player_SetFacing(int dir) { FacingDir = (dir >= 0) ? 1 : -1; }
 
+
 /*************************************** ACCESSORS ***************************************/
 bool        IsGhostPatient() { return CarriedPatientIsGhost; }
 ILLNESSES   Player_GetTrueDiagnosis() { return TrueDiagnosis; }
@@ -385,11 +428,11 @@ int         Player_GetGhostExtraAnomalies() { return GhostExtraAnomalies; }
 int         Player_GetPatientsHandled() { return PatientsHandled; }
 bool        Player_HasPatient() { return PatientPickedUp; }
 void        Player_GetTargetRoom(s8& patientFloor, s8& patientDoor, s8& destFloor, s8& destDoor) {
-                patientFloor = PickupFloor;
-                patientDoor = PickupDoor;
-                destFloor = DestFloor;
-                destDoor = DestDoor;
-            }
+    patientFloor = PickupFloor;
+    patientDoor = PickupDoor;
+    destFloor = DestFloor;
+    destDoor = DestDoor;
+}
 float       Player_GetWidth() { return PLAYER_WIDTH; }
 float       Player_GetHeight() { return PLAYER_HEIGHT; }
 bool        Player_IsWalking() { return WalkingSoundPlaying; }
