@@ -176,7 +176,7 @@ void Tutorial_Initialize() {
 *******************************************************************************/
 void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 	// Fading in from the right
-	if (!dialogue.dialogueShown) {
+	if (!dialogue.dialogueShown) { // basically waits till 0.5 f til the box shows
 		dialogue.dialogueTimer += dt;
 
 		if (dialogue.dialogueTimer >= 0.5f) {
@@ -184,15 +184,15 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 		}
 	}
 
-	if (dialogue.dialogueShown) {
+	if (dialogue.dialogueShown) { // if the dhown is true, the alpha will increase
 		if (dialogue.dialogueFadeAlpha < 1.0f) {
 			dialogue.dialogueFadeAlpha += dialogue.dialogueFadeSpeed * dt;
 
 			if (dialogue.dialogueFadeAlpha > 1.0f) {
-				dialogue.dialogueFadeAlpha = 1.0f;
+				dialogue.dialogueFadeAlpha = 1.0f; // clamp the alpha
 			}
 		}
-		if (dialogue.tutBGX > destX) {
+		if (dialogue.tutBGX > destX) { // currently i put their initial X value to be more than the destination X so itll move from righ tto left
 			dialogue.tutBGX += (destX - dialogue.tutBGX) * 3.0f * dt;
 
 			if (dialogue.tutBGX < destX) {
@@ -221,7 +221,7 @@ void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
 
 		// Spacebar Logic
 		if (tutSpacePress) {
-			if (!dialogue.finishedTyping) {
+			if (!dialogue.finishedTyping) { // Basiclly check sif the dialogue box has finished typing, if not then itll be forced to be true
 				dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
 				dialogue.finishedTyping = true;
 				dialogue.tutSoundPlayed = true;
@@ -280,13 +280,13 @@ void Tutorial_Update(f32 dt) {
 	// -------------------------------- TUTORIAL: YES --------------------------------
 	if (doTutorial && !tutFinished) {
 		textSpaceAlpha = 1.0f;
-		Timer_SetPaused(true);
+		Timer_SetPaused(true); // so player doesnt lose the game if they take too long
 		switch (curTutStage) {
 			case TUTORIAL_START: {
 				tutStarted = true;
-				DialogueBox_Update(tutStartedBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_TAB)) {
-					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE;
+				DialogueBox_Update(tutStartedBox, dt, 400.0f); // draws the dialogue box
+				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_TAB)) { // if player opens the pager, next stage of tutorial will appaer 
+					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE; // nxet stage
 					tutStarted = false;
 				}
 				break;
@@ -416,7 +416,8 @@ void DrawDialogueBoxBackground(DialogueBox& dialogue) {
 	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
-	// Apply black fade like the guide
+	// Apply red fade like the guide
+	// Moves the color bits left to make space for the transparency value.   | gets the fade amount by multiplying it to 200.0f
 	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
 	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
 }
@@ -456,7 +457,7 @@ void Tutorial_Draw() {
 			std::string visibleText(
 				tutStartedBox.tutFullText,
 				(size_t)tutStartedBox.tutVisibleCharCount
-			);
+			); // It copies only the first few characters of the full text, c_str converts c++ to c -> const char* 
 			Tutorial_Text_Draw(visibleText.c_str(), -240.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerOpened) {

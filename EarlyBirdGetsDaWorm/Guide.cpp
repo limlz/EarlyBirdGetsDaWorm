@@ -121,42 +121,26 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	}
 
 	// Category Select
-	bool cat1Hover{ IsAreaClicked(categoryTopX, categoryTopY, categoryW, categoryH, Input_GetMouseX(), Input_GetMouseY()) },
-		cat2Hover{ IsAreaClicked(categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH, Input_GetMouseX(), Input_GetMouseY()) },
-		cat3Hover{ IsAreaClicked(categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH, Input_GetMouseX(), Input_GetMouseY()) };
+	bool cat1Hover{ IsAreaHovered(categoryTopX, categoryTopY, categoryW, categoryH) },
+		cat2Hover{ IsAreaHovered(categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH) },
+		cat3Hover{ IsAreaHovered(categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH) };
+
 	// Fade out when button hover 
-	f32 catTargetAlpha = cat1Hover ? 1.0f : 0.5f;
-	cat1Alpha += (catTargetAlpha - cat1Alpha) * catSpeed * dt;
-	catTargetAlpha = cat2Hover ? 1.0f : 0.5f;
-	cat2Alpha += (catTargetAlpha - cat2Alpha) * catSpeed * dt;
-	catTargetAlpha = cat3Hover ? 1.0f : 0.5f;
-	cat3Alpha += (catTargetAlpha - cat3Alpha) * catSpeed * dt;
+	HoverAnimation(cat1Alpha, cat1Hover, catSpeed, dt);
+	HoverAnimation(cat2Alpha, cat2Hover, catSpeed, dt);
+	HoverAnimation(cat3Alpha, cat3Hover, catSpeed, dt);
 
-	cat1Alpha = AEClamp(cat1Alpha, 0.5f, 1.0f);
-	cat2Alpha = AEClamp(cat2Alpha, 0.5f, 1.0f);
-	cat3Alpha = AEClamp(cat3Alpha, 0.5f, 1.0f);
-
-	if (cat1Hover) {
-		cat1Alpha = 1.0;
-	}
-	if (cat2Hover) {
-		cat2Alpha = 1.0;
-	}
-	if (cat3Hover) {
-		cat3Alpha = 1.0;
-	}
-
-	if (cat1Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
+	if (cat1Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		cat1Alpha = 1.0f;
 		categoryID = 1;
 		
 	}
-	if (cat2Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
+	if (cat2Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		cat2Alpha = 1.0f;
 		categoryID = 2;
 		//cat2ScrollY = 0.0f;
 	}
-	if (cat3Hover && AEInputCheckCurr(AEVK_LBUTTON)) {
+	if (cat3Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		cat3Alpha = 1.0f;
 		categoryID = 3;
 	}
