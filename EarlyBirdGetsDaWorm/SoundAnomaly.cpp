@@ -1,5 +1,9 @@
 #include "pch.hpp"
+#include "sound_anomaly.hpp"
 #include "settings.hpp"
+
+// Global instance
+SoundAnomalySystem SoundAnomaly;
 
 // ================================================================
 // HELPERS
@@ -15,9 +19,13 @@ static inline const SoundTimes& SndCfg(ILLNESSES ill)
     return Config::soundTable[static_cast<int>(ill)];
 }
 
+// ================================================================
+// PRIVATE — audio level restore
 // Restores BGM/SFX/Walking volumes to whatever the settings sliders say.
 // Call this whenever an illness modified the global audio state.
-static void RestoreAudioLevels()
+// ================================================================
+
+void SoundAnomalySystem::RestoreAudioLevels()
 {
     float master = Settings_GetMasterVolume();
     AudioManager_SetBGMVolume(Settings_GetBGMVolume() * master);
@@ -26,514 +34,462 @@ static void RestoreAudioLevels()
 }
 
 // ================================================================
-// STATE — common
+// PRIVATE — state reset
 // ================================================================
 
-static bool  gWasCarrying  = false;
-
-// Ghost layer
-static float gGhost_Timer  = 0.0f;
-static float gGhost_NextAt = 0.0f;
-
-// ================================================================
-// STATE — per-illness
-// ================================================================
-
-// PARANOIA
-static float gPar_Timer            = 0.0f;
-static float gPar_NextAt           = 0.0f;
-static bool  gPar_WasWalking       = false;
-static bool  gPar_ExtraStepPending = false;
-
-// MANIA
-static float gMan_Timer       = 0.0f;
-static float gMan_NextAt      = 0.0f;
-static bool  gMan_SpikeActive = false;
-static float gMan_SpikeTimer  = 0.0f;
-static bool  gMan_PanRight    = false;
-
-// DEPRESSION
-static float gDep_Timer      = 0.0f;
-static float gDep_NextAt     = 0.0f;
-static bool  gDep_BGMSlugged = false;
-
-// DEMENTIA
-static float gDem_Timer        = 0.0f;
-static float gDem_NextAt       = 0.0f;
-static bool  gDem_Stuttering   = false;
-static float gDem_StutterTimer = 0.0f;
-static int   gDem_StutterCount = 0;
-
-// SCHIZOPHRENIA
-static float gSch_Timer      = 0.0f;
-static float gSch_NextAt     = 0.0f;
-static bool  gSch_CutPending = false;
-static float gSch_CutTimer   = 0.0f;
-
-// AIW
-static float gAiw_Timer   = 0.0f;
-static float gAiw_NextAt  = 0.0f;
-static bool  gAiw_BigNext = true;
-
-// INSOMNIA
-static float gIns_CarryTime      = 0.0f;
-static float gIns_HeartTimer     = 0.0f;
-static float gIns_HeartInterval  = 1.5f;
-
-// OCD
-static float   gOcd_Timer        = 0.0f;
-static float   gOcd_NextAt       = 0.0f;
-static int     gOcd_RepeatCount  = 0;
-static float   gOcd_RepeatTimer  = 0.0f;
-static SoundID gOcd_RepeatSfx    = SFX_DOOR_KNOCK;
-static float   gOcd_RepeatPitch  = 1.0f;
-static float   gOcd_RepeatVol    = 0.4f;
-
-// SCOTOPHOBIA
-static bool gSco_WasDark = false;
-
-// ================================================================
-// ON PICKUP / ON DELIVER
-// ================================================================
-
-static void ResetIllnessState()
+void SoundAnomalySystem::ResetState()
 {
-    gGhost_Timer  = 0.0f;
-    gGhost_NextAt = RandRange(SndCfg(ILLNESSES::GHOST).minInterval, SndCfg(ILLNESSES::GHOST).maxInterval);
+    ghost = GhostState{};
+    ghost.next_at = RandRange(SndCfg(ILLNESSES::GHOST).minInterval,
+                              SndCfg(ILLNESSES::GHOST).maxInterval);
 
-    gPar_Timer = gPar_NextAt = 0.0f;
-    gPar_WasWalking = gPar_ExtraStepPending = false;
+    par = ParanoiaState{};
+    man = ManiaState{};
+    dep = DepressionState{};
+    dem = DementiaState{};
+    sch = SchizophreniaState{};
+    aiw = AiwState{};
+    ins = InsomniaState{};
+    ocd = OcdState{};
 
-    gMan_Timer = gMan_NextAt = gMan_SpikeTimer = 0.0f;
-    gMan_SpikeActive = false;
-    gMan_PanRight = false;
-
-    gDep_Timer = gDep_NextAt = 0.0f;
-    gDep_BGMSlugged = false;
-
-    gDem_Timer = gDem_NextAt = gDem_StutterTimer = 0.0f;
-    gDem_StutterCount = 0;
-    gDem_Stuttering = false;
-
-    gSch_Timer = gSch_NextAt = gSch_CutTimer = 0.0f;
-    gSch_CutPending = false;
-
-    gAiw_Timer = gAiw_NextAt = 0.0f;
-    gAiw_BigNext = true;
-
-    gIns_CarryTime = gIns_HeartTimer = 0.0f;
-    gIns_HeartInterval = 1.5f;
-
-    gOcd_Timer = gOcd_NextAt = gOcd_RepeatTimer = 0.0f;
-    gOcd_RepeatCount = 0;
-
-    if (gSco_WasDark) AudioManager_StopSFX();
-    gSco_WasDark = false;
+    if (sco.was_dark) AudioManager_StopSFX(); // cut the looping whisper if it was playing
+    sco = ScotophobiaState{};
 }
 
-static void OnPatientPickup(ILLNESSES effective)
+// ================================================================
+// PRIVATE — pickup / delivery
+// ================================================================
+
+void SoundAnomalySystem::OnPickup(ILLNESSES effective)
 {
-    ResetIllnessState();
+    ResetState();
 
     // Set first-event warmup timers (2 seconds by default)
-    gPar_NextAt = 2.0f;
-    gMan_NextAt = 2.0f;
-    gDep_NextAt = 5.0f;
-    gDem_NextAt = 3.0f;
-    gSch_NextAt = 3.0f;
-    gAiw_NextAt = 2.5f;
-    gOcd_NextAt = 3.0f;
-    gIns_HeartTimer = -1.5f; // first beat after 1.5s warmup
+    par.next_at     = 2.0f;
+    man.next_at     = 2.0f;
+    dep.next_at     = 5.0f;
+    dem.next_at     = 3.0f;
+    sch.next_at     = 3.0f;
+    aiw.next_at     = 2.5f;
+    ocd.next_at     = 3.0f;
+    ins.heart_timer = -1.5f; // first beat fires after 1.5s warmup
 
-    // Depression: immediately slow the BGM
+    // Depression: immediately slow the BGM on pickup
     if (effective == ILLNESSES::DEPRESSION)
     {
         float master = Settings_GetMasterVolume();
         AudioManager_SetBGMVolume(Settings_GetBGMVolume() * master * 0.5f);
-        gDep_BGMSlugged = true;
+        dep.bgm_slugged = true;
     }
-
-    (void)effective;
 }
 
-static void OnPatientDelivered()
+void SoundAnomalySystem::OnDelivered()
 {
     // Undo any illness-level audio modifications
     RestoreAudioLevels();
-    ResetIllnessState();
+    ResetState();
 }
 
 // ================================================================
-// PER-ILLNESS UPDATE FUNCTIONS
+// PRIVATE — per-illness updates
 // ================================================================
 
-// ---- PARANOIA -----------------------------------------------
+// ---- PARANOIA --------------------------------------------------
 // * Phantom footsteps slightly behind the player while walking
 // * One extra ghost step the moment the player stops
 // * Quiet whispers while standing still
-static void UpdateParanoia(float dt)
+void SoundAnomalySystem::UpdateParanoia(float dt)
 {
     bool walking = Player_IsWalking();
 
     // Detect walk→stop transition: queue one extra phantom step
-    if (gPar_WasWalking && !walking)
+    if (par.was_walking && !walking)
     {
-        gPar_ExtraStepPending = true;
-        gPar_Timer  = 0.0f;
-        gPar_NextAt = RandRange(0.2f, 0.5f);
+        par.extra_step_pending = true;
+        par.timer   = 0.0f;
+        par.next_at = RandRange(0.2f, 0.5f);
     }
-    gPar_WasWalking = walking;
+    par.was_walking = walking;
 
-    gPar_Timer += dt;
-    if (gPar_Timer < gPar_NextAt) return;
-    gPar_Timer = 0.0f;
+    par.timer += dt;
+    if (par.timer < par.next_at) return;
+    par.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::PARANOIA);
-    if (gPar_ExtraStepPending)
+    if (par.extra_step_pending)
     {
         // One last phantom footstep after the player stops
         AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.3f, RandRange(0.9f, 1.05f), 0);
-        gPar_ExtraStepPending = false;
-        gPar_NextAt = RandRange(t.minInterval, t.maxInterval);
+        par.extra_step_pending = false;
+        par.next_at = RandRange(t.minInterval, t.maxInterval);
     }
     else if (walking)
     {
         // Phantom footsteps trailing behind while moving
         AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.2f, RandRange(0.88f, 1.05f), 0);
-        gPar_NextAt = RandRange(1.2f, 2.8f);
+        par.next_at = RandRange(1.2f, 2.8f);
     }
     else
     {
         // Whisper from an empty corner while standing
         AudioManager_PlaySFX(SFX_VOICE_WHISPER, t.volume, RandRange(0.85f, 1.0f), 0);
-        gPar_NextAt = RandRange(t.minInterval, t.maxInterval);
+        par.next_at = RandRange(t.minInterval, t.maxInterval);
     }
 }
 
-// ---- MANIA --------------------------------------------------
+// ---- MANIA -----------------------------------------------------
 // * Erratic high-pitch scratching
 // * Sudden SFX volume spike then snap back
 // * Fast whispers that bounce between positions
-static void UpdateMania(float dt)
+void SoundAnomalySystem::UpdateMania(float dt)
 {
     // Resolve the spike cooldown
-    if (gMan_SpikeActive)
+    if (man.spike_active)
     {
-        gMan_SpikeTimer -= dt;
-        if (gMan_SpikeTimer <= 0.0f)
+        man.spike_timer -= dt;
+        if (man.spike_timer <= 0.0f)
         {
-            gMan_SpikeActive = false;
+            man.spike_active = false;
             RestoreAudioLevels();
         }
     }
 
-    gMan_Timer += dt;
-    if (gMan_Timer < gMan_NextAt) return;
-    gMan_Timer = 0.0f;
+    man.timer += dt;
+    if (man.timer < man.next_at) return;
+    man.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::MANIA);
     switch (rand() % 3)
     {
     case 0: // Erratic scratching at high pitch
         AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, t.volume, 2.0f, 0);
-        gMan_NextAt = RandRange(1.5f, 3.5f);
+        man.next_at = RandRange(1.5f, 3.5f);
         break;
 
-    case 1: // Audio spike — double SFX volume for 0.15 s then snap back
+    case 1: // Audio spike — double SFX volume for 0.15s then snap back
         AudioManager_SetSFXVolume(Settings_GetSFXVolume() * Settings_GetMasterVolume() * 2.0f);
         AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 1.0f, RandRange(1.5f, 2.0f), 0);
-        gMan_SpikeActive = true;
-        gMan_SpikeTimer  = 0.15f;
-        gMan_NextAt      = RandRange(t.minInterval, t.maxInterval);
+        man.spike_active = true;
+        man.spike_timer  = 0.15f;
+        man.next_at      = RandRange(t.minInterval, t.maxInterval);
         break;
 
     case 2: // Manic mumbling — fast whispers alternating "left/right" via pitch shift
-        gMan_PanRight = !gMan_PanRight;
+        man.pan_right = !man.pan_right;
         AudioManager_PlaySFX(SFX_VOICE_WHISPER, t.volume,
-            gMan_PanRight ? RandRange(1.6f, 2.0f) : RandRange(0.6f, 0.9f), 0);
-        gMan_NextAt = RandRange(1.0f, 2.5f);
+            man.pan_right ? RandRange(1.6f, 2.0f) : RandRange(0.6f, 0.9f), 0);
+        man.next_at = RandRange(1.0f, 2.5f);
         break;
     }
 }
 
-// ---- DEPRESSION ---------------------------------------------
-// * BGM slows/dulls on pickup (volume halved, already done in OnPatientPickup)
+// ---- DEPRESSION ------------------------------------------------
+// * BGM slows/dulls on pickup (volume halved, done in OnPickup)
 // * Heavy breathing from the wheelchair
 // * Muffled sobbing + distant knocking combo
-static void UpdateDepression(float dt)
+void SoundAnomalySystem::UpdateDepression(float dt)
 {
-    gDep_Timer += dt;
-    if (gDep_Timer < gDep_NextAt) return;
-    gDep_Timer = 0.0f;
+    dep.timer += dt;
+    if (dep.timer < dep.next_at) return;
+    dep.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::DEPRESSION);
     switch (rand() % 2)
     {
     case 0: // Heavy slow exhale
         AudioManager_PlaySFX(SFX_EXHALE, t.volume, 1.0f, 0);
-        gDep_NextAt = RandRange(t.minInterval, t.maxInterval);
+        dep.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
     case 1: // Muffled sobbing + distant knocking
         AudioManager_PlaySFX(SFX_DOOR_KNOCKING, t.volume * 0.5f, 0.6f, 0);
         AudioManager_PlaySFX(SFX_CRYING, t.volume, 1.0f, 0);
-        gDep_NextAt = RandRange(t.minInterval, t.maxInterval);
+        dep.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
     }
 }
 
-// ---- DEMENTIA -----------------------------------------------
+// ---- DEMENTIA --------------------------------------------------
 // * SFX_LIFT plays at the end of the hallway (no elevator there)
 // * Wheelchair squeak gets stuck in a 3–5 stutter glitch
-static void UpdateDementia(float dt)
+void SoundAnomalySystem::UpdateDementia(float dt)
 {
     // Drive ongoing stutter
-    if (gDem_Stuttering)
+    if (dem.stuttering)
     {
-        gDem_StutterTimer -= dt;
-        if (gDem_StutterTimer <= 0.0f)
+        dem.stutter_timer -= dt;
+        if (dem.stutter_timer <= 0.0f)
         {
-            if (gDem_StutterCount > 0)
+            if (dem.stutter_count > 0)
             {
-                AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK, SndCfg(ILLNESSES::DEMENTIA).volume, RandRange(0.8f, 1.3f), 0);
-                gDem_StutterCount--;
-                gDem_StutterTimer = 0.18f;
+                AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK,
+                    SndCfg(ILLNESSES::DEMENTIA).volume, RandRange(0.8f, 1.3f), 0);
+                dem.stutter_count--;
+                dem.stutter_timer = 0.18f;
             }
             else
             {
-                gDem_Stuttering = false;
+                dem.stuttering = false;
             }
         }
     }
 
-    gDem_Timer += dt;
-    if (gDem_Timer < gDem_NextAt) return;
-    gDem_Timer = 0.0f;
+    dem.timer += dt;
+    if (dem.timer < dem.next_at) return;
+    dem.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::DEMENTIA);
     switch (rand() % 2)
     {
     case 0: // Audio displacement — lift ding from the wrong end of the hall
         AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, t.volume, RandRange(0.85f, 1.15f), 0);
-        gDem_NextAt = RandRange(t.minInterval, t.maxInterval);
+        dem.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
     case 1: // Looping glitch — wheelchair stutter burst
-        if (!gDem_Stuttering)
+        if (!dem.stuttering)
         {
-            gDem_Stuttering   = true;
-            gDem_StutterCount = 3 + rand() % 3;
-            gDem_StutterTimer = 0.05f;
+            dem.stuttering    = true;
+            dem.stutter_count = 3 + rand() % 3;
+            dem.stutter_timer = 0.05f;
         }
-        gDem_NextAt = RandRange(t.minInterval, t.maxInterval);
+        dem.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
     }
 }
 
-// ---- SCHIZOPHRENIA ------------------------------------------
+// ---- SCHIZOPHRENIA ---------------------------------------------
 // * Commanding voice — a loud non-spatial whisper right at the player
-// * Fake jumpscare — deafening scream cut to silence after 0.2 s
-static void UpdateSchizophrenia(float dt)
+// * Fake jumpscare — deafening scream cut to silence after 0.2s
+void SoundAnomalySystem::UpdateSchizophrenia(float dt)
 {
     // Resolve the scream cut-off
-    if (gSch_CutPending)
+    if (sch.cut_pending)
     {
-        gSch_CutTimer -= dt;
-        if (gSch_CutTimer <= 0.0f)
+        sch.cut_timer -= dt;
+        if (sch.cut_timer <= 0.0f)
         {
             AudioManager_StopSFX(); // dead silence after the fake jumpscare
-            gSch_CutPending = false;
+            sch.cut_pending = false;
         }
     }
 
-    gSch_Timer += dt;
-    if (gSch_Timer < gSch_NextAt) return;
-    gSch_Timer = 0.0f;
+    sch.timer += dt;
+    if (sch.timer < sch.next_at) return;
+    sch.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::SCHIZOPHRENIA);
     switch (rand() % 2)
     {
     case 0: // Commanding voices — loud close whisper, not spatial
         AudioManager_PlaySFX(SFX_VOICE_WHISPER, 1.0f, RandRange(0.9f, 1.1f), 0);
-        gSch_NextAt = RandRange(t.minInterval, t.maxInterval);
+        sch.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
-    case 1: // Fake jumpscare — sudden scream cut to silence in 0.2 s
+    case 1: // Fake jumpscare — sudden scream cut to silence in 0.2s
         AudioManager_PlaySFX(SFX_SCREAMING, 1.5f, RandRange(0.9f, 1.2f), 0);
-        gSch_CutPending = true;
-        gSch_CutTimer   = 0.2f;
-        gSch_NextAt     = RandRange(t.minInterval + 2.0f, t.maxInterval + 2.0f);
+        sch.cut_pending = true;
+        sch.cut_timer   = 0.2f;
+        sch.next_at     = RandRange(t.minInterval + 2.0f, t.maxInterval + 2.0f);
         break;
     }
 }
 
-// ---- AIW SYNDROME -------------------------------------------
+// ---- AIW SYNDROME ----------------------------------------------
 // * Giant's Footsteps — deep pitched-down thud (you feel tiny)
 // * The Mouse — tiny high-pitch footstep sounds (everything feels huge)
-static void UpdateAIW(float dt)
+void SoundAnomalySystem::UpdateAIW(float dt)
 {
-    gAiw_Timer += dt;
-    if (gAiw_Timer < gAiw_NextAt) return;
-    gAiw_Timer = 0.0f;
+    aiw.timer += dt;
+    if (aiw.timer < aiw.next_at) return;
+    aiw.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::AIW_SYNDROME);
-    if (gAiw_BigNext)
+    if (aiw.big_next)
     {
         // Giant's Footsteps — massive low thud
         AudioManager_PlaySFX(SFX_PLANT_THUD, t.volume, 0.35f, 0);
-        gAiw_NextAt = RandRange(t.minInterval, t.maxInterval);
+        aiw.next_at = RandRange(t.minInterval, t.maxInterval);
     }
     else
     {
         // The Mouse — tiny scurrying sounds at high pitch, quiet
         AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.2f, 2.2f, 0);
-        gAiw_NextAt = RandRange(2.0f, 4.0f);
+        aiw.next_at = RandRange(2.0f, 4.0f);
     }
-    gAiw_BigNext = !gAiw_BigNext;
+    aiw.big_next = !aiw.big_next;
 }
 
-// ---- INSOMNIA -----------------------------------------------
+// ---- INSOMNIA --------------------------------------------------
 // * Rhythmic heartbeat that speeds up the longer the patient is carried
 // * Occasional tinnitus burst (high-pitch flicker sound)
-static void UpdateInsomnia(float dt)
+void SoundAnomalySystem::UpdateInsomnia(float dt)
 {
-    gIns_CarryTime += dt;
+    ins.carry_time += dt;
 
-    // Heartbeat interval starts at 1.5 s, shrinks toward 0.4 s over 90 s of carrying
-    float target = 1.5f - (gIns_CarryTime / 90.0f) * 1.1f;
+    // Heartbeat interval starts at 1.5s, shrinks toward 0.4s over 90s of carrying
+    float target = 1.5f - (ins.carry_time / 90.0f) * 1.1f;
     if (target < 0.4f) target = 0.4f;
-    gIns_HeartInterval += (target - gIns_HeartInterval) * dt * 0.8f;
+    ins.heart_interval += (target - ins.heart_interval) * dt * 0.8f;
 
-    gIns_HeartTimer += dt;
-    if (gIns_HeartTimer < gIns_HeartInterval) return;
-    gIns_HeartTimer = 0.0f;
+    ins.heart_timer += dt;
+    if (ins.heart_timer < ins.heart_interval) return;
+    ins.heart_timer = 0.0f;
 
     // Volume rises with speed (louder as heart races)
-    float vol = 0.2f + (1.5f - gIns_HeartInterval) * 0.35f;
+    float vol = 0.2f + (1.5f - ins.heart_interval) * 0.35f;
     AudioManager_PlaySFX(SFX_HEARTBEAT, vol, 1.0f, 0);
 
     // 1-in-5 chance of a tinnitus ringing burst alongside the beat
     if (rand() % 5 == 0)
-    {
         AudioManager_PlaySFX(SFX_LIGHT_FLICKER, SndCfg(ILLNESSES::INSOMNIA).volume, 3.5f, 0);
-    }
 }
 
-// ---- OCD ----------------------------------------------------
+// ---- OCD -------------------------------------------------------
 // * Rule of Three — every sound repeats exactly two more times after the first
 // * Rhythmic ticking that gets louder when the player stops moving
-static void UpdateOCD(float dt)
+void SoundAnomalySystem::UpdateOCD(float dt)
 {
     // Drive pending repeats
-    if (gOcd_RepeatCount > 0)
+    if (ocd.repeat_count > 0)
     {
-        gOcd_RepeatTimer -= dt;
-        if (gOcd_RepeatTimer <= 0.0f)
+        ocd.repeat_timer -= dt;
+        if (ocd.repeat_timer <= 0.0f)
         {
-            AudioManager_PlaySFX(gOcd_RepeatSfx, gOcd_RepeatVol, gOcd_RepeatPitch, 0);
-            gOcd_RepeatCount--;
-            gOcd_RepeatTimer = 0.5f;
+            AudioManager_PlaySFX(ocd.repeat_sfx, ocd.repeat_vol, ocd.repeat_pitch, 0);
+            ocd.repeat_count--;
+            ocd.repeat_timer = 0.5f;
         }
     }
 
-    gOcd_Timer += dt;
-    if (gOcd_Timer < gOcd_NextAt) return;
-    gOcd_Timer = 0.0f;
+    ocd.timer += dt;
+    if (ocd.timer < ocd.next_at) return;
+    ocd.timer = 0.0f;
 
     // Ticking is louder when the player is standing still
-    bool walking         = Player_IsWalking();
-    float vol            = walking ? 0.15f : 0.45f;
-    float pitch          = 1.0f;
+    bool  walking = Player_IsWalking();
+    float vol     = walking ? 0.15f : 0.45f;
 
     // File contains 3 ticks — play once, no code-driven repeats needed
-    AudioManager_PlaySFX(SFX_CLOCK_TICK, vol, pitch, 0);
-    gOcd_RepeatCount = 0;
+    AudioManager_PlaySFX(SFX_CLOCK_TICK, vol, 1.0f, 0);
+    ocd.repeat_count = 0;
 
     const SoundTimes& t = SndCfg(ILLNESSES::OCD);
-    gOcd_NextAt = RandRange(t.minInterval, t.maxInterval);
+    ocd.next_at = RandRange(t.minInterval, t.maxInterval);
 }
 
-// ---- SCOTOPHOBIA --------------------------------------------
+// ---- SCOTOPHOBIA -----------------------------------------------
 // * The Whisper — looping whisper while in darkness, cuts off abruptly in light
-static void UpdateScotophobia(float /*dt*/, float camX, s8 floorNum)
+void SoundAnomalySystem::UpdateScotophobia(float dt, float cam_x, s8 floor_num)
 {
-    bool isDark = Lighting_IsPlayerInDarkness(camX, floorNum);
+    (void)dt;
+    bool is_dark = Lighting_IsPlayerInDarkness(cam_x, floor_num);
 
-    if (isDark && !gSco_WasDark)
+    if (is_dark && !sco.was_dark)
     {
-        AudioManager_PlaySFX(SFX_VOICE_WHISPER, SndCfg(ILLNESSES::SCOTOPHOBIA).volume, 1.0f, -1);
-        gSco_WasDark = true;
+        AudioManager_PlaySFX(SFX_VOICE_WHISPER,
+            SndCfg(ILLNESSES::SCOTOPHOBIA).volume, 1.0f, -1);
+        sco.was_dark = true;
     }
-    else if (!isDark && gSco_WasDark)
+    else if (!is_dark && sco.was_dark)
     {
         AudioManager_StopSFX();
-        gSco_WasDark = false;
+        sco.was_dark = false;
     }
 }
 
 // ================================================================
-// LIFECYCLE
+// PUBLIC — lifecycle
 // ================================================================
 
-void SoundAnomaly_Initialize()
+void SoundAnomalySystem::Initialize()
 {
     RestoreAudioLevels();
-    gWasCarrying = false;
-    ResetIllnessState();
+    was_carrying = false;
+    ResetState();
 }
 
-void SoundAnomaly_Update(float dt, float camX, s8 floorNum)
+void SoundAnomalySystem::Update(float dt, float cam_x, s8 floor_num)
 {
-    bool hasPatient = Player_HasPatient();
+    bool has_patient = Player_HasPatient();
 
-    // ── Patient picked up ────────────────────────────────────────
-    if (hasPatient && !gWasCarrying)
+    // ── Patient picked up ─────────────────────────────────────────
+    if (has_patient && !was_carrying)
     {
-        gWasCarrying = true;
+        was_carrying = true;
         ILLNESSES current   = Player_GetTrueDiagnosis();
         ILLNESSES effective = (current == ILLNESSES::GHOST)
                               ? Player_GetAnomalyIllness()
                               : current;
-        OnPatientPickup(effective);
+        OnPickup(effective);
     }
 
-    // ── Patient delivered ────────────────────────────────────────
-    if (!hasPatient && gWasCarrying)
+    // ── Patient delivered ─────────────────────────────────────────
+    if (!has_patient && was_carrying)
     {
-        gWasCarrying = false;
-        OnPatientDelivered();
+        was_carrying = false;
+        OnDelivered();
     }
 
-    if (!hasPatient) return;
+    if (!has_patient) return;
     if (!CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)) return;
 
     ILLNESSES current   = Player_GetTrueDiagnosis();
-    bool      isGhost   = (current == ILLNESSES::GHOST);
-    ILLNESSES effective = isGhost ? Player_GetAnomalyIllness() : current;
+    bool      is_ghost  = (current == ILLNESSES::GHOST);
+    ILLNESSES effective = is_ghost ? Player_GetAnomalyIllness() : current;
 
-    // ── Per-illness behaviour ────────────────────────────────────
+    // ── Per-illness behaviour ─────────────────────────────────────
     switch (effective)
     {
-    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Paranoia);        UpdateParanoia(dt);      break;
-    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Sound_Mania);           UpdateMania(dt);         break;
-    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Sound_Depression);      UpdateDepression(dt);    break;
-    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Dementia);        UpdateDementia(dt);      break;
-    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Sound_Schizophrenia);   UpdateSchizophrenia(dt); break;
-    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Sound_AIW);             UpdateAIW(dt);           break;
-    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Sound_Insomnia);        UpdateInsomnia(dt);      break;
-    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Sound_OCD);             UpdateOCD(dt);           break;
-    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Sound_Scotophobia);     UpdateScotophobia(dt, camX, floorNum);   break;
-    default: break;
+    case ILLNESSES::PARANOIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Paranoia);
+        UpdateParanoia(dt);
+        break;
+    case ILLNESSES::MANIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Mania);
+        UpdateMania(dt);
+        break;
+    case ILLNESSES::DEPRESSION:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Depression);
+        UpdateDepression(dt);
+        break;
+    case ILLNESSES::DEMENTIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Dementia);
+        UpdateDementia(dt);
+        break;
+    case ILLNESSES::SCHIZOPHRENIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Schizophrenia);
+        UpdateSchizophrenia(dt);
+        break;
+    case ILLNESSES::AIW_SYNDROME:
+        Journal_ReportAnomaly(ANOMALYID::Sound_AIW);
+        UpdateAIW(dt);
+        break;
+    case ILLNESSES::INSOMNIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Insomnia);
+        UpdateInsomnia(dt);
+        break;
+    case ILLNESSES::OCD:
+        Journal_ReportAnomaly(ANOMALYID::Sound_OCD);
+        UpdateOCD(dt);
+        break;
+    case ILLNESSES::SCOTOPHOBIA:
+        Journal_ReportAnomaly(ANOMALYID::Sound_Scotophobia);
+        UpdateScotophobia(dt, cam_x, floor_num);
+        break;
+    default:
+        break;
     }
 
-    // ── Ghost underlayer: deep whisper on top of the mimic sound ─
-    if (isGhost)
+    // ── Ghost underlayer: deep whisper on top of the mimic sound ──
+    if (is_ghost)
     {
-        gGhost_Timer += dt;
-        if (gGhost_Timer >= gGhost_NextAt)
+        ghost.timer += dt;
+        if (ghost.timer >= ghost.next_at)
         {
-            gGhost_Timer  = 0.0f;
-            gGhost_NextAt = RandRange(SndCfg(ILLNESSES::GHOST).minInterval, SndCfg(ILLNESSES::GHOST).maxInterval);
+            ghost.timer   = 0.0f;
+            ghost.next_at = RandRange(SndCfg(ILLNESSES::GHOST).minInterval,
+                                      SndCfg(ILLNESSES::GHOST).maxInterval);
             AudioManager_PlaySFX(SFX_VOICE_WHISPER,
                 Config::soundTable[10].volume,
                 RandRange(0.4f, 0.7f), 0);

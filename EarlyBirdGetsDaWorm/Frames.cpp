@@ -51,7 +51,7 @@ static int Frames_GetExtraAnomalyCount() {
 // should switch to based on the current illness. Returns 0 if it shouldn't react.
 // The integers correspond to the indices in the `framePaths` array in Frames_Load().
 /******************************************** ANOMALY TEXTURE MAPPING   *******************************************/
-static int GetSpecificGlitchState(ILLNESSES illness, int designID) {
+static int GetSpecificGlitchState(ILLNESSES illness, int designID) { //can change to config
     switch (illness) {
     case ILLNESSES::PARANOIA:
         if (designID == POSTER_EVERYDAY) return 2; // EverydayEye: Subtle eyes watching the player

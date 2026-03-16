@@ -376,7 +376,7 @@ void Game_Update()
         if (AEInputCheckTriggered(AEVK_8)) { Player_SetIllness(ILLNESSES::OCD);           illnessSwitched = true; }
         if (AEInputCheckTriggered(AEVK_9)) { Player_SetIllness(ILLNESSES::SCOTOPHOBIA);   illnessSwitched = true; }
         // Reset sound state so audio levels restore and OnPatientPickup re-fires for the new illness
-        if (illnessSwitched) SoundAnomaly_Initialize();
+        if (illnessSwitched) SoundAnomaly.Initialize();
 
         // 0: Re-roll the central pool anomaly assignment for the current patient
         if (AEInputCheckTriggered(AEVK_0)) {
@@ -399,7 +399,7 @@ void Game_Update()
             Player_GetTargetRoom(tFloor, tDoor, dFloor, dDoor);
             if (!Player_HasPatient()) {
                 Player_HandleInteraction(tFloor, tDoor, CurrentDay);
-                SoundAnomaly_Initialize();
+                SoundAnomaly.Initialize();
             } else {
                 if (Player_HandleInteraction(dFloor, dDoor, CurrentDay))
                     liftActive = false;
@@ -430,7 +430,7 @@ void Game_Update()
 
     Lighting_Update(floorNum, camX, dementia);
     Frames_Update(dt, camX);
-    SoundAnomaly_Update(dt, camX, floorNum);
+    SoundAnomaly.Update(dt, camX, floorNum);
 
     // ------------------------------------------------------------
     // PHASE 7: DOOR INTERACTION LOGIC (E key)

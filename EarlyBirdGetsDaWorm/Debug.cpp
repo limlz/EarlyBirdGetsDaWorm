@@ -30,7 +30,7 @@ void Debug_Update()
     if (AEInputCheckTriggered(AEVK_H) && Player_HasPatient()) {
         if (IsGhostPatient()) Player_ForceHumanPatient();
         else                  Player_ForceGhostPatient();
-        SoundAnomaly_Initialize(); // reset audio state for new patient type
+        SoundAnomaly.Initialize(); // reset audio state for new patient type
     }
 }
 
