@@ -222,10 +222,13 @@ namespace Assets
     }
     namespace Guide
     {
-        constexpr const char* guideIcon = "Assets/Guide/icon-placeholder.png";
-        constexpr const char* category1Text = "Assets/Guide/cat1Text.png";
-        constexpr const char* category2Text = "Assets/Guide/cat2Text.png";
-        constexpr const char* category3Text = "Assets/Guide/cat3Text.png";
+        constexpr const char* guideIcon = "Assets/Guide/GuideIcon.png";
+        constexpr const char* guideBGBack = "Assets/Guide/GUIDE_BACK.png";
+        constexpr const char* guideBGTop = "Assets/Guide/GUIDE_TOP.png";
+
+        constexpr const char* category1Text = "Assets/Guide/GUIDE_CAT1.png";
+        constexpr const char* category2Text = "Assets/Guide/GUIDE_CAT2.png";
+        constexpr const char* category3Text = "Assets/Guide/GUIDE_CAT3.png";
         constexpr const char* image1 = "Assets/Guide/Movements.png";
         constexpr const char* image2 = "Assets/Guide/Instructions1.png";
         constexpr const char* image3 = "Assets/Guide/Instructions2.png";
