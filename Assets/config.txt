@@ -254,42 +254,42 @@ NONE_FRAME_WAIT_RAND=0.0
 
 // --- PARANOIA: brief glitch, then a calm fixed wait (Weeping Angel pacing) ---
 PARANOIA_FRAME_GLITCH_DUR=3.0
-PARANOIA_FRAME_WAIT_MIN=5.0
+PARANOIA_FRAME_WAIT_MIN=4.0
 PARANOIA_FRAME_WAIT_RAND=0.0
 
 // --- MANIA: short bursts, frequent random waits (hyperactive pacing) ---
 MANIA_FRAME_GLITCH_DUR=2.0
 MANIA_FRAME_WAIT_MIN=2.0
-MANIA_FRAME_WAIT_RAND=5.0       // wait = 2.0 + rand(0..5.0) seconds
+MANIA_FRAME_WAIT_RAND=3.0       // wait = 2.0 + rand(0..3.0) seconds
 
 // --- DEPRESSION: long slow melts, long slow recovery ---
 DEPRESSION_FRAME_GLITCH_DUR=4.0
-DEPRESSION_FRAME_WAIT_MIN=6.0
-DEPRESSION_FRAME_WAIT_RAND=4.0  // wait = 6.0 + rand(0..4.0) seconds
+DEPRESSION_FRAME_WAIT_MIN=4.0
+DEPRESSION_FRAME_WAIT_RAND=3.0  // wait = 4.0 + rand(0..3.0) seconds
 
 // --- DEMENTIA: same slow confused rhythm as Depression ---
-DEMENTIA_FRAME_GLITCH_DUR=4.0
-DEMENTIA_FRAME_WAIT_MIN=6.0
-DEMENTIA_FRAME_WAIT_RAND=4.0    // wait = 6.0 + rand(0..4.0) seconds
+DEMENTIA_FRAME_GLITCH_DUR=3.0
+DEMENTIA_FRAME_WAIT_MIN=3.0
+DEMENTIA_FRAME_WAIT_RAND=2.0    // wait = 3.0 + rand(0..2.0) seconds
 
 // --- SCHIZOPHRENIA: same fast bursts as Mania ---
 SCHIZOPHRENIA_FRAME_GLITCH_DUR=2.0
 SCHIZOPHRENIA_FRAME_WAIT_MIN=2.0
-SCHIZOPHRENIA_FRAME_WAIT_RAND=5.0
+SCHIZOPHRENIA_FRAME_WAIT_RAND=3.0
 
 // --- AIW_SYNDROME: fixed 5-second cycle both phases (predictable spatial rhythm) ---
 AIW_SYNDROME_FRAME_GLITCH_DUR=5.0
 AIW_SYNDROME_FRAME_WAIT_MIN=5.0
 AIW_SYNDROME_FRAME_WAIT_RAND=0.0
 
-// --- INSOMNIA: fixed 8-second cycle (slow exhausted rhythm) ---
+// --- INSOMNIA: fixed 6-second cycle (slow exhausted rhythm) ---
 INSOMNIA_FRAME_GLITCH_DUR=8.0
-INSOMNIA_FRAME_WAIT_MIN=8.0
+INSOMNIA_FRAME_WAIT_MIN=5.0
 INSOMNIA_FRAME_WAIT_RAND=0.0
 
-// --- OCD: fixed 6-second cycle (metronomic, annoyingly predictable) ---
-OCD_FRAME_GLITCH_DUR=6.0
-OCD_FRAME_WAIT_MIN=6.0
+// --- OCD: fixed 4-second cycle (metronomic, annoyingly predictable) ---
+OCD_FRAME_GLITCH_DUR=4.0
+OCD_FRAME_WAIT_MIN=5.0
 OCD_FRAME_WAIT_RAND=0.0
 
 // --- SCOTOPHOBIA: default fallback ---
@@ -303,10 +303,10 @@ SCOTOPHOBIA_FRAME_WAIT_RAND=0.0
 // ==========================================
 
 // --- PARANOIA (Weeping Angel effect) ---
-FRAME_PARANOIA_CLOSE_RANGE=250.0        // Within this distance (px) frames look perfectly normal
+FRAME_PARANOIA_CLOSE_RANGE=200.0        // Within this distance (px) frames look perfectly normal
 FRAME_PARANOIA_PANIC_RANGE=350.0        // Distance range over which panic speed scales up (closeRange to closeRange+panicRange)
 FRAME_PARANOIA_INTENSITY_SCALE=10.0     // Multiplier converting panic speed to jitter intensity
-FRAME_PARANOIA_MIN_INTENSITY=2          // Minimum jitter intensity (ensures it always moves at least 1px)
+FRAME_PARANOIA_MIN_INTENSITY=3         // Minimum jitter intensity (ensures it always moves at least 1px)
 
 // --- MANIA (hyperactive drift + stutter) ---
 FRAME_MANIA_DRIFT_SPEED=30.0            // Pixels of drift accumulated per second of animation time
@@ -325,7 +325,7 @@ FRAME_DEMENTIA_JITTER_RANGE=6           // Total jitter pixel range (applied as 
 FRAME_SCHIZO_JITTER_RANGE=14            // Total jitter pixel range (applied as ±half, so ±7px — wider than Dementia)
 
 // --- AIW SYNDROME (floating spatial distortion) ---
-FRAME_AIW_OSCILLATION_FREQ=2.0          // Oscillation speed in radians per second (higher = faster floating)
+FRAME_AIW_OSCILLATION_FREQ=3.0          // Oscillation speed in radians per second (higher = faster floating)
 FRAME_AIW_OSCILLATION_AMP=15.0          // Radius of the circular floating offset in pixels
 
 // --- INSOMNIA (exhaustion size distortion) ---
