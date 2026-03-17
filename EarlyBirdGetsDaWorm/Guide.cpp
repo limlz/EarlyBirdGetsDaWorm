@@ -290,28 +290,15 @@ void Guide_Draw() {
 	//DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
 
 	if (IsGuideOpen) {
+		// Black BG
+		u32 colorBG = (0x000000 << 8) | static_cast<u32>(GuideAlpha * 187.0f);
+		DrawSquareMesh(GuideMesh, 0.0f, 0.0f, winW, winH, colorBG);
+
 		// Draw back BG
 		DrawTextureMesh(GuideMesh, GuideBGBackTexture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		DrawTextureMesh(GuideMesh, GuideCategory3Texture, CategoryX, -150.0f, CategoryW, 157.0f, Cat3Alpha);
 		DrawTextureMesh(GuideMesh, GuideCategory2Texture, CategoryX, 0.0f, CategoryW, 157.0f, Cat2Alpha);
-		DrawTextureMesh(GuideMesh, GuideCategory1Texture, CategoryX, 153.0f, CategoryW, 153.0f, Cat1Alpha);
-
-
-
-		//// Black BG
-		////u32 colorBG = (0x000000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
-		//u32 colorBG = (0x880000 << 8) | static_cast<u32>(guideAlpha * 187.0f);
-		//DrawSquareMesh(guideMesh, 0.0f, 0.0f, winW, winH, colorBG);
-
-		//// Line that seperates the category and info
-		//u32 white = 0xFFFFFFFF;
-		//DrawSquareMesh(guideMesh, AEGfxGetWinMinX() + 400.0f, centerY, 1.0f, 700.0f, white);
-
-		//// Category Text
-		//DrawTextureMesh(guideMesh, guideCategory1Texture, categoryTopX, categoryTopY, categoryW, categoryH, cat1Alpha);
-		//DrawTextureMesh(guideMesh, guideCategory2Texture, categoryTopX, categoryTopY - (categorySpacing), categoryW, categoryH, cat2Alpha);
-		//DrawTextureMesh(guideMesh, guideCategory3Texture, categoryTopX, categoryTopY - (categorySpacing * 2.0f), categoryW, categoryH, cat3Alpha);
-		//DrawTextureMesh(guideMesh, guideImage5Texture, categoryTopX, (categoryTopY - (categorySpacing * 9.0f)) - 21.5f, categoryW, categoryH, 1.0f);
+		DrawTextureMesh(GuideMesh, GuideCategory1Texture, CategoryX, 153.0f, CategoryW, 153.0f, Cat1Alpha);	
 
 		AEGfxPrint(GuideFontID, "CONTROLS", textPosition(465.0f, 150.0f).first, textPosition(465.0f, 150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat1Alpha);
 		AEGfxPrint(GuideFontID, "HOW TO", textPosition(465.0f, 10.0f).first, textPosition(465.0f, 10.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
