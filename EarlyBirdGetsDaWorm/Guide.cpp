@@ -301,9 +301,9 @@ void Guide_Draw() {
 		DrawTextureMesh(GuideMesh, GuideCategory1Texture, CategoryX, 153.0f, CategoryW, 153.0f, Cat1Alpha);	
 
 		AEGfxPrint(GuideFontID, "CONTROLS", textPosition(465.0f, 150.0f).first, textPosition(465.0f, 150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat1Alpha);
-		AEGfxPrint(GuideFontID, "HOW TO", textPosition(465.0f, 10.0f).first, textPosition(465.0f, 10.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
-		AEGfxPrint(GuideFontID, "PLAY", textPosition(465.0f, -10.0f).first, textPosition(465.0f, -10.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
-		AEGfxPrint(GuideFontID, "BOSS FIGHT", textPosition(465.0f, -150.0f).first, textPosition(465.0f, -150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat3Alpha);
+		AEGfxPrint(GuideFontID, "HOW TO", textPosition(465.0f, 5.0f).first, textPosition(465.0f, 5.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
+		AEGfxPrint(GuideFontID, "PLAY", textPosition(465.0f, -25.0f).first, textPosition(465.0f, -25.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
+		AEGfxPrint(GuideFontID, "BOSS FIGHT", textPosition(465.0f, -155.0f).first, textPosition(465.0f, -155.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat3Alpha);
 
 		DrawTextureMesh(GuideMesh, GuideBGTopTexture, -68.0f, 0.0f, 1061.0f, 756.0f, 1.0f);
 		if (Cat1Selected) {
