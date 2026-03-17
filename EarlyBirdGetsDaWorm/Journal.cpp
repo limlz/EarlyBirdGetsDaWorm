@@ -12,12 +12,14 @@ static s8 journalFontId = -1;       // font handle used by AEGfxPrint
 static s8 symbolsFontId = -1;
 const float UI_SCALE = 0.7f;        // journal UI bigger or smaller
 
-static bool gOpen = false;
-static bool gPrevI = false;
-static int  gSelected = 0;
-static int  gRightPage = 0;         // 0 = page 1, 1 = page 2
-bool        hasHovered = false;
-int         hoveredIndex = -1;
+static bool Open = false;
+static bool hasHovered = false;
+static bool HoverTab1 = false;
+static bool HoverTab2 = false;
+
+static int  Selected = 0;
+static int  RightPage = 0;         // 0 = page 1, 1 = page 2
+static int  HoveredIndex = -1;
 
 constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
@@ -26,6 +28,10 @@ constexpr int SYMPTOM_COUNT = 6;
 // TEXTURES
 // ============================================================
 static AEGfxTexture* JournalBook = nullptr;
+static AEGfxTexture* JournalBook = nullptr;
+static AEGfxTexture* Tab_1 = nullptr;
+static AEGfxTexture* Tab_2 = nullptr;
+
 static AEGfxTexture* Undiscovered = nullptr;
 static AEGfxTexture* gSound = nullptr;
 
@@ -98,8 +104,8 @@ static bool Journal_PointInRect(float px, float py, float cx, float cy, float w,
 // Clamp the selected illness index to valid range
 static void ClampSelected()
 {
-    if (gSelected < 0) gSelected = 0;
-    if (gSelected >= (int)IllnessList.size()) gSelected = (int)IllnessList.size() - 1;
+    if (Selected < 0) Selected = 0;
+    if (Selected >= (int)IllnessList.size()) Selected = (int)IllnessList.size() - 1;
 }
 
 // ============================================================
@@ -468,29 +474,29 @@ void Journal_Update()
     // Toggle book with I
     if (AEInputCheckTriggered(AEVK_I))
     {
-        gOpen = !gOpen;
+        Open = !Open;
         AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
 
 		// Reset right page 0 when opening the journal
-        if (gOpen)
+        if (Open)
         {
-            gRightPage = 0;
+            RightPage = 0;
         }
     }
 
-    if (!gOpen) return;
+    if (!Open) return;
 
     if (AEInputCheckTriggered(AEVK_UP))
     {
-        gSelected--;
-        gRightPage = 0;
+        Selected--;
+        RightPage = 0;
         AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
     if (AEInputCheckTriggered(AEVK_DOWN))
     {
-        gSelected++;
-        gRightPage = 0;
+        Selected++;
+        RightPage = 0;
         AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
@@ -498,18 +504,18 @@ void Journal_Update()
 
     if (AEInputCheckTriggered(AEVK_LEFT))
     {
-        if (gRightPage > 0)
+        if (RightPage > 0)
         {
-            --gRightPage;
+            --RightPage;
             AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
         }
     }
 
     if (AEInputCheckTriggered(AEVK_RIGHT))
     {
-        if (gRightPage < 1)
+        if (RightPage < 1)
         {
-            ++gRightPage;
+            ++RightPage;
             AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
         }
     }
@@ -521,7 +527,7 @@ void Journal_Update()
 
 void Journal_Draw(AEGfxVertexList* squareMesh)
 {
-    if (!gOpen) return;
+    if (!Open) return;
 
     // background
     DrawTextureMesh(squareMesh,
@@ -591,7 +597,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         const char* name = GetFromText[i].title.c_str();
         float IllnessY = ListY - i * ListStep;
 
-        if (i == gSelected)
+        if (i == Selected)
         {
             AEGfxPrint(journalFontId, name, 
                 X(LeftStartX), Y(IllnessY),
@@ -615,8 +621,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     // Consists of 2 pages. Toggle RIGHT LEFT ARROW keys.
     // ============================================================
     ClampSelected();
-    ILLNESSES chosen = IllnessList[gSelected];
-    TextStruct& TextData = GetFromText[gSelected];
+    ILLNESSES chosen = IllnessList[Selected];
+    TextStruct& TextData = GetFromText[Selected];
 
     // Mouse position
     s32 mouseX = 0, mouseY = 0;
@@ -627,7 +633,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
 	// Hover state reset
     hasHovered = false;
-    hoveredIndex = -1;
+    HoveredIndex = -1;
 
     // Header
     AEGfxPrint(journalFontId, TextData.title.c_str(),
@@ -639,7 +645,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     // ---------------------------------------------------------------------------
     // PAGE 1
     // ---------------------------------------------------------------------------
-    if (gRightPage == 0)
+    if (RightPage == 0)
     {
         // Description
         AEGfxPrint(journalFontId, TextData.desc.c_str(),
@@ -686,7 +692,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             if (hovered)
             {
                 hasHovered = true;
-                hoveredIndex = i;
+                HoveredIndex = i;
             }
 
             if (observed && SymptomImages)
@@ -743,7 +749,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             if (hovered)
             {
                 hasHovered = true;
-                hoveredIndex = i;
+                HoveredIndex = i;
             }
 
             if (observed && SymptomImages)
@@ -786,17 +792,17 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     const char* HoverText = "Hover an entry to inspect";
 
     // Check if the mouse is hovering over a valid grid slot
-    if (hoveredIndex >= 0 && hoveredIndex < 6)
+    if (HoveredIndex >= 0 && HoveredIndex < 6)
     {
         // Retrieve the anomaly entry for this illness + slot
-        SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, hoveredIndex);
+        SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, HoveredIndex);
 
         // If the anomaly exists AND the player has discovered it
         if (hoveredEntry.anomalyId != ANOMALYID::None &&
             Journal_HasObserved(hoveredEntry.anomalyId))
         {
             // Show the anomaly description text
-            HoverText = TextData.symptomText[hoveredIndex].c_str();
+            HoverText = TextData.symptomText[HoveredIndex].c_str();
         }
         else
         {
@@ -866,8 +872,8 @@ void Journal_Unload()
     }
 
     // reset UI state
-    gOpen = false;
-    gSelected = 0;
+    Open = false;
+    Selected = 0;
 }
 
 // ============================================================
@@ -876,7 +882,7 @@ void Journal_Unload()
 
 bool Journal_IsOpen()
 {
-    return gOpen;
+    return Open;
 }
 
 void Journal_Clear()
