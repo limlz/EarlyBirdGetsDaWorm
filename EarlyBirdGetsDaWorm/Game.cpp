@@ -182,6 +182,7 @@ void Game_Initialize()
     PauseMenu_Initialize();
     Notifications_Initialize();
     Tutorial_Initialize();
+    Journal_Initialize();
     Guide_Initialize();
     AllAnomalies_Initialize();
 

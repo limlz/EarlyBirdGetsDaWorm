@@ -25,12 +25,103 @@ constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
 
 // ============================================================
+// DECLARATIONS
+// ============================================================
+// Dimensions -------------------------------------------------
+static f32 HeaderY;
+static f32 SubHeaderY;
+
+// Tab positions
+static f32 TabX;
+static f32 Tab1Y;
+static f32 Tab2Y;
+
+// Pages X positions
+static f32 LeftStartX;
+static f32 RightStartX;
+
+// Anomalies list
+static f32 ListY;
+static f32 ListStep;
+static f32 IllnessHitX;
+
+// Image grid layout
+static f32 imgW;
+static f32 imgH;
+
+static f32 colGap;
+static f32 rowGap;
+
+static f32 gridStartX;
+static f32 gridStartY;
+
+static f32 tiltAngle;
+
+// Sizing ----------------------------------------------------
+static f32 Header;
+static f32 SubHeader;
+static f32 text;
+static f32 list;
+static f32 listSelected;
+
+static f32 IllnessHitW;
+static f32 IllnessHitH;
+
+static f32 TabW;
+static f32 TabH;
+
+void Journal_Initialize()
+{
+    // Layout
+    HeaderY = 380.0f;
+    SubHeaderY = 170.0f;
+
+    // Tab positions
+    TabX = 870.0f;
+    Tab1Y = 320.0f;
+    Tab2Y = 150.0f;
+
+    // Pages X positions
+    LeftStartX = -700.0f;
+    RightStartX = 80.0f;
+
+    // Anomalies list
+    ListY = 230.0f;
+    ListStep = 70.0f;
+    IllnessHitX = LeftStartX + 140.0f;
+    IllnessHitW = 380.0f;
+    IllnessHitH = ListStep * 0.9f;
+
+    // Image grid layout
+    imgW = 200.0f;
+    imgH = 220.0f;
+
+    colGap = 220.0f;
+    rowGap = 220.0f;
+
+    gridStartX = (RightStartX - 30.0f) + imgW * 0.5f;
+    gridStartY = ListY - imgH * 0.5f;
+
+    tiltAngle = 0.12f;
+
+    // Sizing ----------------------------------------------------
+    Header = 1.2f;
+    SubHeader = 0.90f;
+    text = 0.55f;
+    list = 0.90f;
+    listSelected = 0.80f;
+
+    // Tabs
+    TabW = 250.0f;
+    TabH = 150.0f;
+}
+// ============================================================
 // TEXTURES
 // ============================================================
-static AEGfxTexture* JournalBook = nullptr;
-static AEGfxTexture* JournalBook = nullptr;
-static AEGfxTexture* Tab_1 = nullptr;
-static AEGfxTexture* Tab_2 = nullptr;
+static AEGfxTexture* JournalBack = nullptr;
+static AEGfxTexture* JournalFront = nullptr; 
+static AEGfxTexture* TabEntry1 = nullptr;
+static AEGfxTexture* TabEntry2 = nullptr;
 
 static AEGfxTexture* Undiscovered = nullptr;
 static AEGfxTexture* gSound = nullptr;
@@ -90,7 +181,7 @@ static const std::vector<ILLNESSES> IllnessList =
     ILLNESSES::SCOTOPHOBIA
 };
 
-// Is the mouse point within the rectangle centered?
+// Is the mouse point within a rectangle centered at (cx, cy)?
 static bool Journal_PointInRect(float px, float py, float cx, float cy, float w, float h)
 {
     float left = cx - w * 0.5f;
@@ -101,11 +192,45 @@ static bool Journal_PointInRect(float px, float py, float cx, float cy, float w,
     return (px >= left && px <= right && py >= bottom && py <= top);
 }
 
-// Clamp the selected illness index to valid range
 static void ClampSelected()
 {
-    if (Selected < 0) Selected = 0;
-    if (Selected >= (int)IllnessList.size()) Selected = (int)IllnessList.size() - 1;
+    if (Selected < 0)
+        Selected = 0;
+
+    if (Selected >= (int)IllnessList.size())
+        Selected = (int)IllnessList.size() - 1;
+}
+
+static void DrawTab(
+    AEGfxVertexList* mesh,
+    AEGfxTexture* tex,
+    s8 fontId,
+    const char* label,
+    float x, float y,
+    bool hovered,
+    bool selected)
+{
+    float scale = 1.0f;
+    if (selected) scale += 0.05f;
+    if (hovered)  scale += 0.06f;
+
+    if (tex)
+    {
+        DrawTextureMesh(mesh,
+            tex,
+            x * UI_SCALE,
+            y * UI_SCALE,
+            TabW * scale * UI_SCALE,
+            TabH * scale * UI_SCALE,
+            1.0f);
+    }
+
+    AEGfxPrint(fontId, label,
+        ((x-45.0f) * UI_SCALE) / SCREEN_WIDTH_HALF,
+        ((y-15.0f) * UI_SCALE) / SCREEN_HEIGHT_HALF,
+        SubHeader * scale,
+        0.55f, 0.05f, 0.05f,
+        1.0f);
 }
 
 // ============================================================
@@ -154,7 +279,7 @@ static const char* GetJournalTextFilePath(ILLNESSES illness)
 static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
 {   
     // Open the file for reading
-	// If file doesntt exist or fails to open, return false
+	// If file doesn't exist or fails to open, return false
 	std::ifstream file(filePath);   
     if (!file.is_open())
         return false;
@@ -408,7 +533,11 @@ void Journal_Load()
     symbolsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     journalFontId = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
 
-    JournalBook = LoadTextureChecked(Assets::Equipment::JournalBook);
+    JournalBack = LoadTextureChecked(Assets::Equipment::JournalBack);
+    JournalFront = LoadTextureChecked(Assets::Equipment::JournalFront);
+    TabEntry1 = LoadTextureChecked(Assets::Equipment::Tab);
+    TabEntry2 = LoadTextureChecked(Assets::Equipment::Tab);
+
 	Undiscovered = LoadTextureChecked(Assets::Equipment::Undiscovered);
     gSound = LoadTextureChecked(Assets::Equipment::Sound);
 
@@ -465,364 +594,385 @@ void Journal_Load()
     }
 }
 
-// ============================================================
-// KEYS & NAVIGATION 
-// ============================================================
-
 void Journal_Update()
 {
-    // Toggle book with I
+    // ------------------------------------------------------------
+    // Open / close
+    // ------------------------------------------------------------
     if (AEInputCheckTriggered(AEVK_I))
     {
         Open = !Open;
         AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
 
-		// Reset right page 0 when opening the journal
         if (Open)
-        {
             RightPage = 0;
-        }
     }
 
-    if (!Open) return;
+    if (!Open)
+        return;
 
-    if (AEInputCheckTriggered(AEVK_UP))
-    {
-        Selected--;
-        RightPage = 0;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-    }
-
-    if (AEInputCheckTriggered(AEVK_DOWN))
-    {
-        Selected++;
-        RightPage = 0;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-    }
-
-    ClampSelected();
-
-    if (AEInputCheckTriggered(AEVK_LEFT))
-    {
-        if (RightPage > 0)
-        {
-            --RightPage;
-            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-        }
-    }
-
-    if (AEInputCheckTriggered(AEVK_RIGHT))
-    {
-        if (RightPage < 1)
-        {
-            ++RightPage;
-            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-        }
-    }
-}
-
-// ============================================================
-// BOOK DRAW (two pages)
-// ============================================================
-
-void Journal_Draw(AEGfxVertexList* squareMesh)
-{
-    if (!Open) return;
-
-    // background
-    DrawTextureMesh(squareMesh,
-        JournalBook,
-        0.0f * UI_SCALE,
-        0.0f * UI_SCALE,
-        1800.0f * UI_SCALE,
-        1050.0f * UI_SCALE,
-        1.0f);
-
-    if (journalFontId < 0) return;
-
-    auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
-    auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
-
-    // Dimensions -----------------------------------------------------------------------------------------
-    float HeaderY       = 380.0f;
-    float SubHeaderY    = 170.0f;
-
-    // Pages X positions
-    float LeftStartX    = -700.0f;
-    float RightStartX   = 80.0f;
-
-    // Anomalies list
-    float ListY         = 230.0f;
-    float ListStep      = 70.0f;
-
-    // Image grid layout
-    float imgW          = 200.0f;
-    float imgH          = 220.0f;
-
-    float colGap        = 220.0f;
-    float rowGap        = 220.0f;
-
-    float gridStartX    = (RightStartX - 30.0f) + imgW * 0.5f;
-    float gridStartY    = (ListY)-imgH * 0.5f;
-
-    float tiltAngle     = 0.12f;
-
-    // Sizing -----------------------------------------------------------------------------------------
-    float Header        = 1.2f;
-    float SubHeader     = 0.90f;
-    float text          = 0.55f;
-    float list          = 0.90f;
-    float listSelected  = 0.80f;
-
-    // ============================================================
-    // LEFT SIDE
-    // ============================================================
-    
-    // Header 
-    AEGfxPrint(journalFontId, "Illnesses", 
-        X(LeftStartX), Y(HeaderY),
-        Header,
-        0, 0, 0, // black
-        1);
-
-	// Description
-    AEGfxPrint(journalFontId, "Use arrow keys to select an illness",
-        X(LeftStartX), Y(HeaderY - 60.0f),
-        text,
-        0.2f, 0.2f, 0.2f,
-        1);
-
-    for (int i = 0; i < (int)IllnessList.size(); ++i)
-    {
-        const char* name = GetFromText[i].title.c_str();
-        float IllnessY = ListY - i * ListStep;
-
-        if (i == Selected)
-        {
-            AEGfxPrint(journalFontId, name, 
-                X(LeftStartX), Y(IllnessY),
-                list,
-                0.55f, 0.05f, 0.05f, // bright red
-                1);
-        }
-        else
-        {
-            AEGfxPrint(journalFontId, name, 
-                X(LeftStartX), Y(IllnessY),
-                listSelected,
-                0.2f, 0.2f, 0.2f, // dark gray
-                1);
-        }
-    }
-    // ------------------------------------------------------------------------------------------------------
-
-    // ============================================================
-    // RIGHT SIDE
-    // Consists of 2 pages. Toggle RIGHT LEFT ARROW keys.
-    // ============================================================
-    ClampSelected();
-    ILLNESSES chosen = IllnessList[Selected];
-    TextStruct& TextData = GetFromText[Selected];
-
+    // ------------------------------------------------------------
     // Mouse position
+    // ------------------------------------------------------------
     s32 mouseX = 0, mouseY = 0;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
     float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
     float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
 
-	// Hover state reset
+    // ------------------------------------------------------------
+    // Tab hover
+    // ------------------------------------------------------------
+    float tab1HoverW = TabW * ((RightPage == 0) ? 1.05f : 1.0f) * UI_SCALE;
+    float tab1HoverH = TabH * ((RightPage == 0) ? 1.05f : 1.0f) * UI_SCALE;
+
+    float tab2HoverW = TabW * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
+    float tab2HoverH = TabH * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
+
+    HoverTab1 = IsAreaClickedByMouse(
+        TabX * UI_SCALE,
+        Tab1Y * UI_SCALE,
+        tab1HoverW,
+        tab1HoverH);
+
+    HoverTab2 = IsAreaClickedByMouse(
+        TabX * UI_SCALE,
+        Tab2Y * UI_SCALE,
+        tab2HoverW,
+        tab2HoverH);
+
+    // ------------------------------------------------------------
+    // Mouse click
+    // ------------------------------------------------------------
+    if (AEInputCheckTriggered(AEVK_LBUTTON))
+    {
+        if (HoverTab1 && RightPage != 0)
+        {
+            RightPage = 0;
+            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+        }
+        else if (HoverTab2 && RightPage != 1)
+        {
+            RightPage = 1;
+            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+        }
+        else
+        {
+            for (int i = 0; i < (int)IllnessList.size(); ++i)
+            {
+                float illnessY = ListY - i * ListStep;
+
+                bool hovered = IsAreaClickedByMouse(
+                    IllnessHitX * UI_SCALE,
+                    illnessY * UI_SCALE,
+                    IllnessHitW * UI_SCALE,
+                    IllnessHitH * UI_SCALE);
+
+                if (hovered)
+                {
+                    if (Selected != i)
+                    {
+                        Selected = i;
+                        RightPage = 0;
+                        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Keyboard illness selection
+    // ------------------------------------------------------------
+    if (AEInputCheckTriggered(AEVK_UP))
+    {
+        --Selected;
+        RightPage = 0;
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+    }
+
+    if (AEInputCheckTriggered(AEVK_DOWN))
+    {
+        ++Selected;
+        RightPage = 0;
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+    }
+
+    ClampSelected();
+
+    // ------------------------------------------------------------
+    // Keyboard page switch
+    // ------------------------------------------------------------
+    if (AEInputCheckTriggered(AEVK_LEFT) && RightPage > 0)
+    {
+        --RightPage;
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+    }
+
+    if (AEInputCheckTriggered(AEVK_RIGHT) && RightPage < 1)
+    {
+        ++RightPage;
+        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+    }
+}
+
+// ============================================================
+// BOOK DRAW (two pages)
+// ============================================================
+void Journal_Draw(AEGfxVertexList* squareMesh)
+{
+    if (!Open) return;
+    if (journalFontId < 0) return;
+
+    auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
+    auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
+
+    // ------------------------------------------------------------
+    // Mouse position
+    // ------------------------------------------------------------
+    s32 mouseX = 0, mouseY = 0;
+    AEInputGetCursorPosition(&mouseX, &mouseY);
+
+    float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
+    float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
+
+    // ------------------------------------------------------------
+    // Current illness data
+    // ------------------------------------------------------------
+    ClampSelected();
+    ILLNESSES chosen = IllnessList[Selected];
+    TextStruct& TextData = GetFromText[Selected];
+
+    // ------------------------------------------------------------
+    // Hover reset for symptom images
+    // ------------------------------------------------------------
     hasHovered = false;
     HoveredIndex = -1;
 
-    // Header
+    // ============================================================
+    // LAYERS
+    // Back -> Tabs -> Front -> Text / Images
+    // ============================================================
+
+    // Book back
+    DrawTextureMesh(squareMesh,
+        JournalBack,
+        0.0f * UI_SCALE,
+        0.0f * UI_SCALE,
+        1800.0f * UI_SCALE,
+        1050.0f * UI_SCALE,
+        1.0f);
+
+    // Tabs
+    DrawTab(squareMesh, TabEntry1, journalFontId, "LOG I",
+        TabX, Tab1Y,
+        HoverTab1,
+        RightPage == 0);
+
+    DrawTab(squareMesh, TabEntry2, journalFontId, "LOG II",
+        TabX, Tab2Y,
+        HoverTab2,
+        RightPage == 1);
+
+    // Front page
+    DrawTextureMesh(squareMesh,
+        JournalFront,
+        0.0f * UI_SCALE,
+        0.0f * UI_SCALE,
+        1800.0f * UI_SCALE,
+        1050.0f * UI_SCALE,
+        1.0f);
+
+    // ============================================================
+    // LEFT SIDE
+    // ============================================================
+    AEGfxPrint(journalFontId, "Illnesses",
+        X(LeftStartX), Y(HeaderY),
+        Header,
+        0, 0, 0,
+        1.0f);
+
+    AEGfxPrint(journalFontId, "Select an illness below",
+        X(LeftStartX), Y(HeaderY - 60.0f),
+        text,
+        0.2f, 0.2f, 0.2f,
+        1.0f);
+
+    for (int i = 0; i < (int)IllnessList.size(); ++i)
+    {
+        const char* name = GetFromText[i].title.c_str();
+        float illnessY = ListY - i * ListStep;
+
+        bool hovered = IsAreaClickedByMouse(
+            IllnessHitX * UI_SCALE,
+            illnessY * UI_SCALE,
+            IllnessHitW * UI_SCALE,
+            IllnessHitH * UI_SCALE);
+
+        bool selected = (i == Selected);
+
+        float scale = 1.0f;
+        if (selected) scale += 0.15f;
+        if (hovered)  scale += 0.08f;
+
+        if (selected)
+        {
+            AEGfxPrint(journalFontId, name,
+                X(LeftStartX), Y(illnessY),
+                list * scale,
+                0.55f, 0.05f, 0.05f,
+                1.0f);
+        }
+        else
+        {
+            AEGfxPrint(journalFontId, name,
+                X(LeftStartX), Y(illnessY),
+                listSelected * scale,
+                0.2f, 0.2f, 0.2f,
+                1.0f);
+        }
+    }
+
+    // ============================================================
+    // RIGHT SIDE
+    // ============================================================
     AEGfxPrint(journalFontId, TextData.title.c_str(),
         X(RightStartX), Y(HeaderY),
         Header,
-        0.55f, 0.05f, 0.05f, // bright red
-        1);
+        0, 0, 0,
+        1.0f);
 
-    // ---------------------------------------------------------------------------
-    // PAGE 1
-    // ---------------------------------------------------------------------------
     if (RightPage == 0)
     {
-        // Description
         AEGfxPrint(journalFontId, TextData.desc.c_str(),
             X(RightStartX), Y(HeaderY - 60.0f),
             text,
             0.2f, 0.2f, 0.2f,
-            1);
+            1.0f);
+
         AEGfxPrint(journalFontId, TextData.desc2.c_str(),
             X(RightStartX), Y(HeaderY - 100.0f),
             text,
             0.2f, 0.2f, 0.2f,
-            1);
+            1.0f);
 
-        // Subheader
         AEGfxPrint(journalFontId, "Symptoms",
             X(RightStartX), Y(SubHeaderY),
             SubHeader,
             0, 0, 0,
-            1);
+            1.0f);
 
         AEGfxPrint(journalFontId, "Only 3 out of all will occur during a shift",
             X(RightStartX), Y(SubHeaderY - 55.0f),
             text,
             0.2f, 0.2f, 0.2f,
-            1);
+            1.0f);
 
-        // Draw anomalies in a 1x2 grid
         for (int i = 0; i < 2; ++i)
         {
-			SymptomStruct entry = GetJournalSymptomEntry(chosen, i); // chosen illness, symptom index
-            AEGfxTexture* SymptomImages = entry.texture;
-            ANOMALYID SymptomID         = entry.anomalyId;
+            SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
+            AEGfxTexture* symptomTex = entry.texture;
+            ANOMALYID symptomID = entry.anomalyId;
 
             int col = i % 2;
-            int row = i / 2;
-
             float x = gridStartX + col * colGap;
-            float y = (SubHeaderY - 240.0f);
+            float y = SubHeaderY - 240.0f;
 
-            bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
-            bool observed   = Journal_HasObserved(SymptomID);
+            bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool observed = Journal_HasObserved(symptomID);
 
-            // Check if mouse is over this image slot
             if (hovered)
             {
                 hasHovered = true;
                 HoveredIndex = i;
             }
 
-            if (observed && SymptomImages)
+            if (observed && symptomTex)
             {
-                // Discovered anomaly image
-                // Rotate slightly when hovered
                 if (hovered)
-                {
-                    DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
-                }
+                    DrawTextureMeshRotated(squareMesh, symptomTex, x, y, imgW, imgH, tiltAngle, 1.0f);
                 else
-                {
-                    DrawTextureMesh(squareMesh, SymptomImages, x, y, imgW, imgH, 1.0f);
-                }
+                    DrawTextureMesh(squareMesh, symptomTex, x, y, imgW, imgH, 1.0f);
             }
             else
             {
-                // Undiscovered anomaly image
-                // Still allow hover detection, but do not rotate
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
             }
-        } // ----------------------------------------------------------------------------
-
-        // Navigate to next page controls
-        AEGfxPrint(symbolsFontId, ">",
-            X(650.0f), Y(-370.0f),
-            SubHeader,
-            0, 0, 0,
-            1);
+        }
     }
-
-    // ---------------------------------------------------------------------------
-    // PAGE 2
-    // ---------------------------------------------------------------------------
     else
     {
-        // Draw anomalies in a 2x2 grid
         for (int i = 2; i < 6; ++i)
         {
             SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
-            AEGfxTexture* SymptomImages = entry.texture;
-            ANOMALYID SymptomID         = entry.anomalyId;
+            AEGfxTexture* symptomTex = entry.texture;
+            ANOMALYID symptomID = entry.anomalyId;
 
             int col = (i - 2) % 2;
             int row = (i - 2) / 2;
 
             float x = gridStartX + col * colGap;
-            float y = (150.0f) - row * rowGap;
+            float y = 100.0f - row * rowGap;
 
-            bool hovered    = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
-            bool observed   = Journal_HasObserved(SymptomID);
+            bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
+            bool observed = Journal_HasObserved(symptomID);
 
-            // Check if mouse is over this image slot
             if (hovered)
             {
                 hasHovered = true;
                 HoveredIndex = i;
             }
 
-            if (observed && SymptomImages)
+            if (observed && symptomTex)
             {
-                // Discovered anomaly image
-                // Rotate slightly when hovered
                 if (hovered)
-                {
-                    DrawTextureMeshRotated(squareMesh, SymptomImages, x, y, imgW, imgH, tiltAngle, 1.0f);
-                }
+                    DrawTextureMeshRotated(squareMesh, symptomTex, x, y, imgW, imgH, tiltAngle, 1.0f);
                 else
-                {
-                    DrawTextureMesh(squareMesh, SymptomImages, x, y, imgW, imgH, 1.0f);
-                }
+                    DrawTextureMesh(squareMesh, symptomTex, x, y, imgW, imgH, 1.0f);
             }
             else
             {
-                // Undiscovered anomaly image
-                // Still allow hover detection, but do not rotate
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
             }
-        } //----------------------------------------------------------------------------
-
-        // Navigate to previous page controls
-        AEGfxPrint(symbolsFontId, "<",
-            X(650.0f), Y(-370.0f),
-            SubHeader,
-            0, 0, 0,
-            1);
-
+        }
     }
 
-    // ------------------------------------------------------------
-    // Hover Info Area
-    // Displays text describing the anomaly when the player hovers
-    // over a discovered image in the journal grid.
-    // ------------------------------------------------------------
-
-    // Default text shown when nothing is hovered
+    // ============================================================
+    // HOVER INFO AREA
+    // ============================================================
     const char* HoverText = "Hover an entry to inspect";
 
-    // Check if the mouse is hovering over a valid grid slot
     if (HoveredIndex >= 0 && HoveredIndex < 6)
     {
-        // Retrieve the anomaly entry for this illness + slot
         SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, HoveredIndex);
 
-        // If the anomaly exists AND the player has discovered it
         if (hoveredEntry.anomalyId != ANOMALYID::None &&
             Journal_HasObserved(hoveredEntry.anomalyId))
         {
-            // Show the anomaly description text
             HoverText = TextData.symptomText[HoveredIndex].c_str();
         }
         else
         {
-            // Undiscovered anomaly -> hide the description
             HoverText = "???";
         }
     }
 
     AEGfxPrint(journalFontId, HoverText,
-        X(RightStartX), Y(-300.0f),
+        X(RightStartX), Y(-380.0f),
         text,
         0, 0, 0,
-        1);
+        1.0f);
 }
-
 
 void Journal_Unload()
 {
     // unload textures
-    UnloadTextureSafe(JournalBook);
+    UnloadTextureSafe(JournalBack);
+    UnloadTextureSafe(JournalFront);
+    UnloadTextureSafe(TabEntry1);
+    UnloadTextureSafe(TabEntry2);
+
     UnloadTextureSafe(Undiscovered);
     UnloadTextureSafe(gSound);
 

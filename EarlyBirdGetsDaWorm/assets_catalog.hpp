@@ -12,7 +12,10 @@ namespace Assets
         constexpr const char* PagerIcon = "Assets/Equipment/PagerIcon.png";
         constexpr const char* Pager = "Assets/Equipment/Pager.png";
 
-        constexpr const char* JournalBook = "Assets/Equipment/JournalBook.png";
+        constexpr const char* JournalBack = "Assets/Equipment/JournalBack.png";
+        constexpr const char* JournalFront = "Assets/Equipment/JournalFront.png";
+        constexpr const char* Tab = "Assets/Equipment/Tab.png";
+
 		constexpr const char* Undiscovered = "Assets/Equipment/evidence/Undiscovered.png";
         constexpr const char* Sound = "Assets/Equipment/evidence/Sound.png";
 
