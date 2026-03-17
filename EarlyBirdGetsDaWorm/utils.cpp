@@ -143,10 +143,10 @@ bool IsAreaHovered(f32 areaX, f32 areaY, f32 areaW, f32 areaH) {
 }
 
 // Animates the hover 
-void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt) {
+void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt, f32 minAlpha, f32 maxAlpha) {
 	f32 targetAlpha{ hovered ? 1.0f : 0.5f };
 
 	alpha += (targetAlpha - alpha) * speed * dt;
 
-	alpha = AEClamp(alpha, 0.5f, 1.0f);		
+	alpha = AEClamp(alpha, minAlpha, maxAlpha);
 }
