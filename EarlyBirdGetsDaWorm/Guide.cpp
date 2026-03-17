@@ -28,18 +28,12 @@ static f32 Cat2ScrollSpeed;
 static bool Cat2Page1;
 static bool Cat2Page2;
 
-// Seperator
-static f32 SeperateH;
-static f32 CenterY;
-static f32 TopY;
+// Category Dimensions
+static f32 CategoryW;
+static f32 CategoryX;
 
 // Category
-static f32 CategoryTopX;
-static f32 CategoryTopY;
-static f32 CategorySpacing;
 static int CategoryID;
-static f32 CategoryW;
-static f32 CategoryH;
 static f32 Cat1Alpha;
 static f32 Cat2Alpha;
 static f32 Cat3Alpha;
@@ -81,17 +75,11 @@ void Guide_Initialize() {
 	FadeSpeed = 2.5f;
 	GuideAlpha = 0.0f;
 
-	// Seperator
-	SeperateH = 700.0f;
-	CenterY = (AEGfxGetWinMinY() + AEGfxGetWinMaxY()) * 0.5f;
-	TopY = CenterY + (SeperateH * 0.5f);
+	// Category Dimensions
+	CategoryW = 172.0f;
+	CategoryX = 514.0f;
 
 	// Category
-	CategoryTopX = AEGfxGetWinMinX() + 220.0f;
-	CategoryTopY = TopY - (50.0f * 0.5f);
-	CategorySpacing = 70.0f;
-	CategoryW = 250.0f;
-	CategoryH = 50.0f;
 	CatSpeed = 10.0f;
 	Cat1Alpha = 1.0f;
 	Cat2Alpha = 1.0f;
@@ -129,17 +117,9 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	}
 
 	// Category Select
-	// Hover positions (same as AEGfxPrint)
-	auto controlsPos = textPosition(465.0f, 150.0f);
-	auto howtoPos = textPosition(465.0f, 10.0f);
-	auto bossPos = textPosition(465.0f, -150.0f);
-
-	// Text hover box size (adjust if needed)
-	f32 TextW{ 300.0f }, TextH{ 60.0f };
-
-	bool Cat1Hover{ IsAreaHovered(controlsPos.first, controlsPos.second, TextW, TextH) },
-		Cat2Hover{ IsAreaHovered(howtoPos.first, howtoPos.second, TextW, TextH) },
-		Cat3Hover{ IsAreaHovered(bossPos.first, bossPos.second, TextW, TextH) };
+	bool Cat1Hover{ IsAreaHovered(CategoryX, 153.0f, CategoryW, 153.0f) },
+		Cat2Hover{ IsAreaHovered(CategoryX, 0.0f, CategoryW, 157.0f) },
+		Cat3Hover{ IsAreaHovered(CategoryX, -150.0f, CategoryW, 157.0f) };
 
 	// Fade out when button hover 
 	if (!Cat1Selected) {
@@ -151,6 +131,17 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 	if (!Cat3Selected) {
 		HoverAnimation(Cat3Alpha, Cat3Hover, CatSpeed, dt);
 	}
+
+	if (Cat1Hover && (!Cat2Selected || !Cat3Selected)) {
+		Cat1Alpha = 1.0f;
+	}
+	if (Cat2Hover && (!Cat1Selected || !Cat3Selected)) {
+		Cat2Alpha = 1.0f;
+	}
+	if (Cat3Hover && (!Cat1Selected || !Cat2Selected)) {
+		Cat3Alpha = 1.0f;
+	}
+	
 
 	if (Cat1Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 		Cat1Alpha = 1.0f;
@@ -272,9 +263,9 @@ void Guide_Draw() {
 	if (IsGuideOpen) {
 		// Draw back BG
 		DrawTextureMesh(GuideMesh, GuideBGBackTexture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
-		DrawTextureMesh(GuideMesh, GuideCategory3Texture, 0.0f, 0.0f, 1200.0f, 756.0f, Cat3Alpha);
-		DrawTextureMesh(GuideMesh, GuideCategory2Texture, 0.0f, 0.0f, 1200.0f, 756.0f, Cat2Alpha);
-		DrawTextureMesh(GuideMesh, GuideCategory1Texture, 0.0f, 0.0f, 1200.0f, 756.0f, Cat1Alpha);
+		DrawTextureMesh(GuideMesh, GuideCategory3Texture, CategoryX, -150.0f, CategoryW, 157.0f, Cat3Alpha);
+		DrawTextureMesh(GuideMesh, GuideCategory2Texture, CategoryX, 0.0f, CategoryW, 157.0f, Cat2Alpha);
+		DrawTextureMesh(GuideMesh, GuideCategory1Texture, CategoryX, 153.0f, CategoryW, 153.0f, Cat1Alpha);
 
 
 
@@ -298,7 +289,7 @@ void Guide_Draw() {
 		AEGfxPrint(GuideFontID, "PLAY", textPosition(465.0f, -10.0f).first, textPosition(465.0f, -10.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
 		AEGfxPrint(GuideFontID, "BOSS FIGHT", textPosition(465.0f, -150.0f).first, textPosition(465.0f, -150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat3Alpha);
 
-		DrawTextureMesh(GuideMesh, GuideBGTopTexture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+		DrawTextureMesh(GuideMesh, GuideBGTopTexture, -68.0f, 0.0f, 1061.0f, 756.0f, 1.0f);
 		if (Cat1Selected) {
 			DrawTextureMesh(GuideMesh, GuideImage1Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		}
