@@ -222,18 +222,20 @@ namespace Assets
     }
     namespace Guide
     {
-        constexpr const char* guideIcon = "Assets/Guide/GuideIcon.png";
-        constexpr const char* guideBGBack = "Assets/Guide/GUIDE_BACK.png";
-        constexpr const char* guideBGTop = "Assets/Guide/GUIDE_TOP.png";
+        constexpr const char* GuideIcon = "Assets/Guide/GuideIcon.png";
+        constexpr const char* GuideBGTop = "Assets/Guide/GUIDE_TOP.png";
+        constexpr const char* GuideBGBack = "Assets/Guide/GUIDE_BACK.png";
+        constexpr const char* GuideArrowLeft = "Assets/Guide/ARROW_LEFT.png";
+        constexpr const char* GuideArrowRight = "Assets/Guide/ARROW_RIGHT.png";
 
-        constexpr const char* category1Text = "Assets/Guide/GUIDE_CAT1.png";
-        constexpr const char* category2Text = "Assets/Guide/GUIDE_CAT2.png";
-        constexpr const char* category3Text = "Assets/Guide/GUIDE_CAT3.png";
-        constexpr const char* image1 = "Assets/Guide/Movements.png";
-        constexpr const char* image2 = "Assets/Guide/Instructions1.png";
-        constexpr const char* image3 = "Assets/Guide/Instructions2.png";
-        constexpr const char* image4 = "Assets/Guide/BossFight.png";
-        constexpr const char* image5 = "Assets/Guide/controlText.png";
+        constexpr const char* Category1Text = "Assets/Guide/GUIDE_CAT1.png";
+        constexpr const char* Category2Text = "Assets/Guide/GUIDE_CAT2.png";
+        constexpr const char* Category3Text = "Assets/Guide/GUIDE_CAT3.png";
+
+        constexpr const char* Image1 = "Assets/Guide/Movements.png";
+        constexpr const char* Image2 = "Assets/Guide/Instructions1.png";
+        constexpr const char* Image3 = "Assets/Guide/Instructions2.png";
+        constexpr const char* Image4 = "Assets/Guide/BossFight.png";
     }
     namespace Lift
     {

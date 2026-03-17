@@ -21,7 +21,7 @@ void FreeMeshSafe(AEGfxVertexList*& mesh);
 
 void DrawBlackOverlay(AEGfxVertexList* mesh, float alpha);
 void UpdateButtonScale(float& scale, bool hovering, float hoverTarget, float animSpeed, float dt);
-void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt);
+void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt, f32 minAlpha, f32 maxAlpha);
 
 bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 	float r2x, float r2y, float r2w, float r2h);

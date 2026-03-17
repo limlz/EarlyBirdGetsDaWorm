@@ -5,8 +5,11 @@ static AEGfxVertexList* GuideMesh;
 
 // Textures
 static AEGfxTexture* GuideIconTexture;
-static AEGfxTexture* GuideBGBackTexture;
 static AEGfxTexture* GuideBGTopTexture;
+static AEGfxTexture* GuideBGBackTexture;
+static AEGfxTexture* GuideArrowLeftTexture;
+static AEGfxTexture* GuideArrowRightTexture;
+
 static AEGfxTexture* GuideCategory1Texture;
 static AEGfxTexture* GuideCategory2Texture;
 static AEGfxTexture* GuideCategory3Texture;
@@ -15,7 +18,6 @@ static AEGfxTexture* GuideImage1Texture;
 static AEGfxTexture* GuideImage2Texture;
 static AEGfxTexture* GuideImage3Texture;
 static AEGfxTexture* GuideImage4Texture;
-static AEGfxTexture* GuideImage5Texture;
 
 // Variables
 static s8 GuideFontID = -1;
@@ -27,6 +29,13 @@ static f32 Cat2ScrollY;
 static f32 Cat2ScrollSpeed;
 static bool Cat2Page1;
 static bool Cat2Page2;
+
+// Arrow Dimensions
+static f32 ArrowW;
+static f32 ArrowH;
+static f32 ArrowX;
+static f32 ArrowY;
+static f32 ArrowAlpha;
 
 // Category Dimensions
 static f32 CategoryW;
@@ -45,25 +54,27 @@ static bool Cat3Selected;
 void Guide_Load() {
 	GuideFontID = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
 
-	GuideIconTexture = LoadTextureChecked(Assets::Guide::guideIcon);
-	GuideBGBackTexture = LoadTextureChecked(Assets::Guide::guideBGBack);
-	GuideBGTopTexture = LoadTextureChecked(Assets::Guide::guideBGTop);
+	GuideIconTexture = LoadTextureChecked(Assets::Guide::GuideIcon);
+	GuideBGTopTexture = LoadTextureChecked(Assets::Guide::GuideBGTop);
+	GuideBGBackTexture = LoadTextureChecked(Assets::Guide::GuideBGBack);
+	GuideArrowLeftTexture = LoadTextureChecked(Assets::Guide::GuideArrowLeft);
+	GuideArrowRightTexture = LoadTextureChecked(Assets::Guide::GuideArrowRight);
 
-	GuideCategory1Texture = LoadTextureChecked(Assets::Guide::category1Text);
-	GuideCategory2Texture = LoadTextureChecked(Assets::Guide::category2Text);
-	GuideCategory3Texture = LoadTextureChecked(Assets::Guide::category3Text);
-	GuideImage1Texture = LoadTextureChecked(Assets::Guide::image1);
-	GuideImage2Texture = LoadTextureChecked(Assets::Guide::image2);
-	GuideImage3Texture = LoadTextureChecked(Assets::Guide::image3);
-	GuideImage4Texture = LoadTextureChecked(Assets::Guide::image4);
-	GuideImage5Texture = LoadTextureChecked(Assets::Guide::image5);
+	GuideCategory1Texture = LoadTextureChecked(Assets::Guide::Category1Text);
+	GuideCategory2Texture = LoadTextureChecked(Assets::Guide::Category2Text);
+	GuideCategory3Texture = LoadTextureChecked(Assets::Guide::Category3Text);
+
+	GuideImage1Texture = LoadTextureChecked(Assets::Guide::Image1);
+	GuideImage2Texture = LoadTextureChecked(Assets::Guide::Image2);
+	GuideImage3Texture = LoadTextureChecked(Assets::Guide::Image3);
+	GuideImage4Texture = LoadTextureChecked(Assets::Guide::Image4);
 }
 
 void Guide_Initialize() {
 	// Shared mesh for all guide quads
 	GuideMesh = CreateSquareMesh(0xFFFFFFFF);
 
-	// Variabls
+	// Variables
 	IsGuideOpen = false;
 	Cat2ScrollY = 0.0f;
 	Cat2ScrollSpeed = 500.0f;
@@ -74,6 +85,13 @@ void Guide_Initialize() {
 	GuidePopTimer = 0.0f;
 	FadeSpeed = 2.5f;
 	GuideAlpha = 0.0f;
+
+	// Category Dimensions
+	ArrowW = 62.0f;
+	ArrowH = 62.0f;
+	ArrowX = 420.0f;
+	ArrowY = -290.0f;
+	ArrowAlpha = 1.0f;
 
 	// Category Dimensions
 	CategoryW = 172.0f;
@@ -121,15 +139,19 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 		Cat2Hover{ IsAreaHovered(CategoryX, 0.0f, CategoryW, 157.0f) },
 		Cat3Hover{ IsAreaHovered(CategoryX, -150.0f, CategoryW, 157.0f) };
 
+	// Arrow Select
+	bool ArrowHover{ IsAreaHovered(ArrowX, ArrowY, ArrowW, ArrowH) };
+	HoverAnimation(ArrowAlpha, ArrowHover, CatSpeed, dt, 1.0f, 0.5f);
+
 	// Fade out when button hover 
 	if (!Cat1Selected) {
-		HoverAnimation(Cat1Alpha, Cat1Hover, CatSpeed, dt);
+		HoverAnimation(Cat1Alpha, Cat1Hover, CatSpeed, dt, 0.5f, 1.0f);
 	}
 	if (!Cat2Selected) {
-		HoverAnimation(Cat2Alpha, Cat2Hover, CatSpeed, dt);
+		HoverAnimation(Cat2Alpha, Cat2Hover, CatSpeed, dt, 0.5f, 1.0f);
 	}
 	if (!Cat3Selected) {
-		HoverAnimation(Cat3Alpha, Cat3Hover, CatSpeed, dt);
+		HoverAnimation(Cat3Alpha, Cat3Hover, CatSpeed, dt, 0.5f, 1.0f);
 	}
 
 	if (Cat1Hover && (!Cat2Selected || !Cat3Selected)) {
@@ -195,22 +217,29 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 
 	if (Cat1Selected) {
 		Cat1Alpha = 1.0f;
+		Cat2Page2 = false;
+		Cat2Page1 = true;
 	}
 	if (Cat2Selected) {
 		Cat2Alpha = 1.0f;
-		if (Cat2Page1 && AEInputCheckTriggered(AEVK_RIGHT)) {
+
+		if (Cat2Page1 && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_RIGHT))) {
 			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 			Cat2Page1 = false;
 			Cat2Page2 = true;
+			ArrowAlpha = 1.0f;
 		}
-		else if (Cat2Page2 && AEInputCheckTriggered(AEVK_LEFT)) {
+		else if (Cat2Page2 && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_LEFT))) {
 			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
 			Cat2Page2 = false;
 			Cat2Page1 = true;
+			ArrowAlpha = 1.0f;
 		}
 	}
 	if (Cat3Selected) {
 		Cat3Alpha = 1.0f;
+		Cat2Page2 = false;
+		Cat2Page1 = true;
 	}
 }
 
@@ -296,15 +325,16 @@ void Guide_Draw() {
 		if (Cat2Selected) {
 			if (Cat2Page1) {
 				DrawTextureMesh(GuideMesh, GuideImage2Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+				DrawTextureMesh(GuideMesh, GuideArrowRightTexture, ArrowX, ArrowY, ArrowW, ArrowH, ArrowAlpha);
 			}
 			else if (Cat2Page2) {
 				DrawTextureMesh(GuideMesh, GuideImage3Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+				DrawTextureMesh(GuideMesh, GuideArrowLeftTexture, ArrowX, ArrowY, ArrowW, ArrowH, ArrowAlpha);
 			}
 		}
 		if (Cat3Selected) {
 			DrawTextureMesh(GuideMesh, GuideImage4Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		}
-
 	}
 
 }
@@ -313,16 +343,19 @@ void Guide_Free() {
 	FreeMeshSafe(GuideMesh);
 
 	UnloadTextureSafe(GuideIconTexture);
-	UnloadTextureSafe(GuideBGBackTexture);
 	UnloadTextureSafe(GuideBGTopTexture);
+	UnloadTextureSafe(GuideBGBackTexture);
+	UnloadTextureSafe(GuideArrowLeftTexture);
+	UnloadTextureSafe(GuideArrowRightTexture);
+
 	UnloadTextureSafe(GuideCategory1Texture);
 	UnloadTextureSafe(GuideCategory2Texture);
 	UnloadTextureSafe(GuideCategory3Texture);
+
 	UnloadTextureSafe(GuideImage1Texture);
 	UnloadTextureSafe(GuideImage2Texture);
 	UnloadTextureSafe(GuideImage3Texture);
 	UnloadTextureSafe(GuideImage4Texture);
-	UnloadTextureSafe(GuideImage5Texture);
 
 	AEGfxDestroyFont(GuideFontID);
 }
