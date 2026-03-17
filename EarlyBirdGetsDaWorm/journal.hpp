@@ -15,6 +15,12 @@ void Journal_ReportAnomaly(ANOMALYID id);
 
 bool Journal_HasObserved(ANOMALYID id);
 
+bool Journal_HasUnread(ANOMALYID id);
+
+bool Journal_HasNewContent();
+
+void Journal_MarkAsRead(ANOMALYID id);
+
 void Journal_Update();  // handles I toggle + selection
 
 void Journal_Draw(AEGfxVertexList* squareMesh);

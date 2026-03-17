@@ -8,18 +8,22 @@
 // STATE
 // ============================================================
 
+static f32 dt;
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
 static s8 symbolsFontId = -1;
-const float UI_SCALE = 0.7f;        // journal UI bigger or smaller
+const float UI_SCALE    = 0.7f;        // journal UI bigger or smaller
 
-static bool Open = false;
-static bool hasHovered = false;
-static bool HoverTab1 = false;
-static bool HoverTab2 = false;
+static bool Open                = false;
+static bool hasHovered          = false;
+static bool HoverTab1           = false;
+static bool HoverTab2           = false;
 
-static int  Selected = 0;
-static int  RightPage = 0;         // 0 = page 1, 1 = page 2
-static int  HoveredIndex = -1;
+static bool  JournalHasUnread = false;
+static float JournalAlertTimer = 0.0f;
+
+static int  Selected            = 0;
+static int  RightPage           = 0;    // 0 = page 1, 1 = page 2
+static int  HoveredIndex        = -1;
 
 constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
@@ -115,6 +119,7 @@ void Journal_Initialize()
     TabW = 250.0f;
     TabH = 150.0f;
 }
+
 // ============================================================
 // TEXTURES
 // ============================================================
@@ -240,12 +245,19 @@ static void DrawTab(
 
 void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
 {
-    // Position
-    f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-        winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+    f32 iconX = AEGfxGetWinMinX() + 1500.0f;
+    f32 iconY = AEGfxGetWinMinY() + 750.0f;
 
-    // Draws the journal icon in the corner
-    DrawTextureMesh(squareMesh, JournalIcon, AEGfxGetWinMinX() + 1500.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, 1.0f);
+    f32 iconW = JournalHasUnread ? 140.0f : 100.0f;
+    f32 iconH = JournalHasUnread ? 88.0f : 63.0f;
+
+    DrawTextureMesh(squareMesh, JournalIcon, iconX, iconY, iconW, iconH, 1.0f);
+
+    if (JournalHasUnread)
+    {   
+        AEGfxPrint(journalFontId, "!", iconX + 35.0f, iconY + 20.0f, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+        //DrawSquareMesh(squareMesh, iconX + 35.0f, iconY + 20.0f, 18.0f, 18.0f, COLOR_RED);
+    }
 }
 
 // ============================================================
@@ -499,8 +511,9 @@ static SymptomStruct JournalEntries[ILLNESS_COUNT][SYMPTOM_COUNT];
 // false                    :   Initialize all entries to false (not observed)
 // ---------------------------------------------------------------------------------
 // Usage:
-// Journal_HasObserved(ANOMALYID::Wall_Paranoia) -> gObserved[(int)id] = true;
-static std::vector<bool> gObserved ((int)ANOMALYID::None + 1, false);
+// Journal_HasObserved(ANOMALYID::Wall_Paranoia) -> Observed[(int)id] = true;
+static std::vector<bool> Observed ((int)ANOMALYID::None + 1, false);
+static std::vector<bool> Unread((int)ANOMALYID::None + 1, false);
 
 // Used in all anomly files to report that the player has observed a specific anomaly
 void Journal_ReportAnomaly(ANOMALYID id)
@@ -510,39 +523,92 @@ void Journal_ReportAnomaly(ANOMALYID id)
         return;
     }
 
-    int index = (int)id; // index for the gObserved vector, based on the anomaly ID enum value
+    int index = (int)id; // index for the Observed vector, based on the anomaly ID enum value
 
     // Ensure index is within bounds
-    if (index < 0 || index >= (int)gObserved.size())
+    if (index < 0 || index >= (int)Observed.size())
     {
         return;
     }
 
-	// Mark the anomaly as observed in the gObserved vector
-    gObserved[index] = true;
+    // Only trigger unread alert the first time it is discovered
+    if (!Observed[index])
+    {
+        Observed[index] = true;
+        Unread[index] = true;
+        JournalHasUnread = true;
+    }
 }
 
 // Check if an anomaly has been observed 
 bool Journal_HasObserved(ANOMALYID id)
 {
-	// If there isnt any anomaly, return false
+	// If there isn't any anomaly, return false
     if (id == ANOMALYID::None)
     {
         return false;
     }
 
-	int index = (int)id; // index for the gObserved vector, based on the anomaly ID enum value
+	int index = (int)id; // index for the Observed vector, based on the anomaly ID enum value
 
     // Ensure index is within bounds
-    if (index < 0 || index >= (int)gObserved.size())
+    if (index < 0 || index >= (int)Observed.size())
     {
         return false;
     }
 
-	// Return the observed status of the anomaly from the gObserved vector
-    return gObserved[index];
+	// Return the observed status of the anomaly from the Observed vector
+    return Observed[index];
 }
 
+bool Journal_HasUnread(ANOMALYID id)
+{
+    if (id == ANOMALYID::None)
+    {
+        return false;
+    }
+
+    int index = (int)id;
+
+    if (index < 0 || index >= (int)Unread.size())
+    {
+        return false;
+    }
+
+    return Unread[index];
+}
+
+bool Journal_HasNewContent()
+{
+    for (int i = 0; i < (int)Unread.size(); ++i)
+    {
+        if (Unread[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Journal_MarkAsRead(ANOMALYID id)
+{
+    if (id == ANOMALYID::None)
+    {
+        return;
+    }
+
+    int index = (int)id;
+
+    if (index < 0 || index >= (int)Unread.size())
+    {
+        return;
+    }
+
+    Unread[index] = false;
+    JournalHasUnread = Journal_HasNewContent();
+}
+
+// ============================================================
 void Journal_Load()
 {
     symbolsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
@@ -612,6 +678,11 @@ void Journal_Load()
 
 void Journal_Update()
 {
+    if (JournalHasUnread)
+        JournalAlertTimer += dt;
+    else
+        JournalAlertTimer = 0.0f;
+
     // ------------------------------------------------------------
     // Open / close
     // ------------------------------------------------------------
@@ -902,7 +973,14 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             {
                 hasHovered = true;
                 HoveredIndex = i;
+
+                if (observed)
+                {
+                    Journal_MarkAsRead(symptomID);
+                }
             }
+
+            bool hasUnread = Journal_HasUnread(symptomID);
 
             if (observed && symptomTex)
             {
@@ -910,6 +988,20 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                     DrawTextureMeshRotated(squareMesh, symptomTex, x, y, imgW, imgH, tiltAngle, 1.0f);
                 else
                     DrawTextureMesh(squareMesh, symptomTex, x, y, imgW, imgH, 1.0f);
+
+                if (hasUnread)
+                {
+                    DrawSquareMesh(squareMesh,
+                        x + imgW * 0.38f, y + imgH * 0.38f,
+                        22.0f, 22.0f,
+                        COLOR_RED);
+
+                    AEGfxPrint(journalFontId, "!",
+                        X(x + imgW * 0.34f), Y(y + imgH * 0.30f),
+                        0.8f,
+                        1.0f, 1.0f, 1.0f,
+                        1.0f);
+                }
             }
             else
             {
@@ -938,7 +1030,14 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             {
                 hasHovered = true;
                 HoveredIndex = i;
+
+                if (observed)
+                {
+                    Journal_MarkAsRead(symptomID);
+                }
             }
+
+            bool hasUnread = Journal_HasUnread(symptomID);
 
             if (observed && symptomTex)
             {
@@ -946,6 +1045,20 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                     DrawTextureMeshRotated(squareMesh, symptomTex, x, y, imgW, imgH, tiltAngle, 1.0f);
                 else
                     DrawTextureMesh(squareMesh, symptomTex, x, y, imgW, imgH, 1.0f);
+
+                if (hasUnread)
+                {
+                    DrawSquareMesh(squareMesh,
+                        x + imgW * 0.38f, y + imgH * 0.38f,
+                        22.0f, 22.0f,
+                        COLOR_RED);
+
+                    AEGfxPrint(journalFontId, "!",
+                        X(x + imgW * 0.34f), Y(y + imgH * 0.30f),
+                        0.8f,
+                        1.0f, 1.0f, 1.0f,
+                        1.0f);
+                }
             }
             else
             {
@@ -979,6 +1092,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         text,
         0, 0, 0,
         1.0f);
+    
 }
 
 void Journal_Unload()
@@ -1054,5 +1168,5 @@ bool Journal_IsOpen()
 
 void Journal_Clear()
 {
-    std::fill(gObserved.begin(), gObserved.end(), false);
+    std::fill(Observed.begin(), Observed.end(), false);
 }
