@@ -118,6 +118,7 @@ void Journal_Initialize()
 // ============================================================
 // TEXTURES
 // ============================================================
+static AEGfxTexture* JournalIcon = nullptr;
 static AEGfxTexture* JournalBack = nullptr;
 static AEGfxTexture* JournalFront = nullptr; 
 static AEGfxTexture* TabEntry1 = nullptr;
@@ -231,6 +232,20 @@ static void DrawTab(
         SubHeader * scale,
         0.55f, 0.05f, 0.05f,
         1.0f);
+}
+
+// ============================================================
+// JOURNAL ICON
+// ============================================================
+
+void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
+{
+    // Position
+    f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
+        winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+
+    // Draws the journal icon in the corner
+    DrawTextureMesh(squareMesh, JournalIcon, AEGfxGetWinMinX() + 1500.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, 1.0f);
 }
 
 // ============================================================
@@ -533,6 +548,7 @@ void Journal_Load()
     symbolsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     journalFontId = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
 
+    JournalIcon = LoadTextureChecked(Assets::Equipment::JournalIcon);
     JournalBack = LoadTextureChecked(Assets::Equipment::JournalBack);
     JournalFront = LoadTextureChecked(Assets::Equipment::JournalFront);
     TabEntry1 = LoadTextureChecked(Assets::Equipment::Tab);
@@ -913,7 +929,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             int row = (i - 2) / 2;
 
             float x = gridStartX + col * colGap;
-            float y = 100.0f - row * rowGap;
+            float y = 130.0f - row * rowGap;
 
             bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
             bool observed = Journal_HasObserved(symptomID);
@@ -959,7 +975,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     }
 
     AEGfxPrint(journalFontId, HoverText,
-        X(RightStartX), Y(-380.0f),
+        X(RightStartX), Y(-350.0f),
         text,
         0, 0, 0,
         1.0f);
@@ -968,6 +984,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 void Journal_Unload()
 {
     // unload textures
+    UnloadTextureSafe(JournalIcon);
     UnloadTextureSafe(JournalBack);
     UnloadTextureSafe(JournalFront);
     UnloadTextureSafe(TabEntry1);

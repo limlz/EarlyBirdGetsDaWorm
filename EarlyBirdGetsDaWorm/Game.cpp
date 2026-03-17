@@ -642,6 +642,7 @@ void Game_Draw()
     s8 targetFloor, targetDoor, destFloor, destDoor;
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
+    Journal_DrawSmallIcon(squareMesh);
     Guide_DrawSmallIcon();
     Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
     Timer_Draw(0.0f, 0.85f);

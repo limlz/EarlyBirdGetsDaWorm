@@ -277,7 +277,7 @@ void Guide_DrawSmallIcon() {
 		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
 
 	// Draws the guide icon in the corner
-	DrawTextureMesh(GuideMesh, GuideIconTexture, AEGfxGetWinMinX() + 1300.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, 1.0f);
+	DrawTextureMesh(GuideMesh, GuideIconTexture, AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, 1.0f);
 
 }
 

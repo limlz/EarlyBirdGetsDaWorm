@@ -9,6 +9,8 @@ void Journal_Load();
 
 void Journal_Initialize();
 
+void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh);
+
 void Journal_ReportAnomaly(ANOMALYID id);
 
 bool Journal_HasObserved(ANOMALYID id);
