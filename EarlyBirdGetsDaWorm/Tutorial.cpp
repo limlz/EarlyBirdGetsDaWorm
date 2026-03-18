@@ -54,18 +54,15 @@ tutLiftFloorSelectedBox, tutPatientCollectedBox, tutPatientDeliveredBox;
 static bool tutSpacePress{ false };
 
 // Mesh
-static AEGfxVertexList* tutPromptMesh;
-static AEGfxVertexList* yesTextMesh;
-static AEGfxVertexList* yesButtonMesh;
-static AEGfxVertexList* noButtonMesh;
-static AEGfxVertexList* noTextMesh;
-static AEGfxVertexList* tutBGMesh;
+static AEGfxVertexList* TutorialMesh;
 
 // Textures
 static AEGfxTexture* yesButtonTexture;
 static AEGfxTexture* yesTextTexture;
 static AEGfxTexture* noButtonTexture;
 static AEGfxTexture* noTextTexture;
+static AEGfxTexture* tutBGTexture;
+static AEGfxTexture* TutSpeakerTexture;
 
 // Text
 static s8 promptFontID;
@@ -99,17 +96,13 @@ void Tutorial_Load() {
 	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
 	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
 	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
-	//tutBGTexture = LoadTextureChecked(Assets::Tutorial::tutBG);
+	tutBGTexture = LoadTextureChecked(Assets::Tutorial::TutBG);
+	TutSpeakerTexture = LoadTextureChecked(Assets::Tutorial::TutSpeaker);
 }
 
 void Tutorial_Initialize() {
 	// Mesh
-	tutPromptMesh = CreateSquareMesh(0xFFFFFFFF);
-	yesTextMesh = CreateSquareMesh(0xFFFFFFFF);
-	yesButtonMesh = CreateSquareMesh(0xFFFFFFFF);
-	noButtonMesh = CreateSquareMesh(0xFFFFFFFF);
-	noTextMesh = CreateSquareMesh(0xFFFFFFFF);
-	tutBGMesh = CreateSquareMesh(0xFFFFFFFF);
+	TutorialMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Button
 	yesButtonScale = 1.0f;
@@ -342,6 +335,7 @@ void Tutorial_Update(f32 dt) {
 				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
 				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
 					tutFinished = true;
+					Timer_SetPaused(false); // UNPAUSE TIMER
 				}
 				break;
 			}
@@ -412,15 +406,16 @@ void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) 
 \return
 	None.
 *******************************************************************************/
-void DrawDialogueBoxBackground(DialogueBox& dialogue) {
-	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-
-	// Apply red fade like the guide
-	// Moves the color bits left to make space for the transparency value.   | gets the fade amount by multiplying it to 200.0f
-	u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
-	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, colorBG);
-}
+//void DrawDialogueBoxBackground(DialogueBox& dialogue) {
+//	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
+//		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+//
+//	// Apply red fade like the guide
+//	// Moves the color bits left to make space for the transparency value.   | gets the fade amount by multiplying it to 200.0f
+//	/*u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
+//	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, 1.0f);*/
+//	DrawTextureMesh(tutBGMesh, tutBGTexture, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, dialogue.dialogueFadeAlpha);
+//}
 
 void Tutorial_Draw() {
 	// Position
@@ -430,7 +425,7 @@ void Tutorial_Draw() {
 	if (tutPopUpShown) {
 		// Draws prompt background
 		u32 black = (0x000000 << 8) | static_cast<u32>(promptAlpha * 187.0f);
-		DrawSquareMesh(tutPromptMesh, 0.0f, 0.0f, winW, winH, black);
+		DrawSquareMesh(TutorialMesh, 0.0f, 0.0f, winW, winH, black);
 
 		// Draws prompt text
 		f32 promptX{ textPosition(-220.0f, 0.0f).first },
@@ -438,8 +433,8 @@ void Tutorial_Draw() {
 		AEGfxPrint(promptFontID, "Do you need a tutorial?", promptX, promptY, 1.0f, 1.0f, 1.0f, 1.0f, promptAlpha);
 
 		// Draws the buttons
-		DrawTextureMesh(yesButtonMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
-		DrawTextureMesh(noButtonMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
+		DrawTextureMesh(TutorialMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
+		DrawTextureMesh(TutorialMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
 	}
 
 	if (doTutorial && !tutFinished) {
@@ -453,7 +448,10 @@ void Tutorial_Draw() {
 		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, textSpaceAlpha);
 
 		if (tutStarted) {
-			DrawDialogueBoxBackground(tutStartedBox);
+			//DrawDialogueBoxBackground(tutStartedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutStartedBox.tutBGX + 225.0f, tutStartedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutStartedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutStartedBox.tutFullText,
 				(size_t)tutStartedBox.tutVisibleCharCount
@@ -461,7 +459,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -240.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerOpened) {
-			DrawDialogueBoxBackground(tutPagerOpenedBox);
+			//DrawDialogueBoxBackground(tutPagerOpenedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPagerOpenedBox.tutBGX + 225.0f, tutPagerOpenedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPagerOpenedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutPagerOpenedBox.tutFullText,
 				(size_t)tutPagerOpenedBox.tutVisibleCharCount
@@ -469,7 +470,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -280.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutPagerClosed) {
-			DrawDialogueBoxBackground(tutPagerClosedBox);
+			//DrawDialogueBoxBackground(tutPagerClosedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPagerClosedBox.tutBGX + 225.0f, tutPagerClosedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPagerClosedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutPagerClosedBox.tutFullText,
 				(size_t)tutPagerClosedBox.tutVisibleCharCount
@@ -477,7 +481,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY, tutPagerClosedBox.dialogueFadeAlpha);
 		}
 		if (tutLiftOpened) {
-			DrawDialogueBoxBackground(tutLiftOpenedBox);
+			//DrawDialogueBoxBackground(tutLiftOpenedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutLiftOpenedBox.tutBGX + 225.0f, tutLiftOpenedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutLiftOpenedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutLiftOpenedBox.tutFullText,
 				(size_t)tutLiftOpenedBox.tutVisibleCharCount
@@ -485,7 +492,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.dialogueFadeAlpha);
 		}
 		if (tutLiftFloorSelected) {
-			DrawDialogueBoxBackground(tutLiftFloorSelectedBox);
+			//DrawDialogueBoxBackground(tutLiftFloorSelectedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutLiftFloorSelectedBox.tutBGX + 225.0f, tutLiftFloorSelectedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutLiftFloorSelectedBox.tutFullText,
 				(size_t)tutLiftFloorSelectedBox.tutVisibleCharCount
@@ -493,7 +503,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.dialogueFadeAlpha);
 		}
 		if (tutPatientCollected) {
-			DrawDialogueBoxBackground(tutPatientCollectedBox);
+			//DrawDialogueBoxBackground(tutPatientCollectedBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPatientCollectedBox.tutBGX + 225.0f, tutPatientCollectedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPatientCollectedBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutPatientCollectedBox.tutFullText,
 				(size_t)tutPatientCollectedBox.tutVisibleCharCount
@@ -501,7 +514,10 @@ void Tutorial_Draw() {
 			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.dialogueFadeAlpha);
 		}
 		if (tutPatientDelivered) {
-			DrawDialogueBoxBackground(tutPatientDeliveredBox);
+			//DrawDialogueBoxBackground(tutPatientDeliveredBox);
+			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPatientDeliveredBox.tutBGX + 225.0f, tutPatientDeliveredBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPatientDeliveredBox.dialogueFadeAlpha);
+
 			std::string visibleText(
 				tutPatientDeliveredBox.tutFullText,
 				(size_t)tutPatientDeliveredBox.tutVisibleCharCount
@@ -512,14 +528,12 @@ void Tutorial_Draw() {
 }
 
 void Tutorial_Free() {
-	FreeMeshSafe(tutPromptMesh);
-	FreeMeshSafe(yesButtonMesh);
-	FreeMeshSafe(noButtonMesh);
-	FreeMeshSafe(tutBGMesh);
+	FreeMeshSafe(TutorialMesh);
 
 	UnloadTextureSafe(yesButtonTexture);
 	UnloadTextureSafe(noButtonTexture);
-	//UnloadTextureSafe(tutBGTexture);
+	UnloadTextureSafe(tutBGTexture);
+	UnloadTextureSafe(TutSpeakerTexture);
 
 	// Destroy font if valid
 	if (promptFontID >= 0) {
