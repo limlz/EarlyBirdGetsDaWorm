@@ -8,7 +8,6 @@
 // STATE
 // ============================================================
 
-static f32 dt;
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
 static s8 symbolsFontId = -1;
 const float UI_SCALE    = 0.7f;        // journal UI bigger or smaller
@@ -31,6 +30,7 @@ constexpr int SYMPTOM_COUNT = 6;
 // ============================================================
 // DECLARATIONS
 // ============================================================
+
 // Dimensions -------------------------------------------------
 static f32 HeaderY;
 static f32 SubHeaderY;
@@ -124,6 +124,7 @@ void Journal_Initialize()
 // TEXTURES
 // ============================================================
 static AEGfxTexture* JournalIcon = nullptr;
+static AEGfxTexture* AlertIcon = nullptr;
 static AEGfxTexture* JournalBack = nullptr;
 static AEGfxTexture* JournalFront = nullptr; 
 static AEGfxTexture* TabEntry1 = nullptr;
@@ -237,27 +238,6 @@ static void DrawTab(
         SubHeader * scale,
         0.55f, 0.05f, 0.05f,
         1.0f);
-}
-
-// ============================================================
-// JOURNAL ICON
-// ============================================================
-
-void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
-{
-    f32 iconX = AEGfxGetWinMinX() + 1500.0f;
-    f32 iconY = AEGfxGetWinMinY() + 750.0f;
-
-    f32 iconW = JournalHasUnread ? 140.0f : 100.0f;
-    f32 iconH = JournalHasUnread ? 88.0f : 63.0f;
-
-    DrawTextureMesh(squareMesh, JournalIcon, iconX, iconY, iconW, iconH, 1.0f);
-
-    if (JournalHasUnread)
-    {   
-        AEGfxPrint(journalFontId, "!", iconX + 35.0f, iconY + 20.0f, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
-        //DrawSquareMesh(squareMesh, iconX + 35.0f, iconY + 20.0f, 18.0f, 18.0f, COLOR_RED);
-    }
 }
 
 // ============================================================
@@ -561,7 +541,7 @@ bool Journal_HasObserved(ANOMALYID id)
     return Observed[index];
 }
 
-bool Journal_HasUnread(ANOMALYID id)
+bool Journal_EvidenceHasUnread(ANOMALYID id)
 {
     if (id == ANOMALYID::None)
     {
@@ -576,6 +556,41 @@ bool Journal_HasUnread(ANOMALYID id)
     }
 
     return Unread[index];
+}
+
+bool Journal_IllnessHasUnread(ILLNESSES illness)
+{
+    for (int i = 0; i < SYMPTOM_COUNT; ++i)
+    {
+        SymptomStruct entry = GetJournalSymptomEntry(illness, i);
+
+        if (entry.anomalyId != ANOMALYID::None &&
+            Journal_EvidenceHasUnread(entry.anomalyId))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Journal_PageHasUnread(ILLNESSES illness, int page)
+{
+    int start = (page == 0) ? 0 : 2;
+    int end = (page == 0) ? 2 : 6;
+
+    for (int i = start; i < end; ++i)
+    {
+        SymptomStruct entry = GetJournalSymptomEntry(illness, i);
+
+        if (entry.anomalyId != ANOMALYID::None &&
+            Journal_EvidenceHasUnread(entry.anomalyId))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Journal_HasNewContent()
@@ -614,6 +629,7 @@ void Journal_Load()
     symbolsFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     journalFontId = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
 
+    AlertIcon = LoadTextureChecked(Assets::Equipment::AlertIcon);
     JournalIcon = LoadTextureChecked(Assets::Equipment::JournalIcon);
     JournalBack = LoadTextureChecked(Assets::Equipment::JournalBack);
     JournalFront = LoadTextureChecked(Assets::Equipment::JournalFront);
@@ -678,8 +694,10 @@ void Journal_Load()
 
 void Journal_Update()
 {
+    f32 journalDt{ (f32)AEFrameRateControllerGetFrameTime() };
+
     if (JournalHasUnread)
-        JournalAlertTimer += dt;
+        JournalAlertTimer += journalDt;
     else
         JournalAlertTimer = 0.0f;
 
@@ -805,6 +823,33 @@ void Journal_Update()
 }
 
 // ============================================================
+// JOURNAL ICON
+// ============================================================
+
+void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
+{
+    f32 iconX = AEGfxGetWinMinX() + 1500.0f;
+    f32 iconY = AEGfxGetWinMinY() + 750.0f;
+
+    DrawTextureMesh(squareMesh, JournalIcon, iconX, iconY, 100.0f, 63.0f, 1.0f);
+
+    // Bouncing Alert Icon
+    if (JournalHasUnread && AlertIcon)
+    {
+        // amplitude                   //frequency
+        f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
+
+        DrawTextureMesh(squareMesh,
+            AlertIcon,
+            iconX + 25.0f,
+            iconY + 25.0f + bounceY,
+            25.0f,
+            25.0f,
+            1.0f);
+    }
+}
+
+// ============================================================
 // BOOK DRAW (two pages)
 // ============================================================
 void Journal_Draw(AEGfxVertexList* squareMesh)
@@ -830,6 +875,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     ClampSelected();
     ILLNESSES chosen = IllnessList[Selected];
     TextStruct& TextData = GetFromText[Selected];
+    bool Tab1HasUnread = Journal_PageHasUnread(chosen, 0);
+    bool Tab2HasUnread = Journal_PageHasUnread(chosen, 1);
 
     // ------------------------------------------------------------
     // Hover reset for symptom images
@@ -861,6 +908,35 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         TabX, Tab2Y,
         HoverTab2,
         RightPage == 1);
+
+    // Bouncing Alert Icon
+    if (Tab1HasUnread && AlertIcon)
+    {
+        // amplitude                   //frequency
+        f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
+
+        DrawTextureMesh(squareMesh,
+            AlertIcon,
+            TabX,
+            Tab1Y + bounceY,
+            25.0f,
+            25.0f,
+            1.0f);
+    }
+    // Bouncing Alert Icon
+    if (Tab2HasUnread && AlertIcon)
+    {
+        // amplitude                   //frequency
+        f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
+
+        DrawTextureMesh(squareMesh,
+            AlertIcon,
+            TabX,
+            Tab2Y + bounceY,
+            25.0f,
+            25.0f,
+            1.0f);
+    }
 
     // Front page
     DrawTextureMesh(squareMesh,
@@ -898,6 +974,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             IllnessHitH * UI_SCALE);
 
         bool selected = (i == Selected);
+        bool illnessHasUnread = Journal_IllnessHasUnread(IllnessList[i]);
 
         float scale = 1.0f;
         if (selected) scale += 0.15f;
@@ -917,6 +994,24 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 X(LeftStartX), Y(illnessY),
                 listSelected * scale,
                 0.2f, 0.2f, 0.2f,
+                1.0f);
+        }
+
+        //// Bouncing Alert Icon
+        if (illnessHasUnread && AlertIcon)
+        {
+            // amplitude                   //frequency   f
+            f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
+
+            float textWorldX = LeftStartX * UI_SCALE;
+            float textWorldY = illnessY * UI_SCALE;
+
+            DrawTextureMesh(squareMesh,
+                AlertIcon,
+                (textWorldX - 20.0f),
+                (textWorldY + 15.0f) + bounceY,
+                25.0f,
+                25.0f,
                 1.0f);
         }
     }
@@ -980,7 +1075,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 }
             }
 
-            bool hasUnread = Journal_HasUnread(symptomID);
+            bool hasUnread = Journal_EvidenceHasUnread(symptomID);
 
             if (observed && symptomTex)
             {
@@ -991,15 +1086,15 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
                 if (hasUnread)
                 {
-                    DrawSquareMesh(squareMesh,
-                        x + imgW * 0.38f, y + imgH * 0.38f,
-                        22.0f, 22.0f,
-                        COLOR_RED);
+                              // amplitude                   //frequency
+                    f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
-                    AEGfxPrint(journalFontId, "!",
-                        X(x + imgW * 0.34f), Y(y + imgH * 0.30f),
-                        0.8f,
-                        1.0f, 1.0f, 1.0f,
+                    DrawTextureMesh(squareMesh,
+                        AlertIcon,
+                        (x + imgW - 120.0f),
+                        (y + imgH - 120.0f) + bounceY,
+                        25.0f,
+                        25.0f,
                         1.0f);
                 }
             }
@@ -1037,7 +1132,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 }
             }
 
-            bool hasUnread = Journal_HasUnread(symptomID);
+            bool hasUnread = Journal_EvidenceHasUnread(symptomID);
 
             if (observed && symptomTex)
             {
@@ -1048,15 +1143,15 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
                 if (hasUnread)
                 {
-                    DrawSquareMesh(squareMesh,
-                        x + imgW * 0.38f, y + imgH * 0.38f,
-                        22.0f, 22.0f,
-                        COLOR_RED);
+                    // amplitude                   //frequency
+                    f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
-                    AEGfxPrint(journalFontId, "!",
-                        X(x + imgW * 0.34f), Y(y + imgH * 0.30f),
-                        0.8f,
-                        1.0f, 1.0f, 1.0f,
+                    DrawTextureMesh(squareMesh,
+                        AlertIcon,
+                        (x + imgW - 120.0f),
+                        (y + imgH - 120.0f) + bounceY,
+                        25.0f,
+                        25.0f,
                         1.0f);
                 }
             }
@@ -1098,6 +1193,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 void Journal_Unload()
 {
     // unload textures
+    UnloadTextureSafe(AlertIcon);
     UnloadTextureSafe(JournalIcon);
     UnloadTextureSafe(JournalBack);
     UnloadTextureSafe(JournalFront);
@@ -1169,4 +1265,7 @@ bool Journal_IsOpen()
 void Journal_Clear()
 {
     std::fill(Observed.begin(), Observed.end(), false);
+    std::fill(Unread.begin(), Unread.end(), false);
+    JournalHasUnread = false;
+    JournalAlertTimer = 0.0f;
 }

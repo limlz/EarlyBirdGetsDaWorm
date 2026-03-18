@@ -15,7 +15,11 @@ void Journal_ReportAnomaly(ANOMALYID id);
 
 bool Journal_HasObserved(ANOMALYID id);
 
-bool Journal_HasUnread(ANOMALYID id);
+bool Journal_EvidenceHasUnread(ANOMALYID id);
+
+bool Journal_IllnessHasUnread(ILLNESSES illness);
+
+bool Journal_PageHasUnread(ILLNESSES illness, int page);
 
 bool Journal_HasNewContent();
 
