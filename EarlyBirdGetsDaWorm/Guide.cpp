@@ -20,7 +20,8 @@ static AEGfxTexture* GuideImage3Texture;
 static AEGfxTexture* GuideImage4Texture;
 
 // Variables
-static s8 GuideFontID = -1;
+static s8 GuideFontID;
+static s8 IconFontID;
 static bool IsGuideOpen;
 static f32 FadeSpeed;
 static f32 GuidePopTimer;
@@ -29,6 +30,10 @@ static f32 Cat2ScrollY;
 static f32 Cat2ScrollSpeed;
 static bool Cat2Page1;
 static bool Cat2Page2;
+
+// Small Icon
+static f32 IconAlpha;
+static bool IconHover;
 
 // Arrow Dimensions
 static f32 ArrowW;
@@ -53,6 +58,7 @@ static bool Cat3Selected;
 
 void Guide_Load() {
 	GuideFontID = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
+	IconFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
 	GuideIconTexture = LoadTextureChecked(Assets::Guide::GuideIcon);
 	GuideBGTopTexture = LoadTextureChecked(Assets::Guide::GuideBGTop);
@@ -80,6 +86,8 @@ void Guide_Initialize() {
 	Cat2ScrollSpeed = 500.0f;
 	Cat2Page1 = true;
 	Cat2Page2 = false;
+	IconAlpha = 1.0f;
+	IconHover = false;
 
 	// Fade In Animation
 	GuidePopTimer = 0.0f;
@@ -129,7 +137,11 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 		Cat3Selected = false;
 	}
 
-	if (AEInputCheckTriggered(AEVK_G) && !liftActive && !pagerActive)
+	// Small Icon Hover and Select
+	IconHover = IsAreaHovered(AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f);
+	HoverAnimation(IconAlpha, IconHover, CatSpeed, dt, 1.0f, 0.5f);
+
+	if (((IconHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_G)) && !liftActive && !pagerActive)
 	{
 		IsGuideOpen = !IsGuideOpen;
 	}
@@ -141,7 +153,7 @@ void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
 
 	// Arrow Select
 	bool ArrowHover{ IsAreaHovered(ArrowX, ArrowY, ArrowW, ArrowH) };
-	HoverAnimation(ArrowAlpha, ArrowHover, CatSpeed, dt, 1.0f, 0.5f);
+	HoverAnimation(ArrowAlpha, ArrowHover, 5.0f, dt, 1.0f, 0.5f);
 
 	// Fade out when button hover 
 	if (!Cat1Selected) {
@@ -272,13 +284,12 @@ void Guide_BossFight() {
 bool IsGuideActive() { return IsGuideOpen; }
 
 void Guide_DrawSmallIcon() {
-	// Position
-	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-
 	// Draws the guide icon in the corner
-	DrawTextureMesh(GuideMesh, GuideIconTexture, AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, 1.0f);
+	DrawTextureMesh(GuideMesh, GuideIconTexture, AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, IconAlpha);
 
+	if (IconHover && !IsGuideOpen) {
+		AEGfxPrint(IconFontID, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	}
 }
 
 void Guide_Draw() {
@@ -345,4 +356,5 @@ void Guide_Free() {
 	UnloadTextureSafe(GuideImage4Texture);
 
 	AEGfxDestroyFont(GuideFontID);
+	AEGfxDestroyFont(IconFontID);
 }

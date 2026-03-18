@@ -144,9 +144,14 @@ bool IsAreaHovered(f32 areaX, f32 areaY, f32 areaW, f32 areaH) {
 
 // Animates the hover 
 void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt, f32 minAlpha, f32 maxAlpha) {
-	f32 targetAlpha{ hovered ? 1.0f : 0.5f };
+	f32 targetAlpha = hovered ? maxAlpha : minAlpha;
 
+	// Proper interpolation
 	alpha += (targetAlpha - alpha) * speed * dt;
 
-	alpha = AEClamp(alpha, minAlpha, maxAlpha);
+	// Clamp safely (handle swapped values too)
+	f32 minVal = min(minAlpha, maxAlpha);
+	f32 maxVal = max(minAlpha, maxAlpha);
+
+	alpha = AEClamp(alpha, minVal, maxVal);
 }
