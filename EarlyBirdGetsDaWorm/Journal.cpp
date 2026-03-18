@@ -912,27 +912,25 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     // Bouncing Alert Icon
     if (Tab1HasUnread && AlertIcon)
     {
-        // amplitude                   //frequency
         f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
         DrawTextureMesh(squareMesh,
             AlertIcon,
-            TabX,
-            Tab1Y + bounceY,
+            (TabX + 100.0f)             * UI_SCALE,
+            (Tab1Y + 60.0f + bounceY)  * UI_SCALE,
             25.0f,
             25.0f,
             1.0f);
     }
-    // Bouncing Alert Icon
+
     if (Tab2HasUnread && AlertIcon)
     {
-        // amplitude                   //frequency
         f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
         DrawTextureMesh(squareMesh,
             AlertIcon,
-            TabX,
-            Tab2Y + bounceY,
+            (TabX + 100.0f) * UI_SCALE,
+            (Tab2Y + 60.0f + bounceY) * UI_SCALE,
             25.0f,
             25.0f,
             1.0f);
@@ -1000,7 +998,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         //// Bouncing Alert Icon
         if (illnessHasUnread && AlertIcon)
         {
-            // amplitude                   //frequency   f
+            // amplitude                   //frequency   
             f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
             float textWorldX = LeftStartX * UI_SCALE;
