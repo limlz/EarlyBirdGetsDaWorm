@@ -32,6 +32,10 @@ static bool pagerVibrating{ false };
 static f32 vibrateTimer{ 0.0f };
 static f32 vibrateDuration{ 0.0f };
 
+// Small Icon
+static f32 IconAlpha;
+static bool IconHover;
+
 void Notifications_Load()
 {
 	iconTexture = LoadTextureChecked(Assets::Equipment::PagerIcon);
@@ -62,6 +66,8 @@ void Notifications_Initialize()
 	pagerVibrating = false;
 	vibrateDuration = 0.0f;
 	vibrateTimer = 0.0f;
+	IconAlpha = 1.0f;
+	IconHover = false;
 
 	currentPage = 0;
 	mouseX = static_cast<s32>(0.0f);
@@ -91,7 +97,11 @@ void Notifications_Trigger()
 void Notifications_Update(bool liftActive, f32 dt)
 {
 	// Toggles the pager when user press Q, pager will not be displayed if lift is active
-	if (AEInputCheckTriggered(AEVK_TAB) && !liftActive)
+	// Small Icon Hover and Select
+	IconHover = IsAreaHovered(pagerX, pagerY, pagerWidth, pagerHeight);
+	HoverAnimation(IconAlpha, IconHover, 20.0f, dt, 1.0f, 0.5f);
+
+	if (((IconHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_TAB)) && !liftActive)
 	{
 		isPagerOpen = !isPagerOpen;
 	}
@@ -169,7 +179,10 @@ bool IsPagerActive() { return isPagerOpen; }
 void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8 desFloorNum)
 {
 	// Draws the icon pager in the corner
-	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, 1.0f);
+	DrawTextureMesh(iconMesh, iconTexture, pagerX, pagerY, pagerWidth, pagerHeight, IconAlpha);
+	if (IconHover && !isPagerOpen) {
+		AEGfxPrint(lineID, "Pager", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	if (isPagerOpen)
 	{
