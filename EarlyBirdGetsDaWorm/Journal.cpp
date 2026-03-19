@@ -31,6 +31,7 @@ constexpr int SYMPTOM_COUNT = 6;
 // DECLARATIONS
 // ============================================================
 
+static f32 Alpha;
 // Dimensions -------------------------------------------------
 static f32 HeaderY;
 static f32 SubHeaderY;
@@ -76,6 +77,8 @@ static f32 TabH;
 
 void Journal_Initialize()
 {
+	Alpha = 0.0f;
+
     // Layout
     HeaderY = 380.0f;
     SubHeaderY = 170.0f;
@@ -859,6 +862,10 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
+
+    // Black BG
+    u32 colorBG = (0x000000 << 8) | static_cast<u32>(Alpha * 187.0f);
+    DrawSquareMesh(squareMesh, 0.0f, 0.0f, SCREEN_W, SCREEN_H, colorBG);
 
     // ------------------------------------------------------------
     // Mouse position
