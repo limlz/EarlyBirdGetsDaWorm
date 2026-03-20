@@ -61,22 +61,22 @@ static void LiftAnomaly_ModifyButtonRect(int slotIndex, float& x, float& y, floa
         w *= AiwScaleMap[slotIndex];
         h *= AiwScaleMap[slotIndex];
     }
-    else if (illness == ILLNESSES::OCD) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
-
+    else if (illness == ILLNESSES::OCD) { 
 		// --- OCD ANOMALY (MISALIGNED BUTTON) ---
         if (slotIndex == OcdTarget) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
+
             x += 8.0f;
             y -= 8.0f;
         }
         // If this is the button the player is trying to click, but haven't clicked 3 times yet
         if (slotIndex == SelectedSlot && OcdClickCount < 3 && OcdClickCount > 0) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
+
             x += (rand() % 5) - 2; // Small OCD nervous shudder
         }
     }
-    else if (illness == ILLNESSES::PARANOIA) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
-        
+    else if (illness == ILLNESSES::PARANOIA) {        
         // --- PARANOIA ANOMALY (DODGING BUTTONS) ---
         const float MAX_DODGE_TIME = 5.0f; // How many seconds the buttons dodge for
 
@@ -99,6 +99,7 @@ static void LiftAnomaly_ModifyButtonRect(int slotIndex, float& x, float& y, floa
             // 4. Repel Math
             const float REPEL_RADIUS = 150.0f;
             if (distance < REPEL_RADIUS && distance > 0.1f) {
+                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
 
                 // Calculate how much time is left (1.0 at start, fading to 0.0 at end)
                 float timeMultiplier = 1.0f - (ParanoiaTimer / MAX_DODGE_TIME);
@@ -141,9 +142,9 @@ static bool LiftAnomaly_OnDestinationSelected(s8& pendingFloor) {
     ILLNESSES illness = Player_GetAnomalyIllness();
 
     // --- SCHIZOPHRENIA ANOMALY (ONE-TIME SCARE) ---
-    if (illness == ILLNESSES::SCHIZOPHRENIA && !SchizoLied) {
+    if (illness == ILLNESSES::SCHIZOPHRENIA && !SchizoLied) {  
         Journal_ReportAnomaly(ANOMALYID::Lift_Schizophrenia); // Report the anomaly to the journal
-        
+
         // Secretly change the destination to a completely random floor
         s8 fakeFloor;
         do {
@@ -155,11 +156,11 @@ static bool LiftAnomaly_OnDestinationSelected(s8& pendingFloor) {
     }
 
     // --- OCD ANOMALY (REPETITIVE CLICKING) ---
-    if (illness == ILLNESSES::OCD) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
-        
+    if (illness == ILLNESSES::OCD) {        
         OcdClickCount++;
         if (OcdClickCount < 3) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
+
             AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, 0.5f, 1.2f); // Higher pitched "denied" click
             return false; // DENY the click! Force the panel to stay open!
         }
@@ -182,10 +183,10 @@ static void LiftAnomaly_OnDraw(AEGfxVertexList* squareMesh) {
 
     // --- INSOMNIA ANOMALY (FAKE-OUT DOORS) ---
     if (illness == ILLNESSES::INSOMNIA && !InsomniaFakeOpen) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Insomnia); // Report the anomaly to the journal
-
         // If doors are starting to open (Phase 3, after delay)
         if (LiftPhase == 3 && PhaseTimer >= TRANSIT_TIMER && DoorProgress > 0.4f) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_Insomnia); // Report the anomaly to the journal
+
             DoorProgress = 0.0f;     // SLAM SHUT
             
             // Wind back the transit timer, this forces the elevator to wait 1.5 seconds in silence 
@@ -201,9 +202,9 @@ static void LiftAnomaly_OnDraw(AEGfxVertexList* squareMesh) {
 
     // --- SCOTOPHOBIA ANOMALY (PITCH BLACK TRANSIT) ---
     if (illness == ILLNESSES::SCOTOPHOBIA) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Scotophobia); // Report the anomaly to the journal
-
         if (LiftPhase == 3 && PhaseTimer < TRANSIT_TIMER) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_Scotophobia); // Report the anomaly to the journal
+
             DrawSquareMesh(squareMesh, 0.0f, 0.0f, SCREEN_W * 2.0f, SCREEN_H * 2.0f, COLOR_BLACK);
         }
     }
@@ -257,21 +258,15 @@ static void Lift_GenerateAnomalies() {
         ILLNESSES illness = Player_GetAnomalyIllness();
 
         if (illness == ILLNESSES::DEMENTIA) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_Dementia); // Report the anomaly to the journal
-
             // Shuffle the button mapping so the floors are all mixed up
             unsigned seed = (unsigned)time(NULL);
             std::shuffle(std::begin(ButtonMap), std::end(ButtonMap), std::default_random_engine(seed));
         }
         else if (illness == ILLNESSES::OCD) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
-
             // Pick one random button to be the OCD "target" that is slightly misaligned
             OcdTarget = rand() % NUM_OF_FLOOR;
         }
         else if (illness == ILLNESSES::AIW_SYNDROME) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_AIW); // Report the anomaly to the journal
-
             // Pick between 3 and 5 random buttons to warp
             int numToWarp = (rand() % 3) + 3;
             for (int i = 0; i < numToWarp; i++) {
@@ -395,11 +390,24 @@ void Lift_HandleInput(s8& floorNum) {
     // --- PHASE 2: PANEL APPEARS (AWAITING PLAYER INPUT) ---
     else if (LiftPhase == 2) {
 
-        if (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)
-            && Player_GetAnomalyIllness() == ILLNESSES::PARANOIA) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
+        //if (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)
+        //    && Player_GetAnomalyIllness() == ILLNESSES::PARANOIA) {
+        //    Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
 
-            ParanoiaTimer += dt;
+        //    ParanoiaTimer += dt;
+        //}
+
+        if (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) {
+            ILLNESSES illness = Player_GetAnomalyIllness();
+
+            if (illness == ILLNESSES::PARANOIA) {
+                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
+                ParanoiaTimer += dt; 
+            }
+
+            if (illness == ILLNESSES::DEMENTIA) {
+                Journal_ReportAnomaly(ANOMALYID::Lift_Dementia); // Report the anomaly to the journal
+            }
         }
 
         if (AEInputCheckTriggered(AEVK_LBUTTON)) {
