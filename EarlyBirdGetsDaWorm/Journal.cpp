@@ -120,8 +120,8 @@ void Journal_Initialize()
     listSelected = 0.80f;
 
     // Tabs
-    TabW = 300.0f;
-    TabH = 100.0f;
+    TabW = 350.0f;
+    TabH = 120.0f;
 }
 
 // ============================================================
@@ -942,8 +942,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
         DrawTextureMesh(squareMesh,
             AlertIcon,
-            (TabX + 100.0f)             * UI_SCALE,
-            (Tab1Y + 60.0f + bounceY)  * UI_SCALE,
+            (TabX + 150.0f)             * UI_SCALE,
+            (Tab1Y + 50.0f + bounceY)   * UI_SCALE,
             25.0f,
             25.0f,
             1.0f);
@@ -955,8 +955,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
         DrawTextureMesh(squareMesh,
             AlertIcon,
-            (TabX + 100.0f) * UI_SCALE,
-            (Tab2Y + 60.0f + bounceY) * UI_SCALE,
+            (TabX + 150.0f)             * UI_SCALE,
+            (Tab2Y + 50.0f + bounceY)   * UI_SCALE,
             25.0f,
             25.0f,
             1.0f);
