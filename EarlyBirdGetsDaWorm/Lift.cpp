@@ -249,8 +249,6 @@ static void Lift_GenerateAnomalies() {
 
     // Reset the Schizophrenia flag if the current patient DOESN'T have it
     if (Player_GetAnomalyIllness() != ILLNESSES::SCHIZOPHRENIA) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Schizophrenia); // Report the anomaly to the journal
-
         SchizoLied = false;
     }
 
