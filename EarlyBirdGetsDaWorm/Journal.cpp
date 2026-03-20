@@ -119,7 +119,7 @@ void Journal_Initialize()
     listSelected = 0.80f;
 
     // Tabs
-    TabW = 250.0f;
+    TabW = 300.0f;
     TabH = 150.0f;
 }
 
@@ -906,12 +906,12 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         1.0f);
 
     // Tabs
-    DrawTab(squareMesh, TabEntry1, journalFontId, "LOG I",
+    DrawTab(squareMesh, TabEntry1, journalFontId, "PAGE I",
         TabX, Tab1Y,
         HoverTab1,
         RightPage == 0);
 
-    DrawTab(squareMesh, TabEntry2, journalFontId, "LOG II",
+    DrawTab(squareMesh, TabEntry2, journalFontId, "PAGE II",
         TabX, Tab2Y,
         HoverTab2,
         RightPage == 1);
