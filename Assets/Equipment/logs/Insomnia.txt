@@ -4,8 +4,8 @@ DESC=A condition that prevents a person from
 DESC2=sleeping properly.
 
 SYMPTOM1=A single yellow eye watches me
-SYMPTOM2=LIGHTING TBC
+SYMPTOM2=Light stays on, Sudden flashes
 SYMPTOM3=Frame stretches when distant
 SYMPTOM4=Window door lights flicker on
-SYMPTOM5=The doors start to open then suddenly slam shut
-SYMPTOM6=A racing heartbeat builds until a piercing ring cuts through
+SYMPTOM5=Doors open, Then slam shut
+SYMPTOM6=Racing heartbeat, Piercing ring

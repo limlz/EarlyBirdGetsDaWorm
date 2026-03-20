@@ -3,8 +3,8 @@ TITLE=Scotophobia
 DESC=An intense fear of darkness
 
 SYMPTOM1=Dark scribbles
-SYMPTOM2=LIGHTING TBC
+SYMPTOM2=Long darkness, Narrow light
 SYMPTOM3=Moves when unseen
 SYMPTOM4=Window door lights flicker on
-SYMPTOM5=Everything suddenly goes pitch black in the lift
-SYMPTOM6=A whisper follows me in the dark and dies the moment light returns
+SYMPTOM5=Everything goes pitch black in the lift
+SYMPTOM6=Whisper in darkness, Stops in light

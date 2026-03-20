@@ -4,8 +4,8 @@ DESC=A disorder that distorts perception of
 DESC2=size and space.
 
 SYMPTOM1=The cat gets smaller and smaller
-SYMPTOM2=LIGHTING TBC
+SYMPTOM2=Expanding light, Distorted scale
 SYMPTOM3=Frame breathing unnaturally
-SYMPTOM4=DOOR TBC
+SYMPTOM4=Door window shifts position
 SYMPTOM5=Some buttons suddenly grow or shrink
-SYMPTOM6=Massive thuds and tiny scurrying steps distort my sense of size
+SYMPTOM6=Heavy thuds, Tiny footsteps

@@ -4,8 +4,8 @@ DESC=An intense feeling of fear and distrust
 DESC2=toward others.
 
 SYMPTOM1=The eyes follow wherever I move
-SYMPTOM2=LIGHTING TBC
+SYMPTOM2=Fast flicker, Screen pulses
 SYMPTOM3=Stops glitching when watched
 SYMPTOM4=Window door lights flicker on
-SYMPTOM5=The buttons pull away when I try to press them
+SYMPTOM5=Buttons evade touch
 SYMPTOM6=Footsteps, Whispers

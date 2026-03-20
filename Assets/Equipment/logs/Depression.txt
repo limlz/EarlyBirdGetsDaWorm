@@ -4,8 +4,8 @@ DESC=A persistent feeling of sadness and
 DESC2=hopelessness.
 
 SYMPTOM1=A dark cloud follows me wherever I go
-SYMPTOM2=LIGHTING TBC
+SYMPTOM2=Slow flicker, Heavy darkness
 SYMPTOM3=Frame sagging, slowly melting
-SYMPTOM4=DOOR TBC
+SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The buttons sink lower than usual
-SYMPTOM6=Heavy breathing, muffled sobs, and distant knocks weigh down the air
+SYMPTOM6=Heavy breathing, Muffled sobs, Distant knocks
