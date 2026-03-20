@@ -300,10 +300,7 @@ void Wall_Draw(f32 camX, s8 floorNum)
         break;
     case ANOMALYID::Wall_Depression:
         DrawTextureMesh(wallMesh, depressionTexture[currentImage], 50.0f, 0.0f, 500.0f, 465.0f, 1.0f);// sizing done
-        if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
-        {
-            Journal_ReportAnomaly(ANOMALYID::Wall_Depression); // Report the anomaly to the journal
-        }
+        Journal_ReportAnomaly(ANOMALYID::Wall_Depression); // Report the anomaly to the journal
         break;
     case ANOMALYID::Wall_Dementia:
         DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
