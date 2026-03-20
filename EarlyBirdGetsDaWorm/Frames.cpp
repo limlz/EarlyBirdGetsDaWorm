@@ -450,15 +450,15 @@ void Frames_Draw(int currentLevel, f32 camX) {
                 // Report the anomaly to the journal
                 switch (effIllness)
                 {
-                    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-                    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
-                    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-                    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-                    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-                    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-                    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-                    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
-                    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+                    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Shakes);      break;
+                    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Mania);       break;
+                    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Depression);  break;
+                    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Shakes);      break;
+                    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Shakes);      break;
+                    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_AIW);         break;
+                    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Insomnia);    break;
+                    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_OCD);         break;
+                    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Shakes);      break;
                     default: break;
                 }
             }

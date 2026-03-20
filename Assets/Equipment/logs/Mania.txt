@@ -5,7 +5,7 @@ DESC2=racing thoughts.
 
 SYMPTOM1=The clock begins spinning wildly
 SYMPTOM2=Rapid flicker, Shifting colours
-SYMPTOM3=Frame drifting, twitching violently
+SYMPTOM3=Frame drifting away
 SYMPTOM4=Hand slams against the window 
 SYMPTOM5=Every button trembles in place
 SYMPTOM6=Scratching, Frantic whispers

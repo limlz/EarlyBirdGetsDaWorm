@@ -5,7 +5,7 @@ DESC2=confusion.
 
 SYMPTOM1=A long crack slowly spreads across the wall
 SYMPTOM2=Erratic flicker, Repeating corridor
-SYMPTOM3=Frame locked, jittering endlessly
+SYMPTOM3=Frame shaking violently
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The buttons are all mixed up
 SYMPTOM6=Misplaced lift sounds, Stuttering squeaks

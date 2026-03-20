@@ -279,7 +279,7 @@ void Game_Update()
         return;
     }
 
-    Journal_Update();
+    Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), dt);
     if (Journal_IsOpen()) return;
 
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive())

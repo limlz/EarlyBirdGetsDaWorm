@@ -47,9 +47,12 @@ enum class ANOMALYID : int
     Light_Scotophobia,
 
     // ---- FRAMES ----
-    Frame_Glitch,
-    Frame_Shift,
-    Frame_Distort,
+	Frame_Shakes,   // paranoia, dementia, schizophrenia, scotophobia
+    Frame_Mania,
+    Frame_Depression,
+	Frame_AIW,
+	Frame_Insomnia,
+	Frame_OCD,
 
     // ---- LIFT ----
     Lift_Mania,

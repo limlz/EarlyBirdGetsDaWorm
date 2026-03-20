@@ -5,7 +5,7 @@ DESC2=size and space.
 
 SYMPTOM1=The cat gets smaller and smaller
 SYMPTOM2=Expanding light, Distorted scale
-SYMPTOM3=Frame breathing unnaturally
+SYMPTOM3=Frame loops in circles
 SYMPTOM4=Door window shifts position
 SYMPTOM5=Some buttons suddenly grow or shrink
 SYMPTOM6=Heavy thuds, Tiny footsteps

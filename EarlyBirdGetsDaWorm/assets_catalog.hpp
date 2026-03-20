@@ -25,9 +25,12 @@ namespace Assets
 		constexpr const char* DoorLight = "Assets/Equipment/evidence/DoorLight.png";
         constexpr const char* DoorPosition = "Assets/Equipment/evidence/DoorPosition.png";
 
-        constexpr const char* FrameGlitch = "Assets/Equipment/evidence/FrameGlitch.png";
-        constexpr const char* FrameShift = "Assets/Equipment/evidence/FrameShift.png";
-        constexpr const char* FrameDistort = "Assets/Equipment/evidence/FrameDistort.png";
+        constexpr const char* FrameShakes = "Assets/Equipment/evidence/FrameShakes.png";
+        constexpr const char* FrameMania = "Assets/Equipment/evidence/FrameMania.png";
+        constexpr const char* FrameDepression = "Assets/Equipment/evidence/FrameDepression.png";
+        constexpr const char* FrameAIW = "Assets/Equipment/evidence/FrameAIW.png";
+        constexpr const char* FrameInsomnia = "Assets/Equipment/evidence/FrameInsomnia.png";
+        constexpr const char* FrameOCD = "Assets/Equipment/evidence/FrameOCD.png";
 
         constexpr const char* LightParanoia = "Assets/Equipment/evidence/Light.png";
         constexpr const char* LightMania = "Assets/Equipment/evidence/LightMania.png";

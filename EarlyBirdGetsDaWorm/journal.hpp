@@ -25,7 +25,7 @@ bool Journal_HasNewContent();
 
 void Journal_MarkAsRead(ANOMALYID id);
 
-void Journal_Update();  // handles I toggle + selection
+void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt);
 
 void Journal_Draw(AEGfxVertexList* squareMesh);
 

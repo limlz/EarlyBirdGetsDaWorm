@@ -5,7 +5,7 @@ DESC2=sleeping properly.
 
 SYMPTOM1=A single yellow eye watches me
 SYMPTOM2=Light stays on, Sudden flashes
-SYMPTOM3=Frame stretches when distant
+SYMPTOM3=Frames flip over
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=Doors open, Then slam shut
 SYMPTOM6=Racing heartbeat, Piercing ring

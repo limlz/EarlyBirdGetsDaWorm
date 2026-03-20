@@ -27,11 +27,14 @@ static int  HoveredIndex        = -1;
 constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
 
+static f32 JournalIconAlpha         = 1.0f;
+static bool JournalIconHover        = false;
+static f32 JournalIconHoverSpeed    = 10.0f;
+
 // ============================================================
 // DECLARATIONS
 // ============================================================
 
-static f32 Alpha;
 // Dimensions -------------------------------------------------
 static f32 HeaderY;
 static f32 SubHeaderY;
@@ -77,16 +80,14 @@ static f32 TabH;
 
 void Journal_Initialize()
 {
-	Alpha = 0.0f;
-
     // Layout
     HeaderY = 380.0f;
     SubHeaderY = 170.0f;
 
     // Tab positions
     TabX = 870.0f;
-    Tab1Y = 320.0f;
-    Tab2Y = 150.0f;
+    Tab1Y = 310.0f;
+    Tab2Y = 180.0f;
 
     // Pages X positions
     LeftStartX = -700.0f;
@@ -120,7 +121,7 @@ void Journal_Initialize()
 
     // Tabs
     TabW = 300.0f;
-    TabH = 150.0f;
+    TabH = 100.0f;
 }
 
 // ============================================================
@@ -170,9 +171,12 @@ static AEGfxTexture* gLiftInsomnia = nullptr;
 static AEGfxTexture* gLiftOCD = nullptr;
 static AEGfxTexture* gLiftScotophobia = nullptr;
 
-static AEGfxTexture* gFrameGlitch = nullptr;
-static AEGfxTexture* gFrameShift = nullptr;
-static AEGfxTexture* gFrameDistort = nullptr;
+static AEGfxTexture* gFrameShakes = nullptr;
+static AEGfxTexture* gFrameMania = nullptr;
+static AEGfxTexture* gFrameDepression = nullptr;
+static AEGfxTexture* gFrameAIW = nullptr;
+static AEGfxTexture* gFrameInsomnia = nullptr;
+static AEGfxTexture* gFrameOCD = nullptr;
 
 // ============================================================
 // HELPERS
@@ -365,7 +369,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallParanoia,       ANOMALYID::Wall_Paranoia };
         case 1: return { gLightParanoia,      ANOMALYID::Light_Paranoia };
-        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameShakes,        ANOMALYID::Frame_Shakes };
         case 3: return { gDoorLight,          ANOMALYID::Door_LightChange };
         case 4: return { gLiftParanoia,       ANOMALYID::Lift_Paranoia };
         case 5: return { gSound,              ANOMALYID::Sound_Paranoia };
@@ -377,7 +381,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallMania,          ANOMALYID::Wall_Mania };
         case 1: return { gLightMania,         ANOMALYID::Light_Mania };
-        case 2: return { gFrameGlitch,        ANOMALYID::Frame_Shift };
+        case 2: return { gFrameMania,         ANOMALYID::Frame_Mania };
         case 3: return { gDoorHand,           ANOMALYID::Door_HandSlam };
         case 4: return { gLiftMania,          ANOMALYID::Lift_Mania };
         case 5: return { gSound,              ANOMALYID::Sound_Mania };
@@ -388,7 +392,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallDepression,      ANOMALYID::Wall_Depression };
         case 1: return { gLightDepression,     ANOMALYID::Light_Depression };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
+        case 2: return { gFrameDepression,     ANOMALYID::Frame_Depression };
         case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftDepression,      ANOMALYID::Lift_Depression };
         case 5: return { gSound,               ANOMALYID::Sound_Depression };
@@ -400,7 +404,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallDementia,        ANOMALYID::Wall_Dementia };
         case 1: return { gLightDementia,       ANOMALYID::Light_Dementia };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameShakes,         ANOMALYID::Frame_Shakes };
         case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftDementia,        ANOMALYID::Lift_Dementia };
         case 5: return { gSound,               ANOMALYID::Sound_Dementia };
@@ -412,7 +416,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallSchizophrenia,   ANOMALYID::Wall_Schizophrenia };
         case 1: return { gLightSchizophrenia,  ANOMALYID::Light_Schizophrenia };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameShakes,         ANOMALYID::Frame_Shakes };
         case 3: return { gDoorHand,            ANOMALYID::Door_HandSlam };
         case 4: return { gLiftSchizophrenia,   ANOMALYID::Lift_Schizophrenia };
         case 5: return { gSound,               ANOMALYID::Sound_Schizophrenia };
@@ -424,7 +428,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallAIW,             ANOMALYID::Wall_AIW };
         case 1: return { gLightAIW,            ANOMALYID::Light_AIW };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
+        case 2: return { gFrameAIW,            ANOMALYID::Frame_AIW };
         case 3: return { gDoorPosition,        ANOMALYID::Door_Position };
         case 4: return { gLiftAIW,             ANOMALYID::Lift_AIW };
         case 5: return { gSound,               ANOMALYID::Sound_AIW };
@@ -436,7 +440,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallInsomnia,        ANOMALYID::Wall_Insomnia };
         case 1: return { gLightInsomnia,       ANOMALYID::Light_Insomnia };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Distort };
+        case 2: return { gFrameInsomnia,       ANOMALYID::Frame_Insomnia };
         case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftInsomnia,        ANOMALYID::Lift_Insomnia };
         case 5: return { gSound,               ANOMALYID::Sound_Insomnia };
@@ -448,7 +452,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallOCD,             ANOMALYID::Wall_OCD };
         case 1: return { gLightOCD,            ANOMALYID::Light_OCD };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Shift };
+        case 2: return { gFrameOCD,            ANOMALYID::Frame_OCD };
         case 3: return { gDoorPosition,        ANOMALYID::Door_Position };
         case 4: return { gLiftOCD,             ANOMALYID::Lift_OCD };
         case 5: return { gSound,               ANOMALYID::Sound_OCD };
@@ -460,7 +464,7 @@ static SymptomStruct GetJournalSymptomEntry(ILLNESSES illness, int index)
         {
         case 0: return { gWallScotophobia,     ANOMALYID::Wall_Scotophobia };
         case 1: return { gLightScotophobia,    ANOMALYID::Light_Scotophobia };
-        case 2: return { gFrameGlitch,         ANOMALYID::Frame_Glitch };
+        case 2: return { gFrameShakes,         ANOMALYID::Frame_Shakes };
         case 3: return { gDoorLight,           ANOMALYID::Door_LightChange };
         case 4: return { gLiftScotophobia,     ANOMALYID::Lift_Scotophobia };
         case 5: return { gSound,               ANOMALYID::Sound_Scotophobia };
@@ -652,9 +656,12 @@ void Journal_Load()
 	gWallOCD = LoadTextureChecked(Assets::Equipment::WallOCD);
 	gWallScotophobia = LoadTextureChecked(Assets::Equipment::WallScotophobia);
 
-    gFrameGlitch = LoadTextureChecked(Assets::Equipment::FrameGlitch);
-    gFrameShift = LoadTextureChecked(Assets::Equipment::FrameShift);
-    gFrameDistort = LoadTextureChecked(Assets::Equipment::FrameDistort);
+    gFrameShakes = LoadTextureChecked(Assets::Equipment::FrameShakes);
+    gFrameMania = LoadTextureChecked(Assets::Equipment::FrameMania);
+    gFrameDepression = LoadTextureChecked(Assets::Equipment::FrameDepression);
+    gFrameAIW = LoadTextureChecked(Assets::Equipment::FrameAIW);
+    gFrameInsomnia = LoadTextureChecked(Assets::Equipment::FrameInsomnia);
+    gFrameOCD = LoadTextureChecked(Assets::Equipment::FrameOCD);
 
 	gDoorHand = LoadTextureChecked(Assets::Equipment::DoorHand);
     gDoorLight = LoadTextureChecked(Assets::Equipment::DoorLight);
@@ -695,7 +702,7 @@ void Journal_Load()
     }
 }
 
-void Journal_Update()
+void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
 {
     f32 journalDt{ (f32)AEFrameRateControllerGetFrameTime() };
 
@@ -704,10 +711,17 @@ void Journal_Update()
     else
         JournalAlertTimer = 0.0f;
 
-    // ------------------------------------------------------------
-    // Open / close
-    // ------------------------------------------------------------
-    if (AEInputCheckTriggered(AEVK_I))
+    // Small Icon Hover and Select
+    JournalIconHover = IsAreaHovered(
+        AEGfxGetWinMinX() + 1500.0f,
+        AEGfxGetWinMinY() + 750.0f,
+        100.0f,
+        63.0f);
+
+    HoverAnimation(JournalIconAlpha, JournalIconHover, JournalIconHoverSpeed, dt, 1.0f, 0.5f);
+
+    if (((JournalIconHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_I))
+        && !liftActive && !guideActive && !pagerActive)
     {
         Open = !Open;
         AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
@@ -737,13 +751,13 @@ void Journal_Update()
     float tab2HoverW = TabW * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
     float tab2HoverH = TabH * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
 
-    HoverTab1 = IsAreaClickedByMouse(
+    HoverTab1 = IsAreaHovered(
         TabX * UI_SCALE,
         Tab1Y * UI_SCALE,
         tab1HoverW,
         tab1HoverH);
 
-    HoverTab2 = IsAreaClickedByMouse(
+    HoverTab2 = IsAreaHovered(
         TabX * UI_SCALE,
         Tab2Y * UI_SCALE,
         tab2HoverW,
@@ -770,7 +784,7 @@ void Journal_Update()
             {
                 float illnessY = ListY - i * ListStep;
 
-                bool hovered = IsAreaClickedByMouse(
+                bool hovered = IsAreaHovered(
                     IllnessHitX * UI_SCALE,
                     illnessY * UI_SCALE,
                     IllnessHitW * UI_SCALE,
@@ -834,12 +848,11 @@ void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
     f32 iconX = AEGfxGetWinMinX() + 1500.0f;
     f32 iconY = AEGfxGetWinMinY() + 750.0f;
 
-    DrawTextureMesh(squareMesh, JournalIcon, iconX, iconY, 100.0f, 63.0f, 1.0f);
+    DrawTextureMesh(squareMesh, JournalIcon, iconX, iconY, 100.0f, 63.0f, JournalIconAlpha);
 
     // Bouncing Alert Icon
     if (JournalHasUnread && AlertIcon)
     {
-        // amplitude                   //frequency
         f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
         DrawTextureMesh(squareMesh,
@@ -848,6 +861,16 @@ void Journal_DrawSmallIcon(AEGfxVertexList* squareMesh)
             iconY + 25.0f + bounceY,
             25.0f,
             25.0f,
+            1.0f);
+    }
+
+    if (JournalIconHover && !Open)
+    {
+        AEGfxPrint(symbolsFontId, "Journal",
+            textPosition(-30.0f, -380.0f).first,
+            textPosition(-30.0f, -380.0f).second,
+            1.0f,
+            1.0f, 1.0f, 1.0f,
             1.0f);
     }
 }
@@ -862,10 +885,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };
-
-    // Black BG
-    u32 colorBG = (0x000000 << 8) | static_cast<u32>(Alpha * 187.0f);
-    DrawSquareMesh(squareMesh, 0.0f, 0.0f, SCREEN_W, SCREEN_H, colorBG);
 
     // ------------------------------------------------------------
     // Mouse position
@@ -972,7 +991,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         const char* name = GetFromText[i].title.c_str();
         float illnessY = ListY - i * ListStep;
 
-        bool hovered = IsAreaClickedByMouse(
+        bool hovered = IsAreaHovered(
             IllnessHitX * UI_SCALE,
             illnessY * UI_SCALE,
             IllnessHitW * UI_SCALE,
@@ -1002,7 +1021,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 1.0f);
         }
 
-        //// Bouncing Alert Icon
+        // Bouncing Alert Icon
         if (illnessHasUnread && AlertIcon)
         {
             // amplitude                   //frequency   
@@ -1192,6 +1211,23 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         text,
         0, 0, 0,
         1.0f);
+
+    // ============================================================
+	// "PRESS [I] TO CLOSE" INFO
+    // ============================================================
+    if (Open)
+    {
+        f32 infoX{ textPosition(-220.0f, -380.0f).first };
+        f32 infoY{ textPosition(-220.0f, -380.0f).second };
+
+        AEGfxPrint(symbolsFontId,
+            "PRESS [I] TO CLOSE JOURNAL",
+            infoX,
+            infoY,
+            1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f);
+    }
     
 }
 
@@ -1242,9 +1278,12 @@ void Journal_Unload()
     UnloadTextureSafe(gLightOCD);
     UnloadTextureSafe(gLightScotophobia);
 
-    UnloadTextureSafe(gFrameGlitch);
-    UnloadTextureSafe(gFrameShift);
-    UnloadTextureSafe(gFrameDistort);
+    UnloadTextureSafe(gFrameShakes);
+    UnloadTextureSafe(gFrameMania);
+    UnloadTextureSafe(gFrameDepression);
+    UnloadTextureSafe(gFrameAIW);
+    UnloadTextureSafe(gFrameInsomnia);
+    UnloadTextureSafe(gFrameOCD);
 
     // destroy font
     if (journalFontId >= 0)

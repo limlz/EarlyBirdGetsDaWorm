@@ -4,7 +4,7 @@ DESC=An intense fear of darkness
 
 SYMPTOM1=Dark scribbles
 SYMPTOM2=Long darkness, Narrow light
-SYMPTOM3=Moves when unseen
+SYMPTOM3=Frame shaking violently
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=Everything goes pitch black in the lift
 SYMPTOM6=Whisper in darkness, Stops in light
