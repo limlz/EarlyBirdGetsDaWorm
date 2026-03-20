@@ -4,7 +4,7 @@ DESC=A condition that causes memory loss and
 DESC2=confusion.
 
 SYMPTOM1=A long crack slowly spreads across the wall
-SYMPTOM2=Erratic flicker, Repeating corridor
+SYMPTOM2=Red–yellow light cycle
 SYMPTOM3=Frame shaking violently
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The buttons are all mixed up

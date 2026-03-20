@@ -32,15 +32,15 @@ namespace Assets
         constexpr const char* FrameInsomnia = "Assets/Equipment/evidence/FrameInsomnia.png";
         constexpr const char* FrameOCD = "Assets/Equipment/evidence/FrameOCD.png";
 
-        constexpr const char* LightParanoia = "Assets/Equipment/evidence/Light.png";
+        constexpr const char* LightParanoia = "Assets/Equipment/evidence/LightScotoPara.png";
         constexpr const char* LightMania = "Assets/Equipment/evidence/LightMania.png";
         constexpr const char* LightDepression = "Assets/Equipment/evidence/LightDepression.png";
         constexpr const char* LightDementia = "Assets/Equipment/evidence/LightDementia.png";
         constexpr const char* LightSchizophrenia = "Assets/Equipment/evidence/LightSchizophrenia.png";
-        constexpr const char* LightAIW = "Assets/Equipment/evidence/Light.png";
-        constexpr const char* LightOCD = "Assets/Equipment/evidence/Light.png";
-        constexpr const char* LightInsomnia = "Assets/Equipment/evidence/Light.png";
-        constexpr const char* LightScotophobia = "Assets/Equipment/evidence/Light.png";
+        constexpr const char* LightAIW = "Assets/Equipment/evidence/LightAIW.png";
+        constexpr const char* LightOCD = "Assets/Equipment/evidence/LightOCD.png";
+        constexpr const char* LightInsomnia = "Assets/Equipment/evidence/LightInsomnia.png";
+        constexpr const char* LightScotophobia = "Assets/Equipment/evidence/LightScotoPara.png";
 
         constexpr const char* LiftParanoia = "Assets/Equipment/evidence/LiftParanoia.png";
         constexpr const char* LiftMania = "Assets/Equipment/evidence/LiftMania.png";

@@ -4,7 +4,7 @@ DESC=A disorder that causes hallucinations and
 DESC2=distorted reality.
 
 SYMPTOM1=Child's drawing
-SYMPTOM2=Chaotic flicker, Shimmering light
+SYMPTOM2=Chaotic flickering
 SYMPTOM3=Frame shaking violently
 SYMPTOM4=Hand slams against the window 
 SYMPTOM5=The lift takes me to the wrong floor

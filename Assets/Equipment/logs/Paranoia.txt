@@ -4,7 +4,7 @@ DESC=An intense feeling of fear and distrust
 DESC2=toward others.
 
 SYMPTOM1=The eyes follow wherever I move
-SYMPTOM2=Fast flicker, Screen pulses
+SYMPTOM2=Light pulses rapidly
 SYMPTOM3=Frame shaking violently
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=Buttons evade touch

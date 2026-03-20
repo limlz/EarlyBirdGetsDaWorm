@@ -4,7 +4,7 @@ DESC=A persistent feeling of sadness and
 DESC2=hopelessness.
 
 SYMPTOM1=A dark cloud follows me wherever I go
-SYMPTOM2=Slow flicker, Heavy darkness
+SYMPTOM2=Slow blue light
 SYMPTOM3=Frames slowly melting
 SYMPTOM4=Window door lights flicker on
 SYMPTOM5=The buttons sink lower than usual

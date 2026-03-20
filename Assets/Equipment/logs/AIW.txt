@@ -4,7 +4,7 @@ DESC=A disorder that distorts perception of
 DESC2=size and space.
 
 SYMPTOM1=The cat gets smaller and smaller
-SYMPTOM2=Expanding light, Distorted scale
+SYMPTOM2=Rapid blue light flickering
 SYMPTOM3=Frame loops in circles
 SYMPTOM4=Door window shifts position
 SYMPTOM5=Some buttons suddenly grow or shrink
