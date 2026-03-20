@@ -206,21 +206,6 @@ void Frames_Update(float dt, float camX) {
     const ILLNESSES effIllness = Frames_GetEffectiveIllness();
     const int extraAnoms = Frames_GetExtraAnomalyCount();
 
-    // Report the anomaly to the journal
-    switch (effIllness)
-    {
-    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
-    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
-    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
-    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
-    default: break;
-    }
-
     static int timerState = STATE_NORMAL;
     static float timer = 2.0f;
     static float animTime = 0.0f;
@@ -445,14 +430,38 @@ void Frames_Draw(int currentLevel, f32 camX) {
     if (currentLevel < 0 || currentLevel >= NUM_OF_FLOOR) return;
     if (frameMesh == nullptr) return;
 
+    ILLNESSES effIllness = Frames_GetEffectiveIllness();
+
     for (int i = 0; i < FRAMES_PERLVL; ++i) {
         FrameAnomaly& currentFrame = levelMap[currentLevel][i];
-
         AEGfxTexture* Tex = AllFrameDesigns[currentFrame.designID][currentFrame.currentState];
 
         if (Tex) {
             const f32 drawX = currentFrame.posX + camX;
             DrawTextureMesh(frameMesh, Tex, drawX, currentFrame.posY, currentFrame.width, currentFrame.height, 1.0f);
+            
+            float halfW = currentFrame.width * 0.5f;
+
+            if (currentFrame.currentState > 0 &&
+                drawX + halfW > -SCREEN_WIDTH_HALF &&
+                drawX - halfW < SCREEN_WIDTH_HALF)
+            {
+
+                // Report the anomaly to the journal
+                switch (effIllness)
+                {
+                    case ILLNESSES::PARANOIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+                    case ILLNESSES::MANIA:         Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+                    case ILLNESSES::DEPRESSION:    Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+                    case ILLNESSES::DEMENTIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+                    case ILLNESSES::SCHIZOPHRENIA: Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+                    case ILLNESSES::AIW_SYNDROME:  Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+                    case ILLNESSES::INSOMNIA:      Journal_ReportAnomaly(ANOMALYID::Frame_Distort); break;
+                    case ILLNESSES::OCD:           Journal_ReportAnomaly(ANOMALYID::Frame_Shift);   break;
+                    case ILLNESSES::SCOTOPHOBIA:   Journal_ReportAnomaly(ANOMALYID::Frame_Glitch);  break;
+                    default: break;
+                }
+            }
         }
     }
 }

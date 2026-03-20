@@ -286,39 +286,66 @@ void Wall_Draw(f32 camX, s8 floorNum)
         case ANOMALYID::Wall_Paranoia:
             DrawTextureMesh(wallMesh, paranoiaTexture[0], paranoiaX, paranoiaY, 447.0f, 500.0f, 1.0f);
             DrawTextureMesh(wallMesh, paranoiaTexture[1], paranoiaEyeX, paranoiaY, 447.0f, 500.0f, 1.0f);
-            Journal_ReportAnomaly(ANOMALYID::Wall_Paranoia); // Report the anomaly to the journal
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
+                Journal_ReportAnomaly(ANOMALYID::Wall_Paranoia); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Mania:
-                DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 250.0f, 246.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, maniaTexture[currentImage], wallX, wallY, 250.0f, 246.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_Mania); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Depression:
             DrawTextureMesh(wallMesh, depressionTexture[currentImage], 50.0f, 0.0f, 500.0f, 465.0f, 1.0f);// sizing done
-            Journal_ReportAnomaly(ANOMALYID::Wall_Depression); // Report the anomaly to the journal
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
+                Journal_ReportAnomaly(ANOMALYID::Wall_Depression); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Dementia:
-                DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, dementiaTexture[currentImage], wallX, wallY, 286.0f, 400.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_Dementia); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Schizophrenia:
-                DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 600.0f, 320.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, schizoTexture[currentImage], wallX, wallY, 600.0f, 320.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_Schizophrenia); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_AIW:
-                DrawTextureMesh(wallMesh, aiwTexture[currentImage], wallX, wallY, 600.0f, 455.0f, 1.0f); // sizing done
+            DrawTextureMesh(wallMesh, aiwTexture[currentImage], wallX, wallY, 600.0f, 455.0f, 1.0f); // sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_AIW); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Insomnia:
-                DrawTextureMesh(wallMesh, insomniaTexture[currentImage], wallX, wallY, 600.0f, 246.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, insomniaTexture[currentImage], wallX, wallY, 600.0f, 246.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_Insomnia); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_OCD:
-                DrawTextureMesh(wallMesh, ocdTexture[currentImage], wallX, wallY, 500.0f, 418.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, ocdTexture[currentImage], wallX, wallY, 500.0f, 418.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_OCD); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::Wall_Scotophobia:
-                DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 500.0f, 439.0f, 1.0f);// sizing done
+            DrawTextureMesh(wallMesh, scotoTexture[currentImage], wallX, wallY, 500.0f, 439.0f, 1.0f);// sizing done
+            if (wallX > -SCREEN_WIDTH_HALF && wallX < SCREEN_WIDTH_HALF)
+            {
                 Journal_ReportAnomaly(ANOMALYID::Wall_Scotophobia); // Report the anomaly to the journal
+            }
             break;
         case ANOMALYID::None:
         default:
