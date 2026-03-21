@@ -238,8 +238,6 @@ void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
 		if (OutsideGuide && AEInputCheckTriggered(AEVK_LBUTTON)) { GuideState.IsOpen = false; }
 	}
 
-
-
 	// Category Select
 	bool Cat1Hover{ IsAreaHovered(GuideCategory.X, 153.0f, GuideCategory.Width, 153.0f) },
 		Cat2Hover{ IsAreaHovered(GuideCategory.X, 0.0f, GuideCategory.Width, 157.0f) },
@@ -383,7 +381,7 @@ void Guide::Draw() {
 	// Draws the guide icon in the corner
 	DrawTextureMesh(GuideMesh, GuideTexture.Icon, GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height, GuideIcon.Alpha);
 
-	if (GuideIcon.Hover && !GuideState.IsOpen) {
+	if (GuideIcon.Hover && !GuideState.IsOpen && !Doing_Tutorial()) {
 		AEGfxPrint(GuideFont.Pixel, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
@@ -406,8 +404,9 @@ void Guide::Draw() {
 
 		f32 InfoX{ textPosition(-220.0f, -410.0f).first },
 			InfoY{ textPosition(-220.0f, -410.0f).second };
-		AEGfxPrint(GuideFont.Pixel, "PRESS [G] TO CLOSE GUIDE", InfoX, InfoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
+		if (IsTutorialFinished() || !Doing_Tutorial()) {
+			AEGfxPrint(GuideFont.Pixel, "PRESS [G] TO CLOSE GUIDE", InfoX, InfoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
 		DrawTextureMesh(GuideMesh, GuideTexture.BackgroundTop, -68.0f, 0.0f, 1061.0f, 756.0f, 1.0f);
 		if (GuideCategory.Selected1) {
 			DrawTextureMesh(GuideMesh, GuideTexture.Image1, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);

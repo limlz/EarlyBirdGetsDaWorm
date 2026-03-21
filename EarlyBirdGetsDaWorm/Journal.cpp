@@ -1217,16 +1217,18 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     // ============================================================
     if (Open)
     {
-        f32 infoX{ textPosition(-220.0f, -380.0f).first };
-        f32 infoY{ textPosition(-220.0f, -380.0f).second };
+        f32 infoX{ textPosition(-220.0f, -410.0f).first };
+        f32 infoY{ textPosition(-220.0f, -410.0f).second };
 
-        AEGfxPrint(symbolsFontId,
-            "PRESS [I] TO CLOSE JOURNAL",
-            infoX,
-            infoY,
-            1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f);
+        if (IsTutorialFinished() || !Doing_Tutorial()) {
+            AEGfxPrint(symbolsFontId,
+                "PRESS [I] TO CLOSE JOURNAL",
+                infoX,
+                infoY,
+                1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f);
+        }
     }
     
 }

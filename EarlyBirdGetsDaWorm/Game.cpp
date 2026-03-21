@@ -273,14 +273,21 @@ void Game_Update()
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
 
-    if (IsGuideActive())
-    {
+    // For Tutorial DT
+    f32 gameDT = Timer_IsPaused() ? 0.0f : dt;
+    if (Doing_Tutorial()) {
+        Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), dt);
+    }
+    else {
+        Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), gameDT);
+        if (Journal_IsOpen()) return;
+    }
+
+
+    if (IsGuideActive()) {
         Guide_Update(liftActive, dt, IsPagerActive());
         return;
     }
-
-    Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), dt);
-    if (Journal_IsOpen()) return;
 
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive())
     {

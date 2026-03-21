@@ -323,7 +323,7 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 {
 	// Draws the icon pager in the corner
 	DrawTextureMesh(PagerMesh, PagerTexture.Icon, PagerIcon.X, PagerIcon.Y, PagerIcon.Width, PagerIcon.Height, PagerIcon.Alpha);
-	if (PagerIcon.IsHovered && !PagerState.IsActive) {
+	if (PagerIcon.IsHovered && !PagerState.IsActive && !Doing_Tutorial()) {
 		AEGfxPrint(BigPager.Font, "Pager", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
@@ -359,7 +359,9 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 
 		f32 InfoX{ textPosition(-220.0f, -410.0f).first },
 			InfoY{ textPosition(-220.0f, -410.0f).second };
-		AEGfxPrint(BigPager.Font, "PRESS [TAB] TO CLOSE PAGER", InfoX, InfoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		if (IsTutorialFinished() || !Doing_Tutorial()) {
+			AEGfxPrint(BigPager.Font, "PRESS [TAB] TO CLOSE PAGER", InfoX, InfoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
 
 	}
 }

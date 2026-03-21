@@ -1,543 +1,559 @@
 #include "pch.hpp"
 
-// Tutorial Stages
-enum TutorialStages {
-	TUTORIAL_START,
-	TUTORIAL_WAIT_FOR_PAGER_CLOSE,
-	TUTORIAL_WAIT_FOR_LIFT_OPEN,
-	TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION,
-	TUTORIAL_WAIT_FOR_PATIENT_COLLECTION,
-	TUTORIAL_WAIT_FOR_PATIENT_DELIVERY,
-	TUTORIAL_END
-};
-static s8 curTutStage{};
-static bool tutStarted{ false };
-static bool tutPagerOpened{ false };
-static bool tutPagerClosed{ false };
-static bool tutLiftOpened{ false };
-static bool tutLiftFloorSelected{ false };
-static bool tutPatientCollected{ false };
-static bool tutPatientDelivered{ false };
-static bool tutFinished{ false };
+class Tutorial {
+public:
+	// Stages
+	enum Stages {
+		TUTORIAL_START,
+		TUTORIAL_WAIT_FOR_PAGER_CLOSE,
+		TUTORIAL_WAIT_FOR_LIFT_OPEN,
+		TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION,
+		TUTORIAL_WAIT_FOR_PATIENT_COLLECTION,
+		TUTORIAL_WAIT_FOR_JOURNAL_OPEN,
+		TUTORIAL_WAIT_FOR_JOURNAL_CLOSE,
+		TUTORIAL_WAIT_FOR_PATIENT_DELIVERY,
+		TUTORIAL_END
+	} CurrentStage;
 
-// Tutorial Variables
-struct DialogueBox {
-	f32 tutBGW;
-	f32 tutBGH;
-	f32 tutBGX;
-	f32 tutBGY;
+	// States
+	struct State {
+
+		bool Started;                        // tutStarted
+		bool PagerOpened;                    // tutPagerOpened
+		bool PagerClosed;                    // tutPagerClosed
+		bool LiftOpened;                     // tutLiftOpened
+		bool LiftFloorSelected;              // tutLiftFloorSelected
+		bool PatientCollected;               // tutPatientCollected
+		bool JournalOpened;
+		bool JournalClosed;
+		bool PatientDelivered;               // tutPatientDelivered
+		bool Finished;                       // tutFinished
+	} TutorialState;
+
+	// Dialogue Box
+	struct DialogueBox {
+		f32 Width, Height;
+		f32 X, Y;
+
+		bool Shown;
+		f32 Timer;
+
+		f32 FadeSpeed;
+		f32 FadeAlpha;
+
+		const char* FullText;
+
+		f32 TypingSpeed;
+		bool SoundPlayed;
+		f32 VisibleCharCount;
+		s8 LineCount;
+
+		f32 TypingTimer;
+		bool FinishedTyping;
+	};
+
+	DialogueBox StartedBox;            // tutStartedBox
+	DialogueBox PagerOpenedBox;        // tutPagerOpenedBox
+	DialogueBox PagerClosedBox;        // tutPagerClosedBox
+	DialogueBox LiftOpenedBox;         // tutLiftOpenedBox
+	DialogueBox LiftFloorSelectedBox;  // tutLiftFloorSelectedBox
+	DialogueBox PatientCollectedBox;   // tutPatientCollectedBox
+	DialogueBox JournalOpenedBox;
+	DialogueBox JournalClosedBox;
+	DialogueBox PatientDeliveredBox;   // tutPatientDeliveredBox
+
+	// Mesh
+	AEGfxVertexList* TutorialMesh;
+
+	// Font
+	s8 Font; // promptFontID
+
+	// Textures
+	struct Textures {
+		AEGfxTexture* Background;  // tutBGTexture
+		AEGfxTexture* Speaker;  // TutSpeakerTexture
+		AEGfxTexture* YesButton;
+		AEGfxTexture* NoButton;
+		AEGfxTexture* YesText;
+		AEGfxTexture* NoText;
+	} TutorialTexture;
+
+	// Input
+	struct Input {
+		bool SpacePressed;     // tutSpacePress
+		bool ButtonHover;      // buttonHover
+		bool PromptAnswered;   // promptAnswered
+		bool DoTutorial;       // doTutorial
+	} TutorialInput;
+
+	// Dimension 
+	struct Size {
+		f32 Width, Height;
+		f32 X, Y;
+	} TutorialSize;
 
 	// Pop Up
-	bool dialogueShown;
-	f32 dialogueTimer;
+	struct Prompt {
+		bool Shown;            // tutPopUpShown
+		f32 Timer;              // tutPopupTimer
 
-	// Fade Animation
-	f32 dialogueFadeSpeed;
-	f32 dialogueFadeAlpha;
+		f32 FadeSpeed;			 // fadeSpeed
+		f32 Alpha;              // promptAlpha
+		f32 TextAlpha;          // textSpaceAlpha
+	} TutorialPrompt;
 
-	const char* tutFullText;	// The entire 
+	// Button
+	struct Button {
+		f32 Width, Height;
+		f32 HoverSpeed;
+		f32 YesScale;
+		f32 NoScale;
+	} TutorialButton;
 
-	f32 tutTypingSpeed;			// Number of lines currently visible
-	bool tutSoundPlayed;		// T check if sound is being played
-	f32 tutVisibleCharCount;	// Number of characters currently shown
-	s8 tutLineCount;			// Number of lines currently visible
-
-	f32 tutTextW;
-	f32 tutTextH;
-
-
-	f32 typingTimer;			// Accumulates time for typing speed
-	bool finishedTyping; 
+	public:
+		void Load();
+		void LoadConfigFromFile(const std::string& Filename);
+		void Initialize();
+		void Update(f32 DT);
+		void Draw();
+		void Free();
+		void DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT, f32 DestinationX);
+		void TextDraw(char const* Str, f32 TextX, f32 TextY, f32 Alpha);
+		void DrawTextTopRight(DialogueBox& Dialogue);
 };
-static DialogueBox tutStartedBox, tutPagerOpenedBox, tutPagerClosedBox, tutLiftOpenedBox,
-tutLiftFloorSelectedBox, tutPatientCollectedBox, tutPatientDeliveredBox;
-static bool tutSpacePress{ false };
 
-// Mesh
-static AEGfxVertexList* TutorialMesh;
+static Tutorial TheTutorial;
+void Tutorial_Load(){ TheTutorial.Load(); }
+void Tutorial_Initialize(){ TheTutorial.Initialize(); }
+void Tutorial_Update(f32 DT){ TheTutorial.Update(DT); }
+void Tutorial_Draw() { TheTutorial.Draw(); }
+void Tutorial_Free() { TheTutorial.Free(); }
+bool Doing_Tutorial() { return TheTutorial.TutorialInput.DoTutorial; }
+bool Tutorial_Prompt_Answered() { return TheTutorial.TutorialInput.PromptAnswered; }
+bool IsTutorialActive() { return TheTutorial.TutorialPrompt.Shown; }
+bool IsTutorialFinished() { return TheTutorial.TutorialState.Finished; }
 
-// Textures
-static AEGfxTexture* yesButtonTexture;
-static AEGfxTexture* yesTextTexture;
-static AEGfxTexture* noButtonTexture;
-static AEGfxTexture* noTextTexture;
-static AEGfxTexture* tutBGTexture;
-static AEGfxTexture* TutSpeakerTexture;
+void Tutorial::Load() {
+	Font = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+	// Placeholder for now
+	TutorialTexture.YesButton = LoadTextureChecked(Assets::Tutorial::YesButton);
+	TutorialTexture.NoButton = LoadTextureChecked(Assets::Tutorial::NoButton);
 
-// Text
-static s8 promptFontID;
-
-// Button
-static f32 buttonW{ 250.0f };
-static f32 buttonH{ 100.0f };
-static bool doTutorial{ false };
-static bool promptAnswered{ false };
-
-// Button Animation
-static bool buttonHover{ false };
-static f32 buttonHoverSpeed{ 15.0f };
-static f32 yesButtonScale{ 1.0f };
-static f32 noButtonScale{ 1.0f };
-
-// Prompt Pop Up
-static bool tutPopUpShown{ false };
-static f32 tutPopupTimer{ 0.0f };
-
-// Fade In Animation
-static f32 fadeSpeed{ 2.5f };
-static f32 promptAlpha{ 0.0f };
-static f32 textSpaceAlpha{ 0.0f };
-
-void Tutorial_Load() {
-	promptFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
-	yesButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	yesTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	noButtonTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	noTextTexture = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	yesButtonTexture = LoadTextureChecked(Assets::Tutorial::YesButton);
-	noButtonTexture = LoadTextureChecked(Assets::Tutorial::NoButton);
-	tutBGTexture = LoadTextureChecked(Assets::Tutorial::TutBG);
-	TutSpeakerTexture = LoadTextureChecked(Assets::Tutorial::TutSpeaker);
+	/*TutorialTexture.YesButton = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	TutorialTexture.YesText = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	TutorialTexture.NoButton = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
+	TutorialTexture.NoText = LoadTextureChecked(Assets::Main_Menu::OptionsTag);*/
+	TutorialTexture.Background = LoadTextureChecked(Assets::Tutorial::TutBG);
+	TutorialTexture.Background = LoadTextureChecked(Assets::Tutorial::BGPlaceholder);
+	TutorialTexture.Speaker = LoadTextureChecked(Assets::Tutorial::TutSpeaker);
 }
 
-void Tutorial_Initialize() {
+void Tutorial::LoadConfigFromFile(const std::string& Filename) {
+	std::ifstream File(Filename);
+	if (!File.is_open()) {
+		printf("[FAIL] Guide configuration could not be opened.");
+		return;
+	}
+
+	std::string Line;
+
+	while (std::getline(File, Line)) {
+		std::istringstream iss(Line);
+
+		std::string Key;
+
+		if (std::getline(iss, Key, '=')) {
+			// State
+			if (Key == "Input") {
+				if (!(iss >> TutorialInput.SpacePressed >> TutorialInput.ButtonHover >> TutorialInput.PromptAnswered >> TutorialInput.DoTutorial)) {
+					printf("[FAIL] Tutorial input configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Tutorial input configuration loaded successfully.\n");
+				}
+			}
+			if (Key == "Dimension") {
+				if (!(iss >> TutorialSize.Width >> TutorialSize.Height >> TutorialSize.X >> TutorialSize.Y)) {
+					printf("[FAIL] Tutorial dimension configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Tutorial dimension configuration loaded successfully.\n");
+				}
+			}
+			if (Key == "Prompt") {
+				if (!(iss >> TutorialPrompt.Shown >> TutorialPrompt.Timer >> TutorialPrompt.FadeSpeed >> TutorialPrompt.Alpha >> TutorialPrompt.TextAlpha)) {
+					printf("[FAIL] Tutorial prompt configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Tutorial prompt configuration loaded successfully.\n");
+				}
+			}
+			if (Key == "Button") {
+				if (!(iss >> TutorialButton.Width >> TutorialButton.Height >> TutorialButton.HoverSpeed >> TutorialButton.YesScale >> TutorialButton.NoScale)) {
+					printf("[FAIL] Tutorial button configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Tutorial button configuration loaded successfully.\n");
+				}
+			}
+		}
+	}
+	File.close();
+}
+
+void Tutorial::Initialize() {
 	// Mesh
 	TutorialMesh = CreateSquareMesh(0xFFFFFFFF);
 
-	// Button
-	yesButtonScale = 1.0f;
-	noButtonScale = 1.0f;
-	doTutorial = false;
-	promptAnswered = false;
+	// Stage 
+	CurrentStage = TUTORIAL_START;
+
+	// Input
+	TutorialInput.SpacePressed = false;
+	TutorialInput.ButtonHover = false;
+	TutorialInput.PromptAnswered = false;
+	TutorialInput.DoTutorial = false;
+
+	// Dimension
+	TutorialSize.Width = 1200.0f;
+	TutorialSize.Height = 150.0f;
+	TutorialSize.X = 0.0f;
+	TutorialSize.Y = -350.0f;
 
 	// Prompt Pop Up
-	tutPopupTimer = 0.0f;
-	tutPopUpShown = false;
+	TutorialPrompt.Shown = false;
+	TutorialPrompt.Timer = 1.0f;
 
-	// Fade In Animation
-	fadeSpeed = 2.5f;
-	promptAlpha = 0.0f;	
-	textSpaceAlpha = 0.0f;
+	TutorialPrompt.FadeSpeed = 2.5f;
+	TutorialPrompt.Alpha = 0.0f;
+	TutorialPrompt.TextAlpha = 0.0f;
 
-	// Tutorial
-	tutStarted = false;
-	tutPagerOpened = false;
-	tutPagerClosed = false;
-	tutLiftOpened = false;
-	tutLiftFloorSelected = false;
-	tutPatientCollected = false;
-	tutPatientDelivered = false;
-	tutFinished = false;
+	// Button
+	TutorialButton.Width = 250.0f;
+	TutorialButton.Height = 100.0f;
+	TutorialButton.HoverSpeed = 15.0f;
+	TutorialButton.YesScale = 1.0f;
+	TutorialButton.NoScale = 1.0f;
 
-	// Tutorial Dialogue Box
-	tutStartedBox = { 520.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 25.0f, false};
-	tutPagerOpenedBox = { 600.0f, 310.0f, 400.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, 
-		"This is your pager.\nIt shows :\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 25.0f, false };
-	tutPagerClosedBox = { 380.0f, 120.0f, 450.0f, 50.0f, false , 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
-	tutLiftOpenedBox = { 550.0f, 220.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"This lift can travel from\nBasement 1 to Level 9.\nTo go to a level,\nClick [B1-9] to select a floor.", 25.0f, false };
-	tutLiftFloorSelectedBox = { 385.0f, 180.0f, 450.0f, -150.0f, false , 0.0f, 2.5f, 0.0f, "Good! Now collect the\npatient from the room\nshown on your pager.", 25.0f, false };
-	tutPatientCollectedBox = { 580.0f, 420.0f, 530.0f, -150.0f, false , 0.0f, 2.5f, 0.0f,
-		"There are two types of patients:\nNormal and Ghost\nNormal patients must be delivered\nto the room shown on your pager,\nand Ghosts to the basement.\nGhosts will have an additional\nsymptom on top of illness.\nWrong delivery will end the game.", 25.0f, false };
-	tutPatientDeliveredBox = { 625.0f, 290.0f, 450.0f, -170.0f, false , 0.0f, 2.5f, 0.0f, "Well done!\nYour shift begins now.\nDeliver at least 5 patients.\nPress [G] anytime to view the guide.\nPress [I] anytime to view the journal.\nStay alert and watch out.", 25.0f, false };
+	// Dialogue Box
+	// Width, Height, X, Y, Shown, Timer, FadeSpeed, FadeAlpha, FullText, TypingSpeed, SoundPlayed
+	StartedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 25.0f, false };
+	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 25.0f, false };
+	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
+	LiftOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This lift can travel from Basement 1 to Level 9.\nClick [B1-9] to select a floor.", 25.0f, false };
+	LiftFloorSelectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now collect the patient from the room shown on your pager.", 25.0f, false };
+	PatientCollectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "There are two types of patients:\nNormal and Ghost\nUsing the Journal, you must identify which illness the patient has\nor if they are a ghost.\nPress [I] to open the Journal.", 25.0f, false };
+	JournalOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your journal. It records the anomalies you encounter.\nA normal patient will display 3 anomalies.\nA ghost will display an additional anomaly.\nMake sure to identify them correctly.\nPress [I] again to close the Journal.", 25.0f, false };
+	JournalClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now bring the patient to their designated room.\nNormal patients must be delivered to the room shown on your pager.\nGhosts must be delivered to the basement (B1).\nBringing the wrong patient type will result in Game Over.", 25.0f, false };
+	PatientDeliveredBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f,"Well done! Your shift begins now.\nDeliver at least 5 patients before each day ends.\nIf you forget how to play, Press [G] anytime to view the guide.\nStay alert and watch out.\nPress [TAB] to end the tutorial.", 25.0f, false };
 
-	tutSpacePress = false;
+	// File reading
+	LoadConfigFromFile("Assets/Tutorial/Config/TutorialConfig.txt");
 }
 
-/*!*****************************************************************************
-\brief
-	Updates a tutorial dialogue box.
-
-	Handles the animation and behaviour of a dialogue box including:
-	- Fade-in animation
-	- Sliding movement to its destination position
-	- Typing text effect
-	- Typing sound playback
-	- Spacebar logic to instantly reveal the full text
-
-\param[in,out] dialogue
-	Reference to the dialogue box being updated.
-
-\param[in] dt
-	Delta time representing the time elapsed since the previous frame.
-
-\param[in] destX
-	The target x-position the dialogue box will slide toward.
-
-\return
-	None.
-*******************************************************************************/
-void DialogueBox_Update(DialogueBox& dialogue, f32 dt, f32 destX) {
+void Tutorial::DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT, f32 DestinationX) {
 	// Fading in from the right
-	if (!dialogue.dialogueShown) { // basically waits till 0.5 f til the box shows
-		dialogue.dialogueTimer += dt;
+	if (!Dialogue.Shown) { // basically waits till 0.5 f til the box shows
+		Dialogue.Timer += DT;
 
-		if (dialogue.dialogueTimer >= 0.5f) {
-			dialogue.dialogueShown = true;
+		if (Dialogue.Timer >= 0.5f) {
+			Dialogue.Shown = true;
 		}
 	}
 
-	if (dialogue.dialogueShown) { // if the dhown is true, the alpha will increase
-		if (dialogue.dialogueFadeAlpha < 1.0f) {
-			dialogue.dialogueFadeAlpha += dialogue.dialogueFadeSpeed * dt;
+	if (Dialogue.Shown) { // if the dhown is true, the alpha will increase
+		if (Dialogue.FadeAlpha < 0.8f) {
+			Dialogue.FadeAlpha += Dialogue.FadeSpeed * DT;
 
-			if (dialogue.dialogueFadeAlpha > 1.0f) {
-				dialogue.dialogueFadeAlpha = 1.0f; // clamp the alpha
+			if (Dialogue.FadeAlpha > 0.8f) {
+				Dialogue.FadeAlpha = 0.8f; // clamp the alpha
 			}
 		}
-		if (dialogue.tutBGX > destX) { // currently i put their initial X value to be more than the destination X so itll move from righ tto left
-			dialogue.tutBGX += (destX - dialogue.tutBGX) * 3.0f * dt;
+		if (Dialogue.X > DestinationX) { // currently i put their initial X value to be more than the destination X so itll move from righ tto left
+			Dialogue.X += (DestinationX - Dialogue.X) * 3.0f * DT;
 
-			if (dialogue.tutBGX < destX) {
-				dialogue.tutBGX = destX;
+			if (Dialogue.X < DestinationX) {
+				Dialogue.X = DestinationX;
 			}
 		}
 
 		// Sound play
-		if (!dialogue.finishedTyping && !dialogue.tutSoundPlayed) {
+		if (!Dialogue.FinishedTyping && !Dialogue.SoundPlayed) {
 			AudioManager_PlaySFX(SFX_TUTORIAL_TYPING, 0.2f, 1.0f, -1);
-			dialogue.tutSoundPlayed = true;
+			Dialogue.SoundPlayed = true;
 		}
-		if (dialogue.finishedTyping && dialogue.tutSoundPlayed) {
+		if (Dialogue.FinishedTyping && Dialogue.SoundPlayed) {
 			AudioManager_StopSFX();
-			dialogue.tutSoundPlayed = false;
+			Dialogue.SoundPlayed = false;
 		}
 
 		// Text typing effect
-		dialogue.tutVisibleCharCount += dialogue.tutTypingSpeed * dt;
-		if (dialogue.tutVisibleCharCount >= static_cast<f32>(strlen(dialogue.tutFullText))) {
-			dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
-			dialogue.finishedTyping = true;
+		Dialogue.VisibleCharCount += Dialogue.TypingSpeed * DT;
+		if (Dialogue.VisibleCharCount >= static_cast<f32>(strlen(Dialogue.FullText))) {
+			Dialogue.VisibleCharCount = static_cast<f32>(strlen(Dialogue.FullText));
+			Dialogue.FinishedTyping = true;
 		}
 
-		tutSpacePress = AEInputCheckTriggered(AEVK_SPACE);
+		TutorialInput.SpacePressed = AEInputCheckTriggered(AEVK_SPACE);
 
 		// Spacebar Logic
-		if (tutSpacePress) {
-			if (!dialogue.finishedTyping) { // Basiclly check sif the dialogue box has finished typing, if not then itll be forced to be true
-				dialogue.tutVisibleCharCount = static_cast<f32>(strlen(dialogue.tutFullText));
-				dialogue.finishedTyping = true;
-				dialogue.tutSoundPlayed = true;
-				//textSpaceAlpha = 0.0f;
+		if (TutorialInput.SpacePressed) {
+			if (!Dialogue.FinishedTyping) { // Basiclly check sif the dialogue box has finished typing, if not then itll be forced to be true
+				Dialogue.VisibleCharCount = static_cast<f32>(strlen(Dialogue.FullText));
+				Dialogue.FinishedTyping = true;
+				Dialogue.SoundPlayed = true;
 			}
 		}
-
-		/*if (dialogue.finishedTyping) {
-			textSpaceAlpha = 0.0f;
-		}*/
 	}
 }
 
-void Tutorial_Update(f32 dt) {
+void Tutorial::Update(f32 DT) {
 	// Game start delayed pop up
-	if (!promptAnswered && !tutPopUpShown) {
-		tutPopupTimer += dt;
+	if (!TutorialInput.PromptAnswered && !TutorialPrompt.Shown) {
+		TutorialPrompt.Timer += DT;
 
-		if (tutPopupTimer >= 0.5f) {
-			tutPopUpShown = true;
+		if (TutorialPrompt.Timer >= 0.5f) {
+			TutorialPrompt.Shown = true;
 		}
 	}
 
-	if (tutPopUpShown && promptAlpha < 1.0f) {
-		promptAlpha += fadeSpeed * dt;
+	if (TutorialPrompt.Shown && TutorialPrompt.Alpha < 1.0f) {
+		TutorialPrompt.Alpha += TutorialPrompt.FadeSpeed * DT;
 
-		if (promptAlpha > 1.0f) {
-			promptAlpha = 1.0f;
+		if (TutorialPrompt.Alpha > 1.0f) {
+			TutorialPrompt.Alpha = 1.0f;
 		}
 	}
 
-	
 	// -------------------------------- TUTORIAL PROMPT: YES OR NO --------------------------------
-	bool yesButtonHover{ IsAreaClicked(-100.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) },
-		noButtonHover{ IsAreaClicked(200.0f, -100.0f, buttonW, buttonH, Input_GetMouseX(), Input_GetMouseY()) };
+	bool YesButtonHover{ IsAreaClicked(-100.0f, -100.0f, TutorialButton.Width, TutorialButton.Height, Input_GetMouseX(), Input_GetMouseY()) },
+		NoButtonHover{ IsAreaClicked(200.0f, -100.0f, TutorialButton.Width, TutorialButton.Height, Input_GetMouseX(), Input_GetMouseY()) };
 
-	UpdateButtonScale(yesButtonScale, yesButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
-	UpdateButtonScale(noButtonScale, noButtonHover, 1.2f, buttonHoverSpeed, dt);	// Function to scale the buttons when hover
-
+	UpdateButtonScale(TutorialButton.YesScale, YesButtonHover, 1.2f, TutorialButton.HoverSpeed, DT);	// Function to scale the buttons when hover
+	UpdateButtonScale(TutorialButton.NoScale, NoButtonHover, 1.2f, TutorialButton.HoverSpeed, DT);	// Function to scale the buttons when hover
+	
 	// if user doesnt want to do tutorial, tutorial prompt will close and pager will be displayed
-	if (tutPopUpShown) {
-		if (noButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
-			tutPopUpShown = false;
-			promptAnswered = true;
-			doTutorial = false;
+	if (TutorialPrompt.Shown) {
+		if (NoButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			TutorialPrompt.Shown = false;
+			TutorialInput.PromptAnswered = true;
+			TutorialInput.DoTutorial = false;
 		}
 
-		if (yesButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
-			tutPopUpShown = false;
-			promptAnswered = true;
-			doTutorial = true;
-			curTutStage = TUTORIAL_START;
+		if (YesButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
+			TutorialPrompt.Shown = false;
+			TutorialInput.PromptAnswered = true;
+			TutorialInput.DoTutorial = true;
+			CurrentStage = TUTORIAL_START;
 		}
 	}
 
 	// -------------------------------- TUTORIAL: YES --------------------------------
-	if (doTutorial && !tutFinished) {
-		textSpaceAlpha = 1.0f;
+	f32 actualDT{ static_cast<f32>(AEFrameRateControllerGetFrameTime()) };
+	if (TutorialInput.DoTutorial && !TutorialState.Finished) {
+		TutorialPrompt.TextAlpha = 1.0f;
 		Timer_SetPaused(true); // so player doesnt lose the game if they take too long
-		switch (curTutStage) {
+		switch (CurrentStage) {
 			case TUTORIAL_START: {
-				tutStarted = true;
-				DialogueBox_Update(tutStartedBox, dt, 400.0f); // draws the dialogue box
-				if (curTutStage == TUTORIAL_START && AEInputCheckTriggered(AEVK_TAB)) { // if player opens the pager, next stage of tutorial will appaer 
-					curTutStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE; // nxet stage
-					tutStarted = false;
+				TutorialState.Started = true;
+				DialogueBoxUpdate(StartedBox, DT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_START && IsPagerActive()) { // if player opens the pager, next stage of tutorial will appaer 
+					CurrentStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE; // nxet stage
+					TutorialState.Started = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
-				tutPagerOpened = true;
-				DialogueBox_Update(tutPagerOpenedBox, dt, 350.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && AEInputCheckTriggered(AEVK_TAB)) {
-					curTutStage = TUTORIAL_WAIT_FOR_LIFT_OPEN;
-					tutPagerOpened = false;
+				TutorialState.PagerOpened = true;
+				DialogueBoxUpdate(PagerOpenedBox, DT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && !IsPagerActive()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_LIFT_OPEN; // nxet stage
+					TutorialState.PagerOpened = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_LIFT_OPEN: {
-				tutPagerClosed = true;
-				DialogueBox_Update(tutPagerClosedBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_LIFT_OPEN && AEInputCheckTriggered(AEVK_L)) {
-					curTutStage = TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION;
-					tutPagerClosed = false;
+				TutorialState.PagerClosed = true;
+				DialogueBoxUpdate(PagerClosedBox, DT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_LIFT_OPEN && Lift_IsActive()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION; // nxet stage
+					TutorialState.PagerClosed = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
-				tutLiftOpened = true;
-				DialogueBox_Update(tutLiftOpenedBox, dt, 480.0f);
-				if ((curTutStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION) && (Lift_IsFloorPressed())) {
-					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION;
-					tutLiftOpened = false;
+				TutorialState.LiftOpened = true;
+				DialogueBoxUpdate(LiftOpenedBox, DT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION && Lift_IsFloorPressed()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION; // nxet stage
+					TutorialState.LiftOpened = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
-				tutLiftFloorSelected = true;
-				DialogueBox_Update(tutLiftFloorSelectedBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
-					Player_ForceHumanPatient();
-					curTutStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY;
-					tutLiftFloorSelected = false;
+				TutorialState.LiftFloorSelected = true;
+				DialogueBoxUpdate(LiftFloorSelectedBox, DT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_JOURNAL_OPEN; // nxet stage
+					TutorialState.LiftFloorSelected = false;
+				}
+				break;
+			}
+			case TUTORIAL_WAIT_FOR_JOURNAL_OPEN: {
+				TutorialState.PatientCollected = true;
+				DialogueBoxUpdate(PatientCollectedBox, actualDT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_JOURNAL_OPEN && Journal_IsOpen()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_JOURNAL_CLOSE; // nxet stage
+					TutorialState.PatientCollected = false;
+				}
+				break;
+			}
+			case TUTORIAL_WAIT_FOR_JOURNAL_CLOSE: {
+				TutorialState.JournalOpened = true;
+				DialogueBoxUpdate(JournalOpenedBox, actualDT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_JOURNAL_CLOSE && !Journal_IsOpen()) {
+					CurrentStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY; // nxet stage
+					TutorialState.JournalOpened = false;
 				}
 				break;
 			}
 			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
-				tutPatientCollected = true;
-				DialogueBox_Update(tutPatientCollectedBox, dt, 500.0f);
-				if (curTutStage == TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
-					curTutStage = TUTORIAL_END;
-					tutPatientCollected = false;
+				TutorialState.JournalClosed = true;
+				DialogueBoxUpdate(JournalClosedBox, actualDT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
+					CurrentStage = TUTORIAL_END; // nxet stage
+					TutorialState.JournalClosed = false;
 				}
 				break;
 			}
 			case TUTORIAL_END: {
-				tutPatientDelivered = true;
-				DialogueBox_Update(tutPatientDeliveredBox, dt, 400.0f);
-				if (curTutStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
-					tutFinished = true;
+				TutorialState.PatientDelivered = true;
+				DialogueBoxUpdate(PatientDeliveredBox, actualDT, 400.0f); // draws the dialogue box
+				if (CurrentStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
+					TutorialState.PatientDelivered = false;
+					TutorialState.Finished = true;
 					Timer_SetPaused(false); // UNPAUSE TIMER
 				}
 				break;
 			}
-
-		}
+		}	
 	}
 }
 
-bool Doing_Tutorial() { return doTutorial; }
-bool Tutorial_Prompt_Answered() { return promptAnswered; }
-bool IsTutorialActive() { return tutPopUpShown; }
-
-// Helper function for typing effect
-/*!*****************************************************************************
-\brief
-	Draws tutorial text with support for multiple lines.
-
-	The function processes newline characters in the string and
-	renders each line individually with proper vertical spacing.
-
-\param[in] str
-	The text string to render.
-
-\param[in] tutTextX
-	The x-position where the text should be drawn.
-
-\param[in] tutTextY
-	The y-position where the text should be drawn.
-
-\param[in] alpha
-	Transparency value used when rendering the text.
-
-\return
-	None.
-*******************************************************************************/
-void Tutorial_Text_Draw(char const* str, f32 tutTextX, f32 tutTextY, f32 alpha) {
-	f32 winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-	f32 lineHeight{ 100.0f / winH};
-	s8 lineNum{};
-	const char* lineStart{ str };
+// Helper function for printing by line
+void Tutorial::TextDraw(char const* Str, f32 TextX, f32 TextY, f32 Alpha) {
+	f32 WinH{ static_cast<f32>(AEGfxGetWindowHeight()) };
+	f32 LineHeight{ 50.0f / WinH };
+	s8 LineNum{};
+	const char* LineStart{ Str };
 
 	for (int i{};; ++i) {
 		// This basically checks the end of the line, if it reaches the end, line will be copied and printed
-		if (str[i] == '\n' || str[i] == '\0') {
-			std::string line(lineStart, &str[i]); 
-			AEGfxPrint(promptFontID, line.c_str(), textPosition(tutTextX, tutTextY).first, textPosition(tutTextX, tutTextY).second - lineHeight * lineNum, 700.0f / winH, 1.0f, 1.0f, 1.0f, alpha);
-			++lineNum;
-			if (str[i] == '\0') {
+		if (Str[i] == '\n' || Str[i] == '\0') {
+			std::string Line(LineStart, &Str[i]);
+
+			// Get Text Width
+			AEGfxPrint(Font, Line.c_str(), textPosition(TextX, TextY).first, textPosition(TextX, TextY).second - LineHeight * LineNum, 700.0f / WinH, 1.0f, 1.0f, 1.0f, Alpha);
+			++LineNum;
+			if (Str[i] == '\0') {
 				break;
 			}
-			lineStart = &str[i + 1];
+			LineStart = &Str[i + 1];
 		}
-		
 	}
 }
 
-// Helper function for dialogue
-/*!*****************************************************************************
-\brief
-	Renders the background for a tutorial dialogue box.
+// Helper function to draw text on top right
+void Tutorial::DrawTextTopRight(DialogueBox& Dialogue) {
+	f32 PosX{ (Dialogue.X - (Dialogue.Width * 0.5f)) + 120.0f },
+		PosY{ (Dialogue.Y + (Dialogue.Height * 0.5f)) - 30.0f };
+	
+	std::string visibleText( Dialogue.FullText, static_cast<size_t>(Dialogue.VisibleCharCount) );
 
-	The background uses a semi-transparent colored rectangle and
-	fades in based on the dialogue box alpha value.
+	TextDraw(visibleText.c_str(), PosX, PosY, Dialogue.FadeAlpha);
+}
 
-\param[in] dialogue
-	Reference to the dialogue box whose background will be drawn.
-
-\return
-	None.
-*******************************************************************************/
-//void DrawDialogueBoxBackground(DialogueBox& dialogue) {
-//	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-//		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-//
-//	// Apply red fade like the guide
-//	// Moves the color bits left to make space for the transparency value.   | gets the fade amount by multiplying it to 200.0f
-//	/*u32 colorBG = (0x880000 << 8) | static_cast<u32>(dialogue.dialogueFadeAlpha * 200.0f);
-//	DrawSquareMesh(tutBGMesh, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, 1.0f);*/
-//	DrawTextureMesh(tutBGMesh, tutBGTexture, dialogue.tutBGX, dialogue.tutBGY, dialogue.tutBGW, dialogue.tutBGH, dialogue.dialogueFadeAlpha);
-//}
-
-void Tutorial_Draw() {
-	// Position
-	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-
-	if (tutPopUpShown) {
+void Tutorial::Draw() {
+	// Prompt
+	if (TutorialPrompt.Shown) {
 		// Draws prompt background
-		u32 black = (0x000000 << 8) | static_cast<u32>(promptAlpha * 187.0f);
-		DrawSquareMesh(TutorialMesh, 0.0f, 0.0f, winW, winH, black);
+		u32 black = (0x000000 << 8) | static_cast<u32>(TutorialPrompt.Alpha * 187.0f);
+		DrawSquareMesh(TutorialMesh, 0.0f, 0.0f, static_cast<f32>(AEGfxGetWindowWidth()), static_cast<f32>(AEGfxGetWindowHeight()), black);
 
 		// Draws prompt text
-		f32 promptX{ textPosition(-220.0f, 0.0f).first },
-			promptY{ textPosition(-220.0f, 0.0f).second };
-		AEGfxPrint(promptFontID, "Do you need a tutorial?", promptX, promptY, 1.0f, 1.0f, 1.0f, 1.0f, promptAlpha);
+		f32 PromptX{ textPosition(-220.0f, 0.0f).first },
+			PromptY{ textPosition(-220.0f, 0.0f).second };
+		AEGfxPrint(Font, "Do you need a tutorial?", PromptX, PromptY, 1.0f, 1.0f, 1.0f, 1.0f, TutorialPrompt.Alpha);
 
 		// Draws the buttons
-		DrawTextureMesh(TutorialMesh, yesButtonTexture, -180.0f, -100.0f, buttonW * yesButtonScale, buttonH * yesButtonScale, promptAlpha);
-		DrawTextureMesh(TutorialMesh, noButtonTexture, 180.0f, -100.0f, buttonW * noButtonScale, buttonH * noButtonScale, promptAlpha);
+		DrawTextureMesh(TutorialMesh, TutorialTexture.YesButton, -180.0f, -100.0f, TutorialButton.Width * TutorialButton.YesScale, TutorialButton.Height * TutorialButton.YesScale, TutorialPrompt.Alpha);
+		DrawTextureMesh(TutorialMesh, TutorialTexture.NoButton, 180.0f, -100.0f, TutorialButton.Width * TutorialButton.NoScale, TutorialButton.Height * TutorialButton.NoScale, TutorialPrompt.Alpha);
 	}
 
-	if (doTutorial && !tutFinished) {
-		const char* infoText{ "PRESS [SPACE] TO SKIP TEXT" };
-		// Change text when tutorial is ending
-		if (curTutStage == TUTORIAL_END) {
-			infoText = "PRESS [TAB] TO END TUTORIAL";
+	if (TutorialInput.DoTutorial && !TutorialState.Finished) {
+		if (TutorialState.Started) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, StartedBox.X, StartedBox.Y, StartedBox.Width, StartedBox.Height, StartedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (StartedBox.X - (StartedBox.Width * 0.5f)) + 50.0f, (StartedBox.Y + (StartedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, StartedBox.FadeAlpha);
+			DrawTextTopRight(StartedBox);		
 		}
-		f32 infoX{ textPosition(-220.0f, -380.0f).first },
-			infoY{ textPosition(-220.0f, -380.0f).second };
-		AEGfxPrint(promptFontID, infoText, infoX, infoY, 1.0f, 1.0f, 1.0f, 1.0f, textSpaceAlpha);
-
-		if (tutStarted) {
-			//DrawDialogueBoxBackground(tutStartedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutStartedBox.tutBGX, tutStartedBox.tutBGY, tutStartedBox.tutBGW, tutStartedBox.tutBGH, tutStartedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutStartedBox.tutBGX + 225.0f, tutStartedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutStartedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutStartedBox.tutFullText,
-				(size_t)tutStartedBox.tutVisibleCharCount
-			); // It copies only the first few characters of the full text, c_str converts c++ to c -> const char* 
-			Tutorial_Text_Draw(visibleText.c_str(), -240.0f + tutStartedBox.tutBGX, 15.0f + tutStartedBox.tutBGY, tutStartedBox.dialogueFadeAlpha);
+		if (TutorialState.PagerOpened) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, PagerOpenedBox.X, PagerOpenedBox.Y, PagerOpenedBox.Width, PagerOpenedBox.Height, PagerOpenedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (PagerOpenedBox.X - (PagerOpenedBox.Width * 0.5f)) + 50.0f, (PagerOpenedBox.Y + (PagerOpenedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, PagerOpenedBox.FadeAlpha);
+			DrawTextTopRight(PagerOpenedBox);
 		}
-		if (tutPagerOpened) {
-			//DrawDialogueBoxBackground(tutPagerOpenedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPagerOpenedBox.tutBGX, tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.tutBGW, tutPagerOpenedBox.tutBGH, tutPagerOpenedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPagerOpenedBox.tutBGX + 225.0f, tutPagerOpenedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPagerOpenedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutPagerOpenedBox.tutFullText,
-				(size_t)tutPagerOpenedBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -280.0f + tutPagerOpenedBox.tutBGX, 95.0f + tutPagerOpenedBox.tutBGY, tutPagerOpenedBox.dialogueFadeAlpha);
+		if (TutorialState.PagerClosed) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, PagerClosedBox.X, PagerClosedBox.Y, PagerClosedBox.Width, PagerClosedBox.Height, PagerClosedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (PagerClosedBox.X - (PagerClosedBox.Width * 0.5f)) + 50.0f, (PagerClosedBox.Y + (PagerClosedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, PagerClosedBox.FadeAlpha);
+			DrawTextTopRight(PagerClosedBox);
 		}
-		if (tutPagerClosed) {
-			//DrawDialogueBoxBackground(tutPagerClosedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPagerClosedBox.tutBGX, tutPagerClosedBox.tutBGY, tutPagerClosedBox.tutBGW, tutPagerClosedBox.tutBGH, tutPagerClosedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPagerClosedBox.tutBGX + 225.0f, tutPagerClosedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPagerClosedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutPagerClosedBox.tutFullText,
-				(size_t)tutPagerClosedBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -165.0f + tutPagerClosedBox.tutBGX, 15.0f + tutPagerClosedBox.tutBGY, tutPagerClosedBox.dialogueFadeAlpha);
+		if (TutorialState.LiftOpened) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, LiftOpenedBox.X, LiftOpenedBox.Y, LiftOpenedBox.Width, LiftOpenedBox.Height, LiftOpenedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (LiftOpenedBox.X - (LiftOpenedBox.Width * 0.5f)) + 50.0f, (LiftOpenedBox.Y + (LiftOpenedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, LiftOpenedBox.FadeAlpha);
+			DrawTextTopRight(LiftOpenedBox);
 		}
-		if (tutLiftOpened) {
-			//DrawDialogueBoxBackground(tutLiftOpenedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutLiftOpenedBox.tutBGX, tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.tutBGW, tutLiftOpenedBox.tutBGH, tutLiftOpenedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutLiftOpenedBox.tutBGX + 225.0f, tutLiftOpenedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutLiftOpenedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutLiftOpenedBox.tutFullText,
-				(size_t)tutLiftOpenedBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -230.0f + tutLiftOpenedBox.tutBGX, 65.0f + tutLiftOpenedBox.tutBGY, tutLiftOpenedBox.dialogueFadeAlpha);
+		if (TutorialState.LiftFloorSelected) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, LiftFloorSelectedBox.X, LiftFloorSelectedBox.Y, LiftFloorSelectedBox.Width, LiftFloorSelectedBox.Height, LiftFloorSelectedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (LiftFloorSelectedBox.X - (LiftFloorSelectedBox.Width * 0.5f)) + 50.0f, (LiftFloorSelectedBox.Y + (LiftFloorSelectedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, LiftFloorSelectedBox.FadeAlpha);
+			DrawTextTopRight(LiftFloorSelectedBox);
 		}
-		if (tutLiftFloorSelected) {
-			//DrawDialogueBoxBackground(tutLiftFloorSelectedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutLiftFloorSelectedBox.tutBGX, tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.tutBGW, tutLiftFloorSelectedBox.tutBGH, tutLiftFloorSelectedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutLiftFloorSelectedBox.tutBGX + 225.0f, tutLiftFloorSelectedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutLiftFloorSelectedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutLiftFloorSelectedBox.tutFullText,
-				(size_t)tutLiftFloorSelectedBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -170.0f + tutLiftFloorSelectedBox.tutBGX, 45.0f + tutLiftFloorSelectedBox.tutBGY, tutLiftFloorSelectedBox.dialogueFadeAlpha);
+		if (TutorialState.PatientCollected) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, PatientCollectedBox.X, PatientCollectedBox.Y, PatientCollectedBox.Width, PatientCollectedBox.Height, PatientCollectedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (PatientCollectedBox.X - (PatientCollectedBox.Width * 0.5f)) + 50.0f, (PatientCollectedBox.Y + (PatientCollectedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, PatientCollectedBox.FadeAlpha);
+			DrawTextTopRight(PatientCollectedBox);
 		}
-		if (tutPatientCollected) {
-			//DrawDialogueBoxBackground(tutPatientCollectedBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPatientCollectedBox.tutBGX, tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.tutBGW, tutPatientCollectedBox.tutBGH, tutPatientCollectedBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPatientCollectedBox.tutBGX + 225.0f, tutPatientCollectedBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPatientCollectedBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutPatientCollectedBox.tutFullText,
-				(size_t)tutPatientCollectedBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -265.0f + tutPatientCollectedBox.tutBGX, 165.0f + tutPatientCollectedBox.tutBGY, tutPatientCollectedBox.dialogueFadeAlpha);
+		if (TutorialState.JournalOpened) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, JournalOpenedBox.X, JournalOpenedBox.Y, JournalOpenedBox.Width, JournalOpenedBox.Height, JournalOpenedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (JournalOpenedBox.X - (JournalOpenedBox.Width * 0.5f)) + 50.0f, (JournalOpenedBox.Y + (JournalOpenedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, JournalOpenedBox.FadeAlpha);
+			DrawTextTopRight(JournalOpenedBox);
 		}
-		if (tutPatientDelivered) {
-			//DrawDialogueBoxBackground(tutPatientDeliveredBox);
-			DrawTextureMesh(TutorialMesh, tutBGTexture, tutPatientDeliveredBox.tutBGX, tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.tutBGW, tutPatientDeliveredBox.tutBGH, tutPatientDeliveredBox.dialogueFadeAlpha);
-			DrawTextureMesh(TutorialMesh, TutSpeakerTexture, tutPatientDeliveredBox.tutBGX + 225.0f, tutPatientDeliveredBox.tutBGY + 60.0f, 64.0f, 64.0f, tutPatientDeliveredBox.dialogueFadeAlpha);
-
-			std::string visibleText(
-				tutPatientDeliveredBox.tutFullText,
-				(size_t)tutPatientDeliveredBox.tutVisibleCharCount
-			);
-			Tutorial_Text_Draw(visibleText.c_str(), -290.0f + tutPatientDeliveredBox.tutBGX, 110.0f + tutPatientDeliveredBox.tutBGY, tutPatientDeliveredBox.dialogueFadeAlpha);
+		if (TutorialState.JournalClosed) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, JournalClosedBox.X, JournalClosedBox.Y, JournalClosedBox.Width, JournalClosedBox.Height, JournalClosedBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (JournalClosedBox.X - (JournalClosedBox.Width * 0.5f)) + 50.0f, (JournalClosedBox.Y + (JournalClosedBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, JournalClosedBox.FadeAlpha);
+			DrawTextTopRight(JournalClosedBox);
+		}
+		if (TutorialState.PatientDelivered) {
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Background, PatientDeliveredBox.X, PatientDeliveredBox.Y, PatientDeliveredBox.Width, PatientDeliveredBox.Height, PatientDeliveredBox.FadeAlpha);
+			DrawTextureMesh(TutorialMesh, TutorialTexture.Speaker, (PatientDeliveredBox.X - (PatientDeliveredBox.Width * 0.5f)) + 50.0f, (PatientDeliveredBox.Y + (PatientDeliveredBox.Height * 0.5f)) - 50.0f, 100.0f, 100.0f, PatientDeliveredBox.FadeAlpha);
+			DrawTextTopRight(PatientDeliveredBox);
 		}
 	}
+
 }
 
-void Tutorial_Free() {
+void Tutorial::Free() {
 	FreeMeshSafe(TutorialMesh);
 
-	UnloadTextureSafe(yesButtonTexture);
-	UnloadTextureSafe(noButtonTexture);
-	UnloadTextureSafe(tutBGTexture);
-	UnloadTextureSafe(TutSpeakerTexture);
+	UnloadTextureSafe(TutorialTexture.Background);
+	UnloadTextureSafe(TutorialTexture.Speaker);
+
+	UnloadTextureSafe(TutorialTexture.YesButton);
+	UnloadTextureSafe(TutorialTexture.NoButton);
+	UnloadTextureSafe(TutorialTexture.YesText);
+	UnloadTextureSafe(TutorialTexture.NoText);
 
 	// Destroy font if valid
-	if (promptFontID >= 0) {
-		AEGfxDestroyFont(promptFontID);
-		promptFontID = -1;
+	if (Font >= 0) {
+		AEGfxDestroyFont(Font);
+		Font = -1;
 	}
 }

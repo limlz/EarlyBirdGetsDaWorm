@@ -49,7 +49,7 @@ void Tutorial_Initialize();
 \return
     None.
 *******************************************************************************/
-void Tutorial_Update(f32 dt);
+void Tutorial_Update(f32 DT);
 
 /*!*****************************************************************************
 \brief
@@ -80,6 +80,7 @@ bool Tutorial_Prompt_Answered();
     True if the tutorial selection prompt is visible on screen.
 *******************************************************************************/
 bool IsTutorialActive();
+bool IsTutorialFinished();
 
 /*!*****************************************************************************
 \brief
