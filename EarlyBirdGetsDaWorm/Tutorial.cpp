@@ -237,15 +237,15 @@ void Tutorial::Initialize() {
 
 	// Dialogue Box
 	// Width, Height, X, Y, Shown, Timer, FadeSpeed, FadeAlpha, FullText, TypingSpeed, SoundPlayed
-	StartedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 25.0f, false };
-	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 25.0f, false };
-	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 25.0f, false };
-	LiftOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This lift can travel from Basement 1 to Level 9.\nClick [B1-9] to select a floor.", 25.0f, false };
-	LiftFloorSelectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now collect the patient from the room shown on your pager.", 25.0f, false };
-	PatientCollectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "There are two types of patients:\nNormal and Ghost\nUsing the Journal, you must identify which illness the patient has\nor if they are a ghost.\nPress [I] to open the Journal.", 25.0f, false };
-	JournalOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your journal. It records the anomalies you encounter.\nA normal patient will display 3 anomalies.\nA ghost will display an additional anomaly.\nMake sure to identify them correctly.\nPress [I] again to close the Journal.", 25.0f, false };
-	JournalClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now bring the patient to their designated room.\nNormal patients must be delivered to the room shown on your pager.\nGhosts must be delivered to the basement (B1).\nBringing the wrong patient type will result in Game Over.", 25.0f, false };
-	PatientDeliveredBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f,"Well done! Your shift begins now.\nDeliver at least 5 patients before each day ends.\nIf you forget how to play, Press [G] anytime to view the guide.\nStay alert and watch out.\nPress [TAB] to end the tutorial.", 25.0f, false };
+	StartedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 50.0f, false };
+	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 50.0f, false };
+	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 50.0f, false };
+	LiftOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This lift can travel from Basement 1 to Level 9.\nClick [B1-9] to select a floor.", 50.0f, false };
+	LiftFloorSelectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now collect the patient from the room shown on your pager.", 50.0f, false };
+	PatientCollectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "There are two types of patients:\nNormal and Ghost\nUsing the Journal, you must identify which illness the patient has\nor if they are a ghost.\nPress [I] to open the Journal.", 50.0f, false };
+	JournalOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your journal. It records the anomalies you encounter.\nA normal patient will display 3 anomalies.\nA ghost will display an additional anomaly.\nMake sure to identify them correctly.\nPress [I] again to close the Journal.", 50.0f, false };
+	JournalClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now bring the patient to their designated room.\nNormal patients must be delivered to the room shown on your pager.\nGhosts must be delivered to the basement (B1).\nBringing the wrong patient type will result in Game Over.", 50.0f, false };
+	PatientDeliveredBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f,"Well done! Your shift begins now.\nDeliver at least 5 patients before each day ends.\nIf you forget how to play, Press [G] anytime to view the guide.\nStay alert and watch out.\nPress [TAB] to end the tutorial.", 50.0f, false };
 
 	// File reading
 	LoadConfigFromFile("Assets/Tutorial/Config/TutorialConfig.txt");
@@ -394,6 +394,7 @@ void Tutorial::Update(f32 DT) {
 				TutorialState.LiftFloorSelected = true;
 				DialogueBoxUpdate(LiftFloorSelectedBox, DT, 400.0f); // draws the dialogue box
 				if (CurrentStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
+					Player_ForceHumanPatient();
 					CurrentStage = TUTORIAL_WAIT_FOR_JOURNAL_OPEN; // nxet stage
 					TutorialState.LiftFloorSelected = false;
 				}
