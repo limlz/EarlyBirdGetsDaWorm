@@ -50,7 +50,7 @@ void Guide_Initialize();
 \return
     None.
 *******************************************************************************/
-void Guide_Update(bool liftActive, f32 dt, bool pagerActive);
+void Guide_Update(bool LiftActive, f32 DT, bool PagerActive);
 
 /*!*****************************************************************************
 \brief
@@ -76,18 +76,6 @@ void Guide_BossFight();
     True if the guide is open, otherwise false.
 *******************************************************************************/
 bool IsGuideActive();
-
-/*!*****************************************************************************
-\brief
-    Draws the small guide icon on the screen.
-
-    This icon appears in the corner of the screen to indicate
-    that the player can open the guide.
-
-\return
-    None.
-*******************************************************************************/
-void Guide_DrawSmallIcon();
 
 /*!*****************************************************************************
 \brief

@@ -1,360 +1,452 @@
 #include "pch.hpp"
 
-// Shared mesh for all guide quads (all are identical white squares)
-static AEGfxVertexList* GuideMesh;
+class Guide {
+	public:
+		// Mesh
+		AEGfxVertexList* GuideMesh;
 
-// Textures
-static AEGfxTexture* GuideIconTexture;
-static AEGfxTexture* GuideBGTopTexture;
-static AEGfxTexture* GuideBGBackTexture;
-static AEGfxTexture* GuideArrowLeftTexture;
-static AEGfxTexture* GuideArrowRightTexture;
+		// Textures 
+		struct Textures {
+			AEGfxTexture* Icon;
+			AEGfxTexture* BackgroundTop;
+			AEGfxTexture* BackgroundBottom;
+			AEGfxTexture* ArrowLeft;
+			AEGfxTexture* ArrowRight;
 
-static AEGfxTexture* GuideCategory1Texture;
-static AEGfxTexture* GuideCategory2Texture;
-static AEGfxTexture* GuideCategory3Texture;
-// Image Textures
-static AEGfxTexture* GuideImage1Texture;
-static AEGfxTexture* GuideImage2Texture;
-static AEGfxTexture* GuideImage3Texture;
-static AEGfxTexture* GuideImage4Texture;
+			AEGfxTexture* Category1;
+			AEGfxTexture* Category2;
+			AEGfxTexture* Category3;
 
-// Variables
-static s8 GuideFontID;
-static s8 IconFontID;
-static bool IsGuideOpen;
-static f32 FadeSpeed;
-static f32 GuidePopTimer;
-static f32 GuideAlpha;
-static f32 Cat2ScrollY;
-static f32 Cat2ScrollSpeed;
-static bool Cat2Page1;
-static bool Cat2Page2;
+			AEGfxTexture* Image1;
+			AEGfxTexture* Image2;
+			AEGfxTexture* Image3;
+			AEGfxTexture* Image4;
+		} GuideTexture;
 
-// Small Icon
-static f32 IconAlpha;
-static bool IconHover;
+		// Font
+		struct Fonts {
+			s8 Pixel;
+			s8 Goth;
 
-// Arrow Dimensions
-static f32 ArrowW;
-static f32 ArrowH;
-static f32 ArrowX;
-static f32 ArrowY;
-static f32 ArrowAlpha;
+		} GuideFont;
 
-// Category Dimensions
-static f32 CategoryW;
-static f32 CategoryX;
+		// State
+		struct State {
+			bool IsOpen;
+			bool CanDisplay;
+			f32 FadeSpeed;
+			f32 PopUpTimer;
+			f32 Alpha;
+		} GuideState;
 
-// Category
-static int CategoryID;
-static f32 Cat1Alpha;
-static f32 Cat2Alpha;
-static f32 Cat3Alpha;
-static f32 CatSpeed;
-static bool Cat1Selected;
-static bool Cat2Selected;
-static bool Cat3Selected;
+		// Small Icon
+		struct Icon {
+			f32 Width, Height;
+			f32 X, Y;
+			f32 Alpha;
+			bool Hover;
+		} GuideIcon;
 
-void Guide_Load() {
-	GuideFontID = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
-	IconFontID = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+		// Arrow
+		struct Arrow {
+			f32 Width, Height;
+			f32 X, Y;
+			f32 Alpha;
+		} GuideArrow;
 
-	GuideIconTexture = LoadTextureChecked(Assets::Guide::GuideIcon);
-	GuideBGTopTexture = LoadTextureChecked(Assets::Guide::GuideBGTop);
-	GuideBGBackTexture = LoadTextureChecked(Assets::Guide::GuideBGBack);
-	GuideArrowLeftTexture = LoadTextureChecked(Assets::Guide::GuideArrowLeft);
-	GuideArrowRightTexture = LoadTextureChecked(Assets::Guide::GuideArrowRight);
+		// Categories 
+		struct Category {
+			s8 ID;
+			f32 Width, X;
+			f32 Alpha1, Alpha2, Alpha3;
+			f32 Speed;
 
-	GuideCategory1Texture = LoadTextureChecked(Assets::Guide::Category1Text);
-	GuideCategory2Texture = LoadTextureChecked(Assets::Guide::Category2Text);
-	GuideCategory3Texture = LoadTextureChecked(Assets::Guide::Category3Text);
+			bool Selected1, Selected2, Selected3;
+			bool Page1Active, Page2Active;
+		} GuideCategory;
 
-	GuideImage1Texture = LoadTextureChecked(Assets::Guide::Image1);
-	GuideImage2Texture = LoadTextureChecked(Assets::Guide::Image2);
-	GuideImage3Texture = LoadTextureChecked(Assets::Guide::Image3);
-	GuideImage4Texture = LoadTextureChecked(Assets::Guide::Image4);
+	public:
+		void Load();
+		void LoadConfigFromFile(const std::string& Filename);
+		void Initialize();
+		void Update(bool LiftActive, f32 DT, bool PagerActive);
+		void Draw();
+		void Free();
+		void BossFight();
+};
+
+static Guide TheGuide;
+
+void Guide_Load() { TheGuide.Load(); }
+void Guide_Initialize() { TheGuide.Initialize(); }
+void Guide_Update(bool LiftActive, f32 DT, bool PagerActive) { TheGuide.Update(LiftActive, DT, PagerActive); }
+void Guide_Draw() { TheGuide.Draw(); }
+void Guide_Free() { TheGuide.Free(); }
+void Guide_BossFight() { TheGuide.BossFight(); }
+bool IsGuideActive() { return TheGuide.GuideState.IsOpen; }
+
+void Guide::Load() {
+	GuideFont.Goth = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
+	GuideFont.Pixel = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+
+	GuideTexture.Icon = LoadTextureChecked(Assets::Guide::GuideIcon);
+	GuideTexture.BackgroundTop = LoadTextureChecked(Assets::Guide::GuideBGTop);
+	GuideTexture.BackgroundBottom = LoadTextureChecked(Assets::Guide::GuideBGBack);
+	GuideTexture.ArrowLeft = LoadTextureChecked(Assets::Guide::GuideArrowLeft);
+	GuideTexture.ArrowRight = LoadTextureChecked(Assets::Guide::GuideArrowRight);
+
+	GuideTexture.Category1 = LoadTextureChecked(Assets::Guide::Category1Text);
+	GuideTexture.Category2 = LoadTextureChecked(Assets::Guide::Category2Text);
+	GuideTexture.Category3 = LoadTextureChecked(Assets::Guide::Category3Text);
+
+	GuideTexture.Image1 = LoadTextureChecked(Assets::Guide::Image1);
+	GuideTexture.Image2 = LoadTextureChecked(Assets::Guide::Image2);
+	GuideTexture.Image3 = LoadTextureChecked(Assets::Guide::Image3);
+	GuideTexture.Image4 = LoadTextureChecked(Assets::Guide::Image4);
 }
 
-void Guide_Initialize() {
+void Guide::LoadConfigFromFile(const std::string& Filename) {
+	std::ifstream File(Filename);
+	if (!File.is_open()) {
+		printf("[FAIL] Guide configuration could not be opened.");
+		return;
+	}
+
+	std::string Line;
+
+	while (std::getline(File, Line)) {
+		std::istringstream iss(Line);
+
+		std::string Key;
+
+		if (std::getline(iss, Key, '=')) {
+			// State
+			if (Key == "State") {
+				if (!(iss >> GuideState.IsOpen >> GuideState.CanDisplay >> GuideState.FadeSpeed >> GuideState.PopUpTimer >> GuideState.Alpha)) {
+					printf("[FAIL] Guide state configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Guide state configuration loaded successfully.\n");
+				}
+			}
+			else if (Key == "Icon") {
+				if (!(iss >> GuideIcon.Width >> GuideIcon.Height >> GuideIcon.Alpha >> GuideIcon.Hover)) {
+					printf("[FAIL] Guide icon configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Guide icon configuration loaded successfully.\n");
+				}
+			}
+			else if (Key == "Arrow") {
+				if (!(iss >> GuideArrow.Width >> GuideArrow.Height >> GuideArrow.X >> GuideArrow.Y >> GuideArrow.Alpha)) {
+					printf("[FAIL] Guide arrow configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Guide arrow configuration loaded successfully.\n");
+				}
+			}
+			else if (Key == "Categories") {
+				if (!(iss >> GuideCategory.ID >> GuideCategory.Width >> GuideCategory.X >> GuideCategory.Alpha1 >> GuideCategory.Alpha2 >> GuideCategory.Alpha3
+					>> GuideCategory.Speed >> GuideCategory.Selected1 >> GuideCategory.Selected2 >> GuideCategory.Selected3
+					>> GuideCategory.Page1Active >> GuideCategory.Page2Active)) {
+					printf("[FAIL] Guide category configuration failed to load.\n");
+				}
+				else {
+					printf("[SUCCESS] Guide category configuration loaded successfully.\n");
+				}
+			}
+		}
+	}
+	File.close();
+}
+
+void Guide::Initialize() {
 	// Shared mesh for all guide quads
 	GuideMesh = CreateSquareMesh(0xFFFFFFFF);
 
-	// Variables
-	IsGuideOpen = false;
-	Cat2ScrollY = 0.0f;
-	Cat2ScrollSpeed = 500.0f;
-	Cat2Page1 = true;
-	Cat2Page2 = false;
-	IconAlpha = 1.0f;
-	IconHover = false;
+	// States
+	GuideState.IsOpen = false;
+	GuideState.CanDisplay = false;
+	GuideState.FadeSpeed = 2.5f;
+	GuideState.PopUpTimer = 0.0f;
+	GuideState.Alpha = 0.0f;
 
-	// Fade In Animation
-	GuidePopTimer = 0.0f;
-	FadeSpeed = 2.5f;
-	GuideAlpha = 0.0f;
+	// Small Icon
+	GuideIcon.Width = 100.0f;
+	GuideIcon.Height = 63.0f;
+	GuideIcon.X = AEGfxGetWinMinX() + 1350.0f;
+	GuideIcon.Y = AEGfxGetWinMinY() + 750.0f;
+	GuideIcon.Alpha = 1.0f;
+	GuideIcon.Hover = false;
 
-	// Category Dimensions
-	ArrowW = 62.0f;
-	ArrowH = 62.0f;
-	ArrowX = 420.0f;
-	ArrowY = -290.0f;
-	ArrowAlpha = 1.0f;
+	// Arrow
+	GuideArrow.Width = 62.0f;
+	GuideArrow.Height = 62.0f;
+	GuideArrow.X = 420.0f;
+	GuideArrow.Y = -290.0f;
+	GuideArrow.Alpha = 1.0f;
 
-	// Category Dimensions
-	CategoryW = 172.0f;
-	CategoryX = 514.0f;
+	// Categories
+	GuideCategory.ID = 1;
+	GuideCategory.Width = 172.0f;
+	GuideCategory.X = 514.0f;
+	GuideCategory.Alpha1 = 1.0f;
+	GuideCategory.Alpha2 = 1.0f;
+	GuideCategory.Alpha3 = 1.0f;
+	GuideCategory.Speed = 10.0f;
+	GuideCategory.Selected1 = true;
+	GuideCategory.Selected2 = false;
+	GuideCategory.Selected3 = false;
+	GuideCategory.Page1Active = false;
+	GuideCategory.Page2Active = false;
 
-	// Category
-	CatSpeed = 10.0f;
-	Cat1Alpha = 1.0f;
-	Cat2Alpha = 1.0f;
-	Cat3Alpha = 1.0f;
-	CategoryID = 1;
-	Cat1Selected = true;
-	Cat2Selected = false;
-	Cat3Selected = false;
+	// File reading
+	LoadConfigFromFile("Assets/Guide/Config/GuideConfig.txt");
 }
 
-void Guide_Update(bool liftActive, f32 dt, bool pagerActive) {
-	if (IsGuideOpen && GuideAlpha < 1.0f) {
-		GuideAlpha += FadeSpeed * dt;
+void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
+	if (GuideState.IsOpen && GuideState.Alpha < 1.0f) {
+		GuideState.Alpha += GuideState.FadeSpeed * DT;
 
-		if (GuideAlpha > 1.0f) {
-			GuideAlpha = 1.0f;
+		if (GuideState.Alpha > 1.0f) {
+			GuideState.Alpha = 1.0f;
 		}
 	}
 
-	if (!IsGuideOpen) {
-		GuideAlpha -= FadeSpeed * dt;
-		if (GuideAlpha < 0.0f) {
-			GuideAlpha = 0.0f;
+	if (!GuideState.IsOpen) {
+		GuideState.Alpha -= GuideState.FadeSpeed * DT;
+		if (GuideState.Alpha < 0.0f) {
+			GuideState.Alpha = 0.0f;
 		}
-		Cat2Alpha = 0.5;
-		Cat3Alpha = 0.5;
-		Cat1Selected = true;
-		Cat2Selected = false;
-		Cat3Selected = false;
+		GuideCategory.Alpha2 = 0.5;
+		GuideCategory.Alpha3 = 0.5;
+
+		GuideCategory.ID = 1;
 	}
 
 	// Small Icon Hover and Select
-	IconHover = IsAreaHovered(AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f);
-	HoverAnimation(IconAlpha, IconHover, CatSpeed, dt, 1.0f, 0.5f);
+	GuideIcon.Hover = IsAreaHovered(GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height);
+	HoverAnimation(GuideIcon.Alpha, GuideIcon.Hover, GuideCategory.Speed, DT, 1.0f, 0.5f);
+	bool OutsideGuide{ (IsAreaClickedByMouse(0.0f, 0.0f, 1200.0f, 756.0f)) ? false : true };
 
-	if (((IconHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_G)) && !liftActive && !pagerActive)
+	if (((GuideIcon.Hover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_G)) && !liftActive && !PagerActive)
 	{
-		IsGuideOpen = !IsGuideOpen;
+		GuideState.IsOpen = !GuideState.IsOpen;
 	}
+
+	if (GuideState.IsOpen) {
+		if (OutsideGuide && AEInputCheckTriggered(AEVK_LBUTTON)) { GuideState.IsOpen = false; }
+	}
+
+
 
 	// Category Select
-	bool Cat1Hover{ IsAreaHovered(CategoryX, 153.0f, CategoryW, 153.0f) },
-		Cat2Hover{ IsAreaHovered(CategoryX, 0.0f, CategoryW, 157.0f) },
-		Cat3Hover{ IsAreaHovered(CategoryX, -150.0f, CategoryW, 157.0f) };
+	bool Cat1Hover{ IsAreaHovered(GuideCategory.X, 153.0f, GuideCategory.Width, 153.0f) },
+		Cat2Hover{ IsAreaHovered(GuideCategory.X, 0.0f, GuideCategory.Width, 157.0f) },
+		Cat3Hover{ IsAreaHovered(GuideCategory.X, -150.0f, GuideCategory.Width, 157.0f) };
 
 	// Arrow Select
-	bool ArrowHover{ IsAreaHovered(ArrowX, ArrowY, ArrowW, ArrowH) };
-	HoverAnimation(ArrowAlpha, ArrowHover, 5.0f, dt, 1.0f, 0.5f);
+	bool ArrowHover{ IsAreaHovered(GuideArrow.X, GuideArrow.Y, GuideArrow.Width, GuideArrow.Height) };
+	HoverAnimation(GuideArrow.Alpha, ArrowHover, 5.0f, DT, 1.0f, 0.5f);
 
 	// Fade out when button hover 
-	if (!Cat1Selected) {
-		HoverAnimation(Cat1Alpha, Cat1Hover, CatSpeed, dt, 0.5f, 1.0f);
+	if (!GuideCategory.Selected1) {
+		HoverAnimation(GuideCategory.Alpha1, Cat1Hover, GuideCategory.Speed, DT, 0.5f, 1.0f);
 	}
-	if (!Cat2Selected) {
-		HoverAnimation(Cat2Alpha, Cat2Hover, CatSpeed, dt, 0.5f, 1.0f);
+	if (!GuideCategory.Selected2) {
+		HoverAnimation(GuideCategory.Alpha2, Cat2Hover, GuideCategory.Speed, DT, 0.5f, 1.0f);
 	}
-	if (!Cat3Selected) {
-		HoverAnimation(Cat3Alpha, Cat3Hover, CatSpeed, dt, 0.5f, 1.0f);
+	if (!GuideCategory.Selected3) {
+		HoverAnimation(GuideCategory.Alpha3, Cat3Hover, GuideCategory.Speed, DT, 0.5f, 1.0f);
 	}
 
-	if (Cat1Hover && (!Cat2Selected || !Cat3Selected)) {
-		Cat1Alpha = 1.0f;
+	if (Cat1Hover && (!GuideCategory.Selected2 || !GuideCategory.Selected3)) {
+		GuideCategory.Alpha1 = 1.0f;
 	}
-	if (Cat2Hover && (!Cat1Selected || !Cat3Selected)) {
-		Cat2Alpha = 1.0f;
+	if (Cat2Hover && (!GuideCategory.Selected1 || !GuideCategory.Selected3)) {
+		GuideCategory.Alpha2 = 1.0f;
 	}
-	if (Cat3Hover && (!Cat1Selected || !Cat2Selected)) {
-		Cat3Alpha = 1.0f;
+	if (Cat3Hover && (!GuideCategory.Selected1 || !GuideCategory.Selected2)) {
+		GuideCategory.Alpha3 = 1.0f;
 	}
-	
+
 
 	if (Cat1Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
-		Cat1Alpha = 1.0f;
-		CategoryID = 1;
-		
+		GuideCategory.Alpha1 = 1.0f;
+		GuideCategory.ID = 1;
+
 	}
 	if (Cat2Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
-		Cat2Alpha = 1.0f;
-		CategoryID = 2;
-		//cat2ScrollY = 0.0f;
+		GuideCategory.Alpha2 = 1.0f;
+		GuideCategory.ID = 2;
 	}
 	if (Cat3Hover && AEInputCheckTriggered(AEVK_LBUTTON)) {
-		Cat3Alpha = 1.0f;
-		CategoryID = 3;
+		GuideCategory.Alpha3 = 1.0f;
+		GuideCategory.ID = 3;
 	}
 
 	// Arrow-Keys
 	if (AEInputCheckTriggered(AEVK_UP)) {
 		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-		--CategoryID;
-		if (CategoryID < 1) {
-			CategoryID = 1;
+		--GuideCategory.ID;
+		if (GuideCategory.ID < 1) {
+			GuideCategory.ID = 1;
 		}
+		return;
 	}
 	if (AEInputCheckTriggered(AEVK_DOWN)) {
 		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-		++CategoryID;
-		if (CategoryID > 3) {
-			CategoryID = 3;
+		++GuideCategory.ID;
+		if (GuideCategory.ID > 3) {
+			GuideCategory.ID = 3;
 		}
+		return;
 	}
 
-	switch (CategoryID) {
+	switch (GuideCategory.ID) {
 	case 1:
-		Cat1Selected = true;
-		Cat2Selected = false;
-		Cat3Selected = false;
+		GuideCategory.Selected1 = true;
+		GuideCategory.Selected2 = false;
+		GuideCategory.Selected3 = false;
 		break;
 	case 2:
-		Cat1Selected = false;
-		Cat2Selected = true;
-		Cat3Selected = false;
+		GuideCategory.Selected1 = false;
+		GuideCategory.Selected2 = true;
+		GuideCategory.Selected3 = false;
 		break;
 	case 3:
-		Cat1Selected = false;
-		Cat2Selected = false;
-		Cat3Selected = true;
-		
+		GuideCategory.Selected1 = false;
+		GuideCategory.Selected2 = false;
+		GuideCategory.Selected3 = true;
+
 		break;
 	}
 
-	if (Cat1Selected) {
-		Cat1Alpha = 1.0f;
-		Cat2Page2 = false;
-		Cat2Page1 = true;
+	if (GuideCategory.Selected1) {
+		GuideCategory.Alpha1 = 1.0f;
+		GuideCategory.Page1Active = true;
+		GuideCategory.Page2Active = false;
 	}
-	if (Cat2Selected) {
-		Cat2Alpha = 1.0f;
+	if (GuideCategory.Selected2) {
+		GuideCategory.Alpha2 = 1.0f;
 
-		if (Cat2Page1 && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_RIGHT))) {
+		if (GuideCategory.Page1Active && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_RIGHT))) {
 			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-			Cat2Page1 = false;
-			Cat2Page2 = true;
-			ArrowAlpha = 1.0f;
+			GuideCategory.Page1Active = false;
+			GuideCategory.Page2Active = true;
+			GuideArrow.Alpha = 1.0f;
 		}
-		else if (Cat2Page2 && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_LEFT))) {
+		else if (GuideCategory.Page2Active && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_LEFT))) {
 			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-			Cat2Page2 = false;
-			Cat2Page1 = true;
-			ArrowAlpha = 1.0f;
+			GuideCategory.Page1Active = true;
+			GuideCategory.Page2Active = false;
+			GuideArrow.Alpha = 1.0f;
 		}
 	}
-	if (Cat3Selected) {
-		Cat3Alpha = 1.0f;
-		Cat2Page2 = false;
-		Cat2Page1 = true;
+	if (GuideCategory.Selected3) {
+		GuideCategory.Alpha3 = 1.0f;
+		GuideCategory.Page1Active = true;
+		GuideCategory.Page2Active = false;
 	}
 }
 
 // This will open the guide with the correct image automatically
-void Guide_BossFight() {
+void Guide::BossFight() {
 	// Open the guide
-	IsGuideOpen = true;
+	GuideState.IsOpen = true;
+	GuideState.CanDisplay = true;
 
 	// Select the boss fight category
-	CategoryID = 3;
-	Cat1Selected = false;
-	Cat2Selected = false;
-	Cat3Selected = true;
+	GuideCategory.ID = 3;
+	GuideCategory.Selected1 = false;
+	GuideCategory.Selected2 = false;
+	GuideCategory.Selected3 = true;
 
 	// Fade in smoothly
-	GuideAlpha = 0.0f;       // start fade from 0
-	GuidePopTimer = 0.0f;
+	GuideState.Alpha = 0.0f;     
+	GuideState.PopUpTimer = 0.0f;
 
 	// Reset category alphas
-	Cat1Alpha = 0.5f;
-	Cat2Alpha = 0.5f;
-	Cat3Alpha = 1.0f;        // non-selected category should be dimmed
+	GuideCategory.Alpha1 = 0.5f;
+	GuideCategory.Alpha2 = 0.5f;
+	GuideCategory.Alpha3 = 1.0f;
 
-	// Reset scroll & pages if needed
-	Cat2ScrollY = 0.0f;
-	Cat2Page1 = true;
-	Cat2Page2 = false;
+	// Reset pages
+	GuideCategory.Page1Active = true;
+	GuideCategory.Page2Active = false;
 }
 
-bool IsGuideActive() { return IsGuideOpen; }
-
-void Guide_DrawSmallIcon() {
+void Guide::Draw() {
 	// Draws the guide icon in the corner
-	DrawTextureMesh(GuideMesh, GuideIconTexture, AEGfxGetWinMinX() + 1350.0f, AEGfxGetWinMinY() + 750.0f, 100.0f, 63.0f, IconAlpha);
+	//DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);\
 
-	if (IconHover && !IsGuideOpen) {
-		AEGfxPrint(IconFontID, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	// Draws the guide icon in the corner
+	DrawTextureMesh(GuideMesh, GuideTexture.Icon, GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height, GuideIcon.Alpha);
+
+	if (GuideIcon.Hover) {
+		AEGfxPrint(GuideFont.Pixel, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
-}
 
-void Guide_Draw() {
-	// Position
-	f32 winW{ static_cast<f32>(AEGfxGetWindowWidth()) },
-		winH{ static_cast<f32>(AEGfxGetWindowHeight()) };
-
-	// Draws the guide icon in the corner
-	//DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);
-
-	if (IsGuideOpen) {
+	if (GuideState.IsOpen) {
 		// Black BG
-		u32 colorBG = (0x000000 << 8) | static_cast<u32>(GuideAlpha * 187.0f);
-		DrawSquareMesh(GuideMesh, 0.0f, 0.0f, winW, winH, colorBG);
+		/*u32 colorBG = (0x000000 << 8) | static_cast<u32>(GuideAlpha * 187.0f);
+		DrawSquareMesh(GuideMesh, 0.0f, 0.0f, winW, winH, colorBG);*/
 
 		// Draw back BG
-		DrawTextureMesh(GuideMesh, GuideBGBackTexture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
-		DrawTextureMesh(GuideMesh, GuideCategory3Texture, CategoryX, -150.0f, CategoryW, 157.0f, Cat3Alpha);
-		DrawTextureMesh(GuideMesh, GuideCategory2Texture, CategoryX, 0.0f, CategoryW, 157.0f, Cat2Alpha);
-		DrawTextureMesh(GuideMesh, GuideCategory1Texture, CategoryX, 153.0f, CategoryW, 153.0f, Cat1Alpha);	
+		DrawTextureMesh(GuideMesh, GuideTexture.BackgroundBottom, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+		DrawTextureMesh(GuideMesh, GuideTexture.Category3, GuideCategory.X, -150.0f, GuideCategory.Width, 157.0f, GuideCategory.Alpha3);
+		DrawTextureMesh(GuideMesh, GuideTexture.Category2, GuideCategory.X, 0.0f, GuideCategory.Width, 157.0f, GuideCategory.Alpha2);
+		DrawTextureMesh(GuideMesh, GuideTexture.Category1, GuideCategory.X, 153.0f, GuideCategory.Width, 153.0f, GuideCategory.Alpha1);
 
-		AEGfxPrint(GuideFontID, "CONTROLS", textPosition(465.0f, 150.0f).first, textPosition(465.0f, 150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat1Alpha);
-		AEGfxPrint(GuideFontID, "HOW TO", textPosition(465.0f, 5.0f).first, textPosition(465.0f, 5.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
-		AEGfxPrint(GuideFontID, "PLAY", textPosition(465.0f, -25.0f).first, textPosition(465.0f, -25.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat2Alpha);
-		AEGfxPrint(GuideFontID, "BOSS FIGHT", textPosition(465.0f, -155.0f).first, textPosition(465.0f, -155.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, Cat3Alpha);
+		AEGfxPrint(GuideFont.Goth, "CONTROLS", textPosition(465.0f, 150.0f).first, textPosition(465.0f, 150.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, GuideCategory.Alpha1);
+		AEGfxPrint(GuideFont.Goth, "HOW TO", textPosition(465.0f, 5.0f).first, textPosition(465.0f, 5.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, GuideCategory.Alpha2);
+		AEGfxPrint(GuideFont.Goth, "PLAY", textPosition(465.0f, -25.0f).first, textPosition(465.0f, -25.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, GuideCategory.Alpha2);
+		AEGfxPrint(GuideFont.Goth, "BOSS FIGHT", textPosition(465.0f, -155.0f).first, textPosition(465.0f, -155.0f).second, 0.6f, 0.50f, 0.05f, 0.05f, GuideCategory.Alpha3);
 
-		DrawTextureMesh(GuideMesh, GuideBGTopTexture, -68.0f, 0.0f, 1061.0f, 756.0f, 1.0f);
-		if (Cat1Selected) {
-			DrawTextureMesh(GuideMesh, GuideImage1Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+
+		f32 InfoX{ textPosition(-220.0f, -410.0f).first },
+			InfoY{ textPosition(-220.0f, -410.0f).second };
+		AEGfxPrint(GuideFont.Pixel, "PRESS [G] TO CLOSE GUIDE", InfoX, InfoY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		DrawTextureMesh(GuideMesh, GuideTexture.BackgroundTop, -68.0f, 0.0f, 1061.0f, 756.0f, 1.0f);
+		if (GuideCategory.Selected1) {
+			DrawTextureMesh(GuideMesh, GuideTexture.Image1, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		}
-		if (Cat2Selected) {
-			if (Cat2Page1) {
-				DrawTextureMesh(GuideMesh, GuideImage2Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
-				DrawTextureMesh(GuideMesh, GuideArrowRightTexture, ArrowX, ArrowY, ArrowW, ArrowH, ArrowAlpha);
+		if (GuideCategory.Selected2) {
+			if (GuideCategory.Page1Active) {
+				DrawTextureMesh(GuideMesh, GuideTexture.Image2, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+				DrawTextureMesh(GuideMesh, GuideTexture.ArrowRight, GuideArrow.X, GuideArrow.Y, GuideArrow.Width, GuideArrow.Height, GuideArrow.Alpha);
 			}
-			else if (Cat2Page2) {
-				DrawTextureMesh(GuideMesh, GuideImage3Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
-				DrawTextureMesh(GuideMesh, GuideArrowLeftTexture, ArrowX, ArrowY, ArrowW, ArrowH, ArrowAlpha);
+			else if (GuideCategory.Page2Active) {
+				DrawTextureMesh(GuideMesh, GuideTexture.Image3, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+				DrawTextureMesh(GuideMesh, GuideTexture.ArrowLeft, GuideArrow.X, GuideArrow.Y, GuideArrow.Width, GuideArrow.Height, GuideArrow.Alpha);
 			}
 		}
-		if (Cat3Selected) {
-			DrawTextureMesh(GuideMesh, GuideImage4Texture, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
+		if (GuideCategory.Selected3) {
+			DrawTextureMesh(GuideMesh, GuideTexture.Image4, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		}
 	}
 
 }
 
-void Guide_Free() {
+void Guide::Free() {
 	FreeMeshSafe(GuideMesh);
 
-	UnloadTextureSafe(GuideIconTexture);
-	UnloadTextureSafe(GuideBGTopTexture);
-	UnloadTextureSafe(GuideBGBackTexture);
-	UnloadTextureSafe(GuideArrowLeftTexture);
-	UnloadTextureSafe(GuideArrowRightTexture);
+	UnloadTextureSafe(GuideTexture.Icon);
+	UnloadTextureSafe(GuideTexture.BackgroundTop);
+	UnloadTextureSafe(GuideTexture.BackgroundBottom);
+	UnloadTextureSafe(GuideTexture.ArrowLeft);
+	UnloadTextureSafe(GuideTexture.ArrowRight);
 
-	UnloadTextureSafe(GuideCategory1Texture);
-	UnloadTextureSafe(GuideCategory2Texture);
-	UnloadTextureSafe(GuideCategory3Texture);
+	UnloadTextureSafe(GuideTexture.Category1);
+	UnloadTextureSafe(GuideTexture.Category2);
+	UnloadTextureSafe(GuideTexture.Category3);
 
-	UnloadTextureSafe(GuideImage1Texture);
-	UnloadTextureSafe(GuideImage2Texture);
-	UnloadTextureSafe(GuideImage3Texture);
-	UnloadTextureSafe(GuideImage4Texture);
+	UnloadTextureSafe(GuideTexture.Image1);
+	UnloadTextureSafe(GuideTexture.Image2);
+	UnloadTextureSafe(GuideTexture.Image3);
+	UnloadTextureSafe(GuideTexture.Image4);
 
-	AEGfxDestroyFont(GuideFontID);
-	AEGfxDestroyFont(IconFontID);
+	AEGfxDestroyFont(GuideFont.Goth);
+	AEGfxDestroyFont(GuideFont.Pixel);
 }

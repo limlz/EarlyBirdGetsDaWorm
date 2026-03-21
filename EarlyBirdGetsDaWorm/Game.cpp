@@ -643,11 +643,11 @@ void Game_Draw()
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
     Journal_DrawSmallIcon(squareMesh);
-    Guide_DrawSmallIcon();
-    Notifications_Draw(targetDoor, targetFloor, destFloor, destDoor);
+    Guide_Draw();
+    Notifications_Draw(targetFloor, targetDoor, destFloor, destDoor);
+    Timer_Draw(0.0f, 0.85f);
     Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
-    Guide_Draw();
     Lift_Draw(squareMesh);
 
     DebugInfo info;

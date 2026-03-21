@@ -4,10 +4,10 @@ void Notifications_Initialize();
 
 void Notifications_Trigger();
 
-void Notifications_Update(bool liftActive, f32 dt);
+void Notifications_Update(bool LiftActive, f32 DT);
 
 bool IsPagerActive();
 
-void Notifications_Draw(s8 patientDoorNum, s8 patientFloorNum, s8 desDoorNum, s8 desFloorNum);
+void Notifications_Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber);
 
 void Notifications_Free();
