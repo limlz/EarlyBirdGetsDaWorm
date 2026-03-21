@@ -383,7 +383,7 @@ void Guide::Draw() {
 	// Draws the guide icon in the corner
 	DrawTextureMesh(GuideMesh, GuideTexture.Icon, GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height, GuideIcon.Alpha);
 
-	if (GuideIcon.Hover) {
+	if (GuideIcon.Hover && !GuideState.IsOpen) {
 		AEGfxPrint(GuideFont.Pixel, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
