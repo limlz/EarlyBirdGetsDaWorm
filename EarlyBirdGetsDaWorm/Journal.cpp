@@ -720,18 +720,46 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
 
     HoverAnimation(JournalIconAlpha, JournalIconHover, JournalIconHoverSpeed, dt, 1.0f, 0.5f);
 
-    if (((JournalIconHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_I))
+    static bool justToggled = false;
+
+    bool clicked = AEInputCheckTriggered(AEVK_LBUTTON);
+    bool pressedI = AEInputCheckTriggered(AEVK_I);
+
+    bool OutsideJournal = !IsAreaClickedByMouse(
+        0.0f * UI_SCALE, 0.0f * UI_SCALE,
+        2000.0f * UI_SCALE, 1050.0f * UI_SCALE
+    );
+
+    // OPEN
+    if (((JournalIconHover && clicked) || pressedI)
         && !liftActive && !guideActive && !pagerActive)
     {
         Open = !Open;
+        justToggled = true;
+
         AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
 
         if (Open)
             RightPage = 0;
     }
 
+    // EARLY EXIT
     if (!Open)
         return;
+
+    // CLOSE
+    if (!justToggled && OutsideJournal && clicked)
+    {
+        AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
+        Open = false;
+    }
+
+    // Reset AFTER all logic
+    if (justToggled)
+    {
+        justToggled = false;
+    }
+
 
     // ------------------------------------------------------------
     // Mouse position
