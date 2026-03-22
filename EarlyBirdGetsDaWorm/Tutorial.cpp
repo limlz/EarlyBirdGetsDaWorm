@@ -132,6 +132,8 @@ public:
 		void TextDraw(char const* Str, f32 TextX, f32 TextY, f32 Alpha);
 		void DrawTextTopRight(DialogueBox& Dialogue);
 		void DrawSkip(DialogueBox& Dialogue);
+		void ResetDialogueBox(DialogueBox& Dialogue);
+		void ResetTutorial();
 };
 
 static Tutorial TheTutorial;
@@ -369,13 +371,16 @@ void Tutorial::Update(f32 DT) {
 			TutorialPrompt.Shown = false;
 			TutorialInput.PromptAnswered = true;
 			TutorialInput.DoTutorial = false;
+			AudioManager_StopSFX();
+			Timer_SetPaused(false);
 		}
 
 		if (YesButtonHover && AEInputCheckTriggered(AEVK_LBUTTON)) {
 			TutorialPrompt.Shown = false;
 			TutorialInput.PromptAnswered = true;
 			TutorialInput.DoTutorial = true;
-			CurrentStage = TUTORIAL_START;
+			//CurrentStage = TUTORIAL_START;
+			ResetTutorial();
 		}
 	}
 
@@ -464,6 +469,7 @@ void Tutorial::Update(f32 DT) {
 				if (CurrentStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
 					TutorialState.PatientDelivered = false;
 					TutorialState.Finished = true;
+					AudioManager_StopSFX();
 					Timer_SetPaused(false); // UNPAUSE TIMER
 				}
 				break;
@@ -515,6 +521,33 @@ void Tutorial::DrawSkip(DialogueBox& Dialogue) {
 		TutorialSkip.Anim = 0.0f;
 	}
 	DrawTextureMesh(TutorialMesh, TutorialTexture.Skip, (Dialogue.X + (Dialogue.Width * 0.5) - 90.0f) + TutorialSkip.Anim, (Dialogue.Y - (Dialogue.Height* 0.5) + 40.0f), TutorialSkip.Width, TutorialSkip.Height, Dialogue.FadeAlpha);
+}
+void Tutorial::ResetDialogueBox(DialogueBox& Dialogue) {
+	Dialogue.Shown = false;
+	Dialogue.Timer = 0.0f;
+	Dialogue.FadeAlpha = 0.0f;
+	Dialogue.VisibleCharCount = 0.0f;
+	Dialogue.TypingTimer = 0.0f;
+	Dialogue.FinishedTyping = false;
+	Dialogue.SoundPlayed = false;
+	Dialogue.Y = TutorialSize.Y;
+}
+
+void Tutorial::ResetTutorial() {
+	// Reset states
+	TutorialState = {};
+	CurrentStage = TUTORIAL_START;
+
+	// Reset all dialogue boxes
+	ResetDialogueBox(StartedBox);
+	ResetDialogueBox(PagerOpenedBox);
+	ResetDialogueBox(PagerClosedBox);
+	ResetDialogueBox(LiftOpenedBox);
+	ResetDialogueBox(LiftFloorSelectedBox);
+	ResetDialogueBox(PatientCollectedBox);
+	ResetDialogueBox(JournalOpenedBox);
+	ResetDialogueBox(JournalClosedBox);
+	ResetDialogueBox(PatientDeliveredBox);
 }
 
 void Tutorial::Draw() {

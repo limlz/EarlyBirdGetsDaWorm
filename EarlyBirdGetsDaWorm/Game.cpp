@@ -275,7 +275,7 @@ void Game_Update()
 
     // For Tutorial DT
     f32 gameDT = Timer_IsPaused() ? 0.0f : dt;
-    if (Doing_Tutorial()) {
+    if (Doing_Tutorial() && !IsTutorialFinished()) {
         Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), dt);
     }
     else {
