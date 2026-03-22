@@ -550,22 +550,22 @@ void Game_Draw()
     AEGfxSetTransparency(1.0f);
 
     // Outside World Persona // Persona Movement + Anim
-    f32 personaDt{ (f32)AEFrameRateControllerGetFrameTime() };
-    imageTimer += personaDt;
+    //f32 personaDt{ (f32)AEFrameRateControllerGetFrameTime() };
+    //imageTimer += personaDt;
 
-    if (imageTimer >= imageDuration) // Switch frame when duration is exceeded
-    {
-        imageTimer = 0.0f;
-        currentImage++;
+    //if (imageTimer >= imageDuration) // Switch frame when duration is exceeded
+    //{
+    //    imageTimer = 0.0f;
+    //    currentImage++;
 
-        if (currentImage >= 4) {
-            currentImage = 0; // loops the animation
-        }
-    }
+    //    if (currentImage >= 4) {
+    //        currentImage = 0; // loops the animation
+    //    }
+    //}
 
-    floatingTimer += personaDt; // Different floating movement
-    f32 floatOffset1{ sinf(floatingTimer * 2.0f) * 20.0f };
-    f32 floatOffset2{ sinf(floatingTimer * 2.0f + 1.5f) * 20.0f };
+    //floatingTimer += personaDt; // Different floating movement
+    //f32 floatOffset1{ sinf(floatingTimer * 2.0f) * 20.0f };
+    //f32 floatOffset2{ sinf(floatingTimer * 2.0f + 1.5f) * 20.0f };
 
     // Left lift only renders when the camera is close enough to the left end of the corridor
     if (camX > -(2 * DIST_BETWEEN_DOORS))
@@ -574,14 +574,14 @@ void Game_Draw()
         Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, floorNum);
 
-        f32 personaX{ -700.0f + camX - 100.0f }, personaY{ 0.0f };
+        /*f32 personaX{ -700.0f + camX - 100.0f }, personaY{ 0.0f };
         if (floorNum == 1) {
             DrawTextureMesh(squareMesh, OutsideGraveTex[0], personaX + 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
         }
         if (floorNum >= 2) {
             DrawTextureMesh(squareMesh, OutsideNadTex[currentImage], personaX + 300.0f, personaY + 150.0f + floatOffset1, 100.0f, 106.0f, 0.35f);
             DrawTextureMesh(squareMesh, OutsideLZTex[currentImage], personaX + 100.0f, personaY - 120.0f + floatOffset2, 132.0f, 106.0f, 0.35f);
-        }
+        }*/
     }
 
     // Right lift only renders near the right end; suppressed entirely in dementia mode where the corridor is infinite
@@ -594,14 +594,14 @@ void Game_Draw()
         Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, floorNum);
 
-        f32 personaX{ endOffset + camX + 200.0f }, personaY{ 0.0f };
+        /*f32 personaX{ endOffset + camX + 200.0f }, personaY{ 0.0f };
         if (floorNum == 1) {
             DrawTextureMesh(squareMesh, OutsideGraveTex[1], personaX - 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
         }
         if (floorNum >= 2) {
             DrawTextureMesh(squareMesh, OutsideSyaTex[currentImage], personaX - 100.0f, personaY - 150.0f + floatOffset2, 86.0f, 106.0f, 0.35f);
             DrawTextureMesh(squareMesh, OutsideAraTex[currentImage], personaX - 280.0f, personaY + 150.0f + floatOffset1, 160.0f, 133.0f, 0.35f);
-        }
+        }*/
     }
 
     AEMtx33 scale;
