@@ -1,7 +1,5 @@
 #include "pch.hpp"
-#include "Settings.hpp"
 #include "Credits.hpp"
-#include <string>
 
 static constexpr float FADE_IN_DURATION = 0.3f;
 static constexpr float FADE_OUT_SPEED = 6.0f;

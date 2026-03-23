@@ -337,6 +337,7 @@ void Game_Update()
         floorNum = 1;
         liftActive = false;
 
+        Doors_ResetAllLocks();   // Unboard all basement doors at the start of each new day
         ResetPatientCounter(CurrentDay);
         Player_GenerateMission();
         return;

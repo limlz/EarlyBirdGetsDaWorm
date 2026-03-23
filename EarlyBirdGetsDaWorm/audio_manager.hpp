@@ -27,6 +27,15 @@ enum SoundID {
     SFX_CRYING,                     // SFX_CRYING.wav
     SFX_CLOCK_TICK,                 // SFX_CLOCK_TICK.wav
 
+    /*************  5. BOSS FIGHT SFX   *************/
+
+    SFX_JUMP_GRUNT,                 // SFX_JUMP_GRUNT.wav
+    SFX_WEOW,                       // SFX_WEOW.wav  (horror-less jump replacement)
+    SFX_WATER_GUN_SQUIRT,           // SFX_WATER_GUN_SQUIRT.wav
+    SFX_WATER_IMPACT,               // SFX_WATER_IMPACT.wav
+    SFX_SHIELD_BREAK,               // SFX_SHIELD_BREAK.wav
+    SFX_DODGE,                      // SFX_DODGE.wav
+
     /****************  4. UI & SYSTEM SFX   *****************/
 
     SFX_MAIN_MENU_WRITING_SCRATCH,  // SFX_MAIN_MENU_WRITING_SCRATCH.wav

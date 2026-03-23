@@ -48,6 +48,14 @@ void AudioManager_LoadAll() {
     soundBank[SFX_CRYING] = AEAudioLoadSound("Assets/Audio/SFX_CRYING.wav");
     soundBank[SFX_CLOCK_TICK] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.wav");
 
+    // Boss Fight
+    soundBank[SFX_JUMP_GRUNT]        = AEAudioLoadSound("Assets/Audio/SFX_JUMP_GRUNT.wav");
+    soundBank[SFX_WEOW]              = AEAudioLoadSound("Assets/Audio/SFX_WEOW.wav");
+    soundBank[SFX_WATER_GUN_SQUIRT]  = AEAudioLoadSound("Assets/Audio/SFX_WATER_GUN_SQUIRT.wav");
+    soundBank[SFX_WATER_IMPACT]      = AEAudioLoadSound("Assets/Audio/SFX_WATER_IMPACT.wav");
+    soundBank[SFX_SHIELD_BREAK]      = AEAudioLoadSound("Assets/Audio/SFX_SHIELD_BREAK.wav");
+    soundBank[SFX_DODGE]             = AEAudioLoadSound("Assets/Audio/SFX_DODGE.wav");
+
     // UI
     soundBank[SFX_MAIN_MENU_WRITING_SCRATCH] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.wav");
     soundBank[SFX_NEW_DAY] = AEAudioLoadSound("Assets/Audio/SFX_UI_NEW_DAY.wav");

@@ -102,7 +102,8 @@ void Boss_Fight_Load()
 
     Boss_Load();
     BossDebug_Load();
-    PauseMenu_Load();
+    // Note: PauseMenu textures are owned by Game_Load() and survive the boss fight transition.
+    // Calling PauseMenu_Load/Unload here would free them and leave Game state with null texture pointers.
     squareMesh = CreateSquareMesh(COLOR_WHITE);
     circleMesh = CreateCircleMesh(0.5f, 40, COLOR_WHITE);
 }
@@ -135,6 +136,10 @@ void Boss_Fight_Initialize()
     fireCooldown = 0.0f;
     bossDodgeCooldown = 0.0f;
     armAngle = 0.0f;
+
+    // Start boss fight music
+    AudioManager_StopBGM();
+    AudioManager_PlayBGM(BGM_MAIN_MENU, 0.4f);
 }
 
 void Boss_Fight_Update()
@@ -147,6 +152,8 @@ void Boss_Fight_Update()
 
     if (myBoss.health <= 0 && !isVictorySequence) {
         isVictorySequence = true;
+        AudioManager_StopBGM();                        // Cut boss music on defeat
+        AudioManager_PlaySFX(SFX_SCREAMING, 0.5f);    // Boss defeat scream
     }
 
     // Run the victory animation and block all gameplay input
@@ -217,6 +224,11 @@ void Boss_Fight_Update()
                 playerVelY = JUMP_FORCE;
                 isGrounded = false;
                 jumpCount++;
+                // Horror-less mode uses a silly WEOW instead of a grunt
+                if (Settings_IsHorrorLessEnabled())
+                    AudioManager_PlaySFX(SFX_WEOW, 0.6f);
+                else
+                    AudioManager_PlaySFX(SFX_JUMP_GRUNT, 0.5f);
             }
         }
 
@@ -231,6 +243,7 @@ void Boss_Fight_Update()
             // Only fire if the cooldown timer has finished
             if (fireCooldown <= 0.0f) {
                 fireCooldown = FIRE_RATE; // Reset timer
+                AudioManager_PlaySFX(SFX_WATER_GUN_SQUIRT, 0.25f, 0.7f);
 
                 // Bullet spawns from the gun tip
                 float drawY     = isCrouching ? playerY - 30.0f : playerY;
@@ -336,9 +349,11 @@ void Boss_Fight_Update()
                     myBoss.bullets[i].active = false;
                     isPlayerHit = true;
                     hitTimer = 0.2f;
+                    AudioManager_PlaySFX(SFX_EXHALE, 0.7f);  // Player hurt reaction
 
                     if (playerHP <= 0 && !BossDebug_IsGodMode()) {
                         Player_StopSounds(); // prevent walking SFX persisting into endgame
+                        AudioManager_StopBGM(); // stop boss fight music before endgame
                         currentEndReason = REASON_DIED_TO_BOSS;
                         Analytics::LogRun(currentEndReason, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
                             static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
@@ -509,6 +524,7 @@ void Boss_Fight_Draw()
 }
 
 void Boss_Fight_Free() {
+    AudioManager_StopBGM(); // Ensure boss music stops when leaving the fight
 }
 
 void Boss_Fight_Unload() {
@@ -529,13 +545,21 @@ void Boss_Fight_Unload() {
         AEGfxDestroyFont(victoryFontId);
         victoryFontId = -1;
     }
-    PauseMenu_Unload();
 }
 
 void Boss_Fight_TryDodge()
 {
-    // Only dodge when the boss is active, unshielded, and the cooldown has expired.
     // Called from bullet hit detection so the chance is per bullet that LANDS, not per bullet fired.
+
+    // Play water impact sound on every confirmed hit, throttled to avoid spam
+    static float impactSoundCooldown = 0.0f;
+    impactSoundCooldown -= (f32)AEFrameRateControllerGetFrameTime();
+    if (impactSoundCooldown <= 0.0f) {
+        AudioManager_PlaySFX(SFX_WATER_IMPACT, 0.5f);
+        impactSoundCooldown = 0.1f; // Cap at ~10 impact sounds per second
+    }
+
+    // Only dodge when the boss is active, unshielded, and the cooldown has expired.
     if (!myBoss.active || myBoss.shieldActive || bossDodgeCooldown > 0.0f)
         return;
 
@@ -543,5 +567,6 @@ void Boss_Fight_TryDodge()
     {
         myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
         bossDodgeCooldown = 3.0f; // Longer cooldown so the boss has time to reach the new position
+        AudioManager_PlaySFX(SFX_DODGE, 0.6f); // Boss dodge whoosh
     }
 }
