@@ -195,6 +195,8 @@ void Timer_StartDayOverlay(int dayNum)
     gDayOverlayAlpha = 1.0f;
     gDayHoldTimer = DAY_HOLD_TIME;
     gDayOverlayActive = true;
+
+    AudioManager_PlaySFX(SFX_NEW_DAY, 1.0f, 1.0f, 0);
 }
 
 bool Timer_IsDayOverlayActive()

@@ -51,7 +51,7 @@ void Endgame_Update()
             AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0); // Optional SFX for winning
         }
         else if (currentEndReason == REASON_DIED_TO_BOSS) {
-            AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0); // Replace SFX_AA with Boss Death SFX
+            AudioManager_PlaySFX(SFX_BOSS_FIGHT, 1.0f, 1.0f, 0); // Replace SFX_AA with Boss Death SFX
         }
         else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
             AudioManager_PlaySFX(SFX_FAH, 1.0f, 1.0f, 0); // Replace SFX_AA with Human Fired SFX

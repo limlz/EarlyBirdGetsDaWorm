@@ -197,6 +197,8 @@ void Game_Initialize()
 
     Config::Load();
     totalTimeSurvived = 0.0f;
+
+    AudioManager_PlayBGM(BGM_GAME_AMBIENCE, 0.5f);
 }
 
 // ============================================================
@@ -223,6 +225,7 @@ void Game_Update()
 
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
+            AudioManager_StopBGM();
 
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
@@ -242,6 +245,7 @@ void Game_Update()
             bossFadeAlpha = 1.0f;
             PauseMenu_SetPaused(false);
             isFadingToBoss = false;
+            AudioManager_StopBGM();
             next = BOSS_FIGHT_STATE;
         }
         return;
@@ -307,6 +311,8 @@ void Game_Update()
             currentEndReason = REASON_SURVIVED_5_DAYS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
+
+            AudioManager_StopBGM();
             next = ENDGAME_STATE;
             return;
         }
@@ -315,6 +321,8 @@ void Game_Update()
             currentEndReason = REASON_DIED_TO_BOSS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
+
+            AudioManager_StopBGM();
             next = ENDGAME_STATE;
 			return;
         }
@@ -707,6 +715,10 @@ void Game_Free() {}
 
 void Game_Unload()
 {
+    AudioManager_StopBGM();
+    AudioManager_StopSFX();
+    AudioManager_StopWalkingSFX();
+
     Frames_Unload();
     Player_Unload();
     Prompts_Unload();

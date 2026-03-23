@@ -291,8 +291,8 @@ void Player_Update(float dt, bool walkKey) {
         {
             AudioManager_StopWalkingSFX();
 
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f, 1.0f, -1);
-            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.1f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.2f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = true;
@@ -304,7 +304,7 @@ void Player_Update(float dt, bool walkKey) {
         {
             AudioManager_StopWalkingSFX();
 
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.5f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = false;

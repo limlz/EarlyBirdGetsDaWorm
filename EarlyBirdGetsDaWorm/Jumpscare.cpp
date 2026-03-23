@@ -114,7 +114,7 @@ void JumpScare_Start()
         AudioManager_PlaySFX(SFX_AA, 1.0f, 1.5f, 0); // AA
     }
     else {
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 1.0f);
+        AudioManager_PlaySFX(SFX_SCREAMING, 1.0f);
     }
 }
 
