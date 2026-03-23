@@ -235,11 +235,25 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
     const ILLNESSES effIllness = GetEffectiveIllness();
     const int ghostExtra = GetGhostExtraCount();
 
+    // Only flicker when a patient is present AND the lighting anomaly system is active for them.
+    // Otherwise force every flickering light back to visible so the corridor looks normal.
+    const bool lightingAnomalyActive = hasPatient
+        && CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive);
+
     for (int i = 0; i < 11; i++)
     {
         if (lightingMatrix[floorNum][i] != 2) continue;
 
         FlickerData& fd = flickerMem[floorNum][i];
+
+        if (!lightingAnomalyActive)
+        {
+            // No patient or patient has no lighting anomaly — hold lights steady
+            fd.isVisible = true;
+            fd.timer     = 0.0f;
+            continue;
+        }
+
         fd.timer -= dt;
 
         if (fd.timer > 0.0f) continue;
