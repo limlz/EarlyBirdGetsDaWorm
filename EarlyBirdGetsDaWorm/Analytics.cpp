@@ -2,6 +2,23 @@
 
 namespace Analytics {
 
+    // Generated once per application launch; format: YYYYMMDD-HHMMSS-XXXX
+    // The 4-char hex suffix guards against duplicate IDs on rapid relaunches within the same second.
+    static std::string GenerateSessionId() {
+        std::time_t now = std::time(nullptr);
+        struct tm t;
+        localtime_s(&t, &now);
+        char buf[32];
+        std::strftime(buf, sizeof(buf), "%Y%m%d-%H%M%S", &t);
+        // Append a 4-digit hex random suffix for uniqueness
+        unsigned suffix = (unsigned)std::rand() % 0xFFFF;
+        char hex[8];
+        std::snprintf(hex, sizeof(hex), "-%04X", suffix);
+        return std::string(buf) + hex;
+    }
+
+    static const std::string gSessionId = GenerateSessionId();
+
     // Converts illness enum index to its name; default catches any unmapped future values
     static std::string GetIllnessName(int illness) {
         switch (illness) {
@@ -53,7 +70,7 @@ namespace Analytics {
 
         // Only runs once on first launch - subsequent runs skip this and append directly
         if (needsHeader) {
-            outFile << "Date_Time,Day_Reached,End_Reason,Illness_Active,Mimic_Illness,Was_Carrying_Ghost,Patients_Handled,Time_Survived_Seconds\n";
+            outFile << "Session_ID,Date_Time,Day_Reached,End_Reason,Illness_Active,Mimic_Illness,Was_Carrying_Ghost,Patients_Handled,Time_Survived_Seconds\n";
         }
 
         // localtime_s is the MSVC-safe alternative to localtime; avoids deprecation warning
@@ -64,7 +81,8 @@ namespace Analytics {
         char timeStr[100];
         std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
 
-        outFile << timeStr << ","
+        outFile << gSessionId << ","
+            << timeStr << ","
             << dayReached << ","
             << GetEndReasonName(reason) << ","
             << GetIllnessName(TrueDiagnosis) << ","

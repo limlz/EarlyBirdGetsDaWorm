@@ -46,18 +46,21 @@ void Endgame_Update()
         AudioManager_StopBGM();
 
         // ---- INDIVIDUAL ENDGAME AUDIO TRIGGERS ----
+        // SFX_AA and SFX_FAH are the horror-less variants; non-horror uses SFX_SCREAMING instead.
+        const bool horrorLess = Settings_IsHorrorLessEnabled();
+
         if (currentEndReason == REASON_SURVIVED_5_DAYS) {
             AudioManager_PlayBGM(BGM_MAIN_MENU, 0.5f);
-            AudioManager_PlaySFX(SFX_AA, 1.0f, 1.0f, 0); // Optional SFX for winning
+            AudioManager_PlaySFX(horrorLess ? SFX_AA : SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
         else if (currentEndReason == REASON_DIED_TO_BOSS) {
-            AudioManager_PlaySFX(SFX_BOSS_FIGHT, 1.0f, 1.0f, 0); // Replace SFX_AA with Boss Death SFX
+            AudioManager_PlaySFX(SFX_BOSS_FIGHT, 1.0f, 1.0f, 0);
         }
         else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
-            AudioManager_PlaySFX(SFX_FAH, 1.0f, 1.0f, 0); // Replace SFX_AA with Human Fired SFX
+            AudioManager_PlaySFX(horrorLess ? SFX_FAH : SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
         else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
-            AudioManager_PlaySFX(SFX_FAH, 1.0f, 1.0f, 0); // Replace SFX_AA with Ghost Fired SFX
+            AudioManager_PlaySFX(horrorLess ? SFX_FAH : SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
 
         first_audio = false;
