@@ -66,21 +66,37 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
     float hpPercent = (float)playerHP / (float)MAX_PLAYER_HP;
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
-    float barWidth = 400.0f;
-    float barHeight = 25.0f;
-    float startX = -500.0f;
-    float startY = 400.0f;
+    const float barWidth  = 400.0f;
+    const float barHeight = 20.0f;
+    const float startX    = -500.0f;
+    const float startY    =  400.0f;
+    const float pad       =    3.0f;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF0044FF);
+    // Outer black border
+    DrawSquareMesh(mesh, startX, startY, barWidth + pad * 2.0f, barHeight + pad * 2.0f, 0xFF000000);
+    // Dark background
+    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF1A1A1A);
 
     if (playerHP > 0) {
-        float currentWidth = barWidth * hpPercent;
-        float fillX = startX - (barWidth / 2.0f) + (currentWidth / 2.0f);
-        DrawSquareMesh(mesh, fillX, startY, currentWidth, barHeight, 0xFF00FFFF);
+        float fillW = barWidth * hpPercent;
+        float fillX = startX - barWidth * 0.5f + fillW * 0.5f;
+
+        // Green when healthy, yellow when mid, red when low
+        u32 fillColor = (hpPercent > 0.5f) ? 0xFF44DD66
+                      : (hpPercent > 0.25f) ? 0xFFFFAA22
+                      :                        0xFFEE3322;
+        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, fillColor);
+
+        // Subtle white highlight along the top third of the fill
+        float hiH = barHeight * 0.3f;
+        float hiY = startY + (barHeight - hiH) * 0.5f;
+        AEGfxSetTransparency(0.2f);
+        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFFFFFFFF);
+        AEGfxSetTransparency(1.0f);
     }
 }
 
@@ -243,7 +259,8 @@ void Boss_Fight_Update()
             // Only fire if the cooldown timer has finished
             if (fireCooldown <= 0.0f) {
                 fireCooldown = FIRE_RATE; // Reset timer
-                AudioManager_PlaySFX(SFX_WATER_GUN_SQUIRT, 0.25f, 0.7f);
+                if (Bullets_HasAmmo())
+                    AudioManager_PlaySFX(SFX_WATER_GUN_SQUIRT, 0.12f, 0.7f);
 
                 // Bullet spawns from the gun tip
                 float drawY     = isCrouching ? playerY - 30.0f : playerY;

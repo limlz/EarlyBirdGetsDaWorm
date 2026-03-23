@@ -213,26 +213,40 @@ void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
     float hpPercent = (float)boss.health / (float)BOSS_MAX_HEALTH;
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
-    float barWidth = 400.0f;
-    float barHeight = 25.0f;
-    float startX = 500.0f;
-    float startY = 400.0f;
+    const float barWidth  = 400.0f;
+    const float barHeight = 20.0f;
+    const float startX    =  500.0f;
+    const float startY    =  400.0f;
+    const float pad       =    3.0f;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF4400FF);
+    // Outer border: blue when shielded, black otherwise
+    u32 borderColor = boss.shieldActive ? 0xFF2266FF : 0xFF000000;
+    DrawSquareMesh(mesh, startX, startY, barWidth + pad * 2.0f, barHeight + pad * 2.0f, borderColor);
+    // Dark background
+    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF220000);
 
     if (boss.health > 0) {
-        float currentWidth = barWidth * hpPercent;
-        float fillX = startX - (barWidth / 2.0f) + (currentWidth / 2.0f);
-        DrawSquareMesh(mesh, fillX, startY, currentWidth, barHeight, 0xFFFF00FF);
+        float fillW = barWidth * hpPercent;
+        float fillX = startX - barWidth * 0.5f + fillW * 0.5f;
+
+        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, 0x8B0000FF);
+
+        // Subtle white highlight along the top third of the fill
+        float hiH = barHeight * 0.3f;
+        float hiY = startY + (barHeight - hiH) * 0.5f;
+        AEGfxSetTransparency(0.2f);
+        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFFFFFFFF);
+        AEGfxSetTransparency(1.0f);
     }
 
+    // Blue shimmer overlay when shielded
     if (boss.shieldActive) {
         AEGfxSetTransparency(0.3f);
-        DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF0088FF);
+        DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF2266FF);
         AEGfxSetTransparency(1.0f);
     }
 }

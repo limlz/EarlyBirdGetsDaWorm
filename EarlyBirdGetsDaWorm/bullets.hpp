@@ -9,4 +9,6 @@ void Bullets_Draw(float camX);
 
 void Bullets_DrawAmmoUI();
 
+bool Bullets_HasAmmo();
+
 void Bullets_Free();

@@ -240,6 +240,10 @@ void Bullets_DrawAmmoUI() {
     }
 }
 
+bool Bullets_HasAmmo() {
+    return currentAmmo > 0 && !isReloading;
+}
+
 void Bullets_Free() {
     FreeMeshSafe(squareMesh);
     std::vector<Bullet>().swap(bullets);
