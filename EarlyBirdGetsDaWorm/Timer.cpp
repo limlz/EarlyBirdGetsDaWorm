@@ -155,8 +155,9 @@ void Timer_Update(float dt)
     if (gTimeUp || gTimerPaused)
         return;
 
-    // Accelerate game time (frame-rate independent)
-    gGameMinutes += MIN_PER_SEC * dt;
+    // Accelerate game time (3x faster in playtest mode)
+    const float effectiveRate = MIN_PER_SEC * (Game_IsPlaytestMode() ? 3.0f : 1.0f);
+    gGameMinutes += effectiveRate * dt;
 
     // Clamp + flag time up
     ClampAndCheckTimeUp();

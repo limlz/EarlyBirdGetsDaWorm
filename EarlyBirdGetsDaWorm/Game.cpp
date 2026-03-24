@@ -41,6 +41,7 @@ bool dementia{ false };
 
 static int  CurrentDay = 1;
 static bool gSessionStarted = false; // Guards Game_Load so day/timer only reset on a fresh session, not a reload
+static bool gPlaytestMode   = false; // Compressed demo mode: 2 patients/day, 3x clock, no visual bluff
 
 // ============================================================
 //  SPAWN
@@ -317,7 +318,8 @@ void Game_Update()
             return;
         }
 
-        if (Player_GetPatientsHandled() < 5) {
+        const int requiredPatients = Game_IsPlaytestMode() ? 2 : 5;
+        if (Player_GetPatientsHandled() < requiredPatients) {
             currentEndReason = REASON_DIED_TO_BOSS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
@@ -442,7 +444,7 @@ void Game_Update()
     doorNumAtPlayer = Doors_Update(camX);
     Doors_Animate(dt, doorNumAtPlayer, camX);
 
-    Lift_Update(dt, camX, maxDist);
+    Lift_Update(dt, camX, maxDist, dementia);
     Lift_HandleInput(floorNum);
 
     Lighting_Update(floorNum, camX, dementia);
@@ -774,7 +776,11 @@ void Game_Unload()
 // Called before a full game restart; clears the guard so Game_Load reinitialises day and timer
 void Game_ResetSession()
 {
-    gSessionStarted = false;
+    gSessionStarted      = false;
+    gPlaytestMode        = false;
+    totalTimeSurvived    = 0.0f;
+    currentEndReason     = REASON_SURVIVED_5_DAYS;
+    Notifications_ResetTaskComplete();
 }
 
 int Game_GetCurrentDay()
@@ -786,3 +792,6 @@ float Game_GetTimeSurvived()
 {
     return totalTimeSurvived;
 }
+
+bool  Game_IsPlaytestMode()              { return gPlaytestMode; }
+void  Game_SetPlaytestMode(bool enabled) { gPlaytestMode = enabled; }

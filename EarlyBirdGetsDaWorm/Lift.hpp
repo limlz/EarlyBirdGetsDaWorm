@@ -26,7 +26,7 @@ void Lift_Initialize();
 	@param	maxDist 
 			The maximum distance of the hallway.
 ******************************************************************************************/
-void Lift_Update(float dt, float camX, float maxDist);
+void Lift_Update(float dt, float camX, float maxDist, bool dementiaActive);
 
 /******************************************************************************************
 	@brief	Processes mouse input for the interactive lift panel and manages the state machine.

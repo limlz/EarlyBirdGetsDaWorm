@@ -33,6 +33,8 @@ static float admit_scale   = 1.0f;
 static float options_scale = 1.0f;
 static float quit_scale    = 1.0f;
 
+static s8 menuFontId = -1;
+
 static int   currentTitleFrame = 0;
 static float titleAnimTimer    = 0.0f;
 
@@ -55,6 +57,8 @@ void MainMenu_Load()
             + Assets::Main_Menu::TitleFrameSuffix;
         title_frames[i] = LoadTextureChecked(path.c_str());
     }
+
+    menuFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 24);
 
     std::cout << "MainMenu: Load\n";
     Settings_Load();
@@ -113,9 +117,10 @@ void MainMenu_Update()
     if (creditsWasOpen) return;
 
     // Main Menu Buttons
-    bool hoverAdmit   = IsAreaClickedByMouse(480.0f,  270.0f, 490.0f, 290.0f);
-    bool hoverOptions = IsAreaClickedByMouse(500.0f,   15.0f, 500.0f, 200.0f);
-    bool hoverQuit    = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
+    bool hoverAdmit    = IsAreaClickedByMouse(480.0f,  270.0f, 490.0f, 290.0f);
+    bool hoverPlaytest = IsAreaClickedByMouse(650.0f, -410.0f,  80.0f,  30.0f);
+    bool hoverOptions  = IsAreaClickedByMouse(500.0f,   15.0f, 500.0f, 200.0f);
+    bool hoverQuit     = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
 
     float animSpeed = 15.0f;
     UpdateButtonScale(admit_scale,   hoverAdmit,   1.15f, animSpeed, dt);
@@ -124,6 +129,7 @@ void MainMenu_Update()
 
     if (AEInputCheckTriggered(AEVK_LBUTTON)) {
         if      (hoverAdmit)            { pendingNextState = GAME_STATE; isFadingOut = true; }
+        else if (hoverPlaytest)         { Game_SetPlaytestMode(!Game_IsPlaytestMode()); }
         else if (hoverOptions)          { Settings_Open(); }
         else if (hoverQuit)             { pendingNextState = GS_QUIT; isFadingOut = true; }
         else if (Credits_IsHovering())  { Credits_Open(); }
@@ -153,6 +159,33 @@ void MainMenu_Draw()
     DrawTextureMesh(squareMesh, options_text,       500.0f,   15.0f, 400.0f * options_scale, 150.0f * options_scale, 1.0f);
     DrawTextureMesh(squareMesh, quit_tag,           500.0f, -220.0f, 500.0f * quit_scale,    200.0f * quit_scale,    1.0f);
     DrawTextureMesh(squareMesh, quit_text,          515.0f, -220.0f, 400.0f * quit_scale,    150.0f * quit_scale,    1.0f);
+
+    // --- Playtest Mode pill switch (bottom right, matches Settings style) ---
+    {
+        const float ptSwX = 650.0f, ptSwY = -410.0f;
+        bool ptOn = Game_IsPlaytestMode();
+
+        // Label above the switch
+        if (menuFontId >= 0) {
+            AEGfxPrintCentered(menuFontId, "PLAYTEST MODE",
+                ptSwX / 800.0f, (ptSwY + 25.0f) / 450.0f,
+                0.6f, 0.75f, 0.95f, 0.75f, 1.0f);
+        }
+
+        // Pill track (green when ON, dark when OFF)
+        DrawSquareMesh(squareMesh, ptSwX, ptSwY, 80.0f, 26.0f,
+            ptOn ? 0xFF228B22 : 0xFF2A2A2A);
+
+        // Sliding nub
+        DrawSquareMesh(squareMesh, ptSwX + (ptOn ? 22.0f : -22.0f), ptSwY, 28.0f, 28.0f, 0xFFEEEEEE);
+
+        // ON / OFF label on the opposite side of the nub
+        if (menuFontId >= 0) {
+            AEGfxPrintCentered(menuFontId, ptOn ? "ON" : "OFF",
+                (ptSwX + (ptOn ? -18.0f : 18.0f)) / 800.0f, (ptSwY - 7.0f) / 450.0f,
+                0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
 
     float fadeAlpha = (fade_in_timer > 0.0f) ? (fade_in_timer / FADE_IN_DURATION)
                                               : (isFadingOut ? fade_out_alpha : 0.0f);
@@ -184,6 +217,8 @@ void MainMenu_Unload()
     for (int i = 0; i < NUM_TITLE_FRAMES; i++) UnloadTextureSafe(title_frames[i]);
 
     Credits_Unload();
+
+    if (menuFontId >= 0) { AEGfxDestroyFont(menuFontId); menuFontId = -1; }
 
     Particles_Free();
     Settings_Unload();

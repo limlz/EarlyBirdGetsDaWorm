@@ -25,6 +25,9 @@ static s8 DestDoor = 0, DestFloor = 0;
 // Tracks the daily quota and random pool of normal vs ghost patients
 static int CurrentDayPool[5]{};
 static int PatientsHandled = 0;
+// Playtest pool: exactly 1 ghost and 1 human per day, shuffled each day
+static int PlaytestDayPool[2] = { 1, 0 };
+
 // 2D Array acting as a truth table for predetermined patient scares based on the Day (1-5)
 static int PlayerPool[6][5] = {
     {0,0,0,0,0}, // Day 0 (Padding)
@@ -79,7 +82,8 @@ static void ApplyNewPatientFromTruth(bool isGhostTruth) {
     }
 
     // 50% chance the patient visually looks like a monster, purely to bluff the player
-    VisualBluff = (std::rand() % 2 == 0);
+    // (disabled in playtest mode so ghost vs. human is always visually clear)
+    VisualBluff = Game_IsPlaytestMode() ? false : (std::rand() % 2 == 0);
     Frame = 0;
     Timer = 0.0f;
 
@@ -93,6 +97,12 @@ void Player_GenerateMission() {
     VisualBluff = false;
     GhostExtraAnomalies = 0;
     TrueDiagnosis = AnomalyIllness = ILLNESSES{};
+
+    IsBlinking              = false;
+    BlinkTimer              = 0.0f;
+    PendingPickup           = false;
+    PendingDelivery         = false;
+    StateChangedDuringBlink = false;
 
     CentralPool_ClearPatientAnomalies();
     Journal_Clear();
@@ -171,13 +181,19 @@ void ResetPatientCounter(int day) {
     PatientsHandled = 0;
     int CurrentDay = (day < 1) ? 1 : (day > 5 ? 5 : day);
 
-    for (int i = 0; i < 5; ++i) {
-        CurrentDayPool[i] = PlayerPool[CurrentDay][i];
-    }
-
-    // Shuffle the array so the player can't memorize the order of Ghost/Human spawns
     unsigned seed = (unsigned)time(NULL);
-    std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
+    if (Game_IsPlaytestMode()) {
+        // Playtest: guaranteed 1 ghost and 1 human per day, order randomised
+        CurrentDayPool[0] = PlaytestDayPool[0];
+        CurrentDayPool[1] = PlaytestDayPool[1];
+        std::shuffle(CurrentDayPool, CurrentDayPool + 2, std::default_random_engine(seed));
+    }
+    else {
+        // Normal: use the full predetermined pool for the day
+        for (int i = 0; i < 5; ++i)
+            CurrentDayPool[i] = PlayerPool[CurrentDay][i];
+        std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
+    }
 }
 
 static AEGfxTexture* GetActiveFrameTex() {

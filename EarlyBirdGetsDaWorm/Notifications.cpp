@@ -226,6 +226,11 @@ void Pager::Trigger()
 	PagerPopUp.TaskComplete = true;   // request open on next state enter
 }
 
+void Notifications_ResetTaskComplete()
+{
+	PagerPopUp.TaskComplete = false;
+}
+
 void Pager::Update(bool LiftActive, f32 DT)
 {
 	// Toggles the pager when user press Q, pager will not be displayed if lift is active

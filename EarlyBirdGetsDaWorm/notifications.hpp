@@ -11,3 +11,5 @@ bool IsPagerActive();
 void Notifications_Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber);
 
 void Notifications_Free();
+
+void Notifications_ResetTaskComplete();
