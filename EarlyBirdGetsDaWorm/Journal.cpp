@@ -1315,7 +1315,12 @@ void Journal_Unload()
     UnloadTextureSafe(gFrameInsomnia);
     UnloadTextureSafe(gFrameOCD);
 
-    // destroy font
+    // destroy fonts
+    if (symbolsFontId >= 0)
+    {
+        AEGfxDestroyFont(symbolsFontId);
+        symbolsFontId = -1;
+    }
     if (journalFontId >= 0)
     {
         AEGfxDestroyFont(journalFontId);
