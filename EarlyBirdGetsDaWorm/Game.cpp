@@ -409,6 +409,11 @@ void Game_Update()
     // Debug-only controls that don't require a patient
     if (Debug_IsActive())
     {
+        // F6: Set patients delivered to 5 (satisfies quota without ending the shift)
+        if (AEInputCheckTriggered(AEVK_F6)) {
+            Player_DebugFulfillPatientQuota();
+        }
+
         // K: Force the current shift to end, satisfying the patient quota → triggers next-day transition
         if (AEInputCheckTriggered(AEVK_K)) {
             Player_DebugFulfillPatientQuota();
@@ -782,7 +787,6 @@ void Game_ResetSession()
     gSessionStarted      = false;
     gPlaytestMode        = false;
     totalTimeSurvived    = 0.0f;
-    currentEndReason     = REASON_SURVIVED_5_DAYS;
     Notifications_ResetTaskComplete();
 }
 

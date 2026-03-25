@@ -126,7 +126,7 @@ void Debug_Draw(const DebugInfo& info)
     sprintf_s(gDebugBuffer, "[1-9] Illness  [0] Re-roll  [H] Ghost/Human  [P] Auto Patient  [K] Next Day");
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 5), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
 
-    sprintf_s(gDebugBuffer, "[F3] Toggle Debug  [F4] Pause Timer  [J] Jumpscare  [M] Warp Cam");
+    sprintf_s(gDebugBuffer, "[F3] Toggle Debug  [F4] Pause Timer  [F6] Set Pts=5  [J] Jumpscare  [M] Warp Cam");
     AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 6), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
 }
 
