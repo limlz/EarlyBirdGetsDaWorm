@@ -156,6 +156,9 @@ void Boss_Fight_Initialize()
     // Start boss fight music
     AudioManager_StopBGM();
     AudioManager_PlayBGM(BGM_MAIN_MENU, 0.4f);
+
+    // Auto-open the guide to the Boss Fight instructions page
+    Guide_BossFight();
 }
 
 void Boss_Fight_Update()
@@ -165,6 +168,9 @@ void Boss_Fight_Update()
     BossDebug_Update(myBoss);
     PauseMenu_Update(dt);
     if (PauseMenu_IsPaused()) return;
+
+    Guide_Update(false, dt, false);
+    if (IsGuideActive()) return;
 
     if (myBoss.health <= 0 && !isVictorySequence) {
         isVictorySequence = true;
@@ -538,6 +544,7 @@ void Boss_Fight_Draw()
     }
 
     PauseMenu_Draw(squareMesh);
+    Guide_Draw();
 }
 
 void Boss_Fight_Free() {

@@ -69,8 +69,8 @@ const float BOSS_FADE_SPEED = 2.0f;
 
 // Endgame can't trigger mid-jumpscare; these flags defer the state transition until the jumpscare finishes
 static bool gPendingEndgameAfterJumpscare = false;
-EndGameReason currentEndReason = REASON_SURVIVED_5_DAYS;
-static EndGameReason gPendingEndReason = REASON_SURVIVED_5_DAYS;
+EndGameReason currentEndReason = REASON_SENT_GHOST_TO_ROOM;
+static EndGameReason gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
 
 void JumpScare_Start();
 bool JumpScare_IsActive();
@@ -230,6 +230,7 @@ void Game_Update()
 
             next = ENDGAME_STATE;
             gPendingEndgameAfterJumpscare = false;
+            return;
         }
     }
 
@@ -307,9 +308,10 @@ void Game_Update()
 
     if (Timer_IsTimeUp())
     {
-        if (CurrentDay >= 5)
-        {
-            currentEndReason = REASON_SURVIVED_5_DAYS;
+        // Check quota first so a failed playtest day still ends with DIED_TO_BOSS
+        const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
+        if (Player_GetPatientsHandled() < requiredPatients) {
+            currentEndReason = REASON_DIED_TO_BOSS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 
@@ -318,15 +320,16 @@ void Game_Update()
             return;
         }
 
-        const int requiredPatients = Game_IsPlaytestMode() ? 2 : 5;
-        if (Player_GetPatientsHandled() < requiredPatients) {
-            currentEndReason = REASON_DIED_TO_BOSS;
+        // End condition: survived all 5 days in normal mode, or completed day 1 in playtest
+        if (CurrentDay >= 5 || Game_IsPlaytestMode())
+        {
+            currentEndReason = REASON_SURVIVED_5_DAYS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 
             AudioManager_StopBGM();
             next = ENDGAME_STATE;
-			return;
+            return;
         }
 
         // Advance the day: reset camera, floor, lift, and regenerate the patient mission
