@@ -279,6 +279,11 @@ void Tutorial::Initialize() {
 	JournalClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now bring the patient to their designated room.\nNormal patients must be delivered to the room shown on your pager.\nGhosts must be delivered to the basement (B1).\nBringing the wrong patient type will result in Game Over.", 30.0f, false };
 	PatientDeliveredBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f,"Well done! Your shift begins now.\nDeliver at least 5 patients before each day ends.\nIf you forget how to play, Press [G] anytime to view the guide.\nStay alert and watch out.\nPress [TAB] to end the tutorial.", 30.0f, false };
 
+	if (Game_IsPlaytestMode()) {
+		PatientDeliveredBox.FullText = "Well done! Your shift begins now.\nDeliver at least 2 patients before each day ends.\nIf you forget how to play, Press [G] anytime to view the guide.\nStay alert and watch out.\nPress [TAB] to end the tutorial.";
+	}
+	
+
 	// File reading
 	LoadConfigFromFile("Assets/Tutorial/Config/TutorialConfig.txt");
 }
