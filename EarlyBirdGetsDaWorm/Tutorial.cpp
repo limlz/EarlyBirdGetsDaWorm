@@ -520,7 +520,7 @@ void Tutorial::DrawSkip(DialogueBox& Dialogue) {
 	else {
 		TutorialSkip.Anim = 0.0f;
 	}
-	DrawTextureMesh(TutorialMesh, TutorialTexture.Skip, (Dialogue.X + (Dialogue.Width * 0.5) - 90.0f) + TutorialSkip.Anim, (Dialogue.Y - (Dialogue.Height* 0.5) + 40.0f), TutorialSkip.Width, TutorialSkip.Height, Dialogue.FadeAlpha);
+	DrawTextureMesh(TutorialMesh, TutorialTexture.Skip, static_cast<f32>((Dialogue.X + (Dialogue.Width * 0.5) - 90.0f) + TutorialSkip.Anim), static_cast<f32>((Dialogue.Y - (Dialogue.Height * 0.5) + 40.0f)), TutorialSkip.Width, TutorialSkip.Height, Dialogue.FadeAlpha);
 }
 void Tutorial::ResetDialogueBox(DialogueBox& Dialogue) {
 	Dialogue.Shown = false;

@@ -228,7 +228,7 @@ void Pager::Trigger()
 
 void Notifications_ResetTaskComplete()
 {
-	PagerPopUp.TaskComplete = false;
+	ThePager.PagerPopUp.TaskComplete = false;
 }
 
 void Pager::Update(bool LiftActive, f32 DT)
