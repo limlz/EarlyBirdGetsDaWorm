@@ -93,6 +93,7 @@ void Notifications_Update(bool LiftActive, f32 DT) { ThePager.Update(LiftActive,
 void Notifications_Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber) { ThePager.Draw(PatientFloorNumber, PatientDoorNumber, DestinationFloorNumber, DestinationDoorNumber); }
 void Notifications_Free() { ThePager.Free(); }
 bool IsPagerActive() { return ThePager.PagerState.IsActive; }
+void Notifications_ResetTaskComplete() { ThePager.PagerPopUp.TaskComplete = false; }
 
 void Pager::Load()
 {
@@ -224,11 +225,6 @@ void Pager::Initialize()
 void Pager::Trigger()
 {
 	PagerPopUp.TaskComplete = true;   // request open on next state enter
-}
-
-void Notifications_ResetTaskComplete()
-{
-	ThePager.PagerPopUp.TaskComplete = false;
 }
 
 void Pager::Update(bool LiftActive, f32 DT)
