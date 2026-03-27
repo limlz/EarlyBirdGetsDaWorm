@@ -16,7 +16,8 @@ namespace Assets
         constexpr const char* JournalIcon = "Assets/Equipment/JournalIcon.png";
         constexpr const char* JournalBack = "Assets/Equipment/JournalBack.png";
         constexpr const char* JournalFront = "Assets/Equipment/JournalFront.png";
-        constexpr const char* Tab = "Assets/Equipment/Tab.png";
+        constexpr const char* Tab = "Assets/Equipment/BookTab.png";
+        constexpr const char* Mark = "Assets/Equipment/BookMark.png";
 
 		constexpr const char* Undiscovered = "Assets/Equipment/evidence/Undiscovered.png";
         constexpr const char* Sound = "Assets/Equipment/evidence/Sound.png";

@@ -10,19 +10,18 @@
 
 static s8 journalFontId = -1;       // font handle used by AEGfxPrint
 static s8 symbolsFontId = -1;
-const float UI_SCALE    = 0.7f;        // journal UI bigger or smaller
+const float UI_SCALE    = 0.7f;     // journal UI bigger or smaller
 
-static bool Open                = false;
-static bool hasHovered          = false;
-static bool HoverTab1           = false;
-static bool HoverTab2           = false;
+static bool Open = false;
+static bool hasHovered = false;
+static bool ShowHowTo = true;      // first time open
+static bool ClickHowTo = false;
+
+static int  Selected = 0;
+static int  HoveredIndex = -1;
 
 static bool  JournalHasUnread = false;
 static float JournalAlertTimer = 0.0f;
-
-static int  Selected            = 0;
-static int  RightPage           = 0;    // 0 = page 1, 1 = page 2
-static int  HoveredIndex        = -1;
 
 constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
@@ -39,19 +38,32 @@ static f32 JournalIconHoverSpeed    = 10.0f;
 static f32 HeaderY;
 static f32 SubHeaderY;
 
-// Tab positions
-static f32 TabX;
-static f32 Tab1Y;
-static f32 Tab2Y;
-
 // Pages X positions
 static f32 LeftStartX;
 static f32 RightStartX;
 
-// Anomalies list
+// Illness tab layout
+static f32 IllnessTabX;
+static f32 IllnessTabW;
+static f32 IllnessTabH;
+
+// Symptom page layout
+static f32 LeftPageSymptomX;
+static f32 LeftPageSymptomY;
+static f32 RightPageSymptomX;
+static f32 RightPageSymptomY;
+
+// Illness list
+static f32 ListX;
 static f32 ListY;
 static f32 ListStep;
 static f32 IllnessHitX;
+
+// How to use tab layout
+static f32 HowToTabX;
+static f32 HowToTabY;
+static f32 HowToTabW;
+static f32 HowToTabH;
 
 // Image grid layout
 static f32 imgW;
@@ -80,35 +92,46 @@ static f32 TabH;
 
 void Journal_Initialize()
 {
-    // Layout
-    HeaderY = 380.0f;
-    SubHeaderY = 170.0f;
-
-    // Tab positions
-    TabX = 870.0f;
-    Tab1Y = 310.0f;
-    Tab2Y = 180.0f;
+    // Layout ----------------------------------------------------
+    HeaderY = 350.0f;
+    SubHeaderY = HeaderY - 200.0f;
 
     // Pages X positions
-    LeftStartX = -700.0f;
-    RightStartX = 80.0f;
+	LeftStartX = -700.0f;
+	RightStartX = 120.0f;
 
-    // Anomalies list
-    ListY = 230.0f;
-    ListStep = 70.0f;
-    IllnessHitX = LeftStartX + 140.0f;
-    IllnessHitW = 380.0f;
-    IllnessHitH = ListStep * 0.9f;
+    // Illness list / tab layout  
+    ListY = 300.0f;
+    ListStep = 90.0f;
 
-    // Image grid layout
-    imgW = 200.0f;
-    imgH = 220.0f;
+    IllnessTabX = -900.0f;
+    IllnessTabW = 340.0f;
+    IllnessTabH = 100.0f;
 
-    colGap = 220.0f;
+    IllnessHitX = IllnessTabX;
+    IllnessHitW = IllnessTabW;
+    IllnessHitH = IllnessTabH;
+
+	// How to use tab layout
+    HowToTabX = -100.0f;      
+    HowToTabY = 420.0f;
+    HowToTabW = 180.0f;
+    HowToTabH = 150.0f;
+
+    // Symptom image layout
+    imgW = 190.0f;
+    imgH = 210.0f;
+
+    colGap = 210.0f;
     rowGap = 220.0f;
+    
+    // left page = 4 symptoms
+    LeftPageSymptomX = LeftStartX + 300.0f;
+    LeftPageSymptomY = -40.0f;
 
-    gridStartX = (RightStartX - 30.0f) + imgW * 0.5f;
-    gridStartY = ListY - imgH * 0.5f;
+    // right page = 2 symptoms
+    RightPageSymptomX = RightStartX + 30.0f;
+    RightPageSymptomY = 180.0f;
 
     tiltAngle = 0.12f;
 
@@ -116,14 +139,9 @@ void Journal_Initialize()
     Header = 1.2f;
     SubHeader = 0.90f;
     text = 0.55f;
-    list = 0.90f;
-    listSelected = 0.80f;
-
-    // Tabs
-    TabW = 350.0f;
-    TabH = 120.0f;
+    list = 0.70f;
+    listSelected = 0.72f;
 }
-
 // ============================================================
 // TEXTURES
 // ============================================================
@@ -131,8 +149,8 @@ static AEGfxTexture* JournalIcon = nullptr;
 static AEGfxTexture* AlertIcon = nullptr;
 static AEGfxTexture* JournalBack = nullptr;
 static AEGfxTexture* JournalFront = nullptr; 
-static AEGfxTexture* TabEntry1 = nullptr;
-static AEGfxTexture* TabEntry2 = nullptr;
+static AEGfxTexture* MarkEntry = nullptr;
+static AEGfxTexture* TabEntry = nullptr;
 
 static AEGfxTexture* Undiscovered = nullptr;
 static AEGfxTexture* gSound = nullptr;
@@ -213,38 +231,6 @@ static void ClampSelected()
 
     if (Selected >= (int)IllnessList.size())
         Selected = (int)IllnessList.size() - 1;
-}
-
-static void DrawTab(
-    AEGfxVertexList* mesh,
-    AEGfxTexture* tex,
-    s8 fontId,
-    const char* label,
-    float x, float y,
-    bool hovered,
-    bool selected)
-{
-    float scale = 1.0f;
-    if (selected) scale += 0.05f;
-    if (hovered)  scale += 0.06f;
-
-    if (tex)
-    {
-        DrawTextureMesh(mesh,
-            tex,
-            x * UI_SCALE,
-            y * UI_SCALE,
-            TabW * scale * UI_SCALE,
-            TabH * scale * UI_SCALE,
-            1.0f);
-    }
-
-    AEGfxPrint(fontId, label,
-        ((x-45.0f) * UI_SCALE) / SCREEN_WIDTH_HALF,
-        ((y-15.0f) * UI_SCALE) / SCREEN_HEIGHT_HALF,
-        SubHeader * scale,
-        0.55f, 0.05f, 0.05f,
-        1.0f);
 }
 
 // ============================================================
@@ -640,8 +626,8 @@ void Journal_Load()
     JournalIcon = LoadTextureChecked(Assets::Equipment::JournalIcon);
     JournalBack = LoadTextureChecked(Assets::Equipment::JournalBack);
     JournalFront = LoadTextureChecked(Assets::Equipment::JournalFront);
-    TabEntry1 = LoadTextureChecked(Assets::Equipment::Tab);
-    TabEntry2 = LoadTextureChecked(Assets::Equipment::Tab);
+    MarkEntry = LoadTextureChecked(Assets::Equipment::Mark);
+    TabEntry = LoadTextureChecked(Assets::Equipment::Tab);
 
 	Undiscovered = LoadTextureChecked(Assets::Equipment::Undiscovered);
     gSound = LoadTextureChecked(Assets::Equipment::Sound);
@@ -738,9 +724,6 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
         justToggled = true;
 
         AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
-
-        if (Open)
-            RightPage = 0;
     }
 
     // EARLY EXIT
@@ -760,6 +743,12 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
         justToggled = false;
     }
 
+    if (Open && ShowHowTo)
+    {
+        ClickHowTo = true;
+        ShowHowTo = false;
+    }
+
 
     // ------------------------------------------------------------
     // Mouse position
@@ -770,64 +759,47 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
     float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
     float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
 
-    // ------------------------------------------------------------
-    // Tab hover
-    // ------------------------------------------------------------
-    float tab1HoverW = TabW * ((RightPage == 0) ? 1.05f : 1.0f) * UI_SCALE;
-    float tab1HoverH = TabH * ((RightPage == 0) ? 1.05f : 1.0f) * UI_SCALE;
-
-    float tab2HoverW = TabW * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
-    float tab2HoverH = TabH * ((RightPage == 1) ? 1.05f : 1.0f) * UI_SCALE;
-
-    HoverTab1 = IsAreaHovered(
-        TabX * UI_SCALE,
-        Tab1Y * UI_SCALE,
-        tab1HoverW,
-        tab1HoverH);
-
-    HoverTab2 = IsAreaHovered(
-        TabX * UI_SCALE,
-        Tab2Y * UI_SCALE,
-        tab2HoverW,
-        tab2HoverH);
-
-    // ------------------------------------------------------------
-    // Mouse click
-    // ------------------------------------------------------------
     if (AEInputCheckTriggered(AEVK_LBUTTON))
     {
-        if (HoverTab1 && RightPage != 0)
+        // ------------------------------------------------------------
+        // How To Use tab click
+        // ------------------------------------------------------------
+        bool hoveredHowTo = IsAreaHovered(
+            HowToTabX * UI_SCALE,
+            HowToTabY * UI_SCALE,
+            HowToTabW * UI_SCALE,
+            HowToTabH * UI_SCALE);
+
+        if (hoveredHowTo)
         {
-            RightPage = 0;
+            ClickHowTo = true;
             AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
         }
-        else if (HoverTab2 && RightPage != 1)
+
+        // ------------------------------------------------------------
+        // Illness tab click
+        // ------------------------------------------------------------
+        for (int i = 0; i < (int)IllnessList.size(); ++i)
         {
-            RightPage = 1;
-            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-        }
-        else
-        {
-            for (int i = 0; i < (int)IllnessList.size(); ++i)
+            float illnessY = ListY - i * ListStep;
+
+            bool hovered = IsAreaHovered(
+                IllnessHitX * UI_SCALE,
+                illnessY * UI_SCALE,
+                IllnessHitW * UI_SCALE,
+                IllnessHitH * UI_SCALE);
+
+            if (hovered)
             {
-                float illnessY = ListY - i * ListStep;
-
-                bool hovered = IsAreaHovered(
-                    IllnessHitX * UI_SCALE,
-                    illnessY * UI_SCALE,
-                    IllnessHitW * UI_SCALE,
-                    IllnessHitH * UI_SCALE);
-
-                if (hovered)
+                if (Selected != i)
                 {
-                    if (Selected != i)
-                    {
-                        Selected = i;
-                        RightPage = 0;
-                        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-                    }
-                    break;
+                    Selected = i;
+                    AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
                 }
+
+                // IMPORTANT: leave how-to page when illness is clicked
+                ClickHowTo = false;
+                break;
             }
         }
     }
@@ -838,33 +810,18 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
     if (AEInputCheckTriggered(AEVK_UP))
     {
         --Selected;
-        RightPage = 0;
+        ClickHowTo = false;
         AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
     if (AEInputCheckTriggered(AEVK_DOWN))
     {
         ++Selected;
-        RightPage = 0;
+        ClickHowTo = false;
         AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
     }
 
     ClampSelected();
-
-    // ------------------------------------------------------------
-    // Keyboard page switch
-    // ------------------------------------------------------------
-    if (AEInputCheckTriggered(AEVK_LEFT) && RightPage > 0)
-    {
-        --RightPage;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-    }
-
-    if (AEInputCheckTriggered(AEVK_RIGHT) && RightPage < 1)
-    {
-        ++RightPage;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
-    }
 }
 
 // ============================================================
@@ -929,8 +886,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     ClampSelected();
     ILLNESSES chosen = IllnessList[Selected];
     TextStruct& TextData = GetFromText[Selected];
-    bool Tab1HasUnread = Journal_PageHasUnread(chosen, 0);
-    bool Tab2HasUnread = Journal_PageHasUnread(chosen, 1);
 
     // ------------------------------------------------------------
     // Hover reset for symptom images
@@ -939,11 +894,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     HoveredIndex = -1;
 
     // ============================================================
-    // LAYERS
-    // Back -> Tabs -> Front -> Text / Images
+    // BACK BOOK
     // ============================================================
-
-    // Book back
     DrawTextureMesh(squareMesh,
         JournalBack,
         0.0f * UI_SCALE,
@@ -952,67 +904,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         1050.0f * UI_SCALE,
         1.0f);
 
-    // Tabs
-    DrawTab(squareMesh, TabEntry1, journalFontId, "PAGE I",
-        TabX, Tab1Y,
-        HoverTab1,
-        RightPage == 0);
-
-    DrawTab(squareMesh, TabEntry2, journalFontId, "PAGE II",
-        TabX, Tab2Y,
-        HoverTab2,
-        RightPage == 1);
-
-    // Bouncing Alert Icon
-    if (Tab1HasUnread && AlertIcon)
-    {
-        f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
-
-        DrawTextureMesh(squareMesh,
-            AlertIcon,
-            (TabX + 150.0f)             * UI_SCALE,
-            (Tab1Y + 50.0f + bounceY)   * UI_SCALE,
-            25.0f,
-            25.0f,
-            1.0f);
-    }
-
-    if (Tab2HasUnread && AlertIcon)
-    {
-        f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
-
-        DrawTextureMesh(squareMesh,
-            AlertIcon,
-            (TabX + 150.0f)             * UI_SCALE,
-            (Tab2Y + 50.0f + bounceY)   * UI_SCALE,
-            25.0f,
-            25.0f,
-            1.0f);
-    }
-
-    // Front page
-    DrawTextureMesh(squareMesh,
-        JournalFront,
-        0.0f * UI_SCALE,
-        0.0f * UI_SCALE,
-        1800.0f * UI_SCALE,
-        1050.0f * UI_SCALE,
-        1.0f);
-
     // ============================================================
-    // LEFT SIDE
+    // ILLNESS TABS
     // ============================================================
-    AEGfxPrint(journalFontId, "Illnesses",
-        X(LeftStartX), Y(HeaderY),
-        Header,
-        0, 0, 0,
-        1.0f);
-
-    AEGfxPrint(journalFontId, "Select an illness below",
-        X(LeftStartX), Y(HeaderY - 60.0f),
-        text,
-        0.2f, 0.2f, 0.2f,
-        1.0f);
 
     for (int i = 0; i < (int)IllnessList.size(); ++i)
     {
@@ -1026,16 +920,35 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             IllnessHitH * UI_SCALE);
 
         bool selected = (i == Selected);
-        bool illnessHasUnread = Journal_IllnessHasUnread(IllnessList[i]);
+        float scale = 0.75f;
+        float drawX = IllnessTabX;
 
-        float scale = 1.0f;
-        if (selected) scale += 0.15f;
-        if (hovered)  scale += 0.08f;
+        // move left when hovered or selected
+        if (hovered) drawX -= 10.0f;
+        if (selected && !ClickHowTo) drawX -= 8.0f;
 
-        if (selected)
+        // ============================================================
+        // DRAW TAB IMAGE
+        // ============================================================
+        DrawTextureMesh(squareMesh,
+            MarkEntry,
+            drawX * UI_SCALE,
+            illnessY * UI_SCALE,
+            IllnessTabW * scale * UI_SCALE,
+            IllnessTabH * scale * UI_SCALE,
+            1.0f);
+
+        // ============================================================
+        // DRAW TEXT ON TOP
+        // ============================================================
+        float textX = drawX - 105.0f;
+        float textY = illnessY - 12.0f;
+
+        if (selected && !ClickHowTo)
         {
             AEGfxPrint(journalFontId, name,
-                X(LeftStartX), Y(illnessY),
+                (textX * UI_SCALE) / SCREEN_WIDTH_HALF,
+                (textY * UI_SCALE) / SCREEN_HEIGHT_HALF,
                 list * scale,
                 0.55f, 0.05f, 0.05f,
                 1.0f);
@@ -1043,25 +956,26 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         else
         {
             AEGfxPrint(journalFontId, name,
-                X(LeftStartX), Y(illnessY),
+                (textX * UI_SCALE) / SCREEN_WIDTH_HALF,
+                (textY * UI_SCALE) / SCREEN_HEIGHT_HALF,
                 listSelected * scale,
                 0.2f, 0.2f, 0.2f,
                 1.0f);
         }
+        
+        // ============================================================
+        // UNREAD ICON 
+        // ============================================================
+        bool illnessHasUnread = Journal_IllnessHasUnread(IllnessList[i]);
 
-        // Bouncing Alert Icon
         if (illnessHasUnread && AlertIcon)
         {
-            // amplitude                   //frequency   
             f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
-
-            float textWorldX = LeftStartX * UI_SCALE;
-            float textWorldY = illnessY * UI_SCALE;
 
             DrawTextureMesh(squareMesh,
                 AlertIcon,
-                (textWorldX - 20.0f),
-                (textWorldY + 15.0f) + bounceY,
+                (IllnessTabX - 10.0f) * UI_SCALE,
+                (illnessY + 18.0f + bounceY) * UI_SCALE,
                 25.0f,
                 25.0f,
                 1.0f);
@@ -1069,38 +983,106 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     }
 
     // ============================================================
-    // RIGHT SIDE
+    // FRONT BOOK
     // ============================================================
-    AEGfxPrint(journalFontId, TextData.title.c_str(),
-        X(RightStartX), Y(HeaderY),
-        Header,
-        0, 0, 0,
+    DrawTextureMesh(squareMesh,
+        JournalFront,
+        0.0f * UI_SCALE,
+        0.0f * UI_SCALE,
+        1800.0f * UI_SCALE,
+        1050.0f * UI_SCALE,
         1.0f);
 
-    if (RightPage == 0)
+    // ============================================================
+    // HELP TAB
+    // ============================================================
+    bool hoveredHowTo = IsAreaHovered(
+        HowToTabX * UI_SCALE,
+        HowToTabY * UI_SCALE,
+        HowToTabW * UI_SCALE,
+        HowToTabH * UI_SCALE);
+
+    float helpScale = 0.8f;
+    if (hoveredHowTo)
+        helpScale += 0.08f;
+
+    // draw flipped tab
+    DrawTextureMesh(squareMesh,
+        TabEntry,
+        HowToTabX * UI_SCALE,
+        HowToTabY * UI_SCALE,
+        -HowToTabW * helpScale * UI_SCALE,
+        HowToTabH * helpScale * UI_SCALE,
+        1.0f);
+
+    // draw text
+    AEGfxPrint(journalFontId, "HELP",
+        X(HowToTabX - 10.0f),
+        Y(HowToTabY),
+        0.6f * helpScale,
+        0.2f, 0.2f, 0.2f,
+        1.0f);
+
+    if (ClickHowTo)
     {
+        // ============================================================
+        // HOW TO USE PAGE
+        // ============================================================
+
+        AEGfxPrint(journalFontId, "How To Use",
+            X(LeftStartX), Y(HeaderY),
+            Header,
+            0, 0, 0,
+            1.0f);
+
+        AEGfxPrint(journalFontId, "1. This is your journal. It keeps",
+            X(LeftStartX), Y(220.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "   track of the symptoms you discover.",
+            X(LeftStartX), Y(150.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "2. A red notification means new symptom",
+            X(LeftStartX), Y(150.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "   information is available.",
+            X(LeftStartX), Y(80.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "3. Once you check the new information, the notification will disappear.",
+            X(LeftStartX), Y(80.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "4. Some symptoms may appear in more than one illness, so compare them carefully.",
+            X(LeftStartX), Y(10.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+
+        AEGfxPrint(journalFontId, "5. Use the journal whenever you need to review what you have found.",
+            X(LeftStartX), Y(-60.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+    }
+    else
+    {
+        // ============================================================
+        // LEFT PAGE : description + 2 symptoms
+        // ============================================================
+        AEGfxPrint(journalFontId, TextData.title.c_str(),
+            X(LeftStartX), Y(HeaderY),
+            Header,
+            0, 0, 0,
+            1.0f);
+
         AEGfxPrint(journalFontId, TextData.desc.c_str(),
-            X(RightStartX), Y(HeaderY - 60.0f),
+            X(LeftStartX), Y(HeaderY - 60.0f),
             text,
             0.2f, 0.2f, 0.2f,
             1.0f);
 
         AEGfxPrint(journalFontId, TextData.desc2.c_str(),
-            X(RightStartX), Y(HeaderY - 100.0f),
+            X(LeftStartX), Y(HeaderY - 100.0f),
             text,
             0.2f, 0.2f, 0.2f,
             1.0f);
 
-        AEGfxPrint(journalFontId, "Symptoms",
-            X(RightStartX), Y(SubHeaderY),
+        AEGfxPrint(journalFontId, "Evidence",
+            X(LeftStartX), Y(SubHeaderY),
             SubHeader,
             0, 0, 0,
-            1.0f);
-
-        AEGfxPrint(journalFontId, "Only 3 out of all will occur during a shift",
-            X(RightStartX), Y(SubHeaderY - 55.0f),
-            text,
-            0.2f, 0.2f, 0.2f,
             1.0f);
 
         for (int i = 0; i < 2; ++i)
@@ -1109,9 +1091,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
             AEGfxTexture* symptomTex = entry.texture;
             ANOMALYID symptomID = entry.anomalyId;
 
-            int col = i % 2;
-            float x = gridStartX + col * colGap;
-            float y = SubHeaderY - 240.0f;
+            float x = LeftPageSymptomX + i * colGap;
+            float y = LeftPageSymptomY;
 
             bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
             bool observed = Journal_HasObserved(symptomID);
@@ -1122,9 +1103,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 HoveredIndex = i;
 
                 if (observed)
-                {
                     Journal_MarkAsRead(symptomID);
-                }
             }
 
             bool hasUnread = Journal_EvidenceHasUnread(symptomID);
@@ -1138,7 +1117,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
                 if (hasUnread)
                 {
-                              // amplitude                   //frequency
                     f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
                     DrawTextureMesh(squareMesh,
@@ -1155,20 +1133,23 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
             }
         }
-    }
-    else
-    {
+
+        // ============================================================
+        // RIGHT PAGE : remaining 4 symptoms
+        // ============================================================
+
         for (int i = 2; i < 6; ++i)
         {
             SymptomStruct entry = GetJournalSymptomEntry(chosen, i);
             AEGfxTexture* symptomTex = entry.texture;
             ANOMALYID symptomID = entry.anomalyId;
 
-            int col = (i - 2) % 2;
-            int row = (i - 2) / 2;
+            int localIndex = i - 2;
+            int col = localIndex % 2;
+            int row = localIndex / 2;
 
-            float x = gridStartX + col * colGap;
-            float y = 130.0f - row * rowGap;
+            float x = RightPageSymptomX + col * colGap;
+            float y = RightPageSymptomY - row * rowGap;
 
             bool hovered = Journal_PointInRect(mouseWorldX, mouseWorldY, x, y, imgW, imgH);
             bool observed = Journal_HasObserved(symptomID);
@@ -1179,9 +1160,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 HoveredIndex = i;
 
                 if (observed)
-                {
                     Journal_MarkAsRead(symptomID);
-                }
             }
 
             bool hasUnread = Journal_EvidenceHasUnread(symptomID);
@@ -1195,7 +1174,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
                 if (hasUnread)
                 {
-                    // amplitude                   //frequency
                     f32 bounceY = 3.0f * sinf(JournalAlertTimer * 3.5f);
 
                     DrawTextureMesh(squareMesh,
@@ -1212,33 +1190,33 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
                 DrawTextureMesh(squareMesh, Undiscovered, x, y, imgW, imgH, 1.0f);
             }
         }
-    }
 
-    // ============================================================
-    // HOVER INFO AREA
-    // ============================================================
-    const char* HoverText = "Hover an entry to inspect";
+        // ============================================================
+        // HOVER INFO AREA
+        // ============================================================
+        const char* HoverText = "Hover an entry to inspect";
 
-    if (HoveredIndex >= 0 && HoveredIndex < 6)
-    {
-        SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, HoveredIndex);
-
-        if (hoveredEntry.anomalyId != ANOMALYID::None &&
-            Journal_HasObserved(hoveredEntry.anomalyId))
+        if (HoveredIndex >= 0 && HoveredIndex < 6)
         {
-            HoverText = TextData.symptomText[HoveredIndex].c_str();
-        }
-        else
-        {
-            HoverText = "???";
-        }
-    }
+            SymptomStruct hoveredEntry = GetJournalSymptomEntry(chosen, HoveredIndex);
 
-    AEGfxPrint(journalFontId, HoverText,
-        X(RightStartX), Y(-350.0f),
-        text,
-        0, 0, 0,
-        1.0f);
+            if (hoveredEntry.anomalyId != ANOMALYID::None &&
+                Journal_HasObserved(hoveredEntry.anomalyId))
+            {
+                HoverText = TextData.symptomText[HoveredIndex].c_str();
+            }
+            else
+            {
+                HoverText = "???";
+            }
+        }
+
+        AEGfxPrint(journalFontId, HoverText,
+            X(RightStartX), Y(-350.0f),
+            text,
+            0, 0, 0,
+            1.0f);
+    }
 
     // ============================================================
 	// "PRESS [I] TO CLOSE" INFO
@@ -1268,8 +1246,7 @@ void Journal_Unload()
     UnloadTextureSafe(JournalIcon);
     UnloadTextureSafe(JournalBack);
     UnloadTextureSafe(JournalFront);
-    UnloadTextureSafe(TabEntry1);
-    UnloadTextureSafe(TabEntry2);
+    UnloadTextureSafe(TabEntry);
 
     UnloadTextureSafe(Undiscovered);
     UnloadTextureSafe(gSound);
