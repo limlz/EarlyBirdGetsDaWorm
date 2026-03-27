@@ -331,7 +331,8 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 	if (PagerState.IsActive) {
 		f32 PosX{ 0.0f }, PosY{ 0.0f },
 			CollectionX{ textPosition(-360.0f, 157.5f).first }, CollectionY{ textPosition(-360.0f, 157.5f).second },
-			DestinationX{ textPosition(-360.0f, 97.5f).first }, DestinationY{ textPosition(-360.0f, 97.5f).second };
+			DestinationX{ textPosition(-360.0f, 97.5f).first }, DestinationY{ textPosition(-360.0f, 97.5f).second },
+			CountX{ textPosition(50.0f, -40.0f).first }, CountY{ textPosition(70.0f, -100.0f).second };
 
 		if (BigPager.IsVibrating)
 		{
@@ -346,6 +347,9 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 
 			DestinationX += OffsetX;
 			DestinationY += OffsetY;
+
+			CountX += OffsetX;
+			CountY += OffsetY;
 		}
 
 		// Draws Pager
@@ -357,6 +361,12 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 		sprintf_s(DestinationText, "Bring patient to room #%02d-%02d", DestinationFloorNumber, DestinationDoorNumber);
 		AEGfxPrint(BigPager.Font, CollectionText, CollectionX, CollectionY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 		AEGfxPrint(BigPager.Font, DestinationText, DestinationX, DestinationY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		// Patient count — bottom-right of pager content area
+		char CountText[32]{};
+		const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
+		sprintf_s(CountText, "Patients: %d / %d", Player_GetPatientsHandled(), requiredPatients);
+		AEGfxPrint(BigPager.Font, CountText, CountX, CountY, 1.0f, 1.0f, 0.85f, 0.45f, 1.0f);
 
 		f32 InfoX{ textPosition(-220.0f, -410.0f).first },
 			InfoY{ textPosition(-220.0f, -410.0f).second };
