@@ -1,7 +1,7 @@
 TITLE=Paranoia
 
-DESC=An intense feeling of fear and distrust
-DESC2=toward others.
+DESC=An intense feeling of fear and 
+DESC2=distrust toward others.
 
 SYMPTOM1=The eyes follow wherever I move
 SYMPTOM2=Light pulses rapidly

@@ -1,7 +1,7 @@
 TITLE=Dementia
 
-DESC=A condition that causes memory loss and 
-DESC2=confusion.
+DESC=A condition that causes memory  
+DESC2=loss and confusion.
 
 SYMPTOM1=A long crack slowly spreads across the wall
 SYMPTOM2=Red–yellow light cycle

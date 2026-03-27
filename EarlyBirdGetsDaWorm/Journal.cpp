@@ -97,12 +97,12 @@ void Journal_Initialize()
     SubHeaderY = HeaderY - 200.0f;
 
     // Pages X positions
-	LeftStartX = -700.0f;
-	RightStartX = 120.0f;
+	LeftStartX = -680.0f;
+	RightStartX = 90.0f;
 
     // Illness list / tab layout  
-    ListY = 300.0f;
-    ListStep = 90.0f;
+    ListY = 330.0f;
+    ListStep = 85.0f;
 
     IllnessTabX = -900.0f;
     IllnessTabW = 340.0f;
@@ -113,10 +113,10 @@ void Journal_Initialize()
     IllnessHitH = IllnessTabH;
 
 	// How to use tab layout
-    HowToTabX = -100.0f;      
-    HowToTabY = 420.0f;
+    HowToTabX = -150.0f;      
+    HowToTabY = 450.0f;
     HowToTabW = 180.0f;
-    HowToTabH = 150.0f;
+    HowToTabH = 130.0f;
 
     // Symptom image layout
     imgW = 190.0f;
@@ -130,7 +130,7 @@ void Journal_Initialize()
     LeftPageSymptomY = -40.0f;
 
     // right page = 2 symptoms
-    RightPageSymptomX = RightStartX + 30.0f;
+    RightPageSymptomX = RightStartX + 70.0f;
     RightPageSymptomY = 180.0f;
 
     tiltAngle = 0.12f;
@@ -238,6 +238,70 @@ static void ClampSelected()
 // ============================================================
 
 // ---------------------------------------------
+// HOW TO USE PAGE 
+// ---------------------------------------------
+struct HelpTextData
+{
+    std::string title;
+    std::vector<std::string> leftLines;
+    std::vector<std::string> rightLines;
+};
+
+static bool LoadHelpText(const std::string& filePath, HelpTextData& data)
+{
+    std::ifstream file(filePath);
+    if (!file.is_open())
+    {
+        std::cout << "Failed to open help file\n";
+        return false;
+    }
+
+    data.title.clear();
+    data.leftLines.clear();
+    data.rightLines.clear();
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        if (line.empty())
+            continue;
+
+        size_t eq = line.find('=');
+        if (eq == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, eq);
+        std::string value = line.substr(eq + 1);
+
+        if (key == "LEFT")
+        {
+            std::stringstream ss(value);
+            std::string segment;
+
+            while (std::getline(ss, segment, '|'))
+            {
+                data.leftLines.push_back(segment);
+            }
+        }
+        else if (key == "RIGHT")
+        {
+            std::stringstream ss(value);
+            std::string segment;
+
+            while (std::getline(ss, segment, '|'))
+            {
+                data.rightLines.push_back(segment);
+            }
+        }
+    }
+
+    return true;
+}
+
+static HelpTextData HelpData;
+
+// ---------------------------------------------
 // 1) LINKING ILLNESSES TO TEXT FILES
 // ---------------------------------------------
 // Each illness now contains...
@@ -279,7 +343,6 @@ static const char* GetJournalTextFilePath(ILLNESSES illness)
 static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
 {   
     // Open the file for reading
-	// If file doesn't exist or fails to open, return false
 	std::ifstream file(filePath);   
     if (!file.is_open())
         return false;
@@ -295,8 +358,6 @@ static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
         }
 
 		// Find "=" to split key and value
-        // Example:
-		// TITLE=Paranoia
         size_t eq = line.find('=');
         if (eq == std::string::npos)
         {
@@ -304,9 +365,6 @@ static bool LoadJournalTextFile(const char* filePath, TextStruct& outData)
         }
 
 		// Extract key and value, then store in the appropriate field of outData
-		// Example:
-		// key = "TITLE"
-        // value = "Paranoia" 
         std::string key = line.substr(0, eq);
         std::string value = line.substr(eq + 1);
 
@@ -686,6 +744,11 @@ void Journal_Load()
                 << std::endl;
         }
     }
+
+    if (!LoadHelpText("Assets/Equipment/logs/Help.txt", HelpData))
+    {
+        std::cout << "Help text failed to load!\n";
+    }
 }
 
 void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
@@ -964,7 +1027,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         }
         
         // ============================================================
-        // UNREAD ICON 
+        // UNREAD ICON "!"
         // ============================================================
         bool illnessHasUnread = Journal_IllnessHasUnread(IllnessList[i]);
 
@@ -974,8 +1037,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
             DrawTextureMesh(squareMesh,
                 AlertIcon,
-                (IllnessTabX - 10.0f) * UI_SCALE,
-                (illnessY + 18.0f + bounceY) * UI_SCALE,
+                (IllnessTabX - 130.0f) * UI_SCALE,
+                (illnessY + 25.0f + bounceY) * UI_SCALE,
                 25.0f,
                 25.0f,
                 1.0f);
@@ -1017,7 +1080,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 
     // draw text
     AEGfxPrint(journalFontId, "HELP",
-        X(HowToTabX - 10.0f),
+        X(HowToTabX - 30.0f),
         Y(HowToTabY),
         0.6f * helpScale,
         0.2f, 0.2f, 0.2f,
@@ -1029,32 +1092,35 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         // HOW TO USE PAGE
         // ============================================================
 
+        float StartY = HeaderY - 80.0f;
+        float spacing = 60.0f;
+
         AEGfxPrint(journalFontId, "How To Use",
-            X(LeftStartX), Y(HeaderY),
+            X(LeftStartX),
+            Y(HeaderY),
             Header,
             0, 0, 0,
             1.0f);
 
-        AEGfxPrint(journalFontId, "1. This is your journal. It keeps",
-            X(LeftStartX), Y(220.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+        // Left Page
+        for (int i = 0; i < (int)HelpData.leftLines.size(); ++i)
+        {
+            AEGfxPrint(journalFontId, HelpData.leftLines[i].c_str(),
+                X(LeftStartX), Y(StartY - i * spacing),
+                text,
+                0.2f, 0.2f, 0.2f,
+                1.0f);
+        }
 
-        AEGfxPrint(journalFontId, "   track of the symptoms you discover.",
-            X(LeftStartX), Y(150.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
-
-        AEGfxPrint(journalFontId, "2. A red notification means new symptom",
-            X(LeftStartX), Y(150.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
-
-        AEGfxPrint(journalFontId, "   information is available.",
-            X(LeftStartX), Y(80.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
-
-        AEGfxPrint(journalFontId, "3. Once you check the new information, the notification will disappear.",
-            X(LeftStartX), Y(80.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
-
-        AEGfxPrint(journalFontId, "4. Some symptoms may appear in more than one illness, so compare them carefully.",
-            X(LeftStartX), Y(10.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
-
-        AEGfxPrint(journalFontId, "5. Use the journal whenever you need to review what you have found.",
-            X(LeftStartX), Y(-60.0f), text, 0.2f, 0.2f, 0.2f, 1.0f);
+        // Right page
+        for (int i = 0; i < (int)HelpData.rightLines.size(); ++i)
+        {
+            AEGfxPrint(journalFontId, HelpData.rightLines[i].c_str(),
+                X(RightStartX), Y(StartY - i * spacing),
+                text,
+                0.2f, 0.2f, 0.2f,
+                1.0f);
+        }
     }
     else
     {

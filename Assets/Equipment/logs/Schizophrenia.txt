@@ -1,7 +1,7 @@
 TITLE=Schizophrenia
 
-DESC=A disorder that causes hallucinations and 
-DESC2=distorted reality.
+DESC=A disorder that causes hallucinations 
+DESC2=and distorted reality.
 
 SYMPTOM1=Child's drawing
 SYMPTOM2=Chaotic flickering

@@ -1,7 +1,7 @@
 TITLE=Depression
 
-DESC=A persistent feeling of sadness and 
-DESC2=hopelessness.
+DESC=A persistent feeling of sadness 
+DESC2=and hopelessness.
 
 SYMPTOM1=A dark cloud follows me wherever I go
 SYMPTOM2=Slow blue light

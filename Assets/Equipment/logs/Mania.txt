@@ -1,7 +1,7 @@
 TITLE=Mania
 
-DESC=A state of uncontrollable energy and  
-DESC2=racing thoughts.
+DESC=A state of uncontrollable energy  
+DESC2=and racing thoughts.
 
 SYMPTOM1=The clock begins spinning wildly
 SYMPTOM2=Rapid green and red flickers
