@@ -10,3 +10,4 @@ void GSM_Update();
 bool GSM_ShouldPreserveCurrentStateOnExit();
 bool GSM_ShouldRunLoadAndInitialize();
 void GSM_OnStateTransition();
+bool GSM_WasGameSuspendedForBoss();

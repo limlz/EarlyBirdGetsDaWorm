@@ -32,8 +32,6 @@ static float gGameMinutes = (float)START_MIN; // float for smooth dt accumulatio
 static bool  gTimeUp = false;
 static bool  gTimerPaused = false;
 
-// (Currently unused, safe to remove if you want)
-static float gAccum = 0.0f;
 
 // Fonts
 static int gClockFontId = -1; // digital clock font
@@ -95,7 +93,7 @@ void Timer_Reset()
 {
     gGameMinutes = (float)START_MIN;
     gTimeUp = false;
-    gAccum = 0.0f;
+    gTimerPaused = false;
 
     // Optional: you can choose to also clear overlay here, but leaving as-is
     // so Game.cpp can control overlay separately.
@@ -166,15 +164,6 @@ void Timer_Update(float dt)
 // ============================================================================
 // CLOCK DRAW
 // ============================================================================
-
-void Timer_DrawPatientCount(float ndcX, float ndcY, int current, int required)
-{
-    if (gOverlayFontId < 0) return;
-    char buf[32]{};
-    sprintf_s(buf, "%d / %d patients", current, required);
-    // Warm amber — readable against dark backgrounds, matches the worn-hospital palette
-    AEGfxPrint(gOverlayFontId, buf, ndcX, ndcY, 0.6f, 1.0f, 0.85f, 0.45f, 1.0f);
-}
 
 void Timer_Draw(float ndcX, float ndcY)
 {

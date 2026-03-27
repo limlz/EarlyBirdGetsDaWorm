@@ -546,6 +546,7 @@ void Boss_Fight_Draw()
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(fadeInAlpha);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
         AEMtx33 scale, trans, transform;
         AEMtx33Scale(&scale, 1600.0f, 900.0f);
@@ -563,6 +564,7 @@ void Boss_Fight_Draw()
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(victoryAlpha);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
         AEMtx33 scale, trans, transform;
         AEMtx33Scale(&scale, 1600.0f, 900.0f);

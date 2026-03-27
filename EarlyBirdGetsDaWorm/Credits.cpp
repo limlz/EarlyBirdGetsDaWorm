@@ -199,6 +199,9 @@ void Credits_Load()
 
 void Credits_Unload()
 {
+    parsedCredits.clear();
+    parsedCredits.shrink_to_fit();
+
     UnloadTextureSafe(credits_guy);
     UnloadTextureSafe(credits_guy2);
     UnloadTextureSafe(close_btn_tex);

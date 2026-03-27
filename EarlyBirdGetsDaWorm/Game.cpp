@@ -694,6 +694,7 @@ void Game_Draw()
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(currentAlpha);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
         AEMtx33 trans, transform;
         AEMtx33Scale(&scale, 1600.0f, 900.0f);
@@ -709,6 +710,7 @@ void Game_Draw()
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetTransparency(1.0f);
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
     Journal_Draw(squareMesh);
     Tutorial_Draw();
@@ -732,7 +734,6 @@ void Game_Unload()
     Frames_Unload();
     Player_Unload();
     Prompts_Unload();
-    Boss_Fight_Unload();
     Lighting_Unload();
     Doors_Unload();
     Debug_Unload();

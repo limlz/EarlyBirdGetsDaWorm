@@ -1330,6 +1330,13 @@ void Journal_Unload()
     // reset UI state
     Open = false;
     Selected = 0;
+
+    // free string data loaded from illness text files
+    for (int i = 0; i < ILLNESS_COUNT; i++)
+        GetFromText[i] = TextStruct{};
+
+    Observed.assign(Observed.size(), false);
+    Unread.assign(Unread.size(), false);
 }
 
 // ============================================================

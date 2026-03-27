@@ -39,6 +39,11 @@ bool GSM_ShouldRunLoadAndInitialize()
 	return true;
 }
 
+bool GSM_WasGameSuspendedForBoss()
+{
+	return gameStateSuspendedForBoss;
+}
+
 void GSM_OnStateTransition()
 {
 	if (previous == GAME_STATE && current == BOSS_FIGHT_STATE) {

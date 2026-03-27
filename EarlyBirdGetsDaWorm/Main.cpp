@@ -77,12 +77,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 fpUnload(); // Unload current state assets
             }
 
+            // If the game state was suspended (preserved) for the boss fight, but we're NOT
+            // returning to the game (e.g. player died → ENDGAME), the preserved game resources
+            // were never freed. Clean them up now before moving on.
+            if (current == BOSS_FIGHT_STATE && next != GAME_STATE && GSM_WasGameSuspendedForBoss()) {
+                Game_Unload();
+            }
+
             previous = current;
             current = next;
             GSM_OnStateTransition();
         }
     }
 
+    AudioManager_Unload();
     AESysExit();
     return 0;
 }
