@@ -1,3 +1,3 @@
 LEFT=- This is your journal. It keeps track|of the symptoms you discover.||- A red notification means you have|discovered a new symptom.||- Once you have checked them,|the notification will disappear.
 
-RIGHT=- Some symptoms may appear in more than|one illness, so compare them carefully.||- Use the journal whenever you need to|review what you have found.
+RIGHT=- Some symptoms may appear in more than|one illness, so compare them carefully.||- Use the journal whenever you need to|review what you have found.||- Remember...|A normal patient shows 3 symptoms.|Anything beyond that indicates a ghost.
