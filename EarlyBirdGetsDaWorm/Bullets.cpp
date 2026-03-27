@@ -206,36 +206,65 @@ void Bullets_Draw(float camX) {
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-// --- NEW: AMMO UI DRAWING ---
-void Bullets_DrawAmmoUI() {
+// Ammo UI — horizontal glass-cylinder bar, bottom-right.
+// Fill drains left-to-right as shots are fired (smooth spray = smooth drain).
+// Cyan = holy water active; orange = reloading.
+void Bullets_DrawAmmoUI()
+{
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    // Place the UI bar in the bottom right corner
-    float barX = 500.0f;
-    float barY = -400.0f;
+    // BOTTOM RIGHT — mirrors the HP bar position on the right side
+    const float barCenterX =  520.0f;
+    const float barCenterY = -390.0f;
+    const float barW       = 280.0f;
+    const float barH       =  18.0f;
+    const float pad        =   3.0f;
+    const float barLeft    = barCenterX - barW * 0.5f;
+
+    // Outer dark border
+    DrawSquareMesh(squareMesh, barCenterX, barCenterY, barW + pad * 2.0f, barH + pad * 2.0f, 0xFF111111);
+    // Dark glass-tinted background
+    DrawSquareMesh(squareMesh, barCenterX, barCenterY, barW, barH, 0xFF021010);
+
+    // Pressure-gauge tick marks at 25%, 50%, 75% (vertical notches, extend 4 px above/below)
+    AEGfxSetTransparency(0.45f);
+    for (int i = 1; i <= 3; i++) {
+        float tickX = barLeft + barW * (i * 0.25f);
+        DrawSquareMesh(squareMesh, tickX, barCenterY, 2.0f, barH + 8.0f, 0xFF00CCCC);
+    }
+    AEGfxSetTransparency(1.0f);
 
     if (isReloading) {
-        // Draw Red Reloading Bar
+        // Dark navy reload-progress bar grows left-to-right
         float reloadProgress = (RELOAD_TIME - reloadTimer) / RELOAD_TIME;
-        float currentWidth = 200.0f * reloadProgress;
+        float fillW  = barW * reloadProgress;
+        float fillCX = barLeft + fillW * 0.5f;
+        DrawSquareMesh(squareMesh, fillCX, barCenterY, fillW, barH, 0x0A1A44FF);
 
-        // Background
-        DrawSquareMesh(squareMesh, barX, barY, 200.0f, 20.0f, 0xFF444444);
-        // Filling Red Bar
-        DrawSquareMesh(squareMesh, barX - (100.0f - (currentWidth / 2.0f)), barY, currentWidth, 20.0f, 0xFFFF0000);
+        // Gloss stripe on the top edge
+        float hiH = barH * 0.22f;
+        float hiY = barCenterY + (barH - hiH) * 0.5f;
+        AEGfxSetTransparency(0.3f);
+        DrawSquareMesh(squareMesh, fillCX, hiY, fillW, hiH, 0x112255FF);
+        AEGfxSetTransparency(1.0f);
     }
     else {
-        // Draw Green Ammo Bar based on remaining ammo
-        float ammoPercentage = (float)currentAmmo / (float)MAX_AMMO;
-        float currentWidth = 200.0f * ammoPercentage;
+        // Glowing cyan holy-water fill — drains smoothly from the right as shots are fired
+        float ammoPercent = (float)currentAmmo / (float)MAX_AMMO;
+        float fillW  = barW * ammoPercent;
+        float fillCX = barLeft + fillW * 0.5f;
 
-        // Background
-        DrawSquareMesh(squareMesh, barX, barY, 200.0f, 20.0f, 0xFF444444);
-        // Shrinking Green Bar
         if (currentAmmo > 0) {
-            DrawSquareMesh(squareMesh, barX - (100.0f - (currentWidth / 2.0f)), barY, currentWidth, 20.0f, 0xFF00FFFF);
+            DrawSquareMesh(squareMesh, fillCX, barCenterY, fillW, barH, 0x00FFFFFF);
+
+            // Glass-tube gloss stripe on the top edge
+            float hiH = barH * 0.22f;
+            float hiY = barCenterY + (barH - hiH) * 0.5f;
+            AEGfxSetTransparency(0.35f);
+            DrawSquareMesh(squareMesh, fillCX, hiY, fillW, hiH, 0xAAFFFFFF);
+            AEGfxSetTransparency(1.0f);
         }
     }
 }

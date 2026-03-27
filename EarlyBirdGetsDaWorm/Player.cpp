@@ -138,7 +138,6 @@ void SetPatientScaryByDay(int day) {
     }
 
     ApplyNewPatientFromTruth(IsScary);
-    PatientsHandled++;
 }
 
 /*****************************************************************************************/
@@ -170,6 +169,7 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day) {
             BlinkTimer = 0.0f;
             PendingDelivery = true;
             StateChangedDuringBlink = false;
+            PatientsHandled++;
 
             return true;
         }

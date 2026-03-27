@@ -18,6 +18,10 @@ static int   currentBulletFrame = 0;
 static float bulletAnimTimer    = 0.0f;
 const  float BULLET_ANIM_SPEED  = 0.1f;
 
+// --- Boss HUD ---
+static s8    bossHudFontId    = -1;
+static float interactBobTimer = 0.0f;
+
 
 
 void Boss_Load()
@@ -32,6 +36,7 @@ void Boss_Load()
     bossBulletFrames[1]        = LoadTextureChecked(Assets::Boss_Fight::Bullet2);
     bossScatterBulletFrames[0] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet1);
     bossScatterBulletFrames[1] = LoadTextureChecked(Assets::Boss_Fight::ScatterBullet2);
+    bossHudFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 26);
 }
 
 void Boss_Initialize(Boss& boss)
@@ -193,6 +198,9 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         }
     }
 
+    // Advance interact-prompt bob animation
+    interactBobTimer += dt;
+
     // --- UPDATE BOSS BULLETS ---
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         if (boss.bullets[i].active) {
@@ -213,41 +221,84 @@ void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
     float hpPercent = (float)boss.health / (float)BOSS_MAX_HEALTH;
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
-    const float barWidth  = 400.0f;
-    const float barHeight = 20.0f;
-    const float startX    =  500.0f;
-    const float startY    =  400.0f;
-    const float pad       =    3.0f;
+    // TOP CENTER — ~84% of the 1600px world-space screen width
+    const float barWidth  = 1350.0f;
+    const float barHeight =  28.0f;
+    const float startX    =   0.0f;   // horizontally centered
+    const float startY    = 375.0f;   // just inside the top black bar
+    const float pad       =   4.0f;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    // Outer border: blue when shielded, black otherwise
-    u32 borderColor = boss.shieldActive ? 0xFF2266FF : 0xFF000000;
+    // Outer frame: electric blue when shielded, near-black otherwise
+    u32 borderColor = boss.shieldActive ? 0xFF2266FF : 0xFF0D0008;
     DrawSquareMesh(mesh, startX, startY, barWidth + pad * 2.0f, barHeight + pad * 2.0f, borderColor);
-    // Dark background
-    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF220000);
+    // Dark corrupted background trough
+    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF1A0012);
 
     if (boss.health > 0) {
         float fillW = barWidth * hpPercent;
         float fillX = startX - barWidth * 0.5f + fillW * 0.5f;
 
-        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, 0x8B0000FF);
+        // Pure blood-crimson fill — deep red, no pink tint
+        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, 0xCC0000FF);
 
-        // Subtle white highlight along the top third of the fill
-        float hiH = barHeight * 0.3f;
+        // Thin glossy highlight stripe along the top edge
+        float hiH = barHeight * 0.22f;
         float hiY = startY + (barHeight - hiH) * 0.5f;
-        AEGfxSetTransparency(0.2f);
-        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFFFFFFFF);
+        AEGfxSetTransparency(0.30f);
+        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFF4444FF);
         AEGfxSetTransparency(1.0f);
     }
 
-    // Blue shimmer overlay when shielded
+    // Bright light-green healing overlay during shield phase
     if (boss.shieldActive) {
-        AEGfxSetTransparency(0.3f);
-        DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF2266FF);
+        AEGfxSetTransparency(0.45f);
+        DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0x44FF44FF);
         AEGfxSetTransparency(1.0f);
+    }
+
+    // Boss name — printed ABOVE the bar
+    // Bar outer top edge = (375 + 14 + 4) = 393 world Y → NDC ≈ 0.873
+    // Tune x to horizontally center the string for your font; 0.85 scale on size-26 font
+    if (bossHudFontId >= 0) {
+        AEGfxPrint(bossHudFontId, "THE SHADOW", -0.185f, 0.895f, 0.85f,
+                   0.85f, 0.55f, 0.70f, 1.0f);
+    }
+}
+
+// Draws a static [G] interact prompt at top-right, level with the boss HP bar.
+// interactBobTimer (advanced in Boss_Update) drives a gentle atmospheric bob.
+void Boss_DrawInteractPrompt(Boss& boss, AEGfxVertexList* mesh)
+{
+    if (!boss.active) return;
+
+    // Fixed anchor: just right of the boss HP bar's right edge
+    // Bar width = 1350, half = 675, + 4 pad + ~50 margin = 729
+    const float baseCX = 729.0f;
+    const float baseCY = 375.0f; // same world Y as the boss HP bar
+
+    // Gentle sine bob (amplitude 5 px) — purely atmospheric, not position-tracking
+    float bob = sinf(interactBobTimer * 2.1f) * 5.0f;
+    float cy  = baseCY + bob;
+
+    // Tattered-clipboard background
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetTransparency(0.85f);
+    DrawSquareMesh(mesh, baseCX, cy, 80.0f, 32.0f, 0xFF2A1E10);           // dark sepia body
+    AEGfxSetTransparency(0.35f);
+    DrawSquareMesh(mesh, baseCX, cy + 12.0f, 80.0f, 4.0f, 0xFF6B4F2A);   // worn top stripe
+    AEGfxSetTransparency(1.0f);
+
+    // "[G]" label — NDC = worldPos / half-screen-extent (800 wide, 450 tall)
+    if (bossHudFontId >= 0) {
+        float ndcX = (baseCX - 26.0f) / 800.0f;
+        float ndcY = (cy     -  7.0f) / 450.0f;
+        AEGfxPrint(bossHudFontId, "[G]", ndcX, ndcY, 0.70f,
+                   0.90f, 0.82f, 0.65f, 1.0f); // parchment-white
     }
 }
 
@@ -357,4 +408,5 @@ void Boss_Unload()
     UnloadTextureSafe(bossBulletFrames[1]);
     UnloadTextureSafe(bossScatterBulletFrames[0]);
     UnloadTextureSafe(bossScatterBulletFrames[1]);
+    if (bossHudFontId >= 0) { AEGfxDestroyFont(bossHudFontId); bossHudFontId = -1; }
 }

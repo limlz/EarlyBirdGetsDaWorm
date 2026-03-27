@@ -29,6 +29,8 @@ int playerHP = 10;
 const int MAX_PLAYER_HP = 10;
 bool isPlayerHit = false;
 float hitTimer = 0.0f;
+static float vignetteAlpha = 0.0f; // Set to 1.0f to flash the damage vignette overlay
+static float lagHpPercent  = 1.0f; // Trails behind hpPercent for the ghost-bar effect
 
 // --- PLAYER ANIMATION VARIABLES ---
 static int currentPlayerFrame = 0;
@@ -66,37 +68,58 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
     float hpPercent = (float)playerHP / (float)MAX_PLAYER_HP;
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
-    const float barWidth  = 400.0f;
-    const float barHeight = 20.0f;
-    const float startX    = -500.0f;
-    const float startY    =  400.0f;
-    const float pad       =    3.0f;
+    // BOTTOM LEFT — horizontal bar sitting on the bottom black bar
+    const float barCenterX = -520.0f;
+    const float barCenterY = -390.0f;
+    const float barW       = 280.0f;
+    const float barH       =  18.0f;
+    const float pad        =   3.0f;
+    const float barLeft    = barCenterX - barW * 0.5f;
+
+    // Shake when hit: sine/cosine driven by hitTimer so it oscillates fast then stops
+    float shakeX = isPlayerHit ? sinf(hitTimer * 90.0f) * 5.0f : 0.0f;
+    float shakeY = isPlayerHit ? cosf(hitTimer * 80.0f) * 3.0f : 0.0f;
+    float cx = barCenterX + shakeX;
+    float cy = barCenterY + shakeY;
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    // Outer black border
-    DrawSquareMesh(mesh, startX, startY, barWidth + pad * 2.0f, barHeight + pad * 2.0f, 0xFF000000);
-    // Dark background
-    DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF1A1A1A);
+    // Outer dark border (shakes with the bar)
+    DrawSquareMesh(mesh, cx, cy, barW + pad * 2.0f, barH + pad * 2.0f, 0x111111FF);
+    // Dark background trough
+    DrawSquareMesh(mesh, cx, cy, barW, barH, 0x1A0000FF);
 
-    if (playerHP > 0) {
-        float fillW = barWidth * hpPercent;
-        float fillX = startX - barWidth * 0.5f + fillW * 0.5f;
-
-        // Green when healthy, yellow when mid, red when low
-        u32 fillColor = (hpPercent > 0.5f) ? 0xFF44DD66
-                      : (hpPercent > 0.25f) ? 0xFFFFAA22
-                      :                        0xFFEE3322;
-        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, fillColor);
-
-        // Subtle white highlight along the top third of the fill
-        float hiH = barHeight * 0.3f;
-        float hiY = startY + (barHeight - hiH) * 0.5f;
-        AEGfxSetTransparency(0.2f);
-        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFFFFFFFF);
+    // Ghost (lag) bar — white, fades slowly after taking damage, drawn BEHIND actual fill
+    if (lagHpPercent > hpPercent) {
+        float lagFillW = barW * lagHpPercent;
+        float lagFillX = (barLeft + lagFillW * 0.5f) + shakeX;
+        AEGfxSetTransparency(0.55f);
+        DrawSquareMesh(mesh, lagFillX, cy, lagFillW, barH, 0xFFFFFFFF);
         AEGfxSetTransparency(1.0f);
+    }
+
+    // Actual HP fill — bright red, fills left-to-right
+    if (playerHP > 0) {
+        float fillW = barW * hpPercent;
+        float fillX = (barLeft + fillW * 0.5f) + shakeX;
+        DrawSquareMesh(mesh, fillX, cy, fillW, barH, 0xCC0000FF);
+
+        // Thin gloss stripe along the top edge
+        float hiH = barH * 0.22f;
+        float hiY = cy + (barH - hiH) * 0.5f;
+        AEGfxSetTransparency(0.25f);
+        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFF6666FF);
+        AEGfxSetTransparency(1.0f);
+    }
+
+    // "HP" label to the left of the bar
+    if (victoryFontId >= 0) {
+        float ndcX = (barLeft - 36.0f) / 800.0f;
+        float ndcY = (barCenterY - 7.0f) / 450.0f;
+        AEGfxPrint(victoryFontId, "HP", ndcX, ndcY, 0.50f,
+                   0.80f, 0.20f, 0.20f, 1.0f);
     }
 }
 
@@ -129,6 +152,7 @@ void Boss_Fight_Initialize()
     Bullets_Initialize();
     PauseMenu_Initialize();
     Boss_Initialize(myBoss);
+    myBoss.health = BOSS_MAX_HEALTH; // explicit reset every entry
 
     playerX = -600.0f;
     playerY = GROUND_Y;
@@ -140,6 +164,7 @@ void Boss_Fight_Initialize()
     facingRight = true;
     playerHP = MAX_PLAYER_HP;
     isPlayerHit = false;
+    lagHpPercent = 1.0f;
 
     // Reset the victory sequence variables
     isVictorySequence = false;
@@ -372,6 +397,7 @@ void Boss_Fight_Update()
                     myBoss.bullets[i].active = false;
                     isPlayerHit = true;
                     hitTimer = 0.2f;
+                    vignetteAlpha = 1.0f; // Hook: set to 1.0f to trigger vignette / cracked-glass overlay
                     AudioManager_PlaySFX(SFX_EXHALE, 0.7f);  // Player hurt reaction
 
                     if (playerHP <= 0 && !BossDebug_IsGodMode()) {
@@ -392,6 +418,24 @@ void Boss_Fight_Update()
         if (hitTimer <= 0.0f) isPlayerHit = false;
     }
 
+    // Decay vignette overlay (~0.4 s fade-out)
+    if (vignetteAlpha > 0.0f) {
+        vignetteAlpha -= dt * 2.5f;
+        if (vignetteAlpha < 0.0f) vignetteAlpha = 0.0f;
+    }
+
+    // Lag (ghost) bar slowly catches up to actual HP
+    {
+        float currentHpPct = (float)playerHP / (float)MAX_PLAYER_HP;
+        if (lagHpPercent > currentHpPct) {
+            lagHpPercent -= dt * 0.45f;
+            if (lagHpPercent < currentHpPct) lagHpPercent = currentHpPct;
+        }
+        else {
+            lagHpPercent = currentHpPct; // snap up if HP is restored
+        }
+    }
+
     Bullets_Update(dt, 0.0f, myBoss);
 }
 
@@ -406,9 +450,15 @@ void Boss_Fight_Draw()
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 
-        // Tint magenta if hit, otherwise use normal color
-        if (isPlayerHit) AEGfxSetColorToMultiply(1.0f, 0.0f, 1.0f, 1.0f);
-        else             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        // Tint red if hit — multiply removes G/B, add pushes R to full bright red
+        if (isPlayerHit) {
+            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
+            AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.0f);
+        }
+        else {
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+        }
 
         AEMtx33 scale, trans, transform;
 
@@ -433,6 +483,7 @@ void Boss_Fight_Draw()
 
         // Reset tint and render mode
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     }
     else
@@ -440,7 +491,7 @@ void Boss_Fight_Draw()
         // Fallback to drawing a colored rectangle if texture fails to load
         float drawHeight = isCrouching ? 210.0f : 240.0f;
         float drawY = isCrouching ? playerY - 15.0f : playerY;
-        u32 playerColor = isPlayerHit ? 0xFFFF00FF : COLOR_WHITE;
+        u32 playerColor = isPlayerHit ? 0xFF0000FF : COLOR_WHITE;
         DrawSquareMesh(squareMesh, playerX, drawY, 70.0f, drawHeight, playerColor);
     }
 
@@ -460,9 +511,13 @@ void Boss_Fight_Draw()
         // V-flip when facing left: V-flip + 180° arm rotation = correct mirrored arm without upside-down artifact
         float texHeight = facingRight ? ARM_WIDTH : -ARM_WIDTH;
 
-        if (isPlayerHit) AEGfxSetColorToMultiply(1.0f, 0.0f, 1.0f, 1.0f);
+        if (isPlayerHit) {
+            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
+            AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.0f);
+        }
         DrawTextureMeshRotated(squareMesh, player_arm_gun, texCX, texCY, TOTAL_LENGTH, texHeight, armAngle, 1.0f);
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
@@ -473,6 +528,17 @@ void Boss_Fight_Draw()
     Player_DrawHealthBar(squareMesh);
     Bullets_DrawAmmoUI();
     Boss_DrawHealthBar(myBoss, squareMesh);
+    // Guide clipboard icon anchored just right of the boss HP bar (bar right edge ≈ 679)
+    Guide_DrawIconAt(739.0f, 375.0f);
+
+    // Damage vignette — auto-decays; set vignetteAlpha = 1.0f to re-trigger (e.g., cracked-glass overlay)
+    if (vignetteAlpha > 0.0f) {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(vignetteAlpha * 0.55f);
+        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 1600.0f, 900.0f, 0xFF110000);
+        AEGfxSetTransparency(1.0f);
+    }
 
     if (fadeInAlpha > 0.0f)
     {

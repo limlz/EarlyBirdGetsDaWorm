@@ -11,6 +11,7 @@ void Timer_Load();
 void Timer_Unload();
 void Timer_Update(float dt);
 void Timer_Draw(float ndcX, float ndcY);
+void Timer_DrawPatientCount(float ndcX, float ndcY, int current, int required);
 
 // ------------------------------
 // TIMER STATUS 

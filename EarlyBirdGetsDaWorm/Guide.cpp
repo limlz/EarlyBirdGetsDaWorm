@@ -34,6 +34,7 @@ class Guide {
 		struct State {
 			bool IsOpen;
 			bool CanDisplay;
+			bool HideIcon;   // suppresses the corner icon (e.g. during boss fight)
 			f32 FadeSpeed;
 			f32 PopUpTimer;
 			f32 Alpha;
@@ -84,6 +85,15 @@ void Guide_Draw() { TheGuide.Draw(); }
 void Guide_Free() { TheGuide.Free(); }
 void Guide_BossFight() { TheGuide.BossFight(); }
 bool IsGuideActive() { return TheGuide.GuideState.IsOpen; }
+
+// Draws just the guide clipboard icon at an arbitrary world-space position.
+// Used during the boss fight to place it beside the boss HP bar.
+void Guide_DrawIconAt(float worldX, float worldY)
+{
+    DrawTextureMesh(TheGuide.GuideMesh, TheGuide.GuideTexture.Icon,
+                    worldX, worldY,
+                    TheGuide.GuideIcon.Width, TheGuide.GuideIcon.Height, 1.0f);
+}
 
 void Guide::Load() {
 	GuideFont.Goth = AEGfxCreateFont(Assets::Fonts::Handwriting1, 50);
@@ -167,6 +177,7 @@ void Guide::Initialize() {
 	// States
 	GuideState.IsOpen = false;
 	GuideState.CanDisplay = false;
+	GuideState.HideIcon = false;
 	GuideState.FadeSpeed = 2.5f;
 	GuideState.PopUpTimer = 0.0f;
 	GuideState.Alpha = 0.0f;
@@ -224,9 +235,14 @@ void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
 		GuideCategory.ID = 1;
 	}
 
-	// Small Icon Hover and Select
-	GuideIcon.Hover = IsAreaHovered(GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height);
-	HoverAnimation(GuideIcon.Alpha, GuideIcon.Hover, GuideCategory.Speed, DT, 1.0f, 0.5f);
+	// Small Icon Hover and Select — skip entirely during boss fight
+	if (!GuideState.HideIcon) {
+		GuideIcon.Hover = IsAreaHovered(GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height);
+		HoverAnimation(GuideIcon.Alpha, GuideIcon.Hover, GuideCategory.Speed, DT, 1.0f, 0.5f);
+	}
+	else {
+		GuideIcon.Hover = false;
+	}
 	bool OutsideGuide{ (IsAreaClickedByMouse(0.0f, 0.0f, 1200.0f, 756.0f)) ? false : true };
 
 	if (((GuideIcon.Hover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_G)) && !liftActive && !PagerActive)
@@ -353,6 +369,7 @@ void Guide::BossFight() {
 	// Open the guide
 	GuideState.IsOpen = true;
 	GuideState.CanDisplay = true;
+	GuideState.HideIcon = true;   // suppress the corner icon during the boss fight
 
 	// Select the boss fight category
 	GuideCategory.ID = 3;
@@ -375,11 +392,10 @@ void Guide::BossFight() {
 }
 
 void Guide::Draw() {
-	// Draws the guide icon in the corner
-	//DrawTextureMesh(guideIconMesh, guideIconTexture, AEGfxGetWinMinX() + 220.0f, AEGfxGetWinMinY() + 750.0f, 130.0f, 63.0f, 1.0f);\
-
-	// Draws the guide icon in the corner
-	DrawTextureMesh(GuideMesh, GuideTexture.Icon, GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height, GuideIcon.Alpha);
+	// Draws the guide icon in the corner (hidden during boss fight)
+	if (!GuideState.HideIcon) {
+		DrawTextureMesh(GuideMesh, GuideTexture.Icon, GuideIcon.X, GuideIcon.Y, GuideIcon.Width, GuideIcon.Height, GuideIcon.Alpha);
+	}
 
 	if (GuideIcon.Hover && !GuideState.IsOpen && !Doing_Tutorial()) {
 		AEGfxPrint(GuideFont.Pixel, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);

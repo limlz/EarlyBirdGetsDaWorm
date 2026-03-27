@@ -320,8 +320,8 @@ void Game_Update()
             return;
         }
 
-        // End condition: survived all 5 days in normal mode, or completed day 1 in playtest
-        if (CurrentDay >= 5 || Game_IsPlaytestMode())
+        // End condition: completed all 5 days (normal and playtest both progress through all days)
+        if (CurrentDay >= 5)
         {
             currentEndReason = REASON_SURVIVED_5_DAYS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
@@ -672,8 +672,11 @@ void Game_Draw()
     Guide_Draw();
     Notifications_Draw(targetFloor, targetDoor, destFloor, destDoor);
     Timer_Draw(0.0f, 0.85f);
-    Timer_Draw(0.0f, 0.85f);
     Timer_DrawDayOverlay(squareMesh);
+    {
+        const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
+        Timer_DrawPatientCount(0.0f, 0.76f, Player_GetPatientsHandled(), requiredPatients);
+    }
     Lift_Draw(squareMesh);
 
     DebugInfo info;

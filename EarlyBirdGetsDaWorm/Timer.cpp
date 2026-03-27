@@ -167,6 +167,15 @@ void Timer_Update(float dt)
 // CLOCK DRAW
 // ============================================================================
 
+void Timer_DrawPatientCount(float ndcX, float ndcY, int current, int required)
+{
+    if (gOverlayFontId < 0) return;
+    char buf[32]{};
+    sprintf_s(buf, "%d / %d patients", current, required);
+    // Warm amber — readable against dark backgrounds, matches the worn-hospital palette
+    AEGfxPrint(gOverlayFontId, buf, ndcX, ndcY, 0.6f, 1.0f, 0.85f, 0.45f, 1.0f);
+}
+
 void Timer_Draw(float ndcX, float ndcY)
 {
     const int totalMinutes = (int)gGameMinutes;

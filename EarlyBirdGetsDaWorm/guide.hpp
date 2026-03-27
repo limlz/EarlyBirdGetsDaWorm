@@ -107,3 +107,10 @@ void Guide_Draw();
     None.
 *******************************************************************************/
 void Guide_Free();
+
+/*!*****************************************************************************
+\brief
+    Draws only the guide clipboard icon at a specific world-space position.
+    Used to anchor the icon beside the boss HP bar during the boss fight.
+*******************************************************************************/
+void Guide_DrawIconAt(float worldX, float worldY);

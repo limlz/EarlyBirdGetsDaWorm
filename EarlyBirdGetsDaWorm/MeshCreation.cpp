@@ -63,6 +63,7 @@ AEGfxVertexList* CreateSquareMesh(u32 color)
 void DrawSquareMesh(AEGfxVertexList* mesh, f32 x, f32 y, f32 width, f32 height, u32 color)
 {
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f); // always clear additive tint before color-mode draws
     AEMtx33 scale, translate, transform;
     AEMtx33Scale(&scale, width, height);
     AEMtx33Trans(&translate, x, y);

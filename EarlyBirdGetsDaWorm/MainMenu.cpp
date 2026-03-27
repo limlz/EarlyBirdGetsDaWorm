@@ -135,9 +135,7 @@ void MainMenu_Update()
         else if (Credits_IsHovering())  { Credits_Open(); }
     }
 
-    if (AEInputCheckCurr(AEVK_B)) {
-        next = BOSS_FIGHT_STATE;
-    }
+
 }
 
 void MainMenu_Draw()

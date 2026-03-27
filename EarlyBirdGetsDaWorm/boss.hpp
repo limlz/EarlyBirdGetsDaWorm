@@ -38,6 +38,7 @@ struct Boss {
 // --- FUNCTIONS ---
 bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float objH);
 void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh);
+void Boss_DrawInteractPrompt(Boss& boss, AEGfxVertexList* mesh);
 void Boss_Load();
 void Boss_Unload();
 void Boss_Initialize(Boss& boss);
