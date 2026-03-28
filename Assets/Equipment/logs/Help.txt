@@ -1,3 +1,3 @@
-LEFT=- This is your journal. It keeps track|of the symptoms you discover.||- A red notification means you have|discovered a new symptom.||- Once you have checked them,|the notification will disappear.
+LEFT=<Journal Entry>|- This journal records the symptoms|  you discover.|- Use it to review and compare your|  findings.||<New Discoveries>|- A red alert means a new symptom|  has been discovered.|- Check the entry to read it.|- The journal resets after each patient.
 
-RIGHT=- Some symptoms may appear in more than|one illness, so compare them carefully.||- Use the journal whenever you need to|review what you have found.||- Remember...|A normal patient shows 3 symptoms.|Anything beyond that indicates a ghost.
+RIGHT=<Cross-Checking>|- Some symptoms may appear in more|  than one illness.|- Compare them carefully before deciding.||<Final Reminder>|- A normal patient shows 3 symptoms.|- Anything more may indicate a ghost.

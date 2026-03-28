@@ -301,6 +301,18 @@ static bool LoadHelpText(const std::string& filePath, HelpTextData& data)
 
 static HelpTextData HelpData;
 
+static bool IsSubHeader(const std::string& line)
+{
+    return line.size() >= 2 && line.front() == '<' && line.back() == '>';
+}
+
+static std::string GetCleanLine(const std::string& line)
+{
+    if (IsSubHeader(line))
+        return line.substr(1, line.size() - 2); // remove < >
+    return line;
+}
+
 // ---------------------------------------------
 // 1) LINKING ILLNESSES TO TEXT FILES
 // ---------------------------------------------
@@ -1086,40 +1098,64 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         0.2f, 0.2f, 0.2f,
         1.0f);
 
+    // ============================================================
+    // HOW TO USE PAGE
+    // ============================================================
     if (ClickHowTo)
     {
-        // ============================================================
-        // HOW TO USE PAGE
-        // ============================================================
+        float LeftStartY    = HeaderY;
+        float RightStartY   = HeaderY;
+        float spacing       = 60.0f;
 
-        float StartY = HeaderY - 80.0f;
-        float spacing = 60.0f;
-
-        AEGfxPrint(journalFontId, "How To Use",
-            X(LeftStartX),
-            Y(HeaderY),
-            Header,
-            0, 0, 0,
-            1.0f);
+        //AEGfxPrint(journalFontId, "How To Use",
+        //    X(LeftStartX),
+        //    Y(HeaderY),
+        //    Header,
+        //    0, 0, 0,
+        //    1.0f);
 
         // Left Page
         for (int i = 0; i < (int)HelpData.leftLines.size(); ++i)
         {
-            AEGfxPrint(journalFontId, HelpData.leftLines[i].c_str(),
-                X(LeftStartX), Y(StartY - i * spacing),
-                text,
-                0.2f, 0.2f, 0.2f,
+            const std::string& rawLine = HelpData.leftLines[i];
+            bool isHeader = IsSubHeader(rawLine);
+            std::string line = GetCleanLine(rawLine);
+
+            float scale = isHeader ? SubHeader : text;
+
+            float r = isHeader ? 0.0f : 0.2f;
+            float g = isHeader ? 0.0f : 0.2f;
+            float b = isHeader ? 0.0f : 0.2f;
+
+            AEGfxPrint(journalFontId, line.c_str(),
+                X(LeftStartX), Y(LeftStartY),
+                scale,
+                r, g, b,
                 1.0f);
+
+            LeftStartY -= spacing;
         }
 
         // Right page
         for (int i = 0; i < (int)HelpData.rightLines.size(); ++i)
         {
-            AEGfxPrint(journalFontId, HelpData.rightLines[i].c_str(),
-                X(RightStartX), Y(StartY - i * spacing),
-                text,
-                0.2f, 0.2f, 0.2f,
+            const std::string& rawLine = HelpData.rightLines[i];
+            bool isHeader = IsSubHeader(rawLine);
+            std::string line = GetCleanLine(rawLine);
+
+            float scale = isHeader ? SubHeader : text;
+
+            float r = isHeader ? 0.0f : 0.2f;
+            float g = isHeader ? 0.0f : 0.2f;
+            float b = isHeader ? 0.0f : 0.2f;
+
+            AEGfxPrint(journalFontId, line.c_str(),
+                X(RightStartX), Y(RightStartY),
+                scale,
+                r, g, b,
                 1.0f);
+
+            RightStartY -= spacing;
         }
     }
     else
