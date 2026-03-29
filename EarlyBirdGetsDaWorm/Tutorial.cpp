@@ -270,8 +270,8 @@ void Tutorial::Initialize() {
 	// Dialogue Box
 	// Width, Height, X, Y, Shown, Timer, FadeSpeed, FadeAlpha, FullText, TypingSpeed, SoundPlayed
 	StartedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 30.0f, false };
-	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\nPress [TAB] again to close the pager.", 30.0f, false };
-	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nPress [L] to use it.", 30.0f, false };
+	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\n3. Number of patients collected.\nPress [TAB] again to close the pager.", 30.0f, false };
+	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nIt is located on both ends of the corridor.\nPress [L] to use it.", 30.0f, false };
 	LiftOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This lift can travel from Basement 1 to Level 9.\nClick [B1-9] to select a floor.", 30.0f, false };
 	LiftFloorSelectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now collect the patient from the room shown on your pager.", 30.0f, false };
 	PatientCollectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "There are two types of patients:\nNormal and Ghost\nUsing the Journal, you must identify which illness the patient has\nor if they are a ghost.\nPress [I] to open the Journal.", 30.0f, false };
