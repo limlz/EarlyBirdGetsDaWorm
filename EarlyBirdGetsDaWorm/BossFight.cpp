@@ -231,7 +231,7 @@ void Boss_Fight_Update()
     }
 
     // --- DETERMINE CROUCH STATE ---
-    isCrouching = AEInputCheckCurr(AEVK_S);
+    isCrouching = AEInputCheckCurr(AEVK_LCTRL);
 
     // --- ARM: TRACK MOUSE ---
     {
@@ -375,7 +375,7 @@ void Boss_Fight_Update()
     }
 
     // Fast fall logic acts independently, allowing plummeting mid-air and crouching upon landing
-    if (AEInputCheckCurr(AEVK_S)) { playerVelY -= 1000.0f * dt; }
+    if (AEInputCheckCurr(AEVK_LCTRL)) { playerVelY -= 1000.0f * dt; }
 
     // ----------------------------------------------------
     // --- UPDATE BOSS ---
