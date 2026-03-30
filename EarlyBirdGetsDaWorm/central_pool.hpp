@@ -105,3 +105,6 @@ bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
 // Debug only: forces a specific anomaly system on for the current patient
 void CentralPool_ForceSystemActive(AnomalyFiles systemFile);
 
+// Call once at program shutdown to release static vector buffers before the CRT leak check runs
+void CentralPool_Shutdown();
+

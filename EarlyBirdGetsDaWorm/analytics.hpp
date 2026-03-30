@@ -11,4 +11,7 @@ namespace Analytics {
     void LogRun(EndGameReason reason, int dayReached, int patientsHandled,
                 bool wasCarryingGhost, int TrueDiagnosis, int AnomalyIllness,
                 float timeSurvived);
+
+    // Call once at program shutdown to free the session-ID string before the CRT leak check
+    void Shutdown();
 }

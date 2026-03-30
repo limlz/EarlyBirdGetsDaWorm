@@ -200,7 +200,8 @@ static AEGfxTexture* gFrameOCD = nullptr;
 // HELPERS
 // ============================================================
 
-static const std::vector<ILLNESSES> IllnessList =
+// std::array has no heap allocation (unlike std::vector), so it won't appear in CRT leak dumps
+static const std::array<ILLNESSES, ILLNESS_COUNT> IllnessList =
 {
     ILLNESSES::PARANOIA,
     ILLNESSES::MANIA,
@@ -1348,6 +1349,7 @@ void Journal_Unload()
     UnloadTextureSafe(JournalIcon);
     UnloadTextureSafe(JournalBack);
     UnloadTextureSafe(JournalFront);
+    UnloadTextureSafe(MarkEntry);
     UnloadTextureSafe(TabEntry);
 
     UnloadTextureSafe(Undiscovered);
@@ -1410,12 +1412,34 @@ void Journal_Unload()
     Open = false;
     Selected = 0;
 
-    // free string data loaded from illness text files
+    // Clear string data loaded from illness text files.
+    // Use .clear() on each member rather than assigning TextStruct{} — constructing a temporary
+    // would swap in new tracked _Container_proxy objects (MSVC debug heap) that outlive _CrtDumpMemoryLeaks.
     for (int i = 0; i < ILLNESS_COUNT; i++)
-        GetFromText[i] = TextStruct{};
+    {
+        GetFromText[i].title.clear();
+        GetFromText[i].desc.clear();
+        GetFromText[i].desc2.clear();
+        for (int j = 0; j < 6; j++)
+            GetFromText[i].symptomText[j].clear();
+    }
 
+    // Same reason: clear members individually instead of assigning HelpTextData{}.
+    HelpData.title.clear();
+    HelpData.leftLines.clear();
+    HelpData.rightLines.clear();
+
+    // reset values but keep the allocation so the vectors remain usable if the game restarts
     Observed.assign(Observed.size(), false);
     Unread.assign(Unread.size(), false);
+}
+
+// Call once at program shutdown to release the static vector backing buffers before _CrtDumpMemoryLeaks runs.
+// Journal_Unload() keeps the allocation alive (for potential restart); this final swap truly frees them.
+void Journal_Shutdown()
+{
+    { std::vector<bool> tmp; Observed.swap(tmp); }
+    { std::vector<bool> tmp; Unread.swap(tmp); }
 }
 
 // ============================================================

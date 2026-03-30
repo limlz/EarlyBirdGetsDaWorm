@@ -151,3 +151,11 @@ void CentralPool_ForceSystemActive(AnomalyFiles systemFile)
 {
     currentPatientANOMALYFILES[static_cast<int>(systemFile)] = true;
 }
+
+// Call once at program shutdown to release static vector backing buffers before the CRT leak check runs.
+// Static destructors fire after _CrtDumpMemoryLeaks, so without this the vectors produce false positives.
+void CentralPool_Shutdown()
+{
+    { std::vector<ILLNESSES> tmp; currentRunILLNESSES.swap(tmp); }
+    { std::vector<bool>      tmp; currentPatientANOMALYFILES.swap(tmp); }
+}

@@ -17,7 +17,7 @@ namespace Analytics {
         return std::string(buf) + hex;
     }
 
-    static const std::string gSessionId = GenerateSessionId();
+    static std::string gSessionId = GenerateSessionId();
 
     // Converts illness enum index to its name; default catches any unmapped future values
     static std::string GetIllnessName(int illness) {
@@ -93,5 +93,13 @@ namespace Analytics {
 
         outFile.close();
         std::cout << "[SUCCESS] Run metrics logged to analytics.csv\n";
+    }
+
+    // Call once at shutdown to release the session-ID heap buffer before the CRT leak check runs.
+    // static const std::string would have been freed by the static destructor, but that fires
+    // after _CrtDumpMemoryLeaks, causing a false-positive in the leak report.
+    void Shutdown()
+    {
+        std::string().swap(gSessionId);
     }
 }

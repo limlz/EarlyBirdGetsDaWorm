@@ -149,7 +149,7 @@ void Game_Load()
         floorNum = 1;
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
-        camX = 0.0f;
+        camX = -(NUM_DOORS + 1) * DIST_BETWEEN_DOORS / 2.0f;  // start at corridor center
         camVelX = 0.0f;
         gSessionStarted = true;
     }
@@ -337,7 +337,7 @@ void Game_Update()
         Timer_Reset();
         Timer_StartDayOverlay(CurrentDay);
 
-        camX = 0.0f;
+        camX = -(NUM_DOORS + 1) * DIST_BETWEEN_DOORS / 2.0f;  // start at corridor center
         camVelX = 0.0f;
         floorNum = 1;
         liftActive = false;
@@ -366,8 +366,11 @@ void Game_Update()
         moveLeft = AEInputCheckCurr(AEVK_A);
         moveRight = AEInputCheckCurr(AEVK_D);
 
-        if (moveLeft) { targetVelX = Config::playerSpeed; left_right = false; }
-        if (moveRight) { targetVelX = -Config::playerSpeed; left_right = true; }
+        const bool isRunning = !Player_HasPatient() && AEInputCheckCurr(AEVK_LSHIFT);
+        const float speed = isRunning ? Config::playerSpeed * 1.8f : Config::playerSpeed;
+
+        if (moveLeft) { targetVelX = speed; left_right = false; }
+        if (moveRight) { targetVelX = -speed; left_right = true; }
 
         if (Debug_IsActive() && AEInputCheckCurr(AEVK_M)) { camX -= 4000; left_right = true; }
     }

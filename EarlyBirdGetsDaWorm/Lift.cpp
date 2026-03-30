@@ -325,7 +325,7 @@ void Lift_Initialize() {
 void Lift_Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
 
     const bool nearLeftLift  = (camX > -5.0f);
-    const bool nearRightLift = !dementiaActive && (camX < -(maxDist - 30.0f));
+    const bool nearRightLift = !dementiaActive && (camX < -(maxDist - 100.0f));
     NearLift = (nearLeftLift || nearRightLift);
 
     if (NearLift && AEInputCheckTriggered(AEVK_L)) {

@@ -31,6 +31,9 @@ void Journal_Draw(AEGfxVertexList* squareMesh);
 
 void Journal_Unload();
 
+// Call once at program shutdown to release static vector buffers before the CRT leak check runs
+void Journal_Shutdown();
+
 bool Journal_IsOpen();
 
 void Journal_Clear();

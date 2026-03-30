@@ -89,6 +89,8 @@ void AudioManager_Unload() {
     AEAudioUnloadAudioGroup(groupSFX);
     AEAudioUnloadAudioGroup(groupBGM);
     AEAudioUnloadAudioGroup(groupWalking);
+
+    AEAudioExit(); // release audio engine internal state (matches AEAudioInit in AudioManager_Init)
 }
 
 /********************************* PLAYBACK FUNCTIONS ************************************/

@@ -201,6 +201,7 @@ void MainMenu_Free()
 
 void MainMenu_Unload()
 {
+    Lighting_Unload();
     FreeMeshSafe(squareMesh);
 
     UnloadTextureSafe(main_menu_bg);

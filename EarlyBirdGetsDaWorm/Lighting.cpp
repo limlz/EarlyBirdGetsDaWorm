@@ -179,6 +179,7 @@ void Lighting_Initialize(int fucked_floor)
         }
     }
 
+    FreeMeshSafe(squareMesh);                   // free any previous mesh (e.g. from MainMenu) before creating a new one
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
 
     // Reset all flicker state so lights don't inherit leftover timers from a previous run

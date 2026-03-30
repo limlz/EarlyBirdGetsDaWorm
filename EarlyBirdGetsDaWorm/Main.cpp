@@ -91,6 +91,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     }
 
     AudioManager_Unload();
+    Analytics::Shutdown();    // free session-ID string before _CrtDumpMemoryLeaks runs
+    CentralPool_Shutdown();   // free static vector buffers before _CrtDumpMemoryLeaks runs
+    Journal_Shutdown();       // free Observed/Unread vector buffers before _CrtDumpMemoryLeaks runs
     AESysExit();
     return 0;
 }
