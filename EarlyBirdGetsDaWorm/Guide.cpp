@@ -401,11 +401,11 @@ void Guide::Draw() {
 		AEGfxPrint(GuideFont.Pixel, "Guide", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	if (GuideState.IsOpen) {
-		// Black BG
-		/*u32 colorBG = (0x000000 << 8) | static_cast<u32>(GuideAlpha * 187.0f);
-		DrawSquareMesh(GuideMesh, 0.0f, 0.0f, winW, winH, colorBG);*/
+	if (GuideState.Alpha > 0.0f) {
+		DrawBlackOverlay(GuideMesh, GuideState.Alpha * 0.8f);
+	}
 
+	if (GuideState.IsOpen) {
 		// Draw back BG
 		DrawTextureMesh(GuideMesh, GuideTexture.BackgroundBottom, 0.0f, 0.0f, 1200.0f, 756.0f, 1.0f);
 		DrawTextureMesh(GuideMesh, GuideTexture.Category3, GuideCategory.X, -150.0f, GuideCategory.Width, 157.0f, GuideCategory.Alpha3);

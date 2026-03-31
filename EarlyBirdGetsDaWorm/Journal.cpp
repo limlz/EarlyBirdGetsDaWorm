@@ -27,6 +27,7 @@ constexpr int ILLNESS_COUNT = 9;
 constexpr int SYMPTOM_COUNT = 6;
 
 static f32 JournalIconAlpha         = 1.0f;
+static f32 journalOverlayAlpha      = 0.0f;
 static bool JournalIconHover        = false;
 static f32 JournalIconHoverSpeed    = 10.0f;
 
@@ -802,6 +803,11 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
         AudioManager_PlaySFX(SoundID::SFX_JOURNAL_OPEN, 1.0f);
     }
 
+    // Fade overlay in when open, reset when closed
+    float overlayTarget = Open ? 0.8f : 0.0f;
+    journalOverlayAlpha += (overlayTarget - journalOverlayAlpha) * 6.0f * dt;
+    if (journalOverlayAlpha < 0.001f) journalOverlayAlpha = 0.0f;
+
     // EARLY EXIT
     if (!Open)
         return;
@@ -943,6 +949,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
 {
     if (!Open) return;
     if (journalFontId < 0) return;
+
+    DrawBlackOverlay(squareMesh, journalOverlayAlpha);
 
     auto X = [&](float x) { return (x * UI_SCALE) / SCREEN_WIDTH_HALF; };
     auto Y = [&](float y) { return (y * UI_SCALE) / SCREEN_HEIGHT_HALF; };

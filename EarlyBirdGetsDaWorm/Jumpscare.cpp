@@ -61,7 +61,7 @@ static float RandMinus1To1()
 void JumpScare_Load()
 {
     gJumpScareTex = LoadTextureChecked(Assets::Background::JumpScare);
-    gQuadMesh = CreateSquareMesh(0x00000000);
+    gQuadMesh = CreateSquareMesh(0xFFFFFFFF);
 }
 
 void JumpScare_Initialize()
@@ -179,6 +179,8 @@ void JumpScare_GetShakeOffset(float& outX, float& outY)
 void JumpScare_Draw()
 {
     if (!gActive) return;
+
+    DrawBlackOverlay(gQuadMesh, 0.8f);
 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 

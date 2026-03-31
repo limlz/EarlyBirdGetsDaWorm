@@ -101,17 +101,6 @@ namespace Assets
     }
     namespace Wall_Anomaly
     {
-        // Will delete this old one after i implmenet the new one, i deleted the images alr tho
-        constexpr const char* Crack1 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK1.png";
-        constexpr const char* Crack2 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK2.png";
-        constexpr const char* Crack3 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK3.png";
-        constexpr const char* Crack4 = "Assets/Wall_Anomaly/WALL_ANOMALY_CRACK4.png";
-        constexpr const char* Drawing1 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING1.png";
-        constexpr const char* Drawing2 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING2.png";
-        constexpr const char* Drawing3 = "Assets/Wall_Anomaly/WALL_ANOMALY_DRAWING3.png";
-        constexpr const char* LeftHand = "Assets/Wall_Anomaly/WALL_ANOMALY_LEFTHAND.png";
-        constexpr const char* RightHand = "Assets/Wall_Anomaly/WALL_ANOMALY_RIGHTHAND.png";
-
         constexpr const char* PARANOIA_BACKGROUND = "Assets/Wall_Anomaly/PARANOIA_BACKGROUND.png";
         constexpr const char* PARANOIA_TOP = "Assets/Wall_Anomaly/PARANOIA_TOP.png";
 

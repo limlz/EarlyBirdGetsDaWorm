@@ -6,7 +6,6 @@ enum class SoundID {
 
     BGM_GAME_AMBIENCE,              // BGM_GAME_AMBIENCE.wav
     BGM_MAIN_MENU,                  // BGM_MAIN_MENU.wav
-    BGM_RAIN,                       // BGM_RAIN.wav
 
     /****************  2. ENVIRONMENTAL SFX   ***************/
 
@@ -41,9 +40,6 @@ enum class SoundID {
     SFX_MAIN_MENU_WRITING_SCRATCH,  // SFX_MAIN_MENU_WRITING_SCRATCH.wav
     SFX_NEW_DAY,                    // SFX_NEW_DAY.wav
     SFX_PAGER_NOTIFICATIONS,        // SFX_PAGER_NOTIFICATIONS.wav
-    SFX_SWOOSH_1,                   // SFX_SWOOSH_1.wav
-    SFX_SWOOSH_2,                   // SFX_SWOOSH_2.wav
-    SFX_SWOOSH_3,                   // SFX_SWOOSH_3.wav
 	SFX_JOURNAL_SELECT,             // SFX_JOURNAL_SELECT.wav
 	SFX_JOURNAL_OPEN,               // SFX_JOURNAL_OPEN.wav
     SFX_TUTORIAL_TYPING,
