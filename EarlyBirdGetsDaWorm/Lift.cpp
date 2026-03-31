@@ -73,7 +73,7 @@ static void LiftAnomaly_ModifyButtonRect(int slotIndex, float& x, float& y, floa
         if (slotIndex == SelectedSlot && OcdClickCount < 3 && OcdClickCount > 0) {
             Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
 
-            x += (rand() % 5) - 2; // Small OCD nervous shudder
+            x += RandInt(-2, 2); // Small OCD nervous shudder
         }
     }
     else if (illness == ILLNESSES::PARANOIA) {        
@@ -88,8 +88,8 @@ static void LiftAnomaly_ModifyButtonRect(int slotIndex, float& x, float& y, floa
             AEInputGetCursorPosition(&mousePixX, &mousePixY);
 
             // 2. Convert to UI coordinates
-            float mx = (float)mousePixX - SCREEN_WIDTH_HALF;
-            float my = SCREEN_HEIGHT_HALF - (float)mousePixY;
+            float mx = static_cast<float>(mousePixX) - SCREEN_WIDTH_HALF;
+            float my = SCREEN_HEIGHT_HALF - static_cast<float>(mousePixY);
 
             // 3. Calculate distance
             float dx = x - mx;
@@ -117,8 +117,8 @@ static void LiftAnomaly_ModifyButtonRect(int slotIndex, float& x, float& y, floa
         
         // --- MANIA ANOMALY (HYPERACTIVE VIBRATION) ---
         // Every button constantly shakes around its center point
-        x += (rand() % 7) - 3;
-        y += (rand() % 7) - 3;
+        x += RandInt(-3, 3);
+        y += RandInt(-3, 3);
 
     }
     else if (illness == ILLNESSES::DEPRESSION) {
@@ -148,7 +148,7 @@ static bool LiftAnomaly_OnDestinationSelected(s8& pendingFloor) {
         // Secretly change the destination to a completely random floor
         s8 fakeFloor;
         do {
-            fakeFloor = rand() % NUM_OF_FLOOR;
+            fakeFloor = RandInt(0, NUM_OF_FLOOR - 1);
         } while (fakeFloor == pendingFloor); // Make sure it's actually a wrong floor
 
         pendingFloor = fakeFloor;
@@ -161,7 +161,7 @@ static bool LiftAnomaly_OnDestinationSelected(s8& pendingFloor) {
         if (OcdClickCount < 3) {
             Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
 
-            AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, 0.5f, 1.2f); // Higher pitched "denied" click
+            AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, 0.5f, 1.2f); // Higher pitched "denied" click
             return false; // DENY the click! Force the panel to stay open!
         }
     }
@@ -259,24 +259,23 @@ static void Lift_GenerateAnomalies() {
 
         if (illness == ILLNESSES::DEMENTIA) {
             // Shuffle the button mapping so the floors are all mixed up
-            unsigned seed = (unsigned)time(NULL);
-            std::shuffle(std::begin(ButtonMap), std::end(ButtonMap), std::default_random_engine(seed));
+            std::shuffle(std::begin(ButtonMap), std::end(ButtonMap), GetGlobalRng());
         }
         else if (illness == ILLNESSES::OCD) {
             // Pick one random button to be the OCD "target" that is slightly misaligned
-            OcdTarget = rand() % NUM_OF_FLOOR;
+            OcdTarget = RandInt(0, NUM_OF_FLOOR - 1);
         }
         else if (illness == ILLNESSES::AIW_SYNDROME) {
             // Pick between 3 and 5 random buttons to warp
-            int numToWarp = (rand() % 3) + 3;
+            int numToWarp = RandInt(3, 5);
             for (int i = 0; i < numToWarp; i++) {
-                int randomSlot = rand() % NUM_OF_FLOOR;
+                int randomSlot = RandInt(0, NUM_OF_FLOOR - 1);
                 // 50/50 chance to be tiny (0.5x to 0.7x) or massive (1.3x to 1.6x)
-                if (rand() % 2 == 0) {
-                    AiwScaleMap[randomSlot] = 0.5f + ((float)(rand() % 21) / 100.0f);
+                if (RandInt(0, 1) == 0) {
+                    AiwScaleMap[randomSlot] = 0.5f + (static_cast<float>(RandInt(0, 20)) / 100.0f);
                 }
                 else {
-                    AiwScaleMap[randomSlot] = 1.3f + ((float)(rand() % 31) / 100.0f);
+                    AiwScaleMap[randomSlot] = 1.3f + (static_cast<float>(RandInt(0, 30)) / 100.0f);
                 }
             }
         }
@@ -337,7 +336,7 @@ void Lift_Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
             DoorProgress = 1.0f;    // Start fully open
             SelectedSlot = -1;
             PendingFloor = -1;
-            AudioManager_PlaySFX(SFX_ELEVATOR_CLOSE, 0.5f);
+            AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
 
             if (!AnomaliesGenerated) {
                 Lift_GenerateAnomalies();
@@ -347,7 +346,7 @@ void Lift_Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
             // If L is pressed while the panel is active, cancel and open doors
             LiftPhase = 3;
             PhaseTimer = TRANSIT_TIMER;     // Skip delay, go straight to opening
-            AudioManager_PlaySFX(SFX_ELEVATOR_CLOSE, 0.5f);
+            AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
             PendingFloor = -1;              // Don't change floors
         }
     }
@@ -374,7 +373,7 @@ void Lift_Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
 void Lift_HandleInput(s8& floorNum) {
     if (!LiftActive) return;
 
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
 
     // --- PHASE 1: DOORS CLOSING ---
     if (LiftPhase == 1) {
@@ -419,7 +418,7 @@ void Lift_HandleInput(s8& floorNum) {
                 // Check: did the player click within this button's rect?
                 if (IsAreaClickedByMouse(bx, by, bw, bh)) {
                     SelectedSlot = i;                  // Track for red highlight
-                    PendingFloor = (s8)ButtonMap[i];   // Track destination
+                    PendingFloor = static_cast<s8>(ButtonMap[i]);   // Track destination
 
                     // Ask the anomaly system if it wants to hijack the floor
                     // If the hook returns false, abort the movement!
@@ -432,14 +431,14 @@ void Lift_HandleInput(s8& floorNum) {
                     // --- SAME FLOOR CHECK ---
                     if (PendingFloor == floorNum) {
                         // Fast-forward the timer to skip the transit delay and instantly open the doors.
-                        AudioManager_PlaySFX(SFX_ELEVATOR_CLOSE, 0.5f);
+                        AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
                         PhaseTimer = TRANSIT_TIMER;
                     }
                     else {
                         // Normal transit to a new floor
                         PhaseTimer = 0.0f;
                         ParanoiaTimer = 0.0f;
-                        AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, 0.5f);
+                        AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, 0.5f);
                     }
 
                     break;
@@ -520,14 +519,16 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, floa
     DrawSquareMesh(squareMesh, panelX, panelY, panelWidth, panelHeight, COLOR_DARK_GREY);
 
     if (liftFontId >= 0) {
-        char textBuffer[32]{};
+        std::ostringstream oss;
 
-        if (floorNum == 0) sprintf_s(textBuffer, "B1");
-        else               sprintf_s(textBuffer, "%02d", (int)floorNum);
+        if (floorNum == 0) oss << "B1";
+        else               oss << std::setw(2) << std::setfill('0') << static_cast<int>(floorNum);
+
+        std::string textBuffer = oss.str();
 
         // CHAR_NDC is a tweakable value that determines how much horizontal space each character takes up in NDC
         const float CHAR_NDC = 0.018f;
-        const int   len = (int)strlen(textBuffer);
+        const int   len = static_cast<int>(textBuffer.size());
         // Calculate the total width of the text in NDC, then divide by 2 to get the half-width for centering
         const float halfTextWidthNDC = (len * CHAR_NDC) * 0.5f;
 
@@ -543,7 +544,7 @@ void Lift_DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, floa
         // GLOW_O is the distance the glow extends from the text; higher values make a bigger glow
         const float GLOW_O = 0.006f;
 
-        AEGfxPrintWithGlow(liftFontId, textBuffer, textNDC_X, textNDC_Y, SCALE, 1.0f, 0.1f, 0.1f, 1.0f, 0.45f, 0.0f, 0.0f, 0.75f, GLOW_O);
+        AEGfxPrintWithGlow(liftFontId, textBuffer.c_str(), textNDC_X, textNDC_Y, SCALE, 1.0f, 0.1f, 0.1f, 1.0f, 0.45f, 0.0f, 0.0f, 0.75f, GLOW_O);
     }
 }
 
@@ -562,13 +563,13 @@ void Lift_Draw(AEGfxVertexList* squareMesh) {
     // Shake ONLY during Phase 3, AFTER the delay, and BEFORE the doors open
     if (LiftPhase == 3 && PhaseTimer >= JITTER_DELAY && PhaseTimer < TRANSIT_TIMER) {
         // Generates a random offset between -3 and +3 pixels
-        jitterX = (float)((rand() % 5) - 3);
-        jitterY = (float)((rand() % 5) - 3);
+        jitterX = static_cast<float>(RandInt(-3, 1));
+        jitterY = static_cast<float>(RandInt(-3, 1));
     }
 
     // --- 1) DRAW DOORS ---
     const float doorW = SCREEN_WIDTH_HALF + (0.5f * LIFT_WIDTH);
-    const float doorH = (f32)SCREEN_H;
+    const float doorH = static_cast<f32>(SCREEN_H);
 
     float gapOffset = DoorProgress * SCREEN_W / 2.0f;
 

@@ -155,3 +155,23 @@ void HoverAnimation(f32& alpha, bool hovered, f32 speed, f32 dt, f32 minAlpha, f
 
 	alpha = AEClamp(alpha, minVal, maxVal);
 }
+
+// --- RNG UTILITIES ---
+// sGlobalRng lives inside GetGlobalRng() as a function-local static.
+// This guarantees it is initialized on first call (C++11 magic statics),
+// avoiding the static initialization order fiasco when other file-scope
+// statics (e.g. Analytics::gSessionId) call RandInt() before WinMain.
+std::mt19937& GetGlobalRng() {
+	static std::mt19937 sGlobalRng(static_cast<unsigned>(std::time(nullptr)));
+	return sGlobalRng;
+}
+
+int RandInt(int min, int max) {
+	std::uniform_int_distribution<int> dist(min, max);
+	return dist(GetGlobalRng());
+}
+
+float RandFloat(float min, float max) {
+	std::uniform_real_distribution<float> dist(min, max);
+	return dist(GetGlobalRng());
+}

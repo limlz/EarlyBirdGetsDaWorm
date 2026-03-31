@@ -12,8 +12,8 @@ void Input_Update()
     AEInputGetCursorPosition(&rawX, &rawY);
 
     // Convert to NDC and store as floats
-    g_mouseX = (float)rawX - 800.0f;
-    g_mouseY = 450.0f - (float)rawY;
+    g_mouseX = static_cast<float>(rawX) - 800.0f;
+    g_mouseY = 450.0f - static_cast<float>(rawY);
 }
 
 float Input_GetMouseX()

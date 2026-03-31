@@ -70,7 +70,7 @@ void Startup_Draw()
 	if (splash_screen_timer > 0)
 	{
 		float maxDuration = 3.0f;
-		float percent = (float)splash_screen_timer / maxDuration;
+		float percent = static_cast<float>(splash_screen_timer) / maxDuration;
 		float alpha = sinf(percent * 3.14159f);
 
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);

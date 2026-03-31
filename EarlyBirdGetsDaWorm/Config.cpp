@@ -148,10 +148,10 @@ namespace Config {
         if (key == prefix + "_B") { visualsTable[idx].b = val; return true; }
         if (key == prefix + "_BRIGHTNESS") { visualsTable[idx].baseBrightness = val; return true; }
         if (key == prefix + "_CONE") { visualsTable[idx].baseConeAngle = val; return true; }
-        if (key == prefix + "_ON_MIN")    { flickerTable[idx].onMin   = (int)val; return true; }
-        if (key == prefix + "_ON_RANGE")  { flickerTable[idx].onRange  = (int)val; return true; }
-        if (key == prefix + "_OFF_MIN")   { flickerTable[idx].offMin   = (int)val; return true; }
-        if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange  = (int)val; return true; }
+        if (key == prefix + "_ON_MIN")    { flickerTable[idx].onMin   = static_cast<int>(val); return true; }
+        if (key == prefix + "_ON_RANGE")  { flickerTable[idx].onRange  = static_cast<int>(val); return true; }
+        if (key == prefix + "_OFF_MIN")   { flickerTable[idx].offMin   = static_cast<int>(val); return true; }
+        if (key == prefix + "_OFF_RANGE") { flickerTable[idx].offRange  = static_cast<int>(val); return true; }
         if (key == prefix + "_OVERLAY_ALPHA") { overlayAlphaTable[idx] = val; return true; }
         if (key == prefix + "_FRAME_GLITCH_DUR") { frameTimesTable[idx].glitchDuration = val; return true; }
         if (key == prefix + "_FRAME_WAIT_MIN")   { frameTimesTable[idx].waitMin        = val; return true; }
@@ -192,23 +192,23 @@ namespace Config {
                 else if (key == "LIGHT_FLICKER_SPEED") lightFlickerSpeed = val;
 
                 // --- LIGHTING GLOBALS ---
-                else if (key == "FLOOR_NORMAL_CHANCE") floorNormalChance = (int)val;
-                else if (key == "FLOOR_FUCKED_CHANCE") floorFuckedChance = (int)val;
+                else if (key == "FLOOR_NORMAL_CHANCE") floorNormalChance = static_cast<int>(val);
+                else if (key == "FLOOR_FUCKED_CHANCE") floorFuckedChance = static_cast<int>(val);
                 else if (key == "STANDALONE_BRIGHTNESS") standaloneBrightness = val;
 
                 // --- FRAME BEHAVIOR CONSTANTS ---
                 else if (key == "FRAME_PARANOIA_CLOSE_RANGE")       frameParanoiaCloseRange     = val;
                 else if (key == "FRAME_PARANOIA_PANIC_RANGE")        frameParanoiaPanicRange     = val;
                 else if (key == "FRAME_PARANOIA_INTENSITY_SCALE")    frameParanoiaIntensityScale = val;
-                else if (key == "FRAME_PARANOIA_MIN_INTENSITY")      frameParanoiaMinIntensity   = (int)val;
+                else if (key == "FRAME_PARANOIA_MIN_INTENSITY")      frameParanoiaMinIntensity   = static_cast<int>(val);
                 else if (key == "FRAME_MANIA_DRIFT_SPEED")           frameManiaDriftSpeed        = val;
-                else if (key == "FRAME_MANIA_STUTTER_CHANCE")        frameManiaSutterChance      = (int)val;
-                else if (key == "FRAME_MANIA_STUTTER_RANGE")         frameManiaSutterRange       = (int)val;
+                else if (key == "FRAME_MANIA_STUTTER_CHANCE")        frameManiaSutterChance      = static_cast<int>(val);
+                else if (key == "FRAME_MANIA_STUTTER_RANGE")         frameManiaSutterRange       = static_cast<int>(val);
                 else if (key == "FRAME_DEPRESSION_STRETCH_DURATION") frameDepressionStretchDuration   = val;
                 else if (key == "FRAME_DEPRESSION_MAX_HEIGHT")       frameDepressionMaxHeightIncrease = val;
                 else if (key == "FRAME_DEPRESSION_Y_OFFSET")         frameDepressionYOffset           = val;
-                else if (key == "FRAME_DEMENTIA_JITTER_RANGE")       frameDementiaJitterRange         = (int)val;
-                else if (key == "FRAME_SCHIZO_JITTER_RANGE")         frameSchizophreniJitterRange     = (int)val;
+                else if (key == "FRAME_DEMENTIA_JITTER_RANGE")       frameDementiaJitterRange         = static_cast<int>(val);
+                else if (key == "FRAME_SCHIZO_JITTER_RANGE")         frameSchizophreniJitterRange     = static_cast<int>(val);
                 else if (key == "FRAME_AIW_OSCILLATION_FREQ")        frameAIWOscillationFreq          = val;
                 else if (key == "FRAME_AIW_OSCILLATION_AMP")         frameAIWOscillationAmp           = val;
                 else if (key == "FRAME_INSOMNIA_FAR_DIST")           frameInsomniaFarDist             = val;
@@ -218,9 +218,9 @@ namespace Config {
                 else if (key == "FRAME_OCD_OFFSET_Y_EVEN")           frameOCDOffsetYEven              = val;
                 else if (key == "FRAME_OCD_OFFSET_Y_ODD")            frameOCDOffsetYOdd               = val;
                 else if (key == "FRAME_SCOTOPHOBIA_CLOSE_RANGE")     frameScotophobiaCloseRange       = val;
-                else if (key == "FRAME_SCOTOPHOBIA_JITTER_RANGE")    frameScotophobiaJitterRange      = (int)val;
-                else if (key == "FRAME_GHOST_STUTTER_CHANCE")        frameGhostStutterChance          = (int)val;
-                else if (key == "FRAME_GHOST_STUTTER_RANGE")         frameGhostStutterRange           = (int)val;
+                else if (key == "FRAME_SCOTOPHOBIA_JITTER_RANGE")    frameScotophobiaJitterRange      = static_cast<int>(val);
+                else if (key == "FRAME_GHOST_STUTTER_CHANCE")        frameGhostStutterChance          = static_cast<int>(val);
+                else if (key == "FRAME_GHOST_STUTTER_RANGE")         frameGhostStutterRange           = static_cast<int>(val);
                 else if (key == "FRAME_GHOST_GLITCH_SPEED_MULT")     frameGhostGlitchSpeedMult        = val;
                 else if (key == "FRAME_GHOST_WAIT_SPEED_MULT")       frameGhostWaitSpeedMult          = val;
                 else if (key == "FRAME_GHOST_MIN_TIMER")             frameGhostMinTimer               = val;

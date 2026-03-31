@@ -32,7 +32,7 @@ void Endgame_Initialize()
     isFadingToMenu = false;
     fadeAlpha = 1.0f; // Start completely black, fade in
 
-    if (currentEndReason == REASON_SURVIVED_5_DAYS) {
+    if (currentEndReason == EndGameReason::REASON_SURVIVED_5_DAYS) {
         AEGfxSetBackgroundColor(0.0f, 0.2f, 0.1f); // Dark green (Victory)
     }
     else {
@@ -49,24 +49,24 @@ void Endgame_Update()
         // SFX_AA and SFX_FAH are the horror-less variants; non-horror uses SFX_SCREAMING instead.
         const bool horrorLess = Settings_IsHorrorLessEnabled();
 
-        if (currentEndReason == REASON_SURVIVED_5_DAYS) {
-            AudioManager_PlayBGM(BGM_MAIN_MENU, 0.5f);
-            AudioManager_PlaySFX(horrorLess ? SFX_AA : SFX_SCREAMING, 1.0f, 1.0f, 0);
+        if (currentEndReason == EndGameReason::REASON_SURVIVED_5_DAYS) {
+            AudioManager_PlayBGM(SoundID::BGM_MAIN_MENU, 0.5f);
+            AudioManager_PlaySFX(horrorLess ? SoundID::SFX_AA : SoundID::SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
-        else if (currentEndReason == REASON_DIED_TO_BOSS) {
-            AudioManager_PlaySFX(SFX_BOSS_FIGHT, 1.0f, 1.0f, 0);
+        else if (currentEndReason == EndGameReason::REASON_DIED_TO_BOSS) {
+            AudioManager_PlaySFX(SoundID::SFX_BOSS_FIGHT, 1.0f, 1.0f, 0);
         }
-        else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
-            AudioManager_PlaySFX(horrorLess ? SFX_FAH : SFX_SCREAMING, 1.0f, 1.0f, 0);
+        else if (currentEndReason == EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT) {
+            AudioManager_PlaySFX(horrorLess ? SoundID::SFX_FAH : SoundID::SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
-        else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
-            AudioManager_PlaySFX(horrorLess ? SFX_FAH : SFX_SCREAMING, 1.0f, 1.0f, 0);
+        else if (currentEndReason == EndGameReason::REASON_SENT_GHOST_TO_ROOM) {
+            AudioManager_PlaySFX(horrorLess ? SoundID::SFX_FAH : SoundID::SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
 
         first_audio = false;
     }
 
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
 
     // 1. Handle Fade In
     if (isFadingIn) {
@@ -106,12 +106,12 @@ void Endgame_Draw()
     if (endgameFontId >= 0 && subFontId >= 0) {
 
         // Computes a centered start-X for AEGfxPrintWithGlow (title font size 30 -> ~0.036 NDC per char)
-        auto titleX = [](const char* text) -> float {
-            return -(strlen(text) * 0.036f / 2.0f);
+        auto titleX = [](std::string_view text) -> float {
+            return -(text.size() * 0.036f / 2.0f);
             };
 
         // --- Title with coloured glow + subtitle ---
-        if (currentEndReason == REASON_SURVIVED_5_DAYS) {
+        if (currentEndReason == EndGameReason::REASON_SURVIVED_5_DAYS) {
             AEGfxPrintWithGlow(endgameFontId, "SHIFT COMPLETE",
                 titleX("SHIFT COMPLETE"), 0.25f, 1.0f,
                 0.4f, 1.0f, 0.5f, 1.0f,   // bright green text
@@ -119,7 +119,7 @@ void Endgame_Draw()
                 0.004f);
             AEGfxPrintCentered(subFontId, "You survived all 5 days!", 0.0f, 0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.030f);
         }
-        else if (currentEndReason == REASON_DIED_TO_BOSS) {
+        else if (currentEndReason == EndGameReason::REASON_DIED_TO_BOSS) {
             AEGfxPrintWithGlow(endgameFontId, "GAME OVER",
                 titleX("GAME OVER"), 0.25f, 1.0f,
                 1.0f, 0.2f, 0.2f, 1.0f,   // red text
@@ -127,7 +127,7 @@ void Endgame_Draw()
                 0.004f);
             AEGfxPrintCentered(subFontId, "You Died", 0.0f, 0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.030f);
         }
-        else if (currentEndReason == REASON_SENT_HUMAN_TO_BASEMENT) {
+        else if (currentEndReason == EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT) {
             AEGfxPrintWithGlow(endgameFontId, "YOU'VE BEEN FIRED",
                 titleX("YOU'VE BEEN FIRED"), 0.25f, 1.0f,
                 1.0f, 0.5f, 0.1f, 1.0f,   // orange text
@@ -135,7 +135,7 @@ void Endgame_Draw()
                 0.004f);
             AEGfxPrintCentered(subFontId, "You sent a human to the basement.", 0.0f, 0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.030f);
         }
-        else if (currentEndReason == REASON_SENT_GHOST_TO_ROOM) {
+        else if (currentEndReason == EndGameReason::REASON_SENT_GHOST_TO_ROOM) {
             AEGfxPrintWithGlow(endgameFontId, "YOU'VE BEEN FIRED",
                 titleX("YOU'VE BEEN FIRED"), 0.25f, 1.0f,
                 1.0f, 0.5f, 0.1f, 1.0f,
@@ -147,11 +147,14 @@ void Endgame_Draw()
         // --- Run stats (day reached + real-time survived) ---
         int   day = Game_GetCurrentDay();
         float seconds = Game_GetTimeSurvived();
-        int   mins = (int)(seconds / 60);
-        int   secs = (int)(seconds) % 60;
-        char statsBuf[64];
-        sprintf_s(statsBuf, "Day %d / 5   |   Time: %02d:%02d", day, mins, secs);
-        AEGfxPrintCentered(subFontId, statsBuf, 0.0f, -0.15f, 0.85f, 0.75f, 0.75f, 0.75f, 1.0f, 0.030f);
+        int   mins = static_cast<int>(seconds / 60);
+        int   secs = static_cast<int>(seconds) % 60;
+        std::ostringstream oss;
+        oss << "Day " << day << " / 5   |   Time: "
+            << std::setw(2) << std::setfill('0') << mins << ":"
+            << std::setw(2) << std::setfill('0') << secs;
+        std::string statsBuf = oss.str();
+        AEGfxPrintCentered(subFontId, statsBuf.c_str(), 0.0f, -0.15f, 0.85f, 0.75f, 0.75f, 0.75f, 1.0f, 0.030f);
 
         // --- Blinking "click to continue" prompt ---
         float blinkAlpha = (sinf(totalTime * 5.0f) + 1.0f) * 0.5f;

@@ -11,7 +11,7 @@ SoundAnomalySystem SoundAnomaly;
 
 static float RandRange(float lo, float hi)
 {
-    return lo + (hi - lo) * ((float)(rand() % 1000) / 999.0f);
+    return RandFloat(lo, hi);
 }
 
 static inline const SoundTimes& SndCfg(ILLNESSES ill)
@@ -119,20 +119,20 @@ void SoundAnomalySystem::UpdateParanoia(float dt)
     if (par.extra_step_pending)
     {
         // One last phantom footstep after the player stops
-        AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.3f, RandRange(0.9f, 1.05f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_PLAYER_WALKING, 0.3f, RandRange(0.9f, 1.05f), 0);
         par.extra_step_pending = false;
         par.next_at = RandRange(t.minInterval, t.maxInterval);
     }
     else if (walking)
     {
         // Phantom footsteps trailing behind while moving
-        AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.2f, RandRange(0.88f, 1.05f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_PLAYER_WALKING, 0.2f, RandRange(0.88f, 1.05f), 0);
         par.next_at = RandRange(1.2f, 2.8f);
     }
     else
     {
         // Whisper from an empty corner while standing
-        AudioManager_PlaySFX(SFX_VOICE_WHISPER, t.volume, RandRange(0.85f, 1.0f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, t.volume, RandRange(0.85f, 1.0f), 0);
         par.next_at = RandRange(t.minInterval, t.maxInterval);
     }
 }
@@ -159,16 +159,16 @@ void SoundAnomalySystem::UpdateMania(float dt)
     man.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::MANIA);
-    switch (rand() % 3)
+    switch (RandInt(0, 2))
     {
     case 0: // Erratic scratching at high pitch
-        AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, t.volume, 2.0f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_MAIN_MENU_WRITING_SCRATCH, t.volume, 2.0f, 0);
         man.next_at = RandRange(1.5f, 3.5f);
         break;
 
     case 1: // Audio spike — double SFX volume for 0.15s then snap back
         AudioManager_SetSFXVolume(Settings_GetSFXVolume() * Settings_GetMasterVolume() * 2.0f);
-        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 1.0f, RandRange(1.5f, 2.0f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_LIGHT_FLICKER, 1.0f, RandRange(1.5f, 2.0f), 0);
         man.spike_active = true;
         man.spike_timer  = 0.15f;
         man.next_at      = RandRange(t.minInterval, t.maxInterval);
@@ -176,7 +176,7 @@ void SoundAnomalySystem::UpdateMania(float dt)
 
     case 2: // Manic mumbling — fast whispers alternating "left/right" via pitch shift
         man.pan_right = !man.pan_right;
-        AudioManager_PlaySFX(SFX_VOICE_WHISPER, t.volume,
+        AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, t.volume,
             man.pan_right ? RandRange(1.6f, 2.0f) : RandRange(0.6f, 0.9f), 0);
         man.next_at = RandRange(1.0f, 2.5f);
         break;
@@ -194,16 +194,16 @@ void SoundAnomalySystem::UpdateDepression(float dt)
     dep.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::DEPRESSION);
-    switch (rand() % 2)
+    switch (RandInt(0, 1))
     {
     case 0: // Heavy slow exhale
-        AudioManager_PlaySFX(SFX_EXHALE, t.volume, 1.0f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_EXHALE, t.volume, 1.0f, 0);
         dep.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
     case 1: // Muffled sobbing + distant knocking
-        AudioManager_PlaySFX(SFX_DOOR_KNOCKING, t.volume * 0.5f, 0.6f, 0);
-        AudioManager_PlaySFX(SFX_CRYING, t.volume, 1.0f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_DOOR_KNOCKING, t.volume * 0.5f, 0.6f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_CRYING, t.volume, 1.0f, 0);
         dep.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
     }
@@ -222,7 +222,7 @@ void SoundAnomalySystem::UpdateDementia(float dt)
         {
             if (dem.stutter_count > 0)
             {
-                AudioManager_PlaySFX(SFX_WHEELCHAIR_SQUEAK,
+                AudioManager_PlaySFX(SoundID::SFX_WHEELCHAIR_SQUEAK,
                     SndCfg(ILLNESSES::DEMENTIA).volume, RandRange(0.8f, 1.3f), 0);
                 dem.stutter_count--;
                 dem.stutter_timer = 0.18f;
@@ -239,10 +239,10 @@ void SoundAnomalySystem::UpdateDementia(float dt)
     dem.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::DEMENTIA);
-    switch (rand() % 2)
+    switch (RandInt(0, 1))
     {
     case 0: // Audio displacement — lift ding from the wrong end of the hall
-        AudioManager_PlaySFX(SFX_ELEVATOR_PRESS, t.volume, RandRange(0.85f, 1.15f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, t.volume, RandRange(0.85f, 1.15f), 0);
         dem.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
@@ -250,7 +250,7 @@ void SoundAnomalySystem::UpdateDementia(float dt)
         if (!dem.stuttering)
         {
             dem.stuttering    = true;
-            dem.stutter_count = 3 + rand() % 3;
+            dem.stutter_count = RandInt(3, 5);
             dem.stutter_timer = 0.05f;
         }
         dem.next_at = RandRange(t.minInterval, t.maxInterval);
@@ -279,15 +279,15 @@ void SoundAnomalySystem::UpdateSchizophrenia(float dt)
     sch.timer = 0.0f;
 
     const SoundTimes& t = SndCfg(ILLNESSES::SCHIZOPHRENIA);
-    switch (rand() % 2)
+    switch (RandInt(0, 1))
     {
     case 0: // Commanding voices — loud close whisper, not spatial
-        AudioManager_PlaySFX(SFX_VOICE_WHISPER, 1.0f, RandRange(0.9f, 1.1f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 1.0f, RandRange(0.9f, 1.1f), 0);
         sch.next_at = RandRange(t.minInterval, t.maxInterval);
         break;
 
     case 1: // Fake jumpscare — sudden scream cut to silence in 0.2s
-        AudioManager_PlaySFX(SFX_SCREAMING, 1.5f, RandRange(0.9f, 1.2f), 0);
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 1.5f, RandRange(0.9f, 1.2f), 0);
         sch.cut_pending = true;
         sch.cut_timer   = 0.2f;
         sch.next_at     = RandRange(t.minInterval + 2.0f, t.maxInterval + 2.0f);
@@ -308,13 +308,13 @@ void SoundAnomalySystem::UpdateAIW(float dt)
     if (aiw.big_next)
     {
         // Giant's Footsteps — massive low thud
-        AudioManager_PlaySFX(SFX_PLANT_THUD, t.volume, 0.35f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_PLANT_THUD, t.volume, 0.35f, 0);
         aiw.next_at = RandRange(t.minInterval, t.maxInterval);
     }
     else
     {
         // The Mouse — tiny scurrying sounds at high pitch, quiet
-        AudioManager_PlaySFX(SFX_PLAYER_WALKING, 0.2f, 2.2f, 0);
+        AudioManager_PlaySFX(SoundID::SFX_PLAYER_WALKING, 0.2f, 2.2f, 0);
         aiw.next_at = RandRange(2.0f, 4.0f);
     }
     aiw.big_next = !aiw.big_next;
@@ -338,11 +338,11 @@ void SoundAnomalySystem::UpdateInsomnia(float dt)
 
     // Volume rises with speed (louder as heart races)
     float vol = 0.2f + (1.5f - ins.heart_interval) * 0.35f;
-    AudioManager_PlaySFX(SFX_HEARTBEAT, vol, 1.0f, 0);
+    AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, vol, 1.0f, 0);
 
     // 1-in-5 chance of a tinnitus ringing burst alongside the beat
-    if (rand() % 5 == 0)
-        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, SndCfg(ILLNESSES::INSOMNIA).volume, 3.5f, 0);
+    if (RandInt(0, 4) == 0)
+        AudioManager_PlaySFX(SoundID::SFX_LIGHT_FLICKER, SndCfg(ILLNESSES::INSOMNIA).volume, 3.5f, 0);
 }
 
 // ---- OCD -------------------------------------------------------
@@ -371,7 +371,7 @@ void SoundAnomalySystem::UpdateOCD(float dt)
     float vol     = walking ? 0.15f : 0.45f;
 
     // File contains 3 ticks — play once, no code-driven repeats needed
-    AudioManager_PlaySFX(SFX_CLOCK_TICK, vol, 1.0f, 0);
+    AudioManager_PlaySFX(SoundID::SFX_CLOCK_TICK, vol, 1.0f, 0);
     ocd.repeat_count = 0;
 
     const SoundTimes& t = SndCfg(ILLNESSES::OCD);
@@ -387,7 +387,7 @@ void SoundAnomalySystem::UpdateScotophobia(float dt, float cam_x, s8 floor_num)
 
     if (is_dark && !sco.was_dark)
     {
-        AudioManager_PlaySFX(SFX_VOICE_WHISPER,
+        AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER,
             SndCfg(ILLNESSES::SCOTOPHOBIA).volume, 1.0f, -1);
         sco.was_dark = true;
     }
@@ -490,7 +490,7 @@ void SoundAnomalySystem::Update(float dt, float cam_x, s8 floor_num)
             ghost.timer   = 0.0f;
             ghost.next_at = RandRange(SndCfg(ILLNESSES::GHOST).minInterval,
                                       SndCfg(ILLNESSES::GHOST).maxInterval);
-            AudioManager_PlaySFX(SFX_VOICE_WHISPER,
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER,
                 Config::soundTable[10].volume,
                 RandRange(0.4f, 0.7f), 0);
         }

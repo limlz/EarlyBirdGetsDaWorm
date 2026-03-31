@@ -66,8 +66,8 @@ void MainMenu_Load()
 
 void MainMenu_Initialize()
 {
-    AudioManager_PlayBGM(BGM_MAIN_MENU, 0.50f);
-    AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.35f);
+    AudioManager_PlayBGM(SoundID::BGM_MAIN_MENU, 0.50f);
+    AudioManager_PlaySFX(SoundID::SFX_MAIN_MENU_WRITING_SCRATCH, 0.35f);
     Lighting_Initialize(0);
     Particles_Initialize();
     squareMesh = CreateSquareMesh(0xFFFFFFFF);

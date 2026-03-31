@@ -28,3 +28,8 @@ bool IsColliding(float r1x, float r1y, float r1w, float r1h,
 
 extern float worldMouseX;
 extern float worldMouseY;
+
+// --- RNG UTILITIES ---
+std::mt19937& GetGlobalRng();
+int RandInt(int min, int max);
+float RandFloat(float min, float max);

@@ -8,13 +8,18 @@ namespace Analytics {
         std::time_t now = std::time(nullptr);
         struct tm t;
         localtime_s(&t, &now);
-        char buf[32];
-        std::strftime(buf, sizeof(buf), "%Y%m%d-%H%M%S", &t);
+        std::ostringstream oss;
+        oss << std::setfill('0')
+            << std::setw(4) << (t.tm_year + 1900)
+            << std::setw(2) << (t.tm_mon + 1)
+            << std::setw(2) << t.tm_mday << "-"
+            << std::setw(2) << t.tm_hour
+            << std::setw(2) << t.tm_min
+            << std::setw(2) << t.tm_sec;
         // Append a 4-digit hex random suffix for uniqueness
-        unsigned suffix = (unsigned)std::rand() % 0xFFFF;
-        char hex[8];
-        std::snprintf(hex, sizeof(hex), "-%04X", suffix);
-        return std::string(buf) + hex;
+        unsigned suffix = static_cast<unsigned>(RandInt(0, 0xFFFE));
+        oss << "-" << std::uppercase << std::hex << std::setw(4) << suffix;
+        return oss.str();
     }
 
     static std::string gSessionId = GenerateSessionId();
@@ -40,11 +45,11 @@ namespace Analytics {
     // Single source of truth for end-reason strings; keeps call sites free of hand-written literals
     std::string GetEndReasonName(EndGameReason reason) {
         switch (reason) {
-        case REASON_SURVIVED_5_DAYS:        return "Victory - Survived 5 Days";
-        case REASON_DIED_TO_BOSS:           return "Death - Killed By Boss";
-        case REASON_SENT_HUMAN_TO_BASEMENT: return "Murder - Wrong Basement Delivery";
-        case REASON_SENT_GHOST_TO_ROOM:     return "Fired - Ghost Sent To Room";
-        case REASON_QUIT_FROM_MENU:         return "Quit From Menu";
+        case EndGameReason::REASON_SURVIVED_5_DAYS:        return "Victory - Survived 5 Days";
+        case EndGameReason::REASON_DIED_TO_BOSS:           return "Death - Killed By Boss";
+        case EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT: return "Murder - Wrong Basement Delivery";
+        case EndGameReason::REASON_SENT_GHOST_TO_ROOM:     return "Fired - Ghost Sent To Room";
+        case EndGameReason::REASON_QUIT_FROM_MENU:         return "Quit From Menu";
         default:                            return "UNKNOWN";
         }
     }
@@ -78,8 +83,15 @@ namespace Analytics {
         struct tm timeinfo;
         localtime_s(&timeinfo, &now);
 
-        char timeStr[100];
-        std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        std::ostringstream ossTime;
+        ossTime << std::setfill('0')
+                << std::setw(4) << (timeinfo.tm_year + 1900) << "-"
+                << std::setw(2) << (timeinfo.tm_mon + 1) << "-"
+                << std::setw(2) << timeinfo.tm_mday << " "
+                << std::setw(2) << timeinfo.tm_hour << ":"
+                << std::setw(2) << timeinfo.tm_min << ":"
+                << std::setw(2) << timeinfo.tm_sec;
+        std::string timeStr = ossTime.str();
 
         outFile << gSessionId << ","
             << timeStr << ","

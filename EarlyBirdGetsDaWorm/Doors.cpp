@@ -99,7 +99,7 @@ bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
 
     s.lockedThisDay = true;
 
-    if ((rand() % 100) < 30)
+    if (RandInt(0, 99) < 30)
     {
         JumpScare_Start();
         outDidJumpscare = true;
@@ -138,13 +138,7 @@ static void ClearDoorEvent(int doorIdx)
 
 static void InitializeRandomOnce()
 {
-    static bool seeded = false;
-
-    if (!seeded)
-    {
-        srand((unsigned)time(nullptr));
-        seeded = true;
-    }
+    // Global RNG is seeded once in utils.cpp; nothing to do here.
 }
 
 // ============================================================
@@ -178,8 +172,8 @@ static void TriggerDoorOCD(int doorIdx)
     s.eventCooldown = 1.2f;
 
     // Randomly shift the window around the door a little bit
-    s.ocdOffsetX = (float)((rand() % 61) - 30); // -30 to +30
-    s.ocdOffsetY = (float)((rand() % 41) - 20); // -20 to +20
+    s.ocdOffsetX = static_cast<float>(RandInt(-30, 30)); // -30 to +30
+    s.ocdOffsetY = static_cast<float>(RandInt(-20, 20)); // -20 to +20
 }
 
 // ============================================================
@@ -189,7 +183,7 @@ static void TriggerDoorOCD(int doorIdx)
 static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
 {
     if (pool.empty()) return ANOMALYID::None;
-    int r = rand() % (int)pool.size();
+    int r = RandInt(0, static_cast<int>(pool.size()) - 1);
     return pool[r];
 }
 
@@ -357,7 +351,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     // ------------------------------------------------
     s.rollCooldown = EVENT_ROLL_COOLDOWN;
 
-    if ((rand() % 100) >= EVENT_CHANCE_PERCENT)
+    if (RandInt(0, 99) >= EVENT_CHANCE_PERCENT)
     {
         return;
     }
@@ -404,7 +398,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
         s.ghostRollCooldown = GHOST_EXTRA_ROLL_COOLDOWN;
 
         // Roll for the ghost bonus event
-        if ((rand() % 100) < GHOST_EXTRA_CHANCE_PERCENT)
+        if (RandInt(0, 99) < GHOST_EXTRA_CHANCE_PERCENT)
         {
             ANOMALYID extraEvent = GetDoorEventByIllness(eff);
 
@@ -553,17 +547,20 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         // ------------------------------------------------
         if (gDoorFontId >= 0)
         {
-            char text[32]{};
+            std::ostringstream oss;
 
             if (floorNum == 0)
-                sprintf_s(text, "B1-%02d", i + 1);
+                oss << "B1-" << std::setw(2) << std::setfill('0') << (i + 1);
             else
-                sprintf_s(text, "%02d-%02d", floorNum, i + 1);
+                oss << std::setw(2) << std::setfill('0') << static_cast<int>(floorNum) << "-"
+                    << std::setw(2) << std::setfill('0') << (i + 1);
+
+            std::string text = oss.str();
 
             float x = (doorX / SCREEN_WIDTH_HALF) - textXoffset;
             float y = textY / SCREEN_HEIGHT_HALF;
 
-            AEGfxPrint(gDoorFontId, text, x, y, 1.0f, 1, 0, 0, 1);
+            AEGfxPrint(gDoorFontId, text.c_str(), x, y, 1.0f, 1, 0, 0, 1);
         }
     }
 }

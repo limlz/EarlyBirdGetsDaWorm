@@ -12,7 +12,7 @@ struct Bullet {
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
 // Allow more water droplets on the screen at once
-#define MAX_BULLETS 300
+static constexpr int MAX_BULLETS = 300;
 std::vector<Bullet> bullets(MAX_BULLETS);
 
 // Gives the player a larger "Water Tank" before needing to reload
@@ -50,7 +50,7 @@ void Fire_Bullet(float startX, float startY, float dirX, float dirY) {
             bullets[i].dirX = dirX;
             bullets[i].dirY = dirY;
             bullets[i].speed = 1200.0f;
-            bullets[i].size = 8.0f + (rand() % 800) / 100.0f;
+            bullets[i].size = 8.0f + RandInt(0, 799) / 100.0f;
 
 			// Consume ammo for each shot fired
             currentAmmo--;
@@ -252,7 +252,7 @@ void Bullets_DrawAmmoUI()
     }
     else {
         // Glowing cyan holy-water fill — drains smoothly from the right as shots are fired
-        float ammoPercent = (float)currentAmmo / (float)MAX_AMMO;
+        float ammoPercent = static_cast<float>(currentAmmo) / static_cast<float>(MAX_AMMO);
         float fillW  = barW * ammoPercent;
         float fillCX = barLeft + fillW * 0.5f;
 

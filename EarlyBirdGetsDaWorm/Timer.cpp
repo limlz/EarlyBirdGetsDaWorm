@@ -28,7 +28,7 @@ static constexpr float DAY_FADE_SPEED = 0.6f; // alpha decrease per second (1.0 
 // ============================================================================
 
 // Clock runtime values
-static float gGameMinutes = (float)START_MIN; // float for smooth dt accumulation
+static float gGameMinutes = static_cast<float>(START_MIN); // float for smooth dt accumulation
 static bool  gTimeUp = false;
 static bool  gTimerPaused = false;
 
@@ -49,9 +49,9 @@ static int   gOverlayDayNum = 1;     // which day number to display
 
 static void ClampAndCheckTimeUp()
 {
-    if (gGameMinutes >= (float)END_MIN)
+    if (gGameMinutes >= static_cast<float>(END_MIN))
     {
-        gGameMinutes = (float)END_MIN;
+        gGameMinutes = static_cast<float>(END_MIN);
         gTimeUp = true;
     }
 }
@@ -91,7 +91,7 @@ void Timer_Unload()
 
 void Timer_Reset()
 {
-    gGameMinutes = (float)START_MIN;
+    gGameMinutes = static_cast<float>(START_MIN);
     gTimeUp = false;
     gTimerPaused = false;
 
@@ -116,14 +116,13 @@ bool Timer_IsTimeUp()
 
 int Timer_GetGameMinutes()
 {
-    // Returns truncated minutes
-    return (int)gGameMinutes;
+    return static_cast<int>(gGameMinutes);
 }
 
 // Debug helper: immediately end the current shift (triggers day transition)
 void Timer_ForceTimeUp()
 {
-    gGameMinutes = (float)END_MIN;
+    gGameMinutes = static_cast<float>(END_MIN);
     gTimeUp = true;
 }
 
@@ -132,9 +131,9 @@ void Timer_DebugSetTime(float minutes)
 {
     gGameMinutes = minutes;
 
-    if (gGameMinutes >= (float)END_MIN)
+    if (gGameMinutes >= static_cast<float>(END_MIN))
     {
-        gGameMinutes = (float)END_MIN;
+        gGameMinutes = static_cast<float>(END_MIN);
         gTimeUp = true;
     }
     else
@@ -167,19 +166,19 @@ void Timer_Update(float dt)
 
 void Timer_Draw(float ndcX, float ndcY)
 {
-    const int totalMinutes = (int)gGameMinutes;
+    const int totalMinutes = static_cast<int>(gGameMinutes);
 
-    const int hours = totalMinutes / 60;
+    const int hours   = totalMinutes / 60;
     const int minutes = totalMinutes % 60;
 
-    char timeBuf[16]{};
-
-    // NOTE: This prints "AM" always (your original behavior).
-    // If you want a real 12-hour clock + AM/PM, tell me and I�ll swap it.
-    sprintf_s(timeBuf, "%02d:%02d AM", hours, minutes);
+    std::ostringstream oss;
+    oss << std::setw(2) << std::setfill('0') << hours
+        << ":" << std::setw(2) << std::setfill('0') << minutes
+        << " AM";
+    std::string timeBuf = oss.str();
 
     if (gClockFontId >= 0)
-        AEGfxPrint(gClockFontId, timeBuf, ndcX, ndcY, 1, 1, 1, 1, 1);
+        AEGfxPrint(gClockFontId, timeBuf.c_str(), ndcX, ndcY, 1, 1, 1, 1, 1);
 }
 
 // ============================================================================
@@ -195,7 +194,7 @@ void Timer_StartDayOverlay(int dayNum)
     gDayHoldTimer = DAY_HOLD_TIME;
     gDayOverlayActive = true;
 
-    AudioManager_PlaySFX(SFX_NEW_DAY, 1.0f, 1.0f, 0);
+    AudioManager_PlaySFX(SoundID::SFX_NEW_DAY, 1.0f, 1.0f, 0);
 }
 
 bool Timer_IsDayOverlayActive()

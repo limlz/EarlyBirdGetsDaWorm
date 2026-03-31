@@ -70,7 +70,7 @@ private:
         float   next_at      = 0.0f;
         int     repeat_count = 0;
         float   repeat_timer = 0.0f;
-        SoundID repeat_sfx   = SFX_DOOR_KNOCK;
+        SoundID repeat_sfx   = SoundID::SFX_DOOR_KNOCK;
         float   repeat_pitch = 1.0f;
         float   repeat_vol   = 0.4f;
     };

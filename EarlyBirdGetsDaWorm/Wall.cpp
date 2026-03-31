@@ -87,7 +87,7 @@ void Wall::SetEnabled(bool Enabled)
 ANOMALYID Wall::PickFromPool(std::vector<ANOMALYID> const& Pool)
 {
     if (Pool.empty()) { return ANOMALYID::None; }
-    int Random = rand() % static_cast<int>(Pool.size());
+    int Random = RandInt(0, static_cast<int>(Pool.size()) - 1);
     return Pool[Random];
 }
 
@@ -176,7 +176,7 @@ void Wall::Load()
 void Wall::LoadConfigFromFile(const std::string& Filename) {
     std::ifstream File(Filename);
     if (!File.is_open()) {
-        printf("[FAIL] Guide configuration could not be opened.");
+        std::cout << "[FAIL] Guide configuration could not be opened.";
         return;
     }
 
@@ -191,12 +191,12 @@ void Wall::LoadConfigFromFile(const std::string& Filename) {
             // State
             if (Key == "Image") {
                 if (!(iss >> WallImage.CurrentImage >> WallImage.Duration >> WallImage.Timer)) {
-                    printf("[FAIL] Wall image configuration failed to load.\n");
+                    std::cout << "[FAIL] Wall image configuration failed to load.\n";
                 }
                 else {
-                    printf("[SUCCESS] Wall image configuration loaded successfully.\n");
+                    std::cout << "[SUCCESS] Wall image configuration loaded successfully.\n";
                 }
-            }            
+            }
         }
     }
     File.close();
@@ -208,12 +208,10 @@ void Wall::Initialize()
     WallMesh = CreateSquareMesh(0xFFFFFFFF);
 
     // Generate random positions for anomalies on each floor
-    srand((unsigned)std::time(nullptr));
-
     for (int i{}; i < MAX_FLOORS; ++i)
     {
-        WallFloor.X[i] = static_cast<f32>(rand() % 6000);
-        WallFloor.Y[i] = static_cast<f32>(rand() % 200);
+        WallFloor.X[i] = static_cast<f32>(RandInt(0, 5999));
+        WallFloor.Y[i] = static_cast<f32>(RandInt(0, 199));
 
         WallFloor.Anomaly[i] = ANOMALYID::None;
         WallFloor.IsAnomalyAssigned[i] = false;

@@ -5,7 +5,7 @@
 static bool gBossDebugMode = false;
 static bool gGodMode       = false;
 static s8   gDebugFont     = -1;
-static char gDebugBuffer[256];
+static std::string gDebugBuffer;
 
 void BossDebug_Load()
 {
@@ -52,37 +52,53 @@ void BossDebug_Draw(const BossDebugInfo& info)
                           : "UNKNOWN";
 
     // Row 0 (green) — Player position, velocity, health, flags
-    sprintf_s(gDebugBuffer, "PLAYER: Pos[%.0f, %.0f] | Vel[%.0f, %.0f] | HP:%d/%d | GRND:%s CROUCH:%s",
-        info.player_x, info.player_y,
-        info.player_vel_x, info.player_vel_y,
-        info.player_hp, info.player_hp_max,
-        info.is_grounded  ? "YES" : "NO",
-        info.is_crouching ? "YES" : "NO");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY, textScale, 0.0f, 1.0f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "PLAYER: Pos[" << std::fixed << std::setprecision(0) << info.player_x << ", " << info.player_y
+            << "] | Vel[" << info.player_vel_x << ", " << info.player_vel_y
+            << "] | HP:" << info.player_hp << "/" << info.player_hp_max
+            << " | GRND:" << (info.is_grounded ? "YES" : "NO")
+            << " CROUCH:" << (info.is_crouching ? "YES" : "NO");
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY, textScale, 0.0f, 1.0f, 0.0f, 1.0f);
 
     // Row 1 (yellow) — Boss position, health, state
-    sprintf_s(gDebugBuffer, "BOSS: Pos[%.0f, %.0f] Base:%.0f | HP:%d/%d | State:%s Timer:%.1f",
-        info.boss_x, info.boss_y, info.boss_base_y,
-        info.boss_health, info.boss_max_health,
-        state_str, info.boss_state_timer);
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - lineHeight, textScale, 1.0f, 1.0f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "BOSS: Pos[" << std::fixed << std::setprecision(0) << info.boss_x << ", " << info.boss_y
+            << "] Base:" << info.boss_base_y
+            << " | HP:" << info.boss_health << "/" << info.boss_max_health
+            << " | State:" << state_str
+            << " Timer:" << std::setprecision(1) << info.boss_state_timer;
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - lineHeight, textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
     // Row 2 (orange) — Boss shield, dodge cooldown, bullet count, god mode
-    sprintf_s(gDebugBuffer, "BOSS: Shield:%s | DodgeCD:%.2f | Active Bullets:%d | GOD MODE:%s",
-        info.boss_shield_active ? "ON" : "OFF",
-        info.boss_dodge_cooldown,
-        info.active_bullet_count,
-        gGodMode ? "ON" : "OFF");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 2), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "BOSS: Shield:" << (info.boss_shield_active ? "ON" : "OFF")
+            << " | DodgeCD:" << std::fixed << std::setprecision(2) << info.boss_dodge_cooldown
+            << " | Active Bullets:" << info.active_bullet_count
+            << " | GOD MODE:" << (gGodMode ? "ON" : "OFF");
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 2), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
 
     // Row 3 (cyan) — FPS / DT
-    f32 fps = 1.0f / (f32)AEFrameRateControllerGetFrameTime();
-    sprintf_s(gDebugBuffer, "FPS: %.2f | DT: %.5f", fps, (f32)AEFrameRateControllerGetFrameTime());
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 3), textScale, 0.0f, 1.0f, 1.0f, 1.0f);
+    f32 fps = 1.0f / static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    {
+        std::ostringstream oss;
+        oss << "FPS: " << std::fixed << std::setprecision(2) << fps
+            << " | DT: " << std::setprecision(5) << static_cast<f32>(AEFrameRateControllerGetFrameTime());
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 3), textScale, 0.0f, 1.0f, 1.0f, 1.0f);
 
     // Row 4 (grey) — Controls hint
-    sprintf_s(gDebugBuffer, "[F3] Toggle  [G] Boss HP->1  [I] God Mode  [N] Toggle Shield  [B] Clear Bullets");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 4), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
+    gDebugBuffer = "[F3] Toggle  [G] Boss HP->1  [I] God Mode  [N] Toggle Shield  [B] Clear Bullets";
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 4), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
 }
 
 bool BossDebug_IsActive() { return gBossDebugMode; }

@@ -111,25 +111,25 @@ void PauseMenu_Update(float dt)
 
             // --- Generate Directional Splatter ---
             for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
-                bloodDrops[i].x = -1000.0f - (rand() % 400);
-                bloodDrops[i].y = (rand() % 1100) - 550.0f;
+                bloodDrops[i].x = -1000.0f - static_cast<float>(RandInt(0, 399));
+                bloodDrops[i].y = static_cast<float>(RandInt(-550, 549));
 
-                bloodDrops[i].velX = (float)((rand() % 3000) + 2000);
-                bloodDrops[i].velY = (float)((rand() % 1400) - 700);
+                bloodDrops[i].velX = static_cast<float>(RandInt(2000, 4999));
+                bloodDrops[i].velY = static_cast<float>(RandInt(-700, 699));
 
-                bloodDrops[i].friction = (float)((rand() % 8) + 15);
+                bloodDrops[i].friction = static_cast<float>(RandInt(15, 22));
 
-                float baseScale = (float)((rand() % 5) + 5);
+                float baseScale = static_cast<float>(RandInt(5, 9));
 
-                bloodDrops[i].targetScaleX = baseScale * ((rand() % 4) + 1.0f);
+                bloodDrops[i].targetScaleX = baseScale * static_cast<float>(RandInt(1, 4));
                 bloodDrops[i].targetScaleY = baseScale * 1.0f;
 
                 bloodDrops[i].currentScaleX = 0.0f;
                 bloodDrops[i].currentScaleY = 0.0f;
 
-                int burstGroup = rand() % 4;
+                int burstGroup = RandInt(0, 3);
                 bloodDrops[i].delayTimer = burstGroup * 0.10f;
-                bloodDrops[i].flyTimer = (float)((rand() % 20) + 5) / 100.0f;
+                bloodDrops[i].flyTimer = static_cast<float>(RandInt(5, 24)) / 100.0f;
                 bloodDrops[i].isActive = false;
             }
         }
@@ -141,7 +141,7 @@ void PauseMenu_Update(float dt)
             for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
                 bloodDrops[i].isActive = true;
                 bloodDrops[i].flyTimer = 0.0f;
-                bloodDrops[i].velX = -(float)((rand() % 4000) + 3000);
+                bloodDrops[i].velX = -static_cast<float>(RandInt(3000, 6999));
                 bloodDrops[i].friction = 0.0f;
             }
         }
@@ -233,7 +233,7 @@ void PauseMenu_Update(float dt)
                 for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
                     bloodDrops[i].isActive = true;
                     bloodDrops[i].flyTimer = 0.0f;
-                    bloodDrops[i].velX = -(float)((rand() % 4000) + 3000);
+                    bloodDrops[i].velX = -static_cast<float>(RandInt(3000, 6999));
                     bloodDrops[i].friction = 0.0f;
                 }
             }
@@ -241,8 +241,8 @@ void PauseMenu_Update(float dt)
                 Settings_Open();
             }
             if (hoverQuit && AEInputCheckTriggered(AEVK_LBUTTON)) {
-                currentEndReason = REASON_QUIT_FROM_MENU;
-                Analytics::LogRun(REASON_QUIT_FROM_MENU, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
+                currentEndReason = EndGameReason::REASON_QUIT_FROM_MENU;
+                Analytics::LogRun(EndGameReason::REASON_QUIT_FROM_MENU, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
                     static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
                 next = MAIN_MENU;
             }
@@ -266,16 +266,16 @@ void PauseMenu_Draw(AEGfxVertexList* squareMesh)
         for (int i = 0; i < MAX_BLOOD_DROPS; i++) {
             AEMtx33 scale, trans, finalTransform;
 
-            int pixelScaleX = (int)bloodDrops[i].currentScaleX;
-            int pixelScaleY = (int)bloodDrops[i].currentScaleY;
-            int pixelPosX = (int)bloodDrops[i].x;
-            int pixelPosY = (int)bloodDrops[i].y;
+            int pixelScaleX = static_cast<int>(bloodDrops[i].currentScaleX);
+            int pixelScaleY = static_cast<int>(bloodDrops[i].currentScaleY);
+            int pixelPosX = static_cast<int>(bloodDrops[i].x);
+            int pixelPosY = static_cast<int>(bloodDrops[i].y);
 
             if (pixelScaleX <= 0) pixelScaleX = 1;
             if (pixelScaleY <= 0) pixelScaleY = 1;
 
-            AEMtx33Scale(&scale, (float)pixelScaleX, (float)pixelScaleY);
-            AEMtx33Trans(&trans, (float)pixelPosX, (float)pixelPosY);
+            AEMtx33Scale(&scale, static_cast<float>(pixelScaleX), static_cast<float>(pixelScaleY));
+            AEMtx33Trans(&trans, static_cast<float>(pixelPosX), static_cast<float>(pixelPosY));
             AEMtx33Concat(&finalTransform, &trans, &scale);
             AEGfxSetTransform(finalTransform.m);
 

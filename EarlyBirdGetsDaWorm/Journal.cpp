@@ -230,8 +230,8 @@ static void ClampSelected()
     if (Selected < 0)
         Selected = 0;
 
-    if (Selected >= (int)IllnessList.size())
-        Selected = (int)IllnessList.size() - 1;
+    if (Selected >= static_cast<int>(IllnessList.size()))
+        Selected = static_cast<int>(IllnessList.size()) - 1;
 }
 
 // ============================================================
@@ -556,8 +556,8 @@ static SymptomStruct JournalEntries[ILLNESS_COUNT][SYMPTOM_COUNT];
 // ---------------------------------------------------------------------------------
 // Usage:
 // Journal_HasObserved(ANOMALYID::Wall_Paranoia) -> Observed[(int)id] = true;
-static std::vector<bool> Observed ((int)ANOMALYID::None + 1, false);
-static std::vector<bool> Unread((int)ANOMALYID::None + 1, false);
+static std::vector<bool> Observed (static_cast<int>(ANOMALYID::None) + 1, false);
+static std::vector<bool> Unread(static_cast<int>(ANOMALYID::None) + 1, false);
 
 // Used in all anomly files to report that the player has observed a specific anomaly
 void Journal_ReportAnomaly(ANOMALYID id)
@@ -567,10 +567,10 @@ void Journal_ReportAnomaly(ANOMALYID id)
         return;
     }
 
-    int index = (int)id; // index for the Observed vector, based on the anomaly ID enum value
+    int index = static_cast<int>(id); // index for the Observed vector, based on the anomaly ID enum value
 
     // Ensure index is within bounds
-    if (index < 0 || index >= (int)Observed.size())
+    if (index < 0 || index >= static_cast<int>(Observed.size()))
     {
         return;
     }
@@ -593,10 +593,10 @@ bool Journal_HasObserved(ANOMALYID id)
         return false;
     }
 
-	int index = (int)id; // index for the Observed vector, based on the anomaly ID enum value
+	int index = static_cast<int>(id); // index for the Observed vector, based on the anomaly ID enum value
 
     // Ensure index is within bounds
-    if (index < 0 || index >= (int)Observed.size())
+    if (index < 0 || index >= static_cast<int>(Observed.size()))
     {
         return false;
     }
@@ -612,9 +612,9 @@ bool Journal_EvidenceHasUnread(ANOMALYID id)
         return false;
     }
 
-    int index = (int)id;
+    int index = static_cast<int>(id);
 
-    if (index < 0 || index >= (int)Unread.size())
+    if (index < 0 || index >= static_cast<int>(Unread.size()))
     {
         return false;
     }
@@ -659,7 +659,7 @@ bool Journal_PageHasUnread(ILLNESSES illness, int page)
 
 bool Journal_HasNewContent()
 {
-    for (int i = 0; i < (int)Unread.size(); ++i)
+    for (int i = 0; i < static_cast<int>(Unread.size()); ++i)
     {
         if (Unread[i])
         {
@@ -676,9 +676,9 @@ void Journal_MarkAsRead(ANOMALYID id)
         return;
     }
 
-    int index = (int)id;
+    int index = static_cast<int>(id);
 
-    if (index < 0 || index >= (int)Unread.size())
+    if (index < 0 || index >= static_cast<int>(Unread.size()))
     {
         return;
     }
@@ -745,7 +745,7 @@ void Journal_Load()
     gLightScotophobia = LoadTextureChecked(Assets::Equipment::LightScotophobia);
 
 	// Load journal text data for each illness
-    for (int i = 0; i < (int)IllnessList.size(); ++i)
+    for (int i = 0; i < static_cast<int>(IllnessList.size()); ++i)
     {
         ILLNESSES illness = IllnessList[i];
         const char* FilePath = GetJournalTextFilePath(illness);
@@ -766,7 +766,7 @@ void Journal_Load()
 
 void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
 {
-    f32 journalDt{ (f32)AEFrameRateControllerGetFrameTime() };
+    f32 journalDt{ static_cast<f32>(AEFrameRateControllerGetFrameTime()) };
 
     if (JournalHasUnread)
         JournalAlertTimer += journalDt;
@@ -799,7 +799,7 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
         Open = !Open;
         justToggled = true;
 
-        AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
+        AudioManager_PlaySFX(SoundID::SFX_JOURNAL_OPEN, 1.0f);
     }
 
     // EARLY EXIT
@@ -809,7 +809,7 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
     // CLOSE
     if (!justToggled && OutsideJournal && clicked)
     {
-        AudioManager_PlaySFX(SFX_JOURNAL_OPEN, 1.0f);
+        AudioManager_PlaySFX(SoundID::SFX_JOURNAL_OPEN, 1.0f);
         Open = false;
     }
 
@@ -832,8 +832,8 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
     s32 mouseX = 0, mouseY = 0;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
-    float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
-    float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
+    float mouseWorldX = static_cast<float>(mouseX) - SCREEN_WIDTH_HALF;
+    float mouseWorldY = SCREEN_HEIGHT_HALF - static_cast<float>(mouseY);
 
     if (AEInputCheckTriggered(AEVK_LBUTTON))
     {
@@ -849,13 +849,13 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
         if (hoveredHowTo)
         {
             ClickHowTo = true;
-            AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+            AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
         }
 
         // ------------------------------------------------------------
         // Illness tab click
         // ------------------------------------------------------------
-        for (int i = 0; i < (int)IllnessList.size(); ++i)
+        for (int i = 0; i < static_cast<int>(IllnessList.size()); ++i)
         {
             float illnessY = ListY - i * ListStep;
 
@@ -870,7 +870,7 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
                 if (Selected != i)
                 {
                     Selected = i;
-                    AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+                    AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
                 }
 
                 // IMPORTANT: leave how-to page when illness is clicked
@@ -887,14 +887,14 @@ void Journal_Update(bool liftActive, bool guideActive, bool pagerActive, f32 dt)
     {
         --Selected;
         ClickHowTo = false;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+        AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
     }
 
     if (AEInputCheckTriggered(AEVK_DOWN))
     {
         ++Selected;
         ClickHowTo = false;
-        AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+        AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
     }
 
     ClampSelected();
@@ -953,8 +953,8 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     s32 mouseX = 0, mouseY = 0;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
-    float mouseWorldX = (float)mouseX - SCREEN_WIDTH_HALF;
-    float mouseWorldY = SCREEN_HEIGHT_HALF - (float)mouseY;
+    float mouseWorldX = static_cast<float>(mouseX) - SCREEN_WIDTH_HALF;
+    float mouseWorldY = SCREEN_HEIGHT_HALF - static_cast<float>(mouseY);
 
     // ------------------------------------------------------------
     // Current illness data
@@ -984,7 +984,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
     // ILLNESS TABS
     // ============================================================
 
-    for (int i = 0; i < (int)IllnessList.size(); ++i)
+    for (int i = 0; i < static_cast<int>(IllnessList.size()); ++i)
     {
         const char* name = GetFromText[i].title.c_str();
         float illnessY = ListY - i * ListStep;
@@ -1116,7 +1116,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         //    1.0f);
 
         // Left Page
-        for (int i = 0; i < (int)HelpData.leftLines.size(); ++i)
+        for (int i = 0; i < static_cast<int>(HelpData.leftLines.size()); ++i)
         {
             const std::string& rawLine = HelpData.leftLines[i];
             bool isHeader = IsSubHeader(rawLine);
@@ -1138,7 +1138,7 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         }
 
         // Right page
-        for (int i = 0; i < (int)HelpData.rightLines.size(); ++i)
+        for (int i = 0; i < static_cast<int>(HelpData.rightLines.size()); ++i)
         {
             const std::string& rawLine = HelpData.rightLines[i];
             bool isHeader = IsSubHeader(rawLine);

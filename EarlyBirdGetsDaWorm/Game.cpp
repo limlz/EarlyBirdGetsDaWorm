@@ -69,8 +69,8 @@ const float BOSS_FADE_SPEED = 2.0f;
 
 // Endgame can't trigger mid-jumpscare; these flags defer the state transition until the jumpscare finishes
 static bool gPendingEndgameAfterJumpscare = false;
-EndGameReason currentEndReason = REASON_SENT_GHOST_TO_ROOM;
-static EndGameReason gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
+EndGameReason currentEndReason = EndGameReason::REASON_SENT_GHOST_TO_ROOM;
+static EndGameReason gPendingEndReason = EndGameReason::REASON_SENT_GHOST_TO_ROOM;
 
 void JumpScare_Start();
 bool JumpScare_IsActive();
@@ -199,7 +199,7 @@ void Game_Initialize()
     Config::Load();
     totalTimeSurvived = 0.0f;
 
-    AudioManager_PlayBGM(BGM_GAME_AMBIENCE, 0.5f);
+    AudioManager_PlayBGM(SoundID::BGM_GAME_AMBIENCE, 0.5f);
 }
 
 // ============================================================
@@ -208,7 +208,7 @@ void Game_Initialize()
 
 void Game_Update()
 {
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
     Debug_Update();
 
     if (AEInputCheckTriggered(AEVK_F5)) {
@@ -311,7 +311,7 @@ void Game_Update()
         // Check quota first so a failed playtest day still ends with DIED_TO_BOSS
         const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
         if (Player_GetPatientsHandled() < requiredPatients) {
-            currentEndReason = REASON_DIED_TO_BOSS;
+            currentEndReason = EndGameReason::REASON_DIED_TO_BOSS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 
@@ -323,7 +323,7 @@ void Game_Update()
         // End condition: completed all 5 days (normal and playtest both progress through all days)
         if (CurrentDay >= 5)
         {
-            currentEndReason = REASON_SURVIVED_5_DAYS;
+            currentEndReason = EndGameReason::REASON_SURVIVED_5_DAYS;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 
@@ -467,7 +467,7 @@ void Game_Update()
     // ------------------------------------------------------------
     if (AEInputCheckTriggered(AEVK_E) && doorNumAtPlayer != -1)
     {
-        const s8 doorAtPlayer1Based = (s8)doorNumAtPlayer + 1;
+        const s8 doorAtPlayer1Based = static_cast<s8>(doorNumAtPlayer) + 1;
 
         s8 targetFloor, targetDoor, destFloor, destDoor;
         Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
@@ -490,12 +490,12 @@ void Game_Update()
                 if (didJumpscare)
                 {
                     // Jumpscare plays first; endgame triggers once it finishes in Phase 1
-                    gPendingEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
+                    gPendingEndReason = EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT;
                     gPendingEndgameAfterJumpscare = true;
                 }
                 else
                 {
-                    currentEndReason = REASON_SENT_HUMAN_TO_BASEMENT;
+                    currentEndReason = EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT;
                     Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                         static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
                     next = ENDGAME_STATE;
@@ -521,7 +521,7 @@ void Game_Update()
             if (isGhostTruth)
             {
                 JumpScare_Start();
-                gPendingEndReason = REASON_SENT_GHOST_TO_ROOM;
+                gPendingEndReason = EndGameReason::REASON_SENT_GHOST_TO_ROOM;
                 gPendingEndgameAfterJumpscare = true; // <-- Unified flag
                 return;
             }

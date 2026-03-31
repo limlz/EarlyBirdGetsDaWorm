@@ -59,7 +59,7 @@ static bool StateChangedDuringBlink = false;
 static ILLNESSES PatientRandomIllness() {
     const std::vector<ILLNESSES>& activePool = AllAnomalies_CurrentRun();
     if (activePool.empty()) { return ILLNESSES::NONE; }
-    int randomIndex = rand() % (int)activePool.size();
+    int randomIndex = RandInt(0, static_cast<int>(activePool.size()) - 1);
     return activePool[randomIndex];
 }
 
@@ -83,7 +83,7 @@ static void ApplyNewPatientFromTruth(bool isGhostTruth) {
 
     // 50% chance the patient visually looks like a monster, purely to bluff the player
     // (disabled in playtest mode so ghost vs. human is always visually clear)
-    VisualBluff = Game_IsPlaytestMode() ? false : (std::rand() % 2 == 0);
+    VisualBluff = Game_IsPlaytestMode() ? false : (RandInt(0, 1) == 0);
     Frame = 0;
     Timer = 0.0f;
 
@@ -107,17 +107,17 @@ void Player_GenerateMission() {
     CentralPool_ClearPatientAnomalies();
     Journal_Clear();
 
-    PickupDoor = (s8)(rand() % 10) + 1;
-    PickupFloor = (s8)(rand() % 9) + 1;
+    PickupDoor = static_cast<s8>(RandInt(1, 10));
+    PickupFloor = static_cast<s8>(RandInt(1, 9));
 
     // Door can be rolled once since the floor will guarantee they are different locations
-    DestDoor = (s8)(rand() % 10) + 1;
+    DestDoor = static_cast<s8>(RandInt(1, 10));
 
     // --- CONSTRAINED RANDOMIZATION ---
     // Keep rolling the destination floor until it is strictly different from the pickup floor.
     // This forces the player to actually navigate the hospital rather than walking next door.
     do {
-        DestFloor = (s8)(rand() % 9) + 1;
+        DestFloor = static_cast<s8>(RandInt(1, 9));
     } while (DestFloor == PickupFloor);
 }
 
@@ -133,7 +133,7 @@ void SetPatientScaryByDay(int day) {
         // --- DIFFICULTY SCALING ---
         // If the player exceeds the quota, use a percentage roll that gets harder each day.
         static constexpr float extraRollProb[] = { 0.0f, 0.20f, 0.20f, 0.35f, 0.35f, 0.40f };
-        float roll = (float)(std::rand() % 101) / 100.0f;
+        float roll = static_cast<float>(RandInt(0, 100)) / 100.0f;
         IsScary = (roll < extraRollProb[Day]);
     }
 
@@ -181,18 +181,17 @@ void ResetPatientCounter(int day) {
     PatientsHandled = 0;
     int CurrentDay = (day < 1) ? 1 : (day > 5 ? 5 : day);
 
-    unsigned seed = (unsigned)time(NULL);
     if (Game_IsPlaytestMode()) {
         // Playtest: guaranteed 1 ghost and 1 human per day, order randomised
         CurrentDayPool[0] = PlaytestDayPool[0];
         CurrentDayPool[1] = PlaytestDayPool[1];
-        std::shuffle(CurrentDayPool, CurrentDayPool + 2, std::default_random_engine(seed));
+        std::shuffle(CurrentDayPool, CurrentDayPool + 2, GetGlobalRng());
     }
     else {
         // Normal: use the full predetermined pool for the day
         for (int i = 0; i < 5; ++i)
             CurrentDayPool[i] = PlayerPool[CurrentDay][i];
-        std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), std::default_random_engine(seed));
+        std::shuffle(std::begin(CurrentDayPool), std::end(CurrentDayPool), GetGlobalRng());
     }
 }
 
@@ -204,8 +203,6 @@ static AEGfxTexture* GetActiveFrameTex() {
 
 /***************************************** LOAD ******************************************/
 void Player_Load() {
-    std::srand((unsigned)std::time(nullptr));
-
     AEGfxMeshStart();
     AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
@@ -307,8 +304,8 @@ void Player_Update(float dt, bool walkKey) {
         {
             AudioManager_StopWalkingSFX();
 
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
-            AudioManager_PlayWalkingSFX(SFX_WHEELCHAIR_SQUEAK, 0.2f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SoundID::SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SoundID::SFX_WHEELCHAIR_SQUEAK, 0.2f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = true;
@@ -320,7 +317,7 @@ void Player_Update(float dt, bool walkKey) {
         {
             AudioManager_StopWalkingSFX();
 
-            AudioManager_PlayWalkingSFX(SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
+            AudioManager_PlayWalkingSFX(SoundID::SFX_PLAYER_WALKING, 0.6f, 1.0f, -1);
 
             WalkingSoundPlaying = true;
             WheelchairSoundPlaying = false;
@@ -374,7 +371,7 @@ void Player_Draw(float x, float y) {
     // Dynamically scales the player's width (sx) depending on whether they are pushing a wheelchair,
     // and flips the sprite horizontally based on FacingDir (1 or -1).
     float widthMultiplier = PatientPickedUp ? 1.0f : 0.3f;
-    float sx = (PLAYER_WIDTH * widthMultiplier) * (float)FacingDir;
+    float sx = (PLAYER_WIDTH * widthMultiplier) * static_cast<float>(FacingDir);
     float sy = PLAYER_HEIGHT;
 
     AEMtx33Scale(&scale, sx, sy);

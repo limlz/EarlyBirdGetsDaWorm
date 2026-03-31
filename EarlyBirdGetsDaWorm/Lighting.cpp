@@ -63,7 +63,7 @@ static inline float FlickerDuration(ILLNESSES effIllness, bool isOn, int ghostEx
 
     if (range <= 0) range = 1;
 
-    float seconds = (float)((rand() % range) + minv) / 100.0f;
+    float seconds = static_cast<float>(RandInt(minv, minv + range - 1)) / 100.0f;
 
     // Shorten both phases slightly so the light feels more erratic under GHOST's extra anomaly
     if (ghostExtra >= 1)
@@ -108,10 +108,10 @@ void Update_StandaloneLight(float dt, float lightX, float lightY)
 
     // On-phase is much longer than off-phase so the light reads as "mostly on with brief cuts"
     if (singleLightIsOn) {
-        AudioManager_PlaySFX(SFX_LIGHT_FLICKER, 0.15f, 1.0f, 0);
-        singleLightTimer = (float)((rand() % 140) + 10) / 100.0f;
+        AudioManager_PlaySFX(SoundID::SFX_LIGHT_FLICKER, 0.15f, 1.0f, 0);
+        singleLightTimer = static_cast<float>(RandInt(10, 149)) / 100.0f;
     } else {
-        singleLightTimer = (float)((rand() % 25) + 5) / 100.0f;
+        singleLightTimer = static_cast<float>(RandInt(5, 29)) / 100.0f;
     }
 }
 
@@ -133,7 +133,7 @@ void Draw_StandaloneConeLight(float x, float y)
 
     for (int i = 0; i < numRays; i++)
     {
-        float progress = (float)i / (float)(numRays - 1);
+        float progress = static_cast<float>(i) / static_cast<float>(numRays - 1);
         float angle = -coneAngle / 2.0f + (progress * coneAngle);
 
         float dirX = sinf(angle);
@@ -175,7 +175,7 @@ void Lighting_Initialize(int fucked_floor)
 
             // fucked_floor uses a higher flicker threshold to make that floor visibly more unstable than the rest
             int threshold = (f == fucked_floor) ? Config::floorFuckedChance : Config::floorNormalChance;
-            lightingMatrix[f][l] = ((rand() % 100) > threshold) ? 2 : 1;
+            lightingMatrix[f][l] = (RandInt(0, 99) > threshold) ? 2 : 1;
         }
     }
 
@@ -206,7 +206,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
 
-    const float dt = (float)AEFrameRateControllerGetFrameTime();
+    const float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
 
     // Ramp resets to 0 the moment a patient is picked up, then climbs to 1 over ~0.5s
     static bool  prevHasPatient = false;
@@ -278,7 +278,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
         fd.timer = FlickerDuration(effIllness, fd.isVisible, ghostExtra);
 
         // 8% chance to double-flicker immediately, making the light stutter rather than toggle cleanly
-        if (ghostExtra >= 1 && (rand() % 100) < 8)
+        if (ghostExtra >= 1 && RandInt(0, 99) < 8)
         {
             fd.isVisible = !fd.isVisible;
             fd.timer *= 0.75f;
@@ -393,7 +393,7 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
 
     for (int i = 0; i < numRays; i++)
     {
-        float progress = (float)i / (float)(numRays - 1);
+        float progress = static_cast<float>(i) / static_cast<float>(numRays - 1);
         float angle = -coneAngle / 2.0f + (progress * coneAngle);
 
         float dirX = sinf(angle);

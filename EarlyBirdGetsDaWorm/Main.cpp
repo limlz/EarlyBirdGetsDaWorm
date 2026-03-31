@@ -13,7 +13,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     int gGameRunning = 1;
 
     // Initialize System
-    AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, true, NULL);
+    AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, true, nullptr);
     AESysSetWindowTitle("The Porter: Ward 8");
     AESysReset();
 

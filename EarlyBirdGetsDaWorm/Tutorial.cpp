@@ -3,7 +3,7 @@
 class Tutorial {
 public:
 	// Stages
-	enum Stages {
+	enum class Stages {
 		TUTORIAL_START,
 		TUTORIAL_WAIT_FOR_PAGER_CLOSE,
 		TUTORIAL_WAIT_FOR_LIFT_OPEN,
@@ -165,7 +165,7 @@ void Tutorial::Load() {
 void Tutorial::LoadConfigFromFile(const std::string& Filename) {
 	std::ifstream File(Filename);
 	if (!File.is_open()) {
-		printf("[FAIL] Guide configuration could not be opened.");
+		std::cout << "[FAIL] Guide configuration could not be opened.";
 		return;
 	}
 
@@ -180,42 +180,42 @@ void Tutorial::LoadConfigFromFile(const std::string& Filename) {
 			// State
 			if (Key == "Input") {
 				if (!(iss >> TutorialInput.SpacePressed >> TutorialInput.ButtonHover >> TutorialInput.PromptAnswered >> TutorialInput.DoTutorial)) {
-					printf("[FAIL] Tutorial input configuration failed to load.\n");
+					std::cout << "[FAIL] Tutorial input configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Tutorial input configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Tutorial input configuration loaded successfully.\n";
 				}
 			}
 			if (Key == "Dimension") {
 				if (!(iss >> TutorialSize.Width >> TutorialSize.Height >> TutorialSize.X >> TutorialSize.Y >> TutorialSize.DestinationY)) {
-					printf("[FAIL] Tutorial dimension configuration failed to load.\n");
+					std::cout << "[FAIL] Tutorial dimension configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Tutorial dimension configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Tutorial dimension configuration loaded successfully.\n";
 				}
 			}
 			if (Key == "Prompt") {
 				if (!(iss >> TutorialPrompt.Shown >> TutorialPrompt.Timer >> TutorialPrompt.FadeSpeed >> TutorialPrompt.Alpha >> TutorialPrompt.TextAlpha)) {
-					printf("[FAIL] Tutorial prompt configuration failed to load.\n");
+					std::cout << "[FAIL] Tutorial prompt configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Tutorial prompt configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Tutorial prompt configuration loaded successfully.\n";
 				}
 			}
 			if (Key == "Button") {
 				if (!(iss >> TutorialButton.Width >> TutorialButton.Height >> TutorialButton.HoverSpeed >> TutorialButton.YesScale >> TutorialButton.NoScale)) {
-					printf("[FAIL] Tutorial button configuration failed to load.\n");
+					std::cout << "[FAIL] Tutorial button configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Tutorial button configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Tutorial button configuration loaded successfully.\n";
 				}
 			}
 			if (Key == "Skip") {
 				if (!(iss >> TutorialSkip.Width >> TutorialSkip.Height >> TutorialSkip.X >> TutorialSkip.Y >> TutorialSkip.Timer >> TutorialSkip.Anim >> TutorialSkip.Offset)) {
-					printf("[FAIL] Tutorial skip configuration failed to load.\n");
+					std::cout << "[FAIL] Tutorial skip configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Tutorial skip configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Tutorial skip configuration loaded successfully.\n";
 				}
 			}
 		}
@@ -228,7 +228,7 @@ void Tutorial::Initialize() {
 	TutorialMesh = CreateSquareMesh(0xFFFFFFFF);
 
 	// Stage 
-	CurrentStage = TUTORIAL_START;
+	CurrentStage = Stages::TUTORIAL_START;
 
 	// Input
 	TutorialInput.SpacePressed = false;
@@ -316,7 +316,7 @@ void Tutorial::DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT) {
 
 		// Sound play
 		if (!Dialogue.FinishedTyping && !Dialogue.SoundPlayed) {
-			AudioManager_PlaySFX(SFX_TUTORIAL_TYPING, 0.2f, 1.0f, -1);
+			AudioManager_PlaySFX(SoundID::SFX_TUTORIAL_TYPING, 0.2f, 1.0f, -1);
 			Dialogue.SoundPlayed = true;
 		}
 		if (Dialogue.FinishedTyping && Dialogue.SoundPlayed) {
@@ -326,8 +326,8 @@ void Tutorial::DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT) {
 
 		// Text typing effect
 		Dialogue.VisibleCharCount += Dialogue.TypingSpeed * DT;
-		if (Dialogue.VisibleCharCount >= static_cast<f32>(strlen(Dialogue.FullText))) {
-			Dialogue.VisibleCharCount = static_cast<f32>(strlen(Dialogue.FullText));
+		if (Dialogue.VisibleCharCount >= static_cast<f32>(std::string_view(Dialogue.FullText).size())) {
+			Dialogue.VisibleCharCount = static_cast<f32>(std::string_view(Dialogue.FullText).size());
 			Dialogue.FinishedTyping = true;
 		}
 
@@ -337,7 +337,7 @@ void Tutorial::DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT) {
 		// Spacebar Logic
 		if (TutorialInput.SpacePressed || (MouseClicked && AEInputCheckTriggered(AEVK_LBUTTON))) {
 			if (!Dialogue.FinishedTyping) { // Basiclly check sif the dialogue box has finished typing, if not then itll be forced to be true
-				Dialogue.VisibleCharCount = static_cast<f32>(strlen(Dialogue.FullText));
+				Dialogue.VisibleCharCount = static_cast<f32>(std::string_view(Dialogue.FullText).size());
 				Dialogue.FinishedTyping = true;
 				Dialogue.SoundPlayed = true;
 			}
@@ -384,7 +384,7 @@ void Tutorial::Update(f32 DT) {
 			TutorialPrompt.Shown = false;
 			TutorialInput.PromptAnswered = true;
 			TutorialInput.DoTutorial = true;
-			//CurrentStage = TUTORIAL_START;
+			//CurrentStage = Stages::TUTORIAL_START;
 			ResetTutorial();
 		}
 	}
@@ -395,83 +395,83 @@ void Tutorial::Update(f32 DT) {
 		TutorialPrompt.TextAlpha = 1.0f;
 		Timer_SetPaused(true); // so player doesnt lose the game if they take too long
 		switch (CurrentStage) {
-			case TUTORIAL_START: {
+			case Stages::TUTORIAL_START: {
 				TutorialState.Started = true;
 				DialogueBoxUpdate(StartedBox, DT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_START && IsPagerActive()) { // if player opens the pager, next stage of tutorial will appaer 
-					CurrentStage = TUTORIAL_WAIT_FOR_PAGER_CLOSE; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_START && IsPagerActive()) { // if player opens the pager, next stage of tutorial will appaer 
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_PAGER_CLOSE; // nxet stage
 					TutorialState.Started = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
+			case Stages::TUTORIAL_WAIT_FOR_PAGER_CLOSE: {
 				TutorialState.PagerOpened = true;
 				DialogueBoxUpdate(PagerOpenedBox, DT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_PAGER_CLOSE && !IsPagerActive()) {
-					CurrentStage = TUTORIAL_WAIT_FOR_LIFT_OPEN; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_PAGER_CLOSE && !IsPagerActive()) {
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_LIFT_OPEN; // nxet stage
 					TutorialState.PagerOpened = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_LIFT_OPEN: {
+			case Stages::TUTORIAL_WAIT_FOR_LIFT_OPEN: {
 				TutorialState.PagerClosed = true;
 				DialogueBoxUpdate(PagerClosedBox, DT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_LIFT_OPEN && Lift_IsActive()) {
-					CurrentStage = TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_LIFT_OPEN && Lift_IsActive()) {
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION; // nxet stage
 					TutorialState.PagerClosed = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
+			case Stages::TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION: {
 				TutorialState.LiftOpened = true;
 				DialogueBoxUpdate(LiftOpenedBox, DT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION && Lift_IsFloorPressed()) {
-					CurrentStage = TUTORIAL_WAIT_FOR_PATIENT_COLLECTION; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_LIFT_FLOOR_SELECTION && Lift_IsFloorPressed()) {
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_PATIENT_COLLECTION; // nxet stage
 					TutorialState.LiftOpened = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
+			case Stages::TUTORIAL_WAIT_FOR_PATIENT_COLLECTION: {
 				TutorialState.LiftFloorSelected = true;
 				DialogueBoxUpdate(LiftFloorSelectedBox, DT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_PATIENT_COLLECTION && Player_HasPatient()) {
 					Player_ForceHumanPatient();
-					CurrentStage = TUTORIAL_WAIT_FOR_JOURNAL_OPEN; // nxet stage
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_JOURNAL_OPEN; // nxet stage
 					TutorialState.LiftFloorSelected = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_JOURNAL_OPEN: {
+			case Stages::TUTORIAL_WAIT_FOR_JOURNAL_OPEN: {
 				TutorialState.PatientCollected = true;
 				DialogueBoxUpdate(PatientCollectedBox, actualDT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_JOURNAL_OPEN && Journal_IsOpen()) {
-					CurrentStage = TUTORIAL_WAIT_FOR_JOURNAL_CLOSE; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_JOURNAL_OPEN && Journal_IsOpen()) {
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_JOURNAL_CLOSE; // nxet stage
 					TutorialState.PatientCollected = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_JOURNAL_CLOSE: {
+			case Stages::TUTORIAL_WAIT_FOR_JOURNAL_CLOSE: {
 				TutorialState.JournalOpened = true;
 				DialogueBoxUpdate(JournalOpenedBox, actualDT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_JOURNAL_CLOSE && !Journal_IsOpen()) {
-					CurrentStage = TUTORIAL_WAIT_FOR_PATIENT_DELIVERY; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_JOURNAL_CLOSE && !Journal_IsOpen()) {
+					CurrentStage = Stages::TUTORIAL_WAIT_FOR_PATIENT_DELIVERY; // nxet stage
 					TutorialState.JournalOpened = false;
 				}
 				break;
 			}
-			case TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
+			case Stages::TUTORIAL_WAIT_FOR_PATIENT_DELIVERY: {
 				TutorialState.JournalClosed = true;
 				DialogueBoxUpdate(JournalClosedBox, actualDT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
-					CurrentStage = TUTORIAL_END; // nxet stage
+				if (CurrentStage == Stages::TUTORIAL_WAIT_FOR_PATIENT_DELIVERY && !Player_HasPatient()) {
+					CurrentStage = Stages::TUTORIAL_END; // nxet stage
 					TutorialState.JournalClosed = false;
 				}
 				break;
 			}
-			case TUTORIAL_END: {
+			case Stages::TUTORIAL_END: {
 				TutorialState.PatientDelivered = true;
 				DialogueBoxUpdate(PatientDeliveredBox, actualDT); // draws the dialogue box
-				if (CurrentStage == TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
+				if (CurrentStage == Stages::TUTORIAL_END && AEInputCheckTriggered(AEVK_TAB)) {
 					TutorialState.PatientDelivered = false;
 					TutorialState.Finished = true;
 					AudioManager_StopSFX();
@@ -541,7 +541,7 @@ void Tutorial::ResetDialogueBox(DialogueBox& Dialogue) {
 void Tutorial::ResetTutorial() {
 	// Reset states
 	TutorialState = {};
-	CurrentStage = TUTORIAL_START;
+	CurrentStage = Stages::TUTORIAL_START;
 
 	// Reset all dialogue boxes
 	ResetDialogueBox(StartedBox);

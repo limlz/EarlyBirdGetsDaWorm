@@ -5,7 +5,7 @@ AEGfxVertexList* CreateCircleMesh(f32 radius, int steps, u32 color)
     AEGfxMeshStart();
 
     // Calculate the angle step for each slice of the pizza
-    f32 angleStep = (2.0f * 3.14159f) / (f32)steps;
+    f32 angleStep = (2.0f * 3.14159f) / static_cast<f32>(steps);
 
     for (int i = 0; i < steps; ++i)
     {

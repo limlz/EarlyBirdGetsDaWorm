@@ -9,8 +9,6 @@
 // ============================================================
 
 #include "pch.hpp"
-#include <cstdlib>   // rand, srand, RAND_MAX
-#include <ctime>     // time
 #include <algorithm> // std::max
 
 // ============================================================
@@ -52,7 +50,7 @@ static float Clamp01(float x)
 static float RandMinus1To1()
 {
     // [-1, 1]
-    return (float(rand()) / float(RAND_MAX)) * 2.0f - 1.0f;
+    return RandFloat(-1.0f, 1.0f);
 }
 
 // ============================================================
@@ -68,14 +66,6 @@ void JumpScare_Load()
 
 void JumpScare_Initialize()
 {
-    // Seed random once
-    static bool seeded = false;
-    if (!seeded)
-    {
-        srand((unsigned)time(nullptr));
-        seeded = true;
-    }
-
     // Reset runtime state
     gActive = false;
     gTimer = 0.0f;
@@ -111,10 +101,10 @@ void JumpScare_Start()
     gFlashTimer = Config::jumpscareFlashDuration; // optional quick flash at start
 
     if (Settings_IsHorrorLessEnabled()) {
-        AudioManager_PlaySFX(SFX_AA, 1.0f, 1.5f, 0); // AA
+        AudioManager_PlaySFX(SoundID::SFX_AA, 1.0f, 1.5f, 0); // AA
     }
     else {
-        AudioManager_PlaySFX(SFX_SCREAMING, 1.0f);
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 1.0f);
     }
 }
 

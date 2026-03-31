@@ -29,17 +29,17 @@ void Particles_Spawn(float startX, float startY, int count)
 
         // Physics: Explosion spread
         // X: Random spread left/right (-200 to +200)
-        p.velX = (float)(rand() % 400 - 200);
+        p.velX = static_cast<float>(RandInt(-200, 199));
 
         // Y: Shoot UP with variation (150 to 450)
-        p.velY = (float)(rand() % 100 );
+        p.velY = static_cast<float>(RandInt(0, 99));
 
         p.life = 2.0f;
-        p.scale = (float)(rand() % 5 + 2); // Size 2px to 7px
+        p.scale = static_cast<float>(RandInt(2, 6)); // Size 2px to 7px
 
         // Color: Random variations of Orange/Yellow/Gold
         p.r = 1.0f;
-        p.g = (rand() % 60 + 40) / 100.0f; // 0.4 to 1.0
+        p.g = static_cast<float>(RandInt(40, 99)) / 100.0f; // 0.4 to 1.0
         p.b = 0.1f;
 
         particleList.push_back(p);
@@ -48,7 +48,7 @@ void Particles_Spawn(float startX, float startY, int count)
 
 void Particles_Update()
 {
-    float dt = (float)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
 
     for (int i = 0; i < particleList.size(); i++)
     {

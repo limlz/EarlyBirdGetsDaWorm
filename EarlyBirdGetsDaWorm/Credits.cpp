@@ -90,12 +90,12 @@ static inline void FadeAlpha(float& alpha, bool open, float dt, float maxVal = 1
     alpha = AEClamp(alpha, 0.0f, maxVal);
 }
 
-static void StripTag(std::string& s, const char* open, const char* close)
+static void StripTag(std::string& s, std::string_view open, std::string_view close)
 {
     auto pos = s.find(open);
-    if (pos != std::string::npos) s.erase(pos, strlen(open));
+    if (pos != std::string::npos) s.erase(pos, open.size());
     pos = s.find(close);
-    if (pos != std::string::npos) s.erase(pos, strlen(close));
+    if (pos != std::string::npos) s.erase(pos, close.size());
 }
 
 static void LoadCreditsFile()
@@ -266,7 +266,7 @@ void Credits_Update(float dt)
 
     if (isHoveringCredits) {
         if (jitter_update_timer <= 0.0f) {
-            credits_jitter_x    = ((rand() % 200 - 100) / 100.0f) * 6.0f;
+            credits_jitter_x    = ((RandInt(0, 199) - 100) / 100.0f) * 6.0f;
             credits_jitter_y    = 0.0f;
             jitter_update_timer = 0.06f;
         }
@@ -278,13 +278,13 @@ void Credits_Update(float dt)
         }
         else {
             credits_twitch_duration = 0.3f;
-            credits_idle_timer = ((rand() % 300) / 100.0f) + 1.5f;
+            credits_idle_timer = (RandInt(0, 299) / 100.0f) + 1.5f;
         }
 
         if (credits_twitch_duration > 0.0f) {
             credits_twitch_duration -= dt;
             if (jitter_update_timer <= 0.0f) {
-                credits_jitter_x    = ((rand() % 200 - 100) / 100.0f) * 5.0f;
+                credits_jitter_x    = ((RandInt(0, 199) - 100) / 100.0f) * 5.0f;
                 credits_jitter_y    = 0.0f;
                 jitter_update_timer = 0.05f;
             }

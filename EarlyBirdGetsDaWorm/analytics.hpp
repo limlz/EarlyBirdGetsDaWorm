@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-enum EndGameReason : int;
+enum class EndGameReason : int;
 
 namespace Analytics {
     // Maps an EndGameReason to its canonical CSV string; single source of truth for all call sites

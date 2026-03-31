@@ -118,7 +118,7 @@ void Guide::Load() {
 void Guide::LoadConfigFromFile(const std::string& Filename) {
 	std::ifstream File(Filename);
 	if (!File.is_open()) {
-		printf("[FAIL] Guide configuration could not be opened.");
+		std::cout << "[FAIL] Guide configuration could not be opened.";
 		return;
 	}
 
@@ -133,36 +133,36 @@ void Guide::LoadConfigFromFile(const std::string& Filename) {
 			// State
 			if (Key == "State") {
 				if (!(iss >> GuideState.IsOpen >> GuideState.CanDisplay >> GuideState.FadeSpeed >> GuideState.PopUpTimer >> GuideState.Alpha)) {
-					printf("[FAIL] Guide state configuration failed to load.\n");
+					std::cout << "[FAIL] Guide state configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Guide state configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Guide state configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "Icon") {
 				if (!(iss >> GuideIcon.Width >> GuideIcon.Height >> GuideIcon.Alpha >> GuideIcon.Hover)) {
-					printf("[FAIL] Guide icon configuration failed to load.\n");
+					std::cout << "[FAIL] Guide icon configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Guide icon configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Guide icon configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "Arrow") {
 				if (!(iss >> GuideArrow.Width >> GuideArrow.Height >> GuideArrow.X >> GuideArrow.Y >> GuideArrow.Alpha)) {
-					printf("[FAIL] Guide arrow configuration failed to load.\n");
+					std::cout << "[FAIL] Guide arrow configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Guide arrow configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Guide arrow configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "Categories") {
 				if (!(iss >> GuideCategory.ID >> GuideCategory.Width >> GuideCategory.X >> GuideCategory.Alpha1 >> GuideCategory.Alpha2 >> GuideCategory.Alpha3
 					>> GuideCategory.Speed >> GuideCategory.Selected1 >> GuideCategory.Selected2 >> GuideCategory.Selected3
 					>> GuideCategory.Page1Active >> GuideCategory.Page2Active)) {
-					printf("[FAIL] Guide category configuration failed to load.\n");
+					std::cout << "[FAIL] Guide category configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Guide category configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Guide category configuration loaded successfully.\n";
 				}
 			}
 		}
@@ -301,7 +301,7 @@ void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
 
 	// Arrow-Keys
 	if (AEInputCheckTriggered(AEVK_UP)) {
-		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+		AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
 		--GuideCategory.ID;
 		if (GuideCategory.ID < 1) {
 			GuideCategory.ID = 1;
@@ -309,7 +309,7 @@ void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
 		return;
 	}
 	if (AEInputCheckTriggered(AEVK_DOWN)) {
-		AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+		AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
 		++GuideCategory.ID;
 		if (GuideCategory.ID > 3) {
 			GuideCategory.ID = 3;
@@ -345,13 +345,13 @@ void Guide::Update(bool liftActive, f32 DT, bool PagerActive) {
 		GuideCategory.Alpha2 = 1.0f;
 
 		if (GuideCategory.Page1Active && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_RIGHT))) {
-			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+			AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
 			GuideCategory.Page1Active = false;
 			GuideCategory.Page2Active = true;
 			GuideArrow.Alpha = 1.0f;
 		}
 		else if (GuideCategory.Page2Active && ((ArrowHover && AEInputCheckTriggered(AEVK_LBUTTON)) || AEInputCheckTriggered(AEVK_LEFT))) {
-			AudioManager_PlaySFX(SFX_JOURNAL_SELECT, 0.5f);
+			AudioManager_PlaySFX(SoundID::SFX_JOURNAL_SELECT, 0.5f);
 			GuideCategory.Page1Active = true;
 			GuideCategory.Page2Active = false;
 			GuideArrow.Alpha = 1.0f;

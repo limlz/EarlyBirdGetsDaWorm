@@ -4,7 +4,7 @@
 // Internal Debug Variables
 static bool gDebugMode = false;
 static s8 gDebugFont = -1;
-static char gDebugBuffer[256];
+static std::string gDebugBuffer;
 
 void Debug_Load()
 {
@@ -83,8 +83,8 @@ void Debug_Draw(const DebugInfo& info)
         break;
     }
     // Calculate World Mouse using info struct
-    float worldMouseX = -info.camX + ((float)mouseX - 800.0f);
-    float worldMouseY = -((float)mouseY - 450.0f);
+    float worldMouseX = -info.camX + (static_cast<float>(mouseX) - 800.0f);
+    float worldMouseY = -(static_cast<float>(mouseY) - 450.0f);
 
     // 2. Setup Text Drawing (Bottom Left)
     // startY accounts for 7 rows at lineHeight 0.06: bottom row lands at ~-0.93 NDC (safely on screen)
@@ -96,38 +96,64 @@ void Debug_Draw(const DebugInfo& info)
     // 3. Print Info Block
 
     // --- MOUSE & CAMERA (merged onto one row) ---
-    sprintf_s(gDebugBuffer, "MOUSE Scrn: [%d, %d] | World: [%.0f, %.0f] | CAM X: %.2f", mouseX, mouseY, worldMouseX, worldMouseY, info.camX);
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY, textScale, 0.0f, 1.0f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "MOUSE Scrn: [" << mouseX << ", " << mouseY
+            << "] | World: [" << std::fixed << std::setprecision(0) << worldMouseX << ", " << worldMouseY
+            << "] | CAM X: " << std::setprecision(2) << info.camX;
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY, textScale, 0.0f, 1.0f, 0.0f, 1.0f);
 
     // --- GAME LOGIC ---
-    sprintf_s(gDebugBuffer, "STATE: Day %d | Floor: %d | Current Illness: %s", info.day, info.floorNum, illness);
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 1), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "STATE: Day " << info.day << " | Floor: " << static_cast<int>(info.floorNum) << " | Current Illness: " << illness;
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 1), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
-    sprintf_s(gDebugBuffer, "DOOR: At: %d | Patient Target: Rm %d (Flr %d) | Scary: %s", info.doorNumAtPlayer, info.patientDoorNum, info.patientFloorNum, IsGhostPatient() ? "GHOST" : "HUMAN");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 2), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "DOOR: At: " << static_cast<int>(info.doorNumAtPlayer)
+            << " | Patient Target: Rm " << static_cast<int>(info.patientDoorNum)
+            << " (Flr " << static_cast<int>(info.patientFloorNum)
+            << ") | Scary: " << (IsGhostPatient() ? "GHOST" : "HUMAN");
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 2), textScale, 1.0f, 1.0f, 0.0f, 1.0f);
 
     // --- ANOMALY SYSTEMS ---
-    sprintf_s(gDebugBuffer, "ANOMALIES: FRAMES:%s  DOORS:%s  LIGHT:%s  WALL:%s  SOUND:%s  LIFT:%s  | DARK:%s",
-        CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)   ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Doors_isActive)    ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive) ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Wall_isActive)     ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)    ? "ON" : "--",
-        CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)     ? "ON" : "--",
-        Lighting_IsPlayerInDarkness(info.camX, info.floorNum)       ? "YES" : "NO");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 3), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
+    {
+        std::ostringstream oss;
+        oss << "ANOMALIES: FRAMES:" << (CentralPool_IsSystemActive(AnomalyFiles::Frames_isActive)   ? "ON" : "--")
+            << "  DOORS:" << (CentralPool_IsSystemActive(AnomalyFiles::Doors_isActive)    ? "ON" : "--")
+            << "  LIGHT:" << (CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive) ? "ON" : "--")
+            << "  WALL:" << (CentralPool_IsSystemActive(AnomalyFiles::Wall_isActive)     ? "ON" : "--")
+            << "  SOUND:" << (CentralPool_IsSystemActive(AnomalyFiles::Sound_isActive)    ? "ON" : "--")
+            << "  LIFT:" << (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)     ? "ON" : "--")
+            << "  | DARK:" << (Lighting_IsPlayerInDarkness(info.camX, info.floorNum)       ? "YES" : "NO");
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 3), textScale, 1.0f, 0.5f, 0.0f, 1.0f);
 
     // --- SYSTEM ---
-    f32 fps = 1.0f / (f32)AEFrameRateControllerGetFrameTime();
-    sprintf_s(gDebugBuffer, "FPS: %.2f | DT: %.5f | TIMER: %s", fps, (f32)AEFrameRateControllerGetFrameTime(), Timer_IsPaused() ? "PAUSED" : "RUNNING");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 4), textScale, 0.0f, 1.0f, 1.0f, 1.0f);
+    f32 fps = 1.0f / static_cast<f32>(AEFrameRateControllerGetFrameTime());
+    {
+        std::ostringstream oss;
+        oss << "FPS: " << std::fixed << std::setprecision(2) << fps
+            << " | DT: " << std::setprecision(5) << static_cast<f32>(AEFrameRateControllerGetFrameTime())
+            << " | TIMER: " << (Timer_IsPaused() ? "PAUSED" : "RUNNING");
+        gDebugBuffer = oss.str();
+    }
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 4), textScale, 0.0f, 1.0f, 1.0f, 1.0f);
 
     // --- DEBUG CONTROLS HINT (two rows so text stays on screen) ---
-    sprintf_s(gDebugBuffer, "[1-9] Illness  [0] Re-roll  [H] Ghost/Human  [P] Auto Patient  [K] Next Day");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 5), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
+    gDebugBuffer = "[1-9] Illness  [0] Re-roll  [H] Ghost/Human  [P] Auto Patient  [K] Next Day";
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 5), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
 
-    sprintf_s(gDebugBuffer, "[F3] Toggle Debug  [F4] Pause Timer  [F6] Set Pts=5  [J] Jumpscare  [M] Warp Cam");
-    AEGfxPrint(gDebugFont, gDebugBuffer, startX, startY - (lineHeight * 6), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
+    gDebugBuffer = "[F3] Toggle Debug  [F4] Pause Timer  [F6] Set Pts=5  [J] Jumpscare  [M] Warp Cam";
+    AEGfxPrint(gDebugFont, gDebugBuffer.c_str(), startX, startY - (lineHeight * 6), textScale, 0.5f, 0.5f, 0.5f, 1.0f);
 }
 
 bool Debug_IsActive()

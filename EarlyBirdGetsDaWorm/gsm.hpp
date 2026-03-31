@@ -1,4 +1,4 @@
-typedef void(*FP)(void);
+using FP = void(*)();
 
 extern int current, previous, next;
 

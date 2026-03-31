@@ -1,6 +1,6 @@
 #pragma once
 
-enum SoundID {
+enum class SoundID {
 
     /*************  1. BACKGROUND MUSIC (BGM)   *************/
 

@@ -9,12 +9,9 @@ static std::vector<ILLNESSES>   currentRunILLNESSES;
 
 // A boolean array acting as a truth table. It maps to the AnomalyFiles enum.
 // If index 2 (e.g., Lift_isActive) is true, the elevator is allowed to glitch for this patient.
-static std::vector<bool>        currentPatientANOMALYFILES((int)AnomalyFiles::Count, false);
+static std::vector<bool>        currentPatientANOMALYFILES(static_cast<int>(AnomalyFiles::Count), false);
 
-// --- ADVANCED RNG ---
-// Mersenne Twister RNG provides a much higher quality, even distribution of randomness 
-// compared to standard C rand(), preventing identical runs.
-static std::mt19937             gRng((unsigned)std::time(nullptr));
+// RNG is now provided globally by GetGlobalRng() in utils.hpp
 
 // Game Balance Constants
 static const int                MAX_ILLNESSES_PER_RUN = 6;
@@ -66,10 +63,10 @@ void AllAnomalies_GenerateRun()
     };
 
     // Shuffle the deck perfectly using the Mersenne Twister RNG
-    std::shuffle(illnessPool.begin(), illnessPool.end(), gRng);
+    std::shuffle(illnessPool.begin(), illnessPool.end(), GetGlobalRng());
 
     // "Deal" the first 6 cards (illnesses) into the active run pool
-    for (int i = 0; i < MAX_ILLNESSES_PER_RUN && i < (int)illnessPool.size(); ++i)
+    for (int i = 0; i < MAX_ILLNESSES_PER_RUN && i < static_cast<int>(illnessPool.size()); ++i)
     {
         currentRunILLNESSES.push_back(illnessPool[i]);
     }
@@ -105,19 +102,18 @@ void CentralPool_GeneratePatientAnomalies(ILLNESSES illness, int ghostExtraAnoma
     int totalSystemsToActivate = MAX_ANOMALIES_PER_ILLNESS + ghostExtraAnomalies;
 
     // Safety clamp to prevent out-of-bounds if we ask for more systems than actually exist
-    if (totalSystemsToActivate > (int)AnomalyFiles::Count) {
-        totalSystemsToActivate = (int)AnomalyFiles::Count;
+    if (totalSystemsToActivate > static_cast<int>(AnomalyFiles::Count)) {
+        totalSystemsToActivate = static_cast<int>(AnomalyFiles::Count);
     }
 
     // Build a temporary pool of all available system indices (0 through Count)
     std::vector<int> availableSystems;
-    for (int i = 0; i < (int)AnomalyFiles::Count; ++i) {
+    for (int i = 0; i < static_cast<int>(AnomalyFiles::Count); ++i) {
         availableSystems.push_back(i);
     }
 
     // Deck-Shuffle the available systems
-    unsigned seed = (unsigned)std::time(nullptr) + rand();
-    std::shuffle(availableSystems.begin(), availableSystems.end(), std::default_random_engine(seed));
+    std::shuffle(availableSystems.begin(), availableSystems.end(), GetGlobalRng());
 
     // Activate the first N systems in the shuffled deck
     for (int i = 0; i < totalSystemsToActivate; ++i) {

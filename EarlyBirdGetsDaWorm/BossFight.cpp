@@ -65,7 +65,7 @@ static s8 victoryFontId = -1;
 
 void Player_DrawHealthBar(AEGfxVertexList* mesh)
 {
-    float hpPercent = (float)playerHP / (float)MAX_PLAYER_HP;
+    float hpPercent = static_cast<float>(playerHP) / static_cast<float>(MAX_PLAYER_HP);
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
     // BOTTOM LEFT — horizontal bar sitting on the bottom black bar
@@ -180,7 +180,7 @@ void Boss_Fight_Initialize()
 
     // Start boss fight music
     AudioManager_StopBGM();
-    AudioManager_PlayBGM(BGM_MAIN_MENU, 0.4f);
+    AudioManager_PlayBGM(SoundID::BGM_MAIN_MENU, 0.4f);
 
     // Auto-open the guide to the Boss Fight instructions page
     Guide_BossFight();
@@ -188,7 +188,7 @@ void Boss_Fight_Initialize()
 
 void Boss_Fight_Update()
 {
-    float dt = (f32)AEFrameRateControllerGetFrameTime();
+    float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
 
     BossDebug_Update(myBoss);
     PauseMenu_Update(dt);
@@ -200,7 +200,7 @@ void Boss_Fight_Update()
     if (myBoss.health <= 0 && !isVictorySequence) {
         isVictorySequence = true;
         AudioManager_StopBGM();                        // Cut boss music on defeat
-        AudioManager_PlaySFX(SFX_SCREAMING, 0.5f);    // Boss defeat scream
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.5f);    // Boss defeat scream
     }
 
     // Run the victory animation and block all gameplay input
@@ -237,8 +237,8 @@ void Boss_Fight_Update()
     {
         s32 cursorX, cursorY;
         AEInputGetCursorPosition(&cursorX, &cursorY);
-        float worldMouseX = (float)cursorX - (AEGfxGetWindowWidth()  / 2.0f);
-        float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - (float)cursorY;
+        float worldMouseX = static_cast<float>(cursorX) - (AEGfxGetWindowWidth()  / 2.0f);
+        float worldMouseY = (AEGfxGetWindowHeight() / 2.0f) - static_cast<float>(cursorY);
 
         // Flip to face whichever side the gun is pointing
         facingRight = (worldMouseX >= playerX);
@@ -273,9 +273,9 @@ void Boss_Fight_Update()
                 jumpCount++;
                 // Horror-less mode uses a silly WEOW instead of a grunt
                 if (Settings_IsHorrorLessEnabled())
-                    AudioManager_PlaySFX(SFX_WEOW, 0.6f);
+                    AudioManager_PlaySFX(SoundID::SFX_WEOW, 0.6f);
                 else
-                    AudioManager_PlaySFX(SFX_JUMP_GRUNT, 0.5f);
+                    AudioManager_PlaySFX(SoundID::SFX_JUMP_GRUNT, 0.5f);
             }
         }
 
@@ -291,7 +291,7 @@ void Boss_Fight_Update()
             if (fireCooldown <= 0.0f) {
                 fireCooldown = FIRE_RATE; // Reset timer
                 if (Bullets_HasAmmo())
-                    AudioManager_PlaySFX(SFX_WATER_GUN_SQUIRT, 0.12f, 0.7f);
+                    AudioManager_PlaySFX(SoundID::SFX_WATER_GUN_SQUIRT, 0.12f, 0.7f);
 
                 // Bullet spawns from the gun tip
                 float drawY     = isCrouching ? playerY - 30.0f : playerY;
@@ -304,8 +304,8 @@ void Boss_Fight_Update()
                 float dirY = sinf(armAngle);
 
                 // Add a slight randomized spread to simulate spraying liquid
-                float spreadX = ((rand() % 100 - 50) / 1000.0f); // Random spread value between -0.05 and 0.05
-                float spreadY = ((rand() % 100 - 50) / 1000.0f);
+                float spreadX = ((RandInt(0, 99) - 50) / 1000.0f); // Random spread value between -0.05 and 0.05
+                float spreadY = ((RandInt(0, 99) - 50) / 1000.0f);
                 dirX += spreadX;
                 dirY += spreadY;
 
@@ -398,12 +398,12 @@ void Boss_Fight_Update()
                     isPlayerHit = true;
                     hitTimer = 0.2f;
                     vignetteAlpha = 1.0f; // Hook: set to 1.0f to trigger vignette / cracked-glass overlay
-                    AudioManager_PlaySFX(SFX_EXHALE, 0.7f);  // Player hurt reaction
+                    AudioManager_PlaySFX(SoundID::SFX_EXHALE, 0.7f);  // Player hurt reaction
 
                     if (playerHP <= 0 && !BossDebug_IsGodMode()) {
                         Player_StopSounds(); // prevent walking SFX persisting into endgame
                         AudioManager_StopBGM(); // stop boss fight music before endgame
-                        currentEndReason = REASON_DIED_TO_BOSS;
+                        currentEndReason = EndGameReason::REASON_DIED_TO_BOSS;
                         Analytics::LogRun(currentEndReason, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
                             static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
                         next = ENDGAME_STATE;
@@ -426,7 +426,7 @@ void Boss_Fight_Update()
 
     // Lag (ghost) bar slowly catches up to actual HP
     {
-        float currentHpPct = (float)playerHP / (float)MAX_PLAYER_HP;
+        float currentHpPct = static_cast<float>(playerHP) / static_cast<float>(MAX_PLAYER_HP);
         if (lagHpPercent > currentHpPct) {
             lagHpPercent -= dt * 0.45f;
             if (lagHpPercent < currentHpPct) lagHpPercent = currentHpPct;
@@ -645,9 +645,9 @@ void Boss_Fight_TryDodge()
 
     // Play water impact sound on every confirmed hit, throttled to avoid spam
     static float impactSoundCooldown = 0.0f;
-    impactSoundCooldown -= (f32)AEFrameRateControllerGetFrameTime();
+    impactSoundCooldown -= static_cast<f32>(AEFrameRateControllerGetFrameTime());
     if (impactSoundCooldown <= 0.0f) {
-        AudioManager_PlaySFX(SFX_WATER_IMPACT, 0.5f);
+        AudioManager_PlaySFX(SoundID::SFX_WATER_IMPACT, 0.5f);
         impactSoundCooldown = 0.1f; // Cap at ~10 impact sounds per second
     }
 
@@ -655,10 +655,10 @@ void Boss_Fight_TryDodge()
     if (!myBoss.active || myBoss.shieldActive || bossDodgeCooldown > 0.0f)
         return;
 
-    if (rand() % 100 < 15) // 15% chance per hit
+    if (RandInt(0, 99) < 15) // 15% chance per hit
     {
         myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
         bossDodgeCooldown = 3.0f; // Longer cooldown so the boss has time to reach the new position
-        AudioManager_PlaySFX(SFX_DODGE, 0.6f); // Boss dodge whoosh
+        AudioManager_PlaySFX(SoundID::SFX_DODGE, 0.6f); // Boss dodge whoosh
     }
 }

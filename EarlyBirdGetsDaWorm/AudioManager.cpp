@@ -1,7 +1,7 @@
 #include "pch.hpp"
 
 // --- AUDIO ENGINE DATA ---
-static AEAudio      soundBank[SND_COUNT];
+static AEAudio      soundBank[static_cast<int>(SoundID::SND_COUNT)];
 
 // --- CHANNEL ISOLATION ---
 static AEAudioGroup groupBGM;
@@ -27,49 +27,49 @@ void AudioManager_Init() {
 /*****************************************************************************************/
 void AudioManager_LoadAll() {
     // BGM
-    soundBank[BGM_GAME_AMBIENCE] = AEAudioLoadSound("Assets/Audio/BGM_GAME_AMBIENCE.wav");
-    soundBank[BGM_MAIN_MENU] = AEAudioLoadSound("Assets/Audio/BGM_MAIN_MENU.wav");
-    soundBank[BGM_RAIN] = AEAudioLoadSound("Assets/Audio/BGM_ENVIRONMENT_RAIN.wav");
+    soundBank[static_cast<int>(SoundID::BGM_GAME_AMBIENCE)] = AEAudioLoadSound("Assets/Audio/BGM_GAME_AMBIENCE.wav");
+    soundBank[static_cast<int>(SoundID::BGM_MAIN_MENU)] = AEAudioLoadSound("Assets/Audio/BGM_MAIN_MENU.wav");
+    soundBank[static_cast<int>(SoundID::BGM_RAIN)] = AEAudioLoadSound("Assets/Audio/BGM_ENVIRONMENT_RAIN.wav");
 
     // Environmental
-    soundBank[SFX_DOOR_KNOCKING] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
-    soundBank[SFX_LIGHT_FLICKER] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
-    soundBank[SFX_PLANT_THUD] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
-    soundBank[SFX_DOOR_KNOCK] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_DOOR_KNOCKING)] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_LIGHT_FLICKER)] = AEAudioLoadSound("Assets/Audio/SFX_LIGHT_FLICKER.wav");
+    soundBank[static_cast<int>(SoundID::SFX_PLANT_THUD)] = AEAudioLoadSound("Assets/Audio/SFX_PLANT_THUD.wav");
+    soundBank[static_cast<int>(SoundID::SFX_DOOR_KNOCK)] = AEAudioLoadSound("Assets/Audio/SFX_DOOR_KNOCK.wav");
 
     // Characters
-    soundBank[SFX_BOSS_FIGHT] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");
-    soundBank[SFX_PLAYER_WALKING] = AEAudioLoadSound("Assets/Audio/SFX_PLAYER_WALK.wav");
-    soundBank[SFX_SCREAMING] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAM.wav");
-    soundBank[SFX_VOICE_WHISPER] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_WHISPER.wav");
-    soundBank[SFX_WHEELCHAIR_SQUEAK] = AEAudioLoadSound("Assets/Audio/SFX_WHEELCHAIR_SQUEAK.wav");
-    soundBank[SFX_HEARTBEAT] = AEAudioLoadSound("Assets/Audio/SFX_HEARTBEAT.wav");
-    soundBank[SFX_EXHALE] = AEAudioLoadSound("Assets/Audio/SFX_EXHALE.wav");
-    soundBank[SFX_CRYING] = AEAudioLoadSound("Assets/Audio/SFX_CRYING.wav");
-    soundBank[SFX_CLOCK_TICK] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_BOSS_FIGHT)] = AEAudioLoadSound("Assets/Audio/SFX_BOSS_FIGHT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_PLAYER_WALKING)] = AEAudioLoadSound("Assets/Audio/SFX_PLAYER_WALK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_SCREAMING)] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_SCREAM.wav");
+    soundBank[static_cast<int>(SoundID::SFX_VOICE_WHISPER)] = AEAudioLoadSound("Assets/Audio/SFX_VOICE_WHISPER.wav");
+    soundBank[static_cast<int>(SoundID::SFX_WHEELCHAIR_SQUEAK)] = AEAudioLoadSound("Assets/Audio/SFX_WHEELCHAIR_SQUEAK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_HEARTBEAT)] = AEAudioLoadSound("Assets/Audio/SFX_HEARTBEAT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_EXHALE)] = AEAudioLoadSound("Assets/Audio/SFX_EXHALE.wav");
+    soundBank[static_cast<int>(SoundID::SFX_CRYING)] = AEAudioLoadSound("Assets/Audio/SFX_CRYING.wav");
+    soundBank[static_cast<int>(SoundID::SFX_CLOCK_TICK)] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.wav");
 
     // Boss Fight
-    soundBank[SFX_JUMP_GRUNT]        = AEAudioLoadSound("Assets/Audio/SFX_JUMP_GRUNT.wav");
-    soundBank[SFX_WEOW]              = AEAudioLoadSound("Assets/Audio/SFX_WEOW.wav");
-    soundBank[SFX_WATER_GUN_SQUIRT]  = AEAudioLoadSound("Assets/Audio/SFX_WATER_GUN_SQUIRT.wav");
-    soundBank[SFX_WATER_IMPACT]      = AEAudioLoadSound("Assets/Audio/SFX_WATER_IMPACT.wav");
-    soundBank[SFX_SHIELD_BREAK]      = AEAudioLoadSound("Assets/Audio/SFX_SHIELD_BREAK.wav");
-    soundBank[SFX_DODGE]             = AEAudioLoadSound("Assets/Audio/SFX_DODGE.wav");
+    soundBank[static_cast<int>(SoundID::SFX_JUMP_GRUNT)]        = AEAudioLoadSound("Assets/Audio/SFX_JUMP_GRUNT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_WEOW)]              = AEAudioLoadSound("Assets/Audio/SFX_WEOW.wav");
+    soundBank[static_cast<int>(SoundID::SFX_WATER_GUN_SQUIRT)]  = AEAudioLoadSound("Assets/Audio/SFX_WATER_GUN_SQUIRT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_WATER_IMPACT)]      = AEAudioLoadSound("Assets/Audio/SFX_WATER_IMPACT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_SHIELD_BREAK)]      = AEAudioLoadSound("Assets/Audio/SFX_SHIELD_BREAK.wav");
+    soundBank[static_cast<int>(SoundID::SFX_DODGE)]             = AEAudioLoadSound("Assets/Audio/SFX_DODGE.wav");
 
     // UI
-    soundBank[SFX_MAIN_MENU_WRITING_SCRATCH] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.wav");
-    soundBank[SFX_NEW_DAY] = AEAudioLoadSound("Assets/Audio/SFX_UI_NEW_DAY.wav");
-    soundBank[SFX_PAGER_NOTIFICATIONS] = AEAudioLoadSound("Assets/Audio/SFX_PAGER_BEEP.wav");
-    soundBank[SFX_SWOOSH_1] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_1.wav");
-    soundBank[SFX_SWOOSH_2] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_2.wav");
-    soundBank[SFX_SWOOSH_3] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
-    soundBank[SFX_TUTORIAL_TYPING] = AEAudioLoadSound("Assets/Audio/SFX_TUTORIAL_TYPING.wav");
-    soundBank[SFX_JOURNAL_SELECT] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
-    soundBank[SFX_JOURNAL_OPEN] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
-    soundBank[SFX_AA] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
-    soundBank[SFX_FAH] = AEAudioLoadSound("Assets/Audio/SFX_FAH.wav");
-    soundBank[SFX_ELEVATOR_PRESS] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_PRESS.wav");
-    soundBank[SFX_ELEVATOR_CLOSE] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_CLOSE.wav");
+    soundBank[static_cast<int>(SoundID::SFX_MAIN_MENU_WRITING_SCRATCH)] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.wav");
+    soundBank[static_cast<int>(SoundID::SFX_NEW_DAY)] = AEAudioLoadSound("Assets/Audio/SFX_UI_NEW_DAY.wav");
+    soundBank[static_cast<int>(SoundID::SFX_PAGER_NOTIFICATIONS)] = AEAudioLoadSound("Assets/Audio/SFX_PAGER_BEEP.wav");
+    soundBank[static_cast<int>(SoundID::SFX_SWOOSH_1)] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_1.wav");
+    soundBank[static_cast<int>(SoundID::SFX_SWOOSH_2)] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_2.wav");
+    soundBank[static_cast<int>(SoundID::SFX_SWOOSH_3)] = AEAudioLoadSound("Assets/Audio/SFX_UI_SWOOSH_3.wav");
+    soundBank[static_cast<int>(SoundID::SFX_TUTORIAL_TYPING)] = AEAudioLoadSound("Assets/Audio/SFX_TUTORIAL_TYPING.wav");
+    soundBank[static_cast<int>(SoundID::SFX_JOURNAL_SELECT)] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_SELECT.wav");
+    soundBank[static_cast<int>(SoundID::SFX_JOURNAL_OPEN)] = AEAudioLoadSound("Assets/Audio/SFX_JOURNAL_OPEN.wav");
+    soundBank[static_cast<int>(SoundID::SFX_AA)] = AEAudioLoadSound("Assets/Audio/SFX_AA.wav");
+    soundBank[static_cast<int>(SoundID::SFX_FAH)] = AEAudioLoadSound("Assets/Audio/SFX_FAH.wav");
+    soundBank[static_cast<int>(SoundID::SFX_ELEVATOR_PRESS)] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_PRESS.wav");
+    soundBank[static_cast<int>(SoundID::SFX_ELEVATOR_CLOSE)] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_CLOSE.wav");
 }
 
 /*****************************************************************************************/
@@ -82,7 +82,7 @@ void AudioManager_Unload() {
     AEAudioStopGroup(groupBGM);
     AEAudioStopGroup(groupWalking);
 
-    for (int i = 0; i < SND_COUNT; ++i) {
+    for (int i = 0; i < static_cast<int>(SoundID::SND_COUNT); ++i) {
         AEAudioUnloadAudio(soundBank[i]);
     }
 
@@ -96,11 +96,11 @@ void AudioManager_Unload() {
 /********************************* PLAYBACK FUNCTIONS ************************************/
 
 void AudioManager_PlayBGM(SoundID id, float volume) {
-    AEAudioPlay(soundBank[id], groupBGM, volume, 1.0f, -1);
+    AEAudioPlay(soundBank[static_cast<int>(id)], groupBGM, volume, 1.0f, -1);
 }
 
 void AudioManager_PlaySFX(SoundID id, float volume, float pitch, s32 loops) {
-    AEAudioPlay(soundBank[id], groupSFX, volume, pitch, loops);
+    AEAudioPlay(soundBank[static_cast<int>(id)], groupSFX, volume, pitch, loops);
 }
 
 /*****************************************************************************************/
@@ -154,7 +154,7 @@ void AudioManager_StopSFX()
 
 void AudioManager_PlayWalkingSFX(SoundID id, float volume, float pitch, s32 loops)
 {
-    AEAudioPlay(soundBank[id], groupWalking, volume, pitch, loops);
+    AEAudioPlay(soundBank[static_cast<int>(id)], groupWalking, volume, pitch, loops);
 }
 
 void AudioManager_StopWalkingSFX()

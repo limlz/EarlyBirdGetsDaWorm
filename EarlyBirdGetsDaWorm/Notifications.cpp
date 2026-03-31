@@ -107,7 +107,7 @@ void Pager::Load()
 void Pager::LoadConfigFromFile(const std::string& Filename) {
 	std::ifstream File(Filename);
 	if (!File.is_open()) {
-		printf("[FAIL] Guide configuration could not be opened.");
+		std::cout << "[FAIL] Guide configuration could not be opened.";
 		return;
 	}
 
@@ -122,37 +122,37 @@ void Pager::LoadConfigFromFile(const std::string& Filename) {
 			// State
 			if (Key == "State") {
 				if (!(iss >> PagerState.IsActive >> PagerState.HasPatient >> PagerState.PreviousFloor >> PagerState.CurrentPage)) {
-					printf("[FAIL] Pager state configuration failed to load.\n");
+					std::cout << "[FAIL] Pager state configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Pager state configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Pager state configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "Icon") {
 				if (!(iss >> PagerIcon.IsClicked >> PagerIcon.IsHovered >> PagerIcon.Width >> PagerIcon.Height
 					>> PagerIcon.Alpha >> PagerIcon.MinAlpha >> PagerIcon.MaxAlpha >> PagerIcon.FadeSpeed)) {
-					printf("[FAIL] Pager icon configuration failed to load.\n");
+					std::cout << "[FAIL] Pager icon configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Pager icon configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Pager icon configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "BigPager") {
 				if (!(iss >> BigPager.Width >> BigPager.Height >> BigPager.IsVibrating >> BigPager.VibrateTimer
 					>> BigPager.TaskTimer >> BigPager.Duration >> BigPager.Intensity >> BigPager.Speed)) {
-					printf("[FAIL] Big pager configuration failed to load.\n");
+					std::cout << "[FAIL] Big pager configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Big pager configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Big pager configuration loaded successfully.\n";
 				}
 			}
 			else if (Key == "PopUp") {
 				if (!(iss >> PagerPopUp.Timer >> PagerPopUp.IsActive >> PagerPopUp.FirstPopUp >> PagerPopUp.TutorialShown
 					>> PagerPopUp.TaskShown >> PagerPopUp.WaitTaskDisplay >> PagerPopUp.BeenShown >> PagerPopUp.HadPatientPrev >> PagerPopUp.TaskComplete)) {
-					printf("[FAIL] Pager pop up configuration failed to load.\n");
+					std::cout << "[FAIL] Pager pop up configuration failed to load.\n";
 				}
 				else {
-					printf("[SUCCESS] Pager pop up configuration loaded successfully.\n");
+					std::cout << "[SUCCESS] Pager pop up configuration loaded successfully.\n";
 				}
 			}
 		}
@@ -263,7 +263,7 @@ void Pager::Update(bool LiftActive, f32 DT)
 		PagerPopUp.Timer += DT;
 
 		if (PagerPopUp.Timer >= 1.3f) {
-			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
+			AudioManager_PlaySFX(SoundID::SFX_PAGER_NOTIFICATIONS, 0.5f);
 			if (!IsTutorialActive() && !Doing_Tutorial()) { PagerPopUp.FirstPopUp = true; }
 
 			PagerState.IsActive = true;
@@ -287,7 +287,7 @@ void Pager::Update(bool LiftActive, f32 DT)
 		BigPager.TaskTimer += DT;
 
 		if (BigPager.TaskTimer >= 1.3f) {
-			AudioManager_PlaySFX(SFX_PAGER_NOTIFICATIONS, 0.5f);
+			AudioManager_PlaySFX(SoundID::SFX_PAGER_NOTIFICATIONS, 0.5f);
 
 			PagerState.IsActive = true;
 			BigPager.IsVibrating = true;
@@ -356,17 +356,27 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 		DrawTextureMesh(PagerMesh, PagerTexture.Pager, PosX, PosY, BigPager.Width, BigPager.Height, 1.0f);
 
 		// Text
-		char CollectionText[40], DestinationText[40];
-		sprintf_s(CollectionText, "Collect patient from room #%02d-%02d", PatientFloorNumber, PatientDoorNumber);
-		sprintf_s(DestinationText, "Bring patient to room #%02d-%02d", DestinationFloorNumber, DestinationDoorNumber);
-		AEGfxPrint(BigPager.Font, CollectionText, CollectionX, CollectionY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-		AEGfxPrint(BigPager.Font, DestinationText, DestinationX, DestinationY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		std::ostringstream ossCollect;
+		ossCollect << "Collect patient from room #"
+		           << std::setw(2) << std::setfill('0') << static_cast<int>(PatientFloorNumber) << "-"
+		           << std::setw(2) << std::setfill('0') << static_cast<int>(PatientDoorNumber);
+		std::string CollectionText = ossCollect.str();
+
+		std::ostringstream ossDest;
+		ossDest << "Bring patient to room #"
+		        << std::setw(2) << std::setfill('0') << static_cast<int>(DestinationFloorNumber) << "-"
+		        << std::setw(2) << std::setfill('0') << static_cast<int>(DestinationDoorNumber);
+		std::string DestinationText = ossDest.str();
+
+		AEGfxPrint(BigPager.Font, CollectionText.c_str(), CollectionX, CollectionY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		AEGfxPrint(BigPager.Font, DestinationText.c_str(), DestinationX, DestinationY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Patient count — bottom-right of pager content area
-		char CountText[32]{};
 		const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
-		sprintf_s(CountText, "Patients: %d / %d", Player_GetPatientsHandled(), requiredPatients);
-		AEGfxPrint(BigPager.Font, CountText, CountX, CountY, 1.0f, 1.0f, 0.85f, 0.45f, 1.0f);
+		std::ostringstream ossCount;
+		ossCount << "Patients: " << Player_GetPatientsHandled() << " / " << requiredPatients;
+		std::string CountText = ossCount.str();
+		AEGfxPrint(BigPager.Font, CountText.c_str(), CountX, CountY, 1.0f, 1.0f, 0.85f, 0.45f, 1.0f);
 
 		f32 InfoX{ textPosition(-220.0f, -410.0f).first },
 			InfoY{ textPosition(-220.0f, -410.0f).second };

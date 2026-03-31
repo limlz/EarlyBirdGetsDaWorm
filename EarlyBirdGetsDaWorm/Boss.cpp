@@ -107,7 +107,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     static bool prevShieldActive = false;
 
     if (boss.stateTimer <= 0.0f) {
-        boss.currentState = rand() % 3;
+        boss.currentState = RandInt(0, 2);
 
         if (boss.currentState == 0) {
             boss.stateTimer = 4.0f;
@@ -121,13 +121,13 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
             boss.stateTimer = 3.5f;
             boss.shieldActive = true;
             boss.shootTimer = 0.5f;
-            AudioManager_PlaySFX(SFX_VOICE_WHISPER, 0.3f); // Eerie whisper when shield activates
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.3f); // Eerie whisper when shield activates
         }
     }
 
     // Play shield break sound when the boss drops its shield
     if (prevShieldActive && !boss.shieldActive) {
-        AudioManager_PlaySFX(SFX_SHIELD_BREAK, 0.6f);
+        AudioManager_PlaySFX(SoundID::SFX_SHIELD_BREAK, 0.6f);
     }
     prevShieldActive = boss.shieldActive;
 
@@ -141,7 +141,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     // State 0: Normal Targeted Shot (From the Hand!)
     if (boss.currentState == 0 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.0f;
-        AudioManager_PlaySFX(SFX_SCREAMING, 0.25f); // Boss attack screech
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.25f); // Boss attack screech
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
@@ -166,7 +166,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     // State 1: Spread Attack (From the Hand!)
     else if (boss.currentState == 1 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.5f;
-        AudioManager_PlaySFX(SFX_SCREAMING, 0.45f, 0.75f); // Boss spread attack (louder, lower pitch)
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.45f, 0.75f); // Boss spread attack (louder, lower pitch)
 
         float diffX = playerX - handX;
         float diffY = playerY - handY;
@@ -218,7 +218,7 @@ void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
 {
     if (!boss.active) return;
 
-    float hpPercent = (float)boss.health / (float)BOSS_MAX_HEALTH;
+    float hpPercent = static_cast<float>(boss.health) / static_cast<float>(BOSS_MAX_HEALTH);
     if (hpPercent < 0.0f) hpPercent = 0.0f;
 
     // TOP CENTER — ~84% of the 1600px world-space screen width

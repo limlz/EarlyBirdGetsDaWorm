@@ -14,7 +14,7 @@ const int MAX_FRAME_STATES = 5;
 static int DesignStateCounts[TOTAL_DESIGNS] = { 5, 5, 5, 3, 3 };
 static AEGfxTexture* AllFrameDesigns[TOTAL_DESIGNS][MAX_FRAME_STATES]{};
 
-enum PosterType {
+enum class PosterType {
     POSTER_EVERYDAY = 0,
     POSTER_HOPE,
     POSTER_RECOVERY,
@@ -51,53 +51,53 @@ static int Frames_GetExtraAnomalyCount() {
 // should switch to based on the current illness. Returns 0 if it shouldn't react.
 // The integers correspond to the indices in the `framePaths` array in Frames_Load().
 /******************************************** ANOMALY TEXTURE MAPPING   *******************************************/
-static int GetSpecificGlitchState(ILLNESSES illness, int designID) { //can change to config
+static int GetSpecificGlitchState(ILLNESSES illness, PosterType designID) { //can change to config
     switch (illness) {
     case ILLNESSES::PARANOIA:
-        if (designID == POSTER_EVERYDAY) return 2; // EverydayEye: Subtle eyes watching the player
-        if (designID == POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
-        if (designID == POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
+        if (designID == PosterType::POSTER_EVERYDAY) return 2; // EverydayEye: Subtle eyes watching the player
+        if (designID == PosterType::POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
+        if (designID == PosterType::POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
         break;
     case ILLNESSES::MANIA:
-		if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
-        if (designID == POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
-		if (designID == POSTER_RECOVERY) return 2; // RecoveryScary: Scribbled over with frantic, aggressive lines
+		if (designID == PosterType::POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
+        if (designID == PosterType::POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
+		if (designID == PosterType::POSTER_RECOVERY) return 2; // RecoveryScary: Scribbled over with frantic, aggressive lines
         break;
     case ILLNESSES::DEPRESSION:
-		if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
-		if (designID == POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
-        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
+		if (designID == PosterType::POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
+		if (designID == PosterType::POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
+        if (designID == PosterType::POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
         break;
     case ILLNESSES::DEMENTIA:
-        if (designID == POSTER_HOPE)     return 1; // HopePlain: Details erased
-        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
-        if (designID == POSTER_RECOVERY) return 4; // RecoveryMemLoss: Severely degraded image
-        if (designID == POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
+        if (designID == PosterType::POSTER_HOPE)     return 1; // HopePlain: Details erased
+        if (designID == PosterType::POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
+        if (designID == PosterType::POSTER_RECOVERY) return 4; // RecoveryMemLoss: Severely degraded image
+        if (designID == PosterType::POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
         break;
     case ILLNESSES::SCHIZOPHRENIA:
-        if (designID == POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
-        if (designID == POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
-        if (designID == POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
+        if (designID == PosterType::POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
+        if (designID == PosterType::POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
+        if (designID == PosterType::POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
         break;
     case ILLNESSES::AIW_SYNDROME:
-        if (designID == POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
-        if (designID == POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
+        if (designID == PosterType::POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
+        if (designID == PosterType::POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
         break;
     case ILLNESSES::INSOMNIA:
-        if (designID == POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
-		if (designID == POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
-        if (designID == POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
-        if (designID == POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
+        if (designID == PosterType::POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
+		if (designID == PosterType::POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
+        if (designID == PosterType::POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
+        if (designID == PosterType::POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
         break;
     case ILLNESSES::OCD:
-        if (designID == POSTER_RECOVERY) return 1; // RecoveryPlain: Details erased
-        if (designID == POSTER_HOPE)     return 1; // HopePlain: Details erased
-        if (designID == POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
+        if (designID == PosterType::POSTER_RECOVERY) return 1; // RecoveryPlain: Details erased
+        if (designID == PosterType::POSTER_HOPE)     return 1; // HopePlain: Details erased
+        if (designID == PosterType::POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
         break;
     case ILLNESSES::SCOTOPHOBIA:
-        if (designID == POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
-        if (designID == POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
-        if (designID == POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
+        if (designID == PosterType::POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
+        if (designID == PosterType::POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
+        if (designID == PosterType::POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
         break;
     }
     return 0; // Return 0 (Normal State) if this poster design doesn't react to this illness
@@ -118,7 +118,7 @@ static float GetFrameTimerByIllness(ILLNESSES illness, bool isGlitchingPhase, in
     } else {
         t = ft.waitMin;
         if (ft.waitRandMax > 0.0f)
-            t += (float)(rand() % (int)(ft.waitRandMax * 100)) / 100.0f;
+            t += static_cast<float>(RandInt(0, static_cast<int>(ft.waitRandMax * 100) - 1)) / 100.0f;
     }
 
     // GHOST MODIFIER: speeds up pacing to make the environment feel frantic
@@ -233,10 +233,10 @@ void Frames_Update(float dt, float camX) {
             for (int level = 0; level < NUM_OF_FLOOR; ++level) {
                 for (int frame = 0; frame < FRAMES_PERLVL; ++frame) {
                     FrameAnomaly& f = levelMap[level][frame];
-                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+                    f.currentState = GetSpecificGlitchState(effIllness, static_cast<PosterType>(f.designID));
 
                     // 50% chance for Event 1 (Static) or Event 2 (Jitter/Physical Movement)
-                    frameJitterMap[level][frame] = (rand() % 2 == 0);
+                    frameJitterMap[level][frame] = (RandInt(0, 1) == 0);
                 }
             }
         }
@@ -295,12 +295,12 @@ void Frames_Update(float dt, float camX) {
                     if (frameJitterMap[level][frame]) {
                         // Probability to pick a NEW random position scales with distance.
                         // If it fails the roll, it keeps its previous offset, creating a sluggish stutter as you approach!
-                        if ((rand() % 100) < (panicSpeed * 100)) {
-                            int intensity = (int)(Config::frameParanoiaIntensityScale * panicSpeed);
+                        if (RandInt(0, 99) < static_cast<int>(panicSpeed * 100)) {
+                            int intensity = static_cast<int>(Config::frameParanoiaIntensityScale * panicSpeed);
                             if (intensity < Config::frameParanoiaMinIntensity) intensity = Config::frameParanoiaMinIntensity;
 
-                            f.posX = baseX + ((rand() % intensity) - (intensity / 2));
-                            f.posY = baseY + ((rand() % intensity) - (intensity / 2));
+                            f.posX = baseX + (RandInt(0, intensity - 1) - (intensity / 2));
+                            f.posY = baseY + (RandInt(0, intensity - 1) - (intensity / 2));
                         }
                     }
                     else {
@@ -320,9 +320,9 @@ void Frames_Update(float dt, float camX) {
                     f.posY = baseY + ((dir == 2) ? drift : (dir == 3) ? -drift : 0.0f);
 
                     // Add brief rapid stutters on top of the smooth drift to simulate hyperactivity
-                    if ((rand() % 100) < Config::frameManiaSutterChance) {
-                        f.posX += ((rand() % Config::frameManiaSutterRange) - (Config::frameManiaSutterRange / 2));
-                        f.posY += ((rand() % Config::frameManiaSutterRange) - (Config::frameManiaSutterRange / 2));
+                    if (RandInt(0, 99) < Config::frameManiaSutterChance) {
+                        f.posX += (RandInt(0, Config::frameManiaSutterRange - 1) - (Config::frameManiaSutterRange / 2));
+                        f.posY += (RandInt(0, Config::frameManiaSutterRange - 1) - (Config::frameManiaSutterRange / 2));
                     }
                 }
             }
@@ -338,15 +338,15 @@ void Frames_Update(float dt, float camX) {
             else if (effIllness == ILLNESSES::DEMENTIA) {
                 // --- DEMENTIA: PERSISTENT CONFUSION ---
                 if (f.currentState > 0) {
-                    f.posX = baseX + ((rand() % Config::frameDementiaJitterRange) - (Config::frameDementiaJitterRange / 2));
-                    f.posY = baseY + ((rand() % Config::frameDementiaJitterRange) - (Config::frameDementiaJitterRange / 2));
+                    f.posX = baseX + (RandInt(0, Config::frameDementiaJitterRange - 1) - (Config::frameDementiaJitterRange / 2));
+                    f.posY = baseY + (RandInt(0, Config::frameDementiaJitterRange - 1) - (Config::frameDementiaJitterRange / 2));
                 }
             }
             else if (effIllness == ILLNESSES::SCHIZOPHRENIA) {
                 // --- SCHIZOPHRENIA: AGGRESSIVE HALLUCINATION ---
                 if (f.currentState > 0) {
-                    f.posX = baseX + ((rand() % Config::frameSchizophreniJitterRange) - (Config::frameSchizophreniJitterRange / 2));
-                    f.posY = baseY + ((rand() % Config::frameSchizophreniJitterRange) - (Config::frameSchizophreniJitterRange / 2));
+                    f.posX = baseX + (RandInt(0, Config::frameSchizophreniJitterRange - 1) - (Config::frameSchizophreniJitterRange / 2));
+                    f.posY = baseY + (RandInt(0, Config::frameSchizophreniJitterRange - 1) - (Config::frameSchizophreniJitterRange / 2));
                 }
             }
             else if (effIllness == ILLNESSES::AIW_SYNDROME) {
@@ -360,7 +360,7 @@ void Frames_Update(float dt, float camX) {
                 else {
                     f.posX = baseX;
                     f.posY = baseY;
-                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+                    f.currentState = GetSpecificGlitchState(effIllness, static_cast<PosterType>(f.designID));
                 }
             }
             else if (effIllness == ILLNESSES::INSOMNIA) {
@@ -382,7 +382,7 @@ void Frames_Update(float dt, float camX) {
             else if (effIllness == ILLNESSES::OCD) {
                 // --- OCD: IMPERFECTION/MISALIGNMENT ---
                 if (timerState == STATE_GLITCHING) {
-                    f.currentState = GetSpecificGlitchState(effIllness, f.designID);
+                    f.currentState = GetSpecificGlitchState(effIllness, static_cast<PosterType>(f.designID));
 
                     float annoyingOffsetX = (frame % 2 == 0) ? Config::frameOCDOffsetXEven : Config::frameOCDOffsetXOdd;
                     float annoyingOffsetY = (level % 2 == 0) ? Config::frameOCDOffsetYEven : Config::frameOCDOffsetYOdd;
@@ -403,8 +403,8 @@ void Frames_Update(float dt, float camX) {
                     f.posY = baseY;
                 }
                 else if (f.currentState > 0) {
-                    f.posX = baseX + ((rand() % Config::frameScotophobiaJitterRange) - (Config::frameScotophobiaJitterRange / 2));
-                    f.posY = baseY + ((rand() % Config::frameScotophobiaJitterRange) - (Config::frameScotophobiaJitterRange / 2));
+                    f.posX = baseX + (RandInt(0, Config::frameScotophobiaJitterRange - 1) - (Config::frameScotophobiaJitterRange / 2));
+                    f.posY = baseY + (RandInt(0, Config::frameScotophobiaJitterRange - 1) - (Config::frameScotophobiaJitterRange / 2));
                 }
             }
             else {
@@ -417,9 +417,9 @@ void Frames_Update(float dt, float camX) {
 
             // --- GHOST OVERRIDE ---
             // If the patient is a ghost, add a chance for a violent micro-stutter on top of all other logic.
-            if (f.currentState > 0 && extraAnoms >= 1 && (rand() % 100) < Config::frameGhostStutterChance) {
-                f.posX += (rand() % Config::frameGhostStutterRange) - (Config::frameGhostStutterRange / 2);
-                f.posY += (rand() % Config::frameGhostStutterRange) - (Config::frameGhostStutterRange / 2);
+            if (f.currentState > 0 && extraAnoms >= 1 && RandInt(0, 99) < Config::frameGhostStutterChance) {
+                f.posX += RandInt(0, Config::frameGhostStutterRange - 1) - (Config::frameGhostStutterRange / 2);
+                f.posY += RandInt(0, Config::frameGhostStutterRange - 1) - (Config::frameGhostStutterRange / 2);
             }
         }
     }
