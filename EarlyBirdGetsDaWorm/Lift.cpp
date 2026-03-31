@@ -328,7 +328,7 @@ void Lift_Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
     const bool nearRightLift = !dementiaActive && (camX < -(maxDist - 100.0f));
     NearLift = (nearLeftLift || nearRightLift);
 
-    if (NearLift && AEInputCheckTriggered(AEVK_L)) {
+    if (NearLift && AEInputCheckTriggered(AEVK_E)) {
         if (!LiftActive) {
 
             AudioManager_StopSFX();

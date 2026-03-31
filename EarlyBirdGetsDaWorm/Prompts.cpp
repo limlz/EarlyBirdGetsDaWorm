@@ -57,7 +57,7 @@ void Prompts_Draw() {
         AEGfxPrint(promptFontId, "That's not the right room...", -0.25f, 0.6f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
         break;
     case PROMPT_LIFT:
-        AEGfxPrint(promptFontId, "Click L to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxPrint(promptFontId, "Click E to access lift!", -0.20f, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
         break;
     case PROMPT_ENTER:
         AEGfxPrint(promptFontId, "Press E to enter the room", -0.20f, 0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
