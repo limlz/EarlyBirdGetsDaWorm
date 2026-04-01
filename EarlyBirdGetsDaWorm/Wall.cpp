@@ -51,6 +51,22 @@ class Wall {
 
     public:
         void Load();
+        /*!*****************************************************************************
+        \brief
+            Loads Wall configuration values from a file.
+
+            Reads configuration data such as state, icon properties,
+            Wall settings, and popup behavior from the specified file.
+
+            If the file cannot be opened or parsing fails, error messages
+            will be printed to the console.
+
+        \param Filename
+            The path to the configuration file.
+
+        \return
+            None.
+        *******************************************************************************/
         void LoadConfigFromFile(const std::string& Filename);
         void SetEnabled(bool Enabled);
         ANOMALYID PickFromPool(std::vector<ANOMALYID> const& Pool);

@@ -68,12 +68,29 @@ class Guide {
 
 	public:
 		void Load();
+		/*!*****************************************************************************
+		\brief
+			Loads guide configuration values from a file.
+
+			Reads configuration data such as state, icon properties,
+			pager settings, and popup behavior from the specified file.
+
+			If the file cannot be opened or parsing fails, error messages
+			will be printed to the console.
+
+		\param Filename
+			The path to the configuration file.
+
+		\return
+			None.
+		*******************************************************************************/
 		void LoadConfigFromFile(const std::string& Filename);
 		void Initialize();
 		void Update(bool LiftActive, f32 DT, bool PagerActive);
 		void Draw();
 		void Free();
 		void BossFight();
+		void ShowIcon();
 };
 
 static Guide TheGuide;
@@ -84,6 +101,7 @@ void Guide_Update(bool LiftActive, f32 DT, bool PagerActive) { TheGuide.Update(L
 void Guide_Draw() { TheGuide.Draw(); }
 void Guide_Free() { TheGuide.Free(); }
 void Guide_BossFight() { TheGuide.BossFight(); }
+void Guide_ShowIcon() { TheGuide.ShowIcon(); }
 bool IsGuideActive() { return TheGuide.GuideState.IsOpen; }
 
 // Draws just the guide clipboard icon at an arbitrary world-space position.
@@ -389,6 +407,10 @@ void Guide::BossFight() {
 	// Reset pages
 	GuideCategory.Page1Active = true;
 	GuideCategory.Page2Active = false;
+}
+
+void Guide::ShowIcon() {
+	GuideState.HideIcon = false;   // suppress the corner icon during the boss fight
 }
 
 void Guide::Draw() {

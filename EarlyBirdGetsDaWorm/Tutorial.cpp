@@ -18,16 +18,16 @@ public:
 	// States
 	struct State {
 
-		bool Started;                        // tutStarted
-		bool PagerOpened;                    // tutPagerOpened
-		bool PagerClosed;                    // tutPagerClosed
-		bool LiftOpened;                     // tutLiftOpened
-		bool LiftFloorSelected;              // tutLiftFloorSelected
-		bool PatientCollected;               // tutPatientCollected
+		bool Started;
+		bool PagerOpened; 
+		bool PagerClosed;
+		bool LiftOpened;
+		bool LiftFloorSelected;
+		bool PatientCollected;
 		bool JournalOpened;
 		bool JournalClosed;
-		bool PatientDelivered;               // tutPatientDelivered
-		bool Finished;                       // tutFinished
+		bool PatientDelivered;
+		bool Finished;
 	} TutorialState;
 
 	// Dialogue Box
@@ -52,15 +52,15 @@ public:
 		bool FinishedTyping;
 	};
 
-	DialogueBox StartedBox;            // tutStartedBox
-	DialogueBox PagerOpenedBox;        // tutPagerOpenedBox
-	DialogueBox PagerClosedBox;        // tutPagerClosedBox
-	DialogueBox LiftOpenedBox;         // tutLiftOpenedBox
-	DialogueBox LiftFloorSelectedBox;  // tutLiftFloorSelectedBox
-	DialogueBox PatientCollectedBox;   // tutPatientCollectedBox
+	DialogueBox StartedBox;
+	DialogueBox PagerOpenedBox; 
+	DialogueBox PagerClosedBox;
+	DialogueBox LiftOpenedBox;
+	DialogueBox LiftFloorSelectedBox;
+	DialogueBox PatientCollectedBox;
 	DialogueBox JournalOpenedBox;
 	DialogueBox JournalClosedBox;
-	DialogueBox PatientDeliveredBox;   // tutPatientDeliveredBox
+	DialogueBox PatientDeliveredBox;
 
 	// Mesh
 	AEGfxVertexList* TutorialMesh;
@@ -70,8 +70,8 @@ public:
 
 	// Textures
 	struct Textures {
-		AEGfxTexture* Background;  // tutBGTexture
-		AEGfxTexture* Speaker;  // TutSpeakerTexture
+		AEGfxTexture* Background;
+		AEGfxTexture* Speaker;
 		AEGfxTexture* Skip; 
 		AEGfxTexture* YesButton;
 		AEGfxTexture* NoButton;
@@ -81,10 +81,10 @@ public:
 
 	// Input
 	struct Input {
-		bool SpacePressed;     // tutSpacePress
-		bool ButtonHover;      // buttonHover
-		bool PromptAnswered;   // promptAnswered
-		bool DoTutorial;       // doTutorial
+		bool SpacePressed;
+		bool ButtonHover;
+		bool PromptAnswered;
+		bool DoTutorial;
 	} TutorialInput;
 
 	// Dimension 
@@ -96,12 +96,12 @@ public:
 
 	// Pop Up
 	struct Prompt {
-		bool Shown;            // tutPopUpShown
-		f32 Timer;              // tutPopupTimer
+		bool Shown;
+		f32 Timer;
 
-		f32 FadeSpeed;			 // fadeSpeed
-		f32 Alpha;              // promptAlpha
-		f32 TextAlpha;          // textSpaceAlpha
+		f32 FadeSpeed;
+		f32 Alpha;
+		f32 TextAlpha;
 	} TutorialPrompt;
 
 	// Button
@@ -123,16 +123,119 @@ public:
 
 	public:
 		void Load();
+		/*!*****************************************************************************
+		\brief
+			Loads tutorial configuration values from a file.
+
+			Reads configuration data such as state, icon properties,
+			tutorial settings, and popup behavior from the specified file.
+
+			If the file cannot be opened or parsing fails, error messages
+			will be printed to the console.
+
+		\param Filename
+			The path to the configuration file.
+
+		\return
+			None.
+		*******************************************************************************/
 		void LoadConfigFromFile(const std::string& Filename);
 		void Initialize();
 		void Update(f32 DT);
 		void Draw();
 		void Free();
+		/*!*****************************************************************************
+		\brief
+			Updates the state and animation of a dialogue box.
+
+			Handles fade-in effects, vertical movement animation, typing text
+			effect, sound playback, and user input to skip or complete text.
+
+		\param Dialogue
+			Reference to the dialogue box to update.
+
+		\param DT
+			Delta time representing the time elapsed since the last frame.
+
+		\return
+			None.
+		*******************************************************************************/
 		void DialogueBoxUpdate(DialogueBox& Dialogue, f32 DT);
+		/*!*****************************************************************************
+		\brief
+			Renders multi-line text with line wrapping support.
+
+			Splits the input string by newline characters and renders each line
+			with proper vertical spacing and transparency.
+
+		\param Str
+			The text string to render.
+
+		\param TextX
+			X position for rendering text.
+
+		\param TextY
+			Y position for rendering text.
+
+		\param Alpha
+			Transparency value for the text.
+
+		\return
+			None.
+		*******************************************************************************/
 		void TextDraw(char const* Str, f32 TextX, f32 TextY, f32 Alpha);
+		/*!*****************************************************************************
+		\brief
+			Draws the visible portion of a dialogue box's text in the top-right area.
+
+			Renders text based on the current typing progress and applies fade
+			transparency for visual effects.
+
+		\param Dialogue
+			Reference to the dialogue box containing the text to render.
+
+		\return
+			None.
+		*******************************************************************************/
 		void DrawTextTopRight(DialogueBox& Dialogue);
+		/*!*****************************************************************************
+		\brief
+			Renders and animates the skip indicator for a dialogue box.
+
+			Displays a visual cue allowing the player to skip the current
+			dialogue. The indicator animates while typing is in progress.
+
+		\param Dialogue
+			Reference to the dialogue box associated with the skip indicator.
+
+		\return
+			None.
+		*******************************************************************************/
 		void DrawSkip(DialogueBox& Dialogue);
+		/*!*****************************************************************************
+		\brief
+			Resets a dialogue box to its initial state.
+
+			Clears visibility, timers, typing progress, sound flags, and
+			resets position and animation-related variables.
+
+		\param Dialogue
+			Reference to the dialogue box to reset.
+
+		\return
+			None.
+		*******************************************************************************/
 		void ResetDialogueBox(DialogueBox& Dialogue);
+		/*!*****************************************************************************
+		\brief
+			Resets the entire tutorial system to its initial state.
+
+			Resets tutorial state flags, current stage, and all dialogue boxes
+			so the tutorial can be restarted from the beginning.
+
+		\return
+			None.
+		*******************************************************************************/
 		void ResetTutorial();
 };
 
@@ -152,11 +255,6 @@ void Tutorial::Load() {
 	// Placeholder for now
 	TutorialTexture.YesButton = LoadTextureChecked(Assets::Tutorial::YesButton);
 	TutorialTexture.NoButton = LoadTextureChecked(Assets::Tutorial::NoButton);
-
-	/*TutorialTexture.YesButton = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	TutorialTexture.YesText = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	TutorialTexture.NoButton = LoadTextureChecked(Assets::Main_Menu::OptionsTag);
-	TutorialTexture.NoText = LoadTextureChecked(Assets::Main_Menu::OptionsTag);*/
 	TutorialTexture.Background = LoadTextureChecked(Assets::Tutorial::TutBG);
 	TutorialTexture.Speaker = LoadTextureChecked(Assets::Tutorial::TutSpeaker);
 	TutorialTexture.Skip = LoadTextureChecked(Assets::Boss_Fight::PlayerArmGun);
@@ -271,7 +369,7 @@ void Tutorial::Initialize() {
 	// Width, Height, X, Y, Shown, Timer, FadeSpeed, FadeAlpha, FullText, TypingSpeed, SoundPlayed
 	StartedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Great!\nPress [TAB] to open your pager.", 30.0f, false };
 	PagerOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This is your pager, it displays the:\n1. Patient Collection Room\n2. Patient Delivery Room\n3. Number of patients collected.\nPress [TAB] again to close the pager.", 30.0f, false };
-	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nIt is located on both ends of the corridor.\nPress [L] to use it.", 30.0f, false };
+	PagerClosedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Now, go to the lift.\nIt is located on both ends of the corridor.\nPress [E] to use it.", 30.0f, false };
 	LiftOpenedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "This lift can travel from Basement 1 to Level 9.\nClick [B1-9] to select a floor.", 30.0f, false };
 	LiftFloorSelectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "Good! Now collect the patient from the room shown on your pager.", 30.0f, false };
 	PatientCollectedBox = { TutorialSize.Width , TutorialSize.Height , TutorialSize.X, TutorialSize.Y, false, 0.0f, 2.5f, 0.0f, "There are two types of patients:\nNormal and Ghost\nUsing the Journal, you must identify which illness the patient has\nor if they are a ghost.\nPress [I] to open the Journal.", 30.0f, false };

@@ -70,6 +70,18 @@ void Guide_BossFight();
 
 /*!*****************************************************************************
 \brief
+    Restores the visibility of the guide corner icon.
+
+    Re-enables the icon that appears on the screen, typically after
+    a boss fight has ended where the icon was previously hidden.
+
+\return
+    None.
+*******************************************************************************/
+void Guide_ShowIcon();
+
+/*!*****************************************************************************
+\brief
     Checks whether the guide menu is currently open.
 
 \return

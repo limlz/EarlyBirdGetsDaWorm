@@ -13,27 +13,27 @@ class Pager {
 
 		// Input 
 		struct Input {
-			s32 InitialX, InitialY;   // old: initialX, initialY
-			s32 MouseX, MouseY;       // old: mouseX, mouseY
+			s32 InitialX, InitialY; 
+			s32 MouseX, MouseY;
 		} PagerInput;
 
 
 		// State
 		struct State {
-			bool IsActive;        // old: isPagerOpen
-			bool HasPatient;	  // old: currHasPatient
-			s8 PreviousFloor;     // old: prevFloor
-			s8 CurrentPage;       // old: currentPage
+			bool IsActive;
+			bool HasPatient;
+			s8 PreviousFloor;
+			s8 CurrentPage;
 		} PagerState;
 
 
 		// Icon 
 		struct Icon {
-			bool IsClicked;       // old: smallClicked
+			bool IsClicked;
 			bool IsHovered;       
 
-			f32 Width, Height;    // old: pagerWidth, pagerHeight
-			f32 X, Y;             // old: pagerX, pagerY
+			f32 Width, Height;
+			f32 X, Y;
 
 			f32 Alpha;
 			f32 MinAlpha;
@@ -44,39 +44,55 @@ class Pager {
 
 		// Pager
 		struct PagerInfo {
-			s8 Font;              // old: lineID
+			s8 Font;
 
 			f32 Width, Height;
 
-			bool IsVibrating;     // old: pagerVibrating
+			bool IsVibrating;
 
-			f32 VibrateTimer;            // old: vibrateTimer 
-			f32 TaskTimer;            // old: taskTimer
-			f32 Duration;         // old: vibrateDuration
+			f32 VibrateTimer;
+			f32 TaskTimer;
+			f32 Duration;
 
-			f32 Intensity;        // how strong the pager shakes
-			f32 Speed;            // how fast the pager shakes
+			f32 Intensity;
+			f32 Speed;
 		} BigPager;
 
 
 		// Pop Up
 		struct PopUp {
-			f32 Timer;            // old: popupTimer
+			f32 Timer;
 
-			bool IsActive;        // old: popUp
-			bool FirstPopUp;      // old: pagerFirstPop
+			bool IsActive;
+			bool FirstPopUp;
 
 			bool TutorialShown;
-			bool TaskShown;       // old: taskPopUpShown
-			bool WaitTaskDisplay; // old: waitTaskPopUp
-			bool BeenShown;       // old: popUpShown
+			bool TaskShown;
+			bool WaitTaskDisplay;
+			bool BeenShown;
 
-			bool HadPatientPrev;   // old: prevHadPatient
-			bool TaskComplete; // old: openPagerAfterDoor
+			bool HadPatientPrev;
+			bool TaskComplete;
 		} PagerPopUp;
 
 	public:
 		void Load();
+		/*!*****************************************************************************
+		\brief
+			Loads pager configuration values from a file.
+
+			Reads configuration data such as state, icon properties,
+			pager settings, and popup behavior from the specified file.
+
+			If the file cannot be opened or parsing fails, error messages
+			will be printed to the console.
+
+		\param Filename
+			The path to the configuration file.
+
+		\return
+			None.
+		*******************************************************************************/
 		void LoadConfigFromFile(const std::string& Filename);
 		void Initialize();
 		void Trigger();
@@ -219,7 +235,6 @@ void Pager::Initialize()
 	// File reading
 	LoadConfigFromFile("Assets/Equipment/logs/PagerConfig.txt");
 }
-
 
 // To call from boss fight
 void Pager::Trigger()

@@ -80,6 +80,15 @@ bool Tutorial_Prompt_Answered();
     True if the tutorial selection prompt is visible on screen.
 *******************************************************************************/
 bool IsTutorialActive();
+
+
+/*!*****************************************************************************
+\brief
+    Checks whether the tutorial is finished.
+
+\return
+    True if the tutorial is finished.
+*******************************************************************************/
 bool IsTutorialFinished();
 
 /*!*****************************************************************************

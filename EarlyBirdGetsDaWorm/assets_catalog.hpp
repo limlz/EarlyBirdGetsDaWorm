@@ -219,7 +219,6 @@ namespace Assets
         constexpr const char* NoButton = "Assets/Tutorial/no-placeholder.png";
         constexpr const char* TutBG = "Assets/Tutorial/Background.jpg";
         constexpr const char* TutSpeaker = "Assets/Tutorial/Speaker.png";
-        /*constexpr const char* BGPlaceholder = "Assets/Tutorial/Background.jpg";*/
     }
     namespace Guide
     {
