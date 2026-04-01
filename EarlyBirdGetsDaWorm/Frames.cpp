@@ -51,56 +51,11 @@ static int Frames_GetExtraAnomalyCount() {
 // should switch to based on the current illness. Returns 0 if it shouldn't react.
 // The integers correspond to the indices in the `framePaths` array in Frames_Load().
 /******************************************** ANOMALY TEXTURE MAPPING   *******************************************/
-static int GetSpecificGlitchState(ILLNESSES illness, PosterType designID) { //can change to config
-    switch (illness) {
-    case ILLNESSES::PARANOIA:
-        if (designID == PosterType::POSTER_EVERYDAY) return 2; // EverydayEye: Subtle eyes watching the player
-        if (designID == PosterType::POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
-        if (designID == PosterType::POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
-        break;
-    case ILLNESSES::MANIA:
-		if (designID == PosterType::POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
-        if (designID == PosterType::POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
-		if (designID == PosterType::POSTER_RECOVERY) return 2; // RecoveryScary: Scribbled over with frantic, aggressive lines
-        break;
-    case ILLNESSES::DEPRESSION:
-		if (designID == PosterType::POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
-		if (designID == PosterType::POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
-        if (designID == PosterType::POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
-        break;
-    case ILLNESSES::DEMENTIA:
-        if (designID == PosterType::POSTER_HOPE)     return 1; // HopePlain: Details erased
-        if (designID == PosterType::POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
-        if (designID == PosterType::POSTER_RECOVERY) return 4; // RecoveryMemLoss: Severely degraded image
-        if (designID == PosterType::POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
-        break;
-    case ILLNESSES::SCHIZOPHRENIA:
-        if (designID == PosterType::POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
-        if (designID == PosterType::POSTER_EVERYDAY) return 4; // EverydayNegative: Hopelessness quotes
-        if (designID == PosterType::POSTER_HOPE)     return 4; // HopeEye: Large intrusive eyeball
-        break;
-    case ILLNESSES::AIW_SYNDROME:
-        if (designID == PosterType::POSTER_RECOVERY) return 3; // RecoverySinking: Visual representation of drowning/sinking
-        if (designID == PosterType::POSTER_HOPE)     return 2; // HopeTear: Tear in the poster
-        break;
-    case ILLNESSES::INSOMNIA:
-        if (designID == PosterType::POSTER_EVERYDAY) return 1; // EverydayPlain: Details erased
-		if (designID == PosterType::POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
-        if (designID == PosterType::POSTER_COLOR)    return 1; // ColorFaces: Confusing/jumbled faces
-        if (designID == PosterType::POSTER_SIGNS)    return 1; // SignsBlood: Bloody warning messages
-        break;
-    case ILLNESSES::OCD:
-        if (designID == PosterType::POSTER_RECOVERY) return 1; // RecoveryPlain: Details erased
-        if (designID == PosterType::POSTER_HOPE)     return 1; // HopePlain: Details erased
-        if (designID == PosterType::POSTER_EVERYDAY) return 3; // EverydayHaunt: Ghost Silhouette
-        break;
-    case ILLNESSES::SCOTOPHOBIA:
-        if (designID == PosterType::POSTER_SIGNS)    return 2; // SignsBeware: Threatening hallucinations
-        if (designID == PosterType::POSTER_HOPE)     return 3; // HopeFear: Scribbled over with frantic, aggressive lines
-        if (designID == PosterType::POSTER_COLOR)    return 2; // ColorBloody: Waves shaped to look like screaming bloody faces
-        break;
-    }
-    return 0; // Return 0 (Normal State) if this poster design doesn't react to this illness
+static int GetSpecificGlitchState(ILLNESSES illness, PosterType designID) {
+    int illIdx    = static_cast<int>(illness);
+    int posterIdx = static_cast<int>(designID);
+    if (illIdx < 0 || illIdx >= 11 || posterIdx < 0 || posterIdx >= 5) return 0;
+    return Config::posterGlitch[illIdx][posterIdx];
 }
 
 /******************************************** ANOMALY TIMINGS   *******************************************/

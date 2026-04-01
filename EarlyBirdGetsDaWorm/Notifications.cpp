@@ -387,7 +387,7 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 		AEGfxPrint(BigPager.Font, DestinationText.c_str(), DestinationX, DestinationY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Patient count — bottom-right of pager content area
-		const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
+		const int requiredPatients = Game_IsPlaytestMode() ? 1 : REQUIRED_PATIENTS;
 		std::ostringstream ossCount;
 		ossCount << "Patients: " << Player_GetPatientsHandled() << " / " << requiredPatients;
 		std::string CountText = ossCount.str();

@@ -101,6 +101,7 @@ inline constexpr float LIFT_DOOR_HEIGHT   = 800.0f;
 
 inline constexpr int   NUM_OF_FLOOR       = 10;
 inline constexpr int   NUM_DOORS          = 10;
+inline constexpr int   REQUIRED_PATIENTS  = 5;
 inline constexpr float SCREEN_WIDTH_HALF  = 800.0f;
 inline constexpr float SCREEN_HEIGHT_HALF = 450.0f;
 inline constexpr float FLOOR_CENTER_Y     = 650.0f;

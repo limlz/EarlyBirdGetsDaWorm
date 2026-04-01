@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "BossDebug.hpp"
+#include "Animation.hpp"
 
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
@@ -32,10 +33,8 @@ float hitTimer = 0.0f;
 static float vignetteAlpha = 0.0f; // Set to 1.0f to flash the damage vignette overlay
 static float lagHpPercent  = 1.0f; // Trails behind hpPercent for the ghost-bar effect
 
-// --- PLAYER ANIMATION VARIABLES ---
-static int currentPlayerFrame = 0;
-static float playerAnimTimer = 0.0f;
-const float PLAYER_ANIM_SPEED = 0.15f; // Time in seconds per frame
+// --- PLAYER ANIMATION ---
+static Animation playerWalkAnim = { 0, 0.0f, 0.15f, 2, true }; // loop 2 frames
 
 // --- WEAPON: HOLY WATER GUN ---
 static float fireCooldown = 0.0f;
@@ -255,15 +254,10 @@ void Boss_Fight_Update()
 
         // --- PLAYER ANIMATION LOGIC ---
         if (AEInputCheckCurr(AEVK_A) || AEInputCheckCurr(AEVK_D)) {
-            playerAnimTimer += dt;
-            if (playerAnimTimer >= PLAYER_ANIM_SPEED) {
-                playerAnimTimer = 0.0f;
-                currentPlayerFrame = (currentPlayerFrame == 0) ? 1 : 0; // Toggle frame between 0 and 1 to create the walking effect
-            }
+            playerWalkAnim.Update(dt);
         }
         else {
-            currentPlayerFrame = 0; // Reset to default standing frame when idle
-            playerAnimTimer = 0.0f;
+            playerWalkAnim.Reset();
         }
 
         if (AEInputCheckTriggered(AEVK_SPACE)) {
@@ -321,8 +315,7 @@ void Boss_Fight_Update()
     }
     else {
         // Force idle frame and lock timers when crouching
-        currentPlayerFrame = 0;
-        playerAnimTimer = 0.0f;
+        playerWalkAnim.Reset();
         fireCooldown -= dt; // Keep decrementing cooldowns so shooting is possible immediately after standing
         bossDodgeCooldown -= dt;
     }
@@ -476,7 +469,7 @@ void Boss_Fight_Draw()
         AEGfxSetTransform(transform.m);
 
         // Select texture based on crouch state first, then fallback to walk animation
-        AEGfxTexture* currentTex = isCrouching ? player_crouch : ((currentPlayerFrame == 0) ? player_walk1 : player_walk2);
+        AEGfxTexture* currentTex = isCrouching ? player_crouch : ((playerWalkAnim.currentFrame == 0) ? player_walk1 : player_walk2);
         AEGfxTextureSet(currentTex, 0.0f, 0.0f);
 
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);

@@ -1,20 +1,85 @@
+// ============================================================
+// LIGHTING MODULE (class-based singleton)
+// ============================================================
+
 #include "pch.hpp"
 
-struct FlickerData
-{
-    float timer = 0.0f;
-    bool  isVisible = true;
+// ============================================================
+// FILE-SCOPE CONSTANTS
+// ============================================================
+
+static constexpr int   NUM_FLOORS_LIGHTING = 10;
+static constexpr int   NUM_LIGHTS          = 11;
+static constexpr int   CONE_NUM_RAYS       = 300;
+static constexpr float CONE_MAX_DIST       = 1000.0f;
+static constexpr float CONE_FLOOR_LEVEL    = -400.0f;
+
+// ============================================================
+// LIGHTING SYSTEM CLASS
+// ============================================================
+
+class LightingSystem {
+public:
+    // Nested structs
+    struct FlickerData {
+        float timer     = 0.0f;
+        bool  isVisible = true;
+    };
+
+    struct StandaloneLight {
+        float timer = 0.0f;
+        bool  isOn  = true;
+    };
+
+    // Members
+    AEGfxVertexList* mesh = nullptr;
+    FlickerData      flickerMem[NUM_FLOORS_LIGHTING][NUM_LIGHTS]{};
+    int              lightingMatrix[NUM_FLOORS_LIGHTING][NUM_LIGHTS]{};
+    StandaloneLight  standalone{};
+    float            totalTime = 0.0f;
+
+public:
+    // Lifecycle
+    void Initialize(int fucked_floor);
+    void Unload();
+
+    // Update / Draw
+    void Update(s8 floorNum, float camX, bool dementia);
+    void DrawAndFlicker(f32 camX, bool left_right, s8 floorNum, bool dementia);
+
+    // Standalone light
+    void UpdateStandaloneLight(float dt, float lightX, float lightY);
+    void DrawStandaloneConeLight(float x, float y);
+
+    // Queries
+    float GetOverlayAlpha();
+    bool  IsPlayerInDarkness(float camX, s8 floorNum);
+
+private:
+    // Ghost helpers
+    ILLNESSES GetEffectiveIllness();
+    int       GetGhostExtraCount();
+
+    // Helpers
+    float FlickerDuration(ILLNESSES effIllness, bool isOn, int ghostExtra);
+    void  DrawRay(float screenLightX, float lightY, float angle, float dist);
+    void  DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left, ILLNESSES effIllness, int ghostExtra);
 };
 
-// Per-light flicker state; indexed [floor][light] to match lightingMatrix layout
-static std::array<std::array<FlickerData, 11>, 10> flickerMem;
-std::array<std::array<int, 11>, 10> lightingMatrix; // 0 = off, 1 = on, 2 = flickering
+// ============================================================
+// SINGLETON + WRAPPERS
+// ============================================================
 
-static AEGfxVertexList* squareMesh = nullptr;
+static LightingSystem TheLighting;
 
-static float singleLightTimer = 0.0f;
-static bool  singleLightIsOn = true;
-static float g_TotalTime = 0.0f;
+void Lighting_Initialize(int fucked_floor)                              { TheLighting.Initialize(fucked_floor); }
+void Lighting_Unload()                                                  { TheLighting.Unload(); }
+void Lighting_Update(s8 floorNum, float camX, bool dementia)            { TheLighting.Update(floorNum, camX, dementia); }
+void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia) { TheLighting.DrawAndFlicker(camX, left_right, floorNum, dementia); }
+void Update_StandaloneLight(float dt, float lightX, float lightY)       { TheLighting.UpdateStandaloneLight(dt, lightX, lightY); }
+void Draw_StandaloneConeLight(float x, float y)                         { TheLighting.DrawStandaloneConeLight(x, y); }
+float Lighting_GetOverlayAlpha()                                        { return TheLighting.GetOverlayAlpha(); }
+bool Lighting_IsPlayerInDarkness(float camX, s8 floorNum)               { return TheLighting.IsPlayerInDarkness(camX, floorNum); }
 
 // ============================================================
 //  GHOST HELPERS
@@ -22,7 +87,7 @@ static float g_TotalTime = 0.0f;
 
 // GHOST borrows another illness's behaviour at runtime; resolve that here before any logic reads the illness.
 // Returns NONE when the lighting anomaly system is not active so all downstream effects fall back to baseline.
-static ILLNESSES GetEffectiveIllness()
+ILLNESSES LightingSystem::GetEffectiveIllness()
 {
     if (!CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive))
         return ILLNESSES::NONE;
@@ -36,7 +101,7 @@ static ILLNESSES GetEffectiveIllness()
 
 // GHOST gets an extra anomaly layer on top of its mimic illness; this drives the bonus instability checks below.
 // Returns 0 when the lighting anomaly system is not active.
-static int GetGhostExtraCount()
+int LightingSystem::GetGhostExtraCount()
 {
     if (!CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive))
         return 0;
@@ -51,7 +116,7 @@ static int GetGhostExtraCount()
 // ============================================================
 
 // Randomises the next on/off duration from Config's hot-reloaded table; GHOST tightens the intervals to increase perceived instability
-static inline float FlickerDuration(ILLNESSES effIllness, bool isOn, int ghostExtra)
+float LightingSystem::FlickerDuration(ILLNESSES effIllness, bool isOn, int ghostExtra)
 {
     int idx = static_cast<int>(effIllness);
     if (idx < 0 || idx > 10) idx = 1; // Out-of-range illness index falls back to PARANOIA timings
@@ -76,7 +141,7 @@ static inline float FlickerDuration(ILLNESSES effIllness, bool isOn, int ghostEx
 }
 
 // Draws a single ray quad; pivoted from the top so the mesh stretches downward from the light source, not from its center
-static void DrawRay(float screenLightX, float lightY, float angle, float dist, AEGfxVertexList* mesh)
+void LightingSystem::DrawRay(float screenLightX, float lightY, float angle, float dist)
 {
     AEMtx33 scale, rot, trans, pivot, final;
     AEMtx33Scale(&scale, 15.0f, dist);
@@ -96,28 +161,27 @@ static void DrawRay(float screenLightX, float lightY, float angle, float dist, A
 //  STANDALONE LIGHT
 // ============================================================
 
-void Update_StandaloneLight(float dt, float lightX, float lightY)
+void LightingSystem::UpdateStandaloneLight(float dt, float lightX, float lightY)
 {
-    singleLightTimer -= dt;
-    if (singleLightTimer > 0.0f) return;
+    standalone.timer -= dt;
+    if (standalone.timer > 0.0f) return;
 
-
-    singleLightIsOn = !singleLightIsOn;
+    standalone.isOn = !standalone.isOn;
 
     Particles_Spawn(lightX, lightY, 8);
 
     // On-phase is much longer than off-phase so the light reads as "mostly on with brief cuts"
-    if (singleLightIsOn) {
+    if (standalone.isOn) {
         AudioManager_PlaySFX(SoundID::SFX_LIGHT_FLICKER, 0.15f, 1.0f, 0);
-        singleLightTimer = static_cast<float>(RandInt(10, 149)) / 100.0f;
+        standalone.timer = static_cast<float>(RandInt(10, 149)) / 100.0f;
     } else {
-        singleLightTimer = static_cast<float>(RandInt(5, 29)) / 100.0f;
+        standalone.timer = static_cast<float>(RandInt(5, 29)) / 100.0f;
     }
 }
 
-void Draw_StandaloneConeLight(float x, float y)
+void LightingSystem::DrawStandaloneConeLight(float x, float y)
 {
-    if (!singleLightIsOn) return;
+    if (!standalone.isOn) return;
 
     static constexpr int   numRays = 300;
     static constexpr float coneAngle = 1.2f;
@@ -147,7 +211,7 @@ void Draw_StandaloneConeLight(float x, float y)
             if (y + (dirY * dist) < floorLevel) break;
         }
 
-        DrawRay(x, y, angle, dist, squareMesh);
+        DrawRay(x, y, angle, dist);
     }
 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -159,7 +223,7 @@ void Draw_StandaloneConeLight(float x, float y)
 //  LIFECYCLE
 // ============================================================
 
-void Lighting_Initialize(int fucked_floor)
+void LightingSystem::Initialize(int fucked_floor)
 {
     Particles_Initialize();
 
@@ -179,8 +243,8 @@ void Lighting_Initialize(int fucked_floor)
         }
     }
 
-    FreeMeshSafe(squareMesh);                   // free any previous mesh (e.g. from MainMenu) before creating a new one
-    squareMesh = CreateSquareMesh(0xFFFFFFFF);
+    FreeMeshSafe(mesh);                   // free any previous mesh (e.g. from MainMenu) before creating a new one
+    mesh = CreateSquareMesh(0xFFFFFFFF);
 
     // Reset all flicker state so lights don't inherit leftover timers from a previous run
     for (int f = 0; f < 10; ++f)
@@ -191,10 +255,10 @@ void Lighting_Initialize(int fucked_floor)
         }
 }
 
-void Lighting_Unload()
+void LightingSystem::Unload()
 {
-    FreeMeshSafe(squareMesh);
-    squareMesh = nullptr;
+    FreeMeshSafe(mesh);
+    mesh = nullptr;
     Particles_Free();
 }
 
@@ -202,7 +266,7 @@ void Lighting_Unload()
 //  UPDATE
 // ============================================================
 
-void Lighting_Update(s8 floorNum, float camX, bool dementia)
+void LightingSystem::Update(s8 floorNum, float camX, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
 
@@ -217,7 +281,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
     if (hasPatient && !prevHasPatient) {
         ramp = 0.0f;
 
-        // Reset all light timers to 0 immediately when a patient is picked up. 
+        // Reset all light timers to 0 immediately when a patient is picked up.
         for (int i = 0; i < 11; i++) {
             flickerMem[floorNum][i].timer = 0.0f;
         }
@@ -231,7 +295,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
     prevHasPatient = hasPatient;
 
     Particles_Update();
-    g_TotalTime += dt;
+    totalTime += dt;
 
     const ILLNESSES effIllness = GetEffectiveIllness();
     const int ghostExtra = GetGhostExtraCount();
@@ -292,7 +356,7 @@ void Lighting_Update(s8 floorNum, float camX, bool dementia)
 // ============================================================
 
 // Casts 300 rays in a fan; each illness modulates cone angle, brightness, and RGB over time via sin waves baked into the switch below
-static void DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left, ILLNESSES effIllness, int ghostExtra)
+void LightingSystem::DrawConeLight(float lightWorldX, float lightY, float camX, bool right_left, ILLNESSES effIllness, int ghostExtra)
 {
     static constexpr int   numRays = 300;
     static constexpr float maxDist = 1000.0f;
@@ -301,7 +365,7 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
     float screenLightX = lightWorldX - camX;
     if (screenLightX < -1800.0f || screenLightX > 1800.0f) return; // Cull lights that are completely off-screen
 
-    float time = g_TotalTime;
+    float time = totalTime;
 
     int idx = static_cast<int>(effIllness);
     if (idx < 0 || idx > 10) idx = 1;
@@ -413,7 +477,7 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
             if (cx > bedLeft && cx < bedRight && cy < bedTop && cy > bedBot)       break;
         }
 
-        DrawRay(screenLightX, lightY, angle, dist, squareMesh);
+        DrawRay(screenLightX, lightY, angle, dist);
     }
 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -425,7 +489,7 @@ static void DrawConeLight(float lightWorldX, float lightY, float camX, bool righ
 //  DRAW & FLICKER
 // ============================================================
 
-void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
+void LightingSystem::DrawAndFlicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 {
     if (floorNum < 0 || floorNum >= 10) return;
 
@@ -466,7 +530,7 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
             DrawConeLight(lightWx, 250.0f, -camX, left_right, effIllness, ghostExtra);
     }
 
-    Particles_Draw(squareMesh, -camX);
+    Particles_Draw(mesh, -camX);
 }
 
 // ============================================================
@@ -476,14 +540,14 @@ void Draw_and_Flicker(f32 camX, bool left_right, s8 floorNum, bool dementia)
 //  Values are tuned per illness theme; default (NONE) = 0.5.
 // ============================================================
 
-float Lighting_GetOverlayAlpha()
+float LightingSystem::GetOverlayAlpha()
 {
     int index = static_cast<int>(GetEffectiveIllness());
     if (index < 0 || index > 10) return 0.50f;
     return Config::overlayAlphaTable[index];
 }
 
-bool Lighting_IsPlayerInDarkness(float camX, s8 floorNum)
+bool LightingSystem::IsPlayerInDarkness(float camX, s8 floorNum)
 {
     if (floorNum < 0 || floorNum >= 10) return false;
 

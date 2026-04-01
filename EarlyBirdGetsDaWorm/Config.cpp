@@ -1,6 +1,11 @@
 #include "pch.hpp"
+#include <filesystem>
+#include <map>
 
 namespace Config {
+    int posterGlitch[11][5] = {};
+    static std::filesystem::file_time_type s_lastWriteTime{};
+    static std::map<std::string, float> s_prevValues;
     // Gameplay Defaults
     float playerSpeed = 400.0f;
     float doorDetectionRange = 150.0f;
@@ -129,6 +134,30 @@ namespace Config {
     float jumpscareImageShake    = 18.0f;
     float jumpscareFlashDuration = 0.08f;
 
+    // --- Helper: map illness name string to enum index ---
+    static int IllnessIndexFromName(const std::string& name) {
+        if (name == "NONE")          return 0;
+        if (name == "PARANOIA")      return 1;
+        if (name == "MANIA")         return 2;
+        if (name == "DEPRESSION")    return 3;
+        if (name == "DEMENTIA")      return 4;
+        if (name == "SCHIZOPHRENIA") return 5;
+        if (name == "AIW_SYNDROME")  return 6;
+        if (name == "INSOMNIA")      return 7;
+        if (name == "OCD")           return 8;
+        if (name == "SCOTOPHOBIA")   return 9;
+        if (name == "GHOST")         return 10;
+        return -1;
+    }
+    static int PosterIndexFromName(const std::string& name) {
+        if (name == "EVERYDAY") return 0;
+        if (name == "HOPE")     return 1;
+        if (name == "RECOVERY") return 2;
+        if (name == "SIGNS")    return 3;
+        if (name == "COLOR")    return 4;
+        return -1;
+    }
+
     // --- Helper: parse sound anomaly keys for one illness ---
     // Keys: PREFIX_SOUND_MIN, PREFIX_SOUND_MAX, PREFIX_SOUND_VOL, PREFIX_SOUND_GHOST_MULT
     bool ParseSoundIllness(const std::string& key, float val, const std::string& prefix, ILLNESSES illness) {
@@ -159,7 +188,67 @@ namespace Config {
         return false; // Key didn't match this illness
     }
 
+    // --- Illness name-to-enum lookup for DRY parsing ---
+    static const struct { const char* name; ILLNESSES illness; } illnessMap[] = {
+        {"NONE",          ILLNESSES::NONE},
+        {"PARANOIA",      ILLNESSES::PARANOIA},
+        {"MANIA",         ILLNESSES::MANIA},
+        {"DEPRESSION",    ILLNESSES::DEPRESSION},
+        {"DEMENTIA",      ILLNESSES::DEMENTIA},
+        {"SCHIZOPHRENIA", ILLNESSES::SCHIZOPHRENIA},
+        {"AIW_SYNDROME",  ILLNESSES::AIW_SYNDROME},
+        {"INSOMNIA",      ILLNESSES::INSOMNIA},
+        {"OCD",           ILLNESSES::OCD},
+        {"SCOTOPHOBIA",   ILLNESSES::SCOTOPHOBIA},
+        {"GHOST",         ILLNESSES::GHOST},
+    };
+
+    // --- Validation helpers ---
+    static void ValidateRange(const char* keyName, float value, float lo, float hi) {
+        if (value < lo || value > hi) {
+            std::cout << "[WARNING] '" << keyName << "' value " << value
+                      << " out of expected range [" << lo << ", " << hi << "]\n";
+        }
+    }
+
+    static void ValidateAll() {
+        ValidateRange("PLAYER_SPEED",          playerSpeed,          0.0f, 2000.0f);
+        ValidateRange("DOOR_DETECTION_RANGE",  doorDetectionRange,   0.0f, 1000.0f);
+        ValidateRange("LIGHT_FLICKER_SPEED",   lightFlickerSpeed,    0.0f, 100.0f);
+        ValidateRange("FLOOR_NORMAL_CHANCE",   (float)floorNormalChance, 0.0f, 100.0f);
+        ValidateRange("FLOOR_FUCKED_CHANCE",   (float)floorFuckedChance, 0.0f, 100.0f);
+        ValidateRange("STANDALONE_BRIGHTNESS", standaloneBrightness, 0.0f, 1.0f);
+        ValidateRange("JUMPSCARE_DURATION",       jumpscareDuration,      0.0f, 10.0f);
+        ValidateRange("JUMPSCARE_FLASH_DURATION", jumpscareFlashDuration, 0.0f, 5.0f);
+
+        for (int i = 0; i < 11; ++i) {
+            ValidateRange("visualsTable.r",         visualsTable[i].r,              0.0f, 1.0f);
+            ValidateRange("visualsTable.g",         visualsTable[i].g,              0.0f, 1.0f);
+            ValidateRange("visualsTable.b",         visualsTable[i].b,              0.0f, 1.0f);
+            ValidateRange("visualsTable.brightness", visualsTable[i].baseBrightness, 0.0f, 1.0f);
+            ValidateRange("overlayAlphaTable",       overlayAlphaTable[i],           0.0f, 1.0f);
+            ValidateRange("soundTable.volume",       soundTable[i].volume,           0.0f, 1.0f);
+            ValidateRange("soundTable.minInterval",  soundTable[i].minInterval,      0.0f, 600.0f);
+            ValidateRange("soundTable.maxInterval",  soundTable[i].maxInterval,      0.0f, 600.0f);
+            ValidateRange("frameTimesTable.glitchDuration", frameTimesTable[i].glitchDuration, 0.0f, 60.0f);
+            ValidateRange("frameTimesTable.waitMin",        frameTimesTable[i].waitMin,        0.0f, 60.0f);
+            for (int p = 0; p < 5; ++p) {
+                ValidateRange("posterGlitch", (float)posterGlitch[i][p], 0.0f, 4.0f);
+            }
+        }
+
+        ValidateRange("FRAME_MANIA_STUTTER_CHANCE",     (float)frameManiaSutterChance,      0.0f, 100.0f);
+        ValidateRange("FRAME_GHOST_STUTTER_CHANCE",     (float)frameGhostStutterChance,     0.0f, 100.0f);
+        ValidateRange("FRAME_DEMENTIA_JITTER_RANGE",    (float)frameDementiaJitterRange,    0.0f, 100.0f);
+        ValidateRange("FRAME_SCHIZO_JITTER_RANGE",      (float)frameSchizophreniJitterRange, 0.0f, 100.0f);
+        ValidateRange("FRAME_SCOTOPHOBIA_JITTER_RANGE", (float)frameScotophobiaJitterRange, 0.0f, 100.0f);
+        ValidateRange("FRAME_GHOST_GLITCH_SPEED_MULT",  frameGhostGlitchSpeedMult,         0.0f, 10.0f);
+        ValidateRange("FRAME_GHOST_WAIT_SPEED_MULT",    frameGhostWaitSpeedMult,            0.0f, 10.0f);
+        ValidateRange("FRAME_GHOST_MIN_TIMER",          frameGhostMinTimer,                 0.0f, 10.0f);
+    }
+
     void Load() {
+        std::memset(posterGlitch, 0, sizeof(posterGlitch));
         std::ifstream file("Assets/config.txt");
 
         if (!file.is_open()) {
@@ -167,6 +256,7 @@ namespace Config {
             return;
         }
 
+        std::map<std::string, float> newValues;
         std::string line;
         while (std::getline(file, line)) {
             line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
@@ -185,6 +275,7 @@ namespace Config {
 
             try {
                 float val = std::stof(valueStr);
+                newValues[key] = val;
 
                 // --- GAMEPLAY SETTINGS ---
                 if (key == "PLAYER_SPEED") playerSpeed = val;
@@ -231,36 +322,87 @@ namespace Config {
                 else if (key == "JUMPSCARE_IMAGE_SHAKE")    jumpscareImageShake = val;
                 else if (key == "JUMPSCARE_FLASH_DURATION") jumpscareFlashDuration = val;
 
-                // --- ILLNESS SETTINGS ---
-                else if (ParseIllness(key, val, "NONE", ILLNESSES::NONE)) {}
-                else if (ParseIllness(key, val, "PARANOIA", ILLNESSES::PARANOIA)) {}
-                else if (ParseIllness(key, val, "MANIA", ILLNESSES::MANIA)) {}
-                else if (ParseIllness(key, val, "DEPRESSION", ILLNESSES::DEPRESSION)) {}
-                else if (ParseIllness(key, val, "DEMENTIA", ILLNESSES::DEMENTIA)) {}
-                else if (ParseIllness(key, val, "SCHIZOPHRENIA", ILLNESSES::SCHIZOPHRENIA)) {}
-                else if (ParseIllness(key, val, "AIW_SYNDROME", ILLNESSES::AIW_SYNDROME)) {}
-                else if (ParseIllness(key, val, "INSOMNIA", ILLNESSES::INSOMNIA)) {}
-                else if (ParseIllness(key, val, "OCD", ILLNESSES::OCD)) {}
-                else if (ParseIllness(key, val, "SCOTOPHOBIA", ILLNESSES::SCOTOPHOBIA)) {}
+                // --- ILLNESS + SOUND + POSTER GLITCH (loop over all illnesses) ---
+                else {
+                    bool matched = false;
 
-                // --- SOUND ANOMALY SETTINGS ---
-                else if (ParseSoundIllness(key, val, "NONE", ILLNESSES::NONE)) {}
-                else if (ParseSoundIllness(key, val, "PARANOIA", ILLNESSES::PARANOIA)) {}
-                else if (ParseSoundIllness(key, val, "MANIA", ILLNESSES::MANIA)) {}
-                else if (ParseSoundIllness(key, val, "DEPRESSION", ILLNESSES::DEPRESSION)) {}
-                else if (ParseSoundIllness(key, val, "DEMENTIA", ILLNESSES::DEMENTIA)) {}
-                else if (ParseSoundIllness(key, val, "SCHIZOPHRENIA", ILLNESSES::SCHIZOPHRENIA)) {}
-                else if (ParseSoundIllness(key, val, "AIW_SYNDROME", ILLNESSES::AIW_SYNDROME)) {}
-                else if (ParseSoundIllness(key, val, "INSOMNIA", ILLNESSES::INSOMNIA)) {}
-                else if (ParseSoundIllness(key, val, "OCD", ILLNESSES::OCD)) {}
-                else if (ParseSoundIllness(key, val, "SCOTOPHOBIA", ILLNESSES::SCOTOPHOBIA)) {}
-                else if (ParseSoundIllness(key, val, "GHOST", ILLNESSES::GHOST)) {}
+                    // ALL_ prefix: apply to every illness as a baseline
+                    if (key.rfind("ALL_", 0) == 0) {
+                        for (const auto& [name, ill] : illnessMap) {
+                            if (ParseIllness(key, val, "ALL", ill)) { matched = true; }
+                        }
+                    }
+
+                    if (!matched) {
+                        for (const auto& [name, ill] : illnessMap) {
+                            if (ParseIllness(key, val, name, ill))      { matched = true; break; }
+                            if (ParseSoundIllness(key, val, name, ill)) { matched = true; break; }
+                        }
+                    }
+                    if (!matched && key.rfind("POSTER_GLITCH_", 0) == 0) {
+                        std::string rest = key.substr(14);
+                        size_t split = rest.rfind('_');
+                        if (split != std::string::npos) {
+                            int illIdx    = IllnessIndexFromName(rest.substr(0, split));
+                            int posterIdx = PosterIndexFromName(rest.substr(split + 1));
+                            if (illIdx >= 0 && posterIdx >= 0)
+                                posterGlitch[illIdx][posterIdx] = static_cast<int>(val);
+                            else
+                                std::cout << "[WARNING] Unknown poster glitch key: " << key << "\n";
+                        }
+                        matched = true;
+                    }
+                    if (!matched) {
+                        std::cout << "[WARNING] Unrecognized config key: " << key << "\n";
+                    }
+                }
 
             }
             catch (...) {
                 std::cout << "[ERROR] Invalid config value for key: " << key << "\n";
             }
         }
-        std::cout << "[SUCCESS] Master Config Hot-Reloaded!\n";
+
+        // --- Print changed values on reload ---
+        if (!s_prevValues.empty()) {
+            bool anyChange = false;
+            for (const auto& [k, v] : newValues) {
+                auto it = s_prevValues.find(k);
+                if (it == s_prevValues.end()) {
+                    std::cout << std::flush << "[CONFIG] NEW  " << k << " = " << v << "\n";
+                    anyChange = true;
+                } else if (std::abs(it->second - v) > 0.0001f) {
+                    std::cout << std::flush << "[CONFIG] " << k << ": " << it->second << " -> " << v << "\n";
+                    anyChange = true;
+                }
+            }
+            for (const auto& [k, v] : s_prevValues) {
+                if (newValues.find(k) == newValues.end()) {
+                    std::cout << std::flush << "[CONFIG] REMOVED " << k << " (was " << v << ")\n";
+                    anyChange = true;
+                }
+            }
+            if (!anyChange) {
+                std::cout << std::flush << "[CONFIG] File touched but no values changed.\n";
+            }
+        }
+        s_prevValues = std::move(newValues);
+
+        // --- Validate all ranges ---
+        ValidateAll();
+
+        std::cout << "[SUCCESS] Master Config Hot-Reloaded!" << std::endl;
+    }
+
+    void PollAndReload() {
+        namespace fs = std::filesystem;
+        static const fs::path configPath = "Assets/config.txt";
+        std::error_code ec;
+        auto currentTime = fs::last_write_time(configPath, ec);
+        if (ec) return;   // file temporarily locked during save — retry next frame
+        if (currentTime != s_lastWriteTime) {
+            s_lastWriteTime = currentTime;
+            Load();
+        }
     }
 }

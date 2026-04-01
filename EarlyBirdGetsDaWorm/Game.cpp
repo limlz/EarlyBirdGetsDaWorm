@@ -196,7 +196,6 @@ void Game_Initialize()
     ResetPatientCounter(CurrentDay);
     Player_GenerateMission();
 
-    Config::Load();
     totalTimeSurvived = 0.0f;
 
     AudioManager_PlayBGM(SoundID::BGM_GAME_AMBIENCE, 0.5f);
@@ -211,9 +210,7 @@ void Game_Update()
     float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
     Debug_Update();
 
-    if (AEInputCheckTriggered(AEVK_F5)) {
-        Config::Load();
-    }
+    Config::PollAndReload();
 
     // ------------------------------------------------------------
     // PHASE 1: JUMPSCARE & DEATH HANDOFF
@@ -309,9 +306,9 @@ void Game_Update()
     if (Timer_IsTimeUp())
     {
         // Check quota first so a failed playtest day still ends with DIED_TO_BOSS
-        const int requiredPatients = Game_IsPlaytestMode() ? 1 : 5;
+        const int requiredPatients = Game_IsPlaytestMode() ? 1 : REQUIRED_PATIENTS;
         if (Player_GetPatientsHandled() < requiredPatients) {
-            currentEndReason = EndGameReason::REASON_DIED_TO_BOSS;
+            currentEndReason = EndGameReason::REASON_QUOTA_NOT_MET;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
                 static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), totalTimeSurvived);
 

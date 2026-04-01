@@ -2,6 +2,7 @@
 #include "Credits.hpp"
 #include "assets_catalog.hpp"
 #include "utils.hpp"
+#include "Animation.hpp"
 #include <fstream>
 #include <string>
 #include <vector>
@@ -51,9 +52,7 @@ static constexpr float SCENE_CHAR_ALPHA  = 0.85f;    // slight transparency to b
 struct SceneChar {
     AEGfxTexture* frames[4] = {};
     int   frameCount   = 0;
-    int   currentFrame = 0;
-    float animTimer    = 0.0f;
-    float animSpeed    = 0.18f; // seconds per frame
+    Animation anim     = { 0, 0.0f, 0.18f, 1, true }; // looping, speed set per-character
     float x            = 0.0f;
     float speedX       = 80.0f;
     float w            = 80.0f;
@@ -67,11 +66,7 @@ static float araFlyTimer = 0.0f;
 
 static void UpdateSceneChar(SceneChar& c, float dt)
 {
-    c.animTimer += dt;
-    if (c.animTimer >= c.animSpeed) {
-        c.animTimer -= c.animSpeed;
-        c.currentFrame = (c.currentFrame + 1) % c.frameCount;
-    }
+    c.anim.Update(dt);
     c.x += c.speedX * dt;
     // Wrap in whichever direction the character travels
     if (c.speedX > 0.0f && c.x > SCENE_RIGHT + c.w)
@@ -168,27 +163,29 @@ void Credits_Load()
     const float walkerH[WALKER_COUNT]       = { 160.0f, 170.0f, 160.0f };
 
     for (int i = 0; i < WALKER_COUNT; i++) {
-        walkers[i].frameCount   = 4;
-        walkers[i].currentFrame = i; // stagger starting frames
-        walkers[i].animTimer    = 0.0f;
-        walkers[i].animSpeed    = walkerAnimSp[i];
-        walkers[i].x            = walkerStartX[i];
-        walkers[i].speedX       = walkerSpeeds[i];
-        walkers[i].w            = walkerW[i];
-        walkers[i].h            = walkerH[i];
+        walkers[i].frameCount        = 4;
+        walkers[i].anim.frameCount   = 4;
+        walkers[i].anim.currentFrame = i; // stagger starting frames
+        walkers[i].anim.timer        = 0.0f;
+        walkers[i].anim.speed        = walkerAnimSp[i];
+        walkers[i].x                 = walkerStartX[i];
+        walkers[i].speedX            = walkerSpeeds[i];
+        walkers[i].w                 = walkerW[i];
+        walkers[i].h                 = walkerH[i];
         for (int j = 0; j < 4; j++)
             walkers[i].frames[j] = LoadTextureChecked(walkerSources[i][j]);
     }
 
     // Ara (flyer) — moves RIGHT TO LEFT so the left-facing sprite is correct
-    araChar.frameCount   = 4;
-    araChar.currentFrame = 0;
-    araChar.animTimer    = 0.0f;
-    araChar.animSpeed    = 0.17f;  // slowed to better match travel speed
-    araChar.x            = 850.0f;   // start from right edge
-    araChar.speedX       = -160.0f;  // negative = flies left
-    araChar.w            = 140.0f;
-    araChar.h            = 110.0f;
+    araChar.frameCount        = 4;
+    araChar.anim.frameCount   = 4;
+    araChar.anim.currentFrame = 0;
+    araChar.anim.timer        = 0.0f;
+    araChar.anim.speed        = 0.17f;  // slowed to better match travel speed
+    araChar.x                 = 850.0f;   // start from right edge
+    araChar.speedX            = -160.0f;  // negative = flies left
+    araChar.w                 = 140.0f;
+    araChar.h                 = 110.0f;
     for (int j = 0; j < 4; j++)
         araChar.frames[j] = LoadTextureChecked(Assets::Background::OutsidePersonaAra[j]);
 
@@ -328,14 +325,14 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh)
         static const float kWalkerOffsetY[WALKER_COUNT] = { 20.0f, 0.0f, -15.0f };
         for (int i = 0; i < WALKER_COUNT; i++) {
             const SceneChar& c = walkers[i];
-            if (c.frames[c.currentFrame])
-                DrawTextureMesh(mesh, c.frames[c.currentFrame], c.x, WALKER_Y + kWalkerOffsetY[i], c.w, c.h, SCENE_CHAR_ALPHA);
+            if (c.frames[c.anim.currentFrame])
+                DrawTextureMesh(mesh, c.frames[c.anim.currentFrame], c.x, WALKER_Y + kWalkerOffsetY[i], c.w, c.h, SCENE_CHAR_ALPHA);
         }
 
         // Ara — flying with sine wave altitude, above walkers and graves
         float araY = ARA_BASE_Y + sinf(araFlyTimer * ARA_FLY_FREQ) * ARA_FLY_AMPLITUDE;
-        if (araChar.frames[araChar.currentFrame])
-            DrawTextureMesh(mesh, araChar.frames[araChar.currentFrame], araChar.x, araY, araChar.w, araChar.h, SCENE_CHAR_ALPHA);
+        if (araChar.frames[araChar.anim.currentFrame])
+            DrawTextureMesh(mesh, araChar.frames[araChar.anim.currentFrame], araChar.x, araY, araChar.w, araChar.h, SCENE_CHAR_ALPHA);
 
         // Scrolling credits text drawn ON TOP of scene characters
         float currentY = creditsScrollY;

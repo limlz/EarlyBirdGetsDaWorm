@@ -1,4 +1,5 @@
 #include "pch.hpp"
+#include "Animation.hpp"
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
@@ -6,17 +7,9 @@ static AEGfxTexture* bossShieldTex[3]    = { nullptr, nullptr, nullptr };
 static AEGfxTexture* bossBulletFrames[2]        = { nullptr, nullptr };
 static AEGfxTexture* bossScatterBulletFrames[2] = { nullptr, nullptr };
 
-// --- Boss Animation Variables ---
-static int   currentBossFrame  = 0;
-static int   bossAnimDir       = 1;   // +1 = forward, -1 = reverse (ping-pong)
-static float bossAnimTimer     = 0.0f;
-const  float BOSS_ANIM_SPEED   = 0.35f;
-
-
-// --- Bullet Animation Variables ---
-static int   currentBulletFrame = 0;
-static float bulletAnimTimer    = 0.0f;
-const  float BULLET_ANIM_SPEED  = 0.1f;
+// --- Boss Animation ---
+static Animation bossAnim   = { 0, 0.0f, 0.35f, 3, true, 1, true };  // ping-pong 3 frames
+static Animation bulletAnim = { 0, 0.0f, 0.1f,  2, true, 1, false }; // loop 2 frames
 
 // --- Boss HUD ---
 static s8    bossHudFontId    = -1;
@@ -60,12 +53,8 @@ void Boss_Initialize(Boss& boss)
     boss.shieldActive = false;
 
     // Reset static animation state so replays start from frame 0
-    currentBossFrame   = 0;
-    bossAnimDir        = 1;
-    bossAnimTimer      = 0.0f;
-
-    currentBulletFrame = 0;
-    bulletAnimTimer    = 0.0f;
+    bossAnim.Reset();
+    bulletAnim.Reset();
 
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         boss.bullets[i].active = false;
@@ -76,20 +65,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
 
     // Boss body animation — ping-pong: 0→1→2→1→0→1→2…
-    bossAnimTimer += dt;
-    if (bossAnimTimer >= BOSS_ANIM_SPEED) {
-        bossAnimTimer -= BOSS_ANIM_SPEED;
-        currentBossFrame += bossAnimDir;
-        if (currentBossFrame >= 2) { currentBossFrame = 2; bossAnimDir = -1; }
-        else if (currentBossFrame <= 0) { currentBossFrame = 0; bossAnimDir =  1; }
-    }
+    bossAnim.Update(dt);
 
     // Bullet sprite animation
-    bulletAnimTimer += dt;
-    if (bulletAnimTimer >= BULLET_ANIM_SPEED) {
-        bulletAnimTimer = 0.0f;
-        currentBulletFrame = (currentBulletFrame == 0) ? 1 : 0;
-    }
+    bulletAnim.Update(dt);
 
     boss.moveTimer += dt * 2.0f;
     float hoverSpeed = boss.shieldActive ? 4.0f : 2.0f;
@@ -308,8 +287,8 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 
     // --- DRAW BOSS (animated) — shield textures replace body textures during shield phase ---
     AEGfxTexture* activeTex = boss.shieldActive
-        ? bossShieldTex[currentBossFrame]
-        : bossTex[currentBossFrame];
+        ? bossShieldTex[bossAnim.currentFrame]
+        : bossTex[bossAnim.currentFrame];
 
     if (activeTex) {
         DrawTextureMesh(mesh, activeTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
@@ -338,8 +317,8 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
         if (boss.bullets[i].active) {
             AEGfxTexture* currentTex = boss.bullets[i].is_scatter
-                ? bossScatterBulletFrames[currentBulletFrame]
-                : bossBulletFrames[currentBulletFrame];
+                ? bossScatterBulletFrames[bulletAnim.currentFrame]
+                : bossBulletFrames[bulletAnim.currentFrame];
             if (currentTex) {
                 float angle = atan2f(boss.bullets[i].dirY, boss.bullets[i].dirX);
 

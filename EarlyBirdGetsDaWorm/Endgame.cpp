@@ -62,6 +62,9 @@ void Endgame_Update()
         else if (currentEndReason == EndGameReason::REASON_SENT_GHOST_TO_ROOM) {
             AudioManager_PlaySFX(horrorLess ? SoundID::SFX_FAH : SoundID::SFX_SCREAMING, 1.0f, 1.0f, 0);
         }
+        else if (currentEndReason == EndGameReason::REASON_QUOTA_NOT_MET) {
+            AudioManager_PlaySFX(horrorLess ? SoundID::SFX_FAH : SoundID::SFX_SCREAMING, 1.0f, 1.0f, 0);
+        }
 
         first_audio = false;
     }
@@ -142,6 +145,14 @@ void Endgame_Draw()
                 0.5f, 0.2f, 0.0f, 0.9f,
                 0.004f);
             AEGfxPrintCentered(subFontId, "You assigned a ghost to a guest room.", 0.0f, 0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.030f);
+        }
+        else if (currentEndReason == EndGameReason::REASON_QUOTA_NOT_MET) {
+            AEGfxPrintWithGlow(endgameFontId, "YOU'VE BEEN FIRED",
+                titleX("YOU'VE BEEN FIRED"), 0.25f, 1.0f,
+                1.0f, 0.5f, 0.1f, 1.0f,
+                0.5f, 0.2f, 0.0f, 0.9f,
+                0.004f);
+            AEGfxPrintCentered(subFontId, "You didn't meet the patient quota.", 0.0f, 0.05f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.030f);
         }
 
         // --- Run stats (day reached + real-time survived) ---

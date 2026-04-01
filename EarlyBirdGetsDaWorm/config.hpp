@@ -103,6 +103,11 @@ namespace Config {
     extern float jumpscareImageShake;
     extern float jumpscareFlashDuration;
 
+    // --- POSTER GLITCH MAPPING ---
+    // [illness_index 0..10][poster_type_index 0..4]  (0=EVERYDAY 1=HOPE 2=RECOVERY 3=SIGNS 4=COLOR)
+    extern int posterGlitch[11][5];
+
     // --- CORE FUNCTIONS ---
     void Load();
+    void PollAndReload(); // call every frame; reloads only when config.txt changes on disk
 }

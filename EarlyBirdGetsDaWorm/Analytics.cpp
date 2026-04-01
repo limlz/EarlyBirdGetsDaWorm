@@ -18,7 +18,7 @@ namespace Analytics {
             << std::setw(2) << t.tm_sec;
         // Append a 4-digit hex random suffix for uniqueness
         unsigned suffix = static_cast<unsigned>(RandInt(0, 0xFFFE));
-        oss << "-" << std::uppercase << std::hex << std::setw(4) << suffix;
+        oss << "-" << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << suffix;
         return oss.str();
     }
 
@@ -50,6 +50,7 @@ namespace Analytics {
         case EndGameReason::REASON_SENT_HUMAN_TO_BASEMENT: return "Murder - Wrong Basement Delivery";
         case EndGameReason::REASON_SENT_GHOST_TO_ROOM:     return "Fired - Ghost Sent To Room";
         case EndGameReason::REASON_QUIT_FROM_MENU:         return "Quit From Menu";
+        case EndGameReason::REASON_QUOTA_NOT_MET:          return "Fired - Quota Not Met";
         default:                            return "UNKNOWN";
         }
     }

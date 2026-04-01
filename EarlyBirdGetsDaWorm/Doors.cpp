@@ -1,5 +1,5 @@
 // ============================================================
-// DOORS MODULE
+// DOORS MODULE (class-based singleton)
 // ============================================================
 
 #include "pch.hpp"
@@ -8,7 +8,7 @@
 #include <cstdlib>
 
 // ============================================================
-// CONFIG
+// FILE-SCOPE CONSTANTS
 // ============================================================
 
 static constexpr float DOOR_W = DOOR_WIDTH;
@@ -40,61 +40,103 @@ static constexpr float GHOST_EXTRA_ROLL_COOLDOWN = 3.0f;
 static constexpr int   GHOST_EXTRA_CHANCE_PERCENT = 18;
 
 // ============================================================
-// RENDER DATA
+// DOORS CLASS
 // ============================================================
 
-static AEGfxVertexList* gQuadMesh = nullptr;
-static s8               gDoorFontId = -1;
+class Doors {
+public:
+    // Nested structs
+    struct DoorState
+    {
+        ANOMALYID anomaly = ANOMALYID::None;
 
-static AEGfxTexture* gDoorTex = nullptr;
-static AEGfxTexture* gDoorBoardedTex = nullptr; // NEW: Boarded Door Texture
-static AEGfxTexture* gWindow0Tex = nullptr;
-static AEGfxTexture* gWindow1Tex = nullptr;
-static AEGfxTexture* gHandprintTex = nullptr;
+        float rollCooldown = 0.0f;
+        float eventCooldown = 0.0f;
+        float ghostRollCooldown = 0.0f;
 
-// ============================================================
-// EVENT STATE
-// ============================================================
+        float ocdOffsetX = 0.0f;
+        float ocdOffsetY = 0.0f;
+    };
 
-struct DoorState
-{
-    ANOMALYID anomaly = ANOMALYID::None;
+    struct BasementCheck
+    {
+        bool lockedThisDay = false;
+    };
 
-    float rollCooldown = 0.0f;
-    float eventCooldown = 0.0f;
-    float ghostRollCooldown = 0.0f;
+    // Render data
+    struct Textures {
+        AEGfxTexture* Door = nullptr;
+        AEGfxTexture* DoorBoarded = nullptr;
+        AEGfxTexture* Window0 = nullptr;
+        AEGfxTexture* Window1 = nullptr;
+        AEGfxTexture* Handprint = nullptr;
+    } DoorTextures;
 
-    float ocdOffsetX = 0.0f;
-    float ocdOffsetY = 0.0f;
+    AEGfxVertexList* QuadMesh = nullptr;
+    s8               FontId = -1;
+
+    // Event state
+    DoorState DoorStates[NUM_DOORS]{};
+    bool      Enabled = true;
+
+    // Basement system
+    BasementCheck BasementDoors[NUM_DOORS]{};
+
+public:
+    void Load();
+    void Initialize();
+    void Unload();
+    int  Update(float camX);
+    void Animate(float dt, int doorNearPlayer, float unused);
+    void Draw(float camX, s8 floorNum, float textXoffset, float textY, bool dementia);
+    void ResetAllLocks();
+    bool TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare);
+
+private:
+    float DoorWorldX(int doorIndex, float camX);
+    void  WindowWorldCenter(float doorX, float& x, float& y);
+    void  ClearDoorEvent(int doorIdx);
+    void  InitializeRandomOnce();
+    void  TriggerHandprintSlam(int doorIdx);
+    void  TriggerLightChange(int doorIdx);
+    void  TriggerDoorOCD(int doorIdx);
+    ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool);
+    ANOMALYID GetDoorEventByIllness(ILLNESSES illness);
+    ILLNESSES GetEffectiveIllnessForDoorEvents();
 };
 
-static DoorState gDoorState[NUM_DOORS]{};
-static bool gDoorsEnabled = true;
+// ============================================================
+// SINGLETON + WRAPPERS
+// ============================================================
+
+static Doors TheDoors;
+
+void Doors_Load()                                                                   { TheDoors.Load(); }
+void Doors_Initialize()                                                             { TheDoors.Initialize(); }
+void Doors_Unload()                                                                 { TheDoors.Unload(); }
+int  Doors_Update(float camX)                                                       { return TheDoors.Update(camX); }
+void Doors_Animate(float dt, int doorNearPlayer, float camX)                        { TheDoors.Animate(dt, doorNearPlayer, camX); }
+void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool dementia) { TheDoors.Draw(camX, floorNum, textXoffset, textY, dementia); }
+void Doors_ResetAllLocks()                                                          { TheDoors.ResetAllLocks(); }
+bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)            { return TheDoors.TryDisposal(floorNum, doorIdx, outDidJumpscare); }
 
 // ============================================================
 // BASEMENT SYSTEM
 // ============================================================
 
-struct BasementCheck
-{
-    bool lockedThisDay = false;
-};
-
-static BasementCheck basementDoors[NUM_DOORS]{};
-
-void Doors_ResetAllLocks()
+void Doors::ResetAllLocks()
 {
     for (int i = 0; i < NUM_DOORS; ++i)
-        basementDoors[i].lockedThisDay = false;
+        BasementDoors[i].lockedThisDay = false;
 }
 
-bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
+bool Doors::TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
 {
     outDidJumpscare = false;
 
     if (doorIdx < 0 || doorIdx >= NUM_DOORS) return false;
 
-    BasementCheck& s = basementDoors[doorIdx];
+    BasementCheck& s = BasementDoors[doorIdx];
     if (s.lockedThisDay) return false;
 
     s.lockedThisDay = true;
@@ -110,15 +152,15 @@ bool Doors_TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
 }
 
 // ============================================================
-// HELPERS
+// PRIVATE HELPERS
 // ============================================================
 
-static float DoorWorldX(int doorIndex, float camX)
+float Doors::DoorWorldX(int doorIndex, float camX)
 {
     return DIST_BETWEEN_DOORS + camX + (DIST_BETWEEN_DOORS * doorIndex);
 }
 
-static void WindowWorldCenter(float doorX, float& x, float& y)
+void Doors::WindowWorldCenter(float doorX, float& x, float& y)
 {
     const float offX = (WINDOW_CENTER_U - 0.5f) * DOOR_W;
     const float offY = (WINDOW_CENTER_V - 0.5f) * DOOR_H;
@@ -127,16 +169,16 @@ static void WindowWorldCenter(float doorX, float& x, float& y)
     y = DOOR_Y + offY;
 }
 
-static void ClearDoorEvent(int doorIdx)
+void Doors::ClearDoorEvent(int doorIdx)
 {
-    DoorState& s = gDoorState[doorIdx];
+    DoorState& s = DoorStates[doorIdx];
     s.anomaly = ANOMALYID::None;
     s.eventCooldown = 0.0f;
     s.ocdOffsetX = 0.0f;
     s.ocdOffsetY = 0.0f;
 }
 
-static void InitializeRandomOnce()
+void Doors::InitializeRandomOnce()
 {
     // Global RNG is seeded once in utils.cpp; nothing to do here.
 }
@@ -145,27 +187,27 @@ static void InitializeRandomOnce()
 // ANOMALY TRIGGERS
 // ============================================================
 
-static void TriggerHandprintSlam(int doorIdx)
+void Doors::TriggerHandprintSlam(int doorIdx)
 {
-    DoorState& s = gDoorState[doorIdx];
+    DoorState& s = DoorStates[doorIdx];
     ClearDoorEvent(doorIdx);
 
     s.anomaly = ANOMALYID::Door_HandSlam;
     s.eventCooldown = 0.8f;
 }
 
-static void TriggerLightChange(int doorIdx)
+void Doors::TriggerLightChange(int doorIdx)
 {
-    DoorState& s = gDoorState[doorIdx];
+    DoorState& s = DoorStates[doorIdx];
     ClearDoorEvent(doorIdx);
 
     s.anomaly = ANOMALYID::Door_LightChange;
     s.eventCooldown = 0.8f;
 }
 
-static void TriggerDoorOCD(int doorIdx)
+void Doors::TriggerDoorOCD(int doorIdx)
 {
-    DoorState& s = gDoorState[doorIdx];
+    DoorState& s = DoorStates[doorIdx];
     ClearDoorEvent(doorIdx);
 
     s.anomaly = ANOMALYID::Door_Position;
@@ -180,14 +222,14 @@ static void TriggerDoorOCD(int doorIdx)
 // ILLNESS -> DOOR EVENT POOLS
 // ============================================================
 
-static ANOMALYID PickFromPool(std::vector<ANOMALYID> const& pool)
+ANOMALYID Doors::PickFromPool(std::vector<ANOMALYID> const& pool)
 {
     if (pool.empty()) return ANOMALYID::None;
     int r = RandInt(0, static_cast<int>(pool.size()) - 1);
     return pool[r];
 }
 
-static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
+ANOMALYID Doors::GetDoorEventByIllness(ILLNESSES illness)
 {
     // Pools to match dictionary exactly
     static const std::vector<ANOMALYID> paranoiaPool{ ANOMALYID::Door_LightChange };
@@ -211,7 +253,7 @@ static ANOMALYID GetDoorEventByIllness(ILLNESSES illness)
     }
 }
 
-static ILLNESSES GetEffectiveIllnessForDoorEvents()
+ILLNESSES Doors::GetEffectiveIllnessForDoorEvents()
 {
     ILLNESSES current = Player_GetTrueDiagnosis();
     if (current == ILLNESSES::GHOST)
@@ -223,50 +265,50 @@ static ILLNESSES GetEffectiveIllnessForDoorEvents()
 // LOAD / INIT / UNLOAD
 // ============================================================
 
-void Doors_Load()
+void Doors::Load()
 {
-    gDoorFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+    FontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
 
-    gDoorTex = LoadTextureChecked(Assets::Background::DoorBg);
-    gDoorBoardedTex = LoadTextureChecked(Assets::Background::DoorBoarded);
-    gWindow0Tex = LoadTextureChecked(Assets::Door_Anomaly::Window_0);
-    gWindow1Tex = LoadTextureChecked(Assets::Door_Anomaly::Window_1);
-    gHandprintTex = LoadTextureChecked(Assets::Door_Anomaly::Handprint);
+    DoorTextures.Door = LoadTextureChecked(Assets::Background::DoorBg);
+    DoorTextures.DoorBoarded = LoadTextureChecked(Assets::Background::DoorBoarded);
+    DoorTextures.Window0 = LoadTextureChecked(Assets::Door_Anomaly::Window_0);
+    DoorTextures.Window1 = LoadTextureChecked(Assets::Door_Anomaly::Window_1);
+    DoorTextures.Handprint = LoadTextureChecked(Assets::Door_Anomaly::Handprint);
 }
 
-void Doors_Initialize()
+void Doors::Initialize()
 {
     InitializeRandomOnce();
 
-    gQuadMesh = CreateSquareMesh(0xFFFFFFFF);
+    QuadMesh = CreateSquareMesh(0xFFFFFFFF);
 
     for (int i = 0; i < NUM_DOORS; ++i)
-        gDoorState[i] = DoorState{};
+        DoorStates[i] = DoorState{};
 }
 
-void Doors_Unload()
+void Doors::Unload()
 {
-    FreeMeshSafe(gQuadMesh);
+    FreeMeshSafe(QuadMesh);
 
-    UnloadTextureSafe(gDoorTex);
-    UnloadTextureSafe(gDoorBoardedTex);
-    UnloadTextureSafe(gWindow0Tex);
-    UnloadTextureSafe(gWindow1Tex);
-    UnloadTextureSafe(gHandprintTex);
+    UnloadTextureSafe(DoorTextures.Door);
+    UnloadTextureSafe(DoorTextures.DoorBoarded);
+    UnloadTextureSafe(DoorTextures.Window0);
+    UnloadTextureSafe(DoorTextures.Window1);
+    UnloadTextureSafe(DoorTextures.Handprint);
 
-    if (gDoorFontId >= 0)
-        AEGfxDestroyFont(gDoorFontId);
+    if (FontId >= 0)
+        AEGfxDestroyFont(FontId);
 
-    gQuadMesh = nullptr;
-    gDoorTex = gDoorBoardedTex = gWindow0Tex = gWindow1Tex = gHandprintTex = nullptr;
-    gDoorFontId = -1;
+    QuadMesh = nullptr;
+    DoorTextures.Door = DoorTextures.DoorBoarded = DoorTextures.Window0 = DoorTextures.Window1 = DoorTextures.Handprint = nullptr;
+    FontId = -1;
 }
 
 // ============================================================
 // UPDATE: returns door index near the player (or -1)
 // ============================================================
 
-int Doors_Update(float camX)
+int Doors::Update(float camX)
 {
     const float detectionRange = DOOR_W * 0.5f;
 
@@ -285,7 +327,7 @@ int Doors_Update(float camX)
 // EVENTS
 // ============================================================
 
-void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
+void Doors::Animate(float dt, int doorNearPlayer, float /*unused*/)
 {
 	// ------------------------------------------------
     // EARLY EXITS
@@ -306,7 +348,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
     // ------------------------------------------------
     for (int d = 0; d < NUM_DOORS; ++d)
     {
-        DoorState& s = gDoorState[d];
+        DoorState& s = DoorStates[d];
 
         if (s.rollCooldown > 0.0f)      s.rollCooldown -= dt;
         if (s.eventCooldown > 0.0f)     s.eventCooldown -= dt;
@@ -330,7 +372,7 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
         return;
     }
 
-    DoorState& s = gDoorState[doorNearPlayer];
+    DoorState& s = DoorStates[doorNearPlayer];
 
 
     // ------------------------------------------------
@@ -451,9 +493,9 @@ void Doors_Animate(float dt, int doorNearPlayer, float /*unused*/)
 // DRAW
 // ============================================================
 
-void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool dementia)
+void Doors::Draw(float camX, s8 floorNum, float textXoffset, float textY, bool dementia)
 {
-    if (!gQuadMesh) return;
+    if (!QuadMesh) return;
 
     int maxDoors = dementia ? 1000 : NUM_DOORS;
 
@@ -465,7 +507,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         if (doorX > SCREEN_WIDTH_HALF + DOOR_W) continue;
 
         int doorIdx = i % NUM_DOORS;
-        DoorState& s = gDoorState[doorIdx];
+        DoorState& s = DoorStates[doorIdx];
 
         // Report the anomaly to the journal
         switch (s.anomaly)
@@ -488,12 +530,12 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
 
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-        bool isBoarded = (floorNum == 0 && basementDoors[doorIdx].lockedThisDay);
+        bool isBoarded = (floorNum == 0 && BasementDoors[doorIdx].lockedThisDay);
 
         // ------------------------------------------------
         // DOOR BASE
         // ------------------------------------------------
-        DrawTextureMesh(gQuadMesh, gDoorTex, doorX, DOOR_Y, DOOR_W, DOOR_H, 1.0f);
+        DrawTextureMesh(QuadMesh, DoorTextures.Door, doorX, DOOR_Y, DOOR_W, DOOR_H, 1.0f);
 
         // ------------------------------------------------
         // WINDOW POSITION
@@ -510,28 +552,28 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         // ------------------------------------------------
         // WINDOW TEXTURE
         // ------------------------------------------------
-        AEGfxTexture* windowTex = gWindow0Tex;
+        AEGfxTexture* windowTex = DoorTextures.Window0;
 
         if (s.anomaly == ANOMALYID::Door_LightChange)
         {
-            windowTex = gWindow1Tex;
+            windowTex = DoorTextures.Window1;
         }
 
         // Window background
-        DrawSquareMesh(gQuadMesh, winX, winY, WINDOW_W, WINDOW_H, 0xFF000000);
+        DrawSquareMesh(QuadMesh, winX, winY, WINDOW_W, WINDOW_H, 0xFF000000);
 
         // Window image
         if (windowTex)
         {
-            DrawTextureMesh(gQuadMesh, windowTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
+            DrawTextureMesh(QuadMesh, windowTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
         }
 
         // ------------------------------------------------
         // WINDOW OVERLAYS
         // ------------------------------------------------
-        if (s.anomaly == ANOMALYID::Door_HandSlam && gHandprintTex)
+        if (s.anomaly == ANOMALYID::Door_HandSlam && DoorTextures.Handprint)
         {
-            DrawTextureMesh(gQuadMesh, gHandprintTex, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
+            DrawTextureMesh(QuadMesh, DoorTextures.Handprint, winX, winY, WINDOW_W, WINDOW_H, 1.0f);
         }
 
         // ------------------------------------------------
@@ -539,13 +581,13 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
         // ------------------------------------------------
         if (isBoarded)
         {
-            DrawTextureMesh(gQuadMesh, gDoorBoardedTex, doorX, DOOR_Y, 300.0f, 200.0f, 1.0f);
+            DrawTextureMesh(QuadMesh, DoorTextures.DoorBoarded, doorX, DOOR_Y, 300.0f, 200.0f, 1.0f);
         }
 
         // ------------------------------------------------
         // LABEL
         // ------------------------------------------------
-        if (gDoorFontId >= 0)
+        if (FontId >= 0)
         {
             std::ostringstream oss;
 
@@ -560,7 +602,7 @@ void Doors_Draw(float camX, s8 floorNum, float textXoffset, float textY, bool de
             float x = (doorX / SCREEN_WIDTH_HALF) - textXoffset;
             float y = textY / SCREEN_HEIGHT_HALF;
 
-            AEGfxPrint(gDoorFontId, text.c_str(), x, y, 1.0f, 1, 0, 0, 1);
+            AEGfxPrint(FontId, text.c_str(), x, y, 1.0f, 1, 0, 0, 1);
         }
     }
 }

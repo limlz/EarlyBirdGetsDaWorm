@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "Credits.hpp"
+#include "Animation.hpp"
 
 static constexpr float FADE_IN_DURATION = 0.3f;
 static constexpr float FADE_OUT_SPEED = 6.0f;
@@ -35,8 +36,7 @@ static float quit_scale    = 1.0f;
 
 static s8 menuFontId = -1;
 
-static int   currentTitleFrame = 0;
-static float titleAnimTimer    = 0.0f;
+static Animation titleAnim = { 0, 0.0f, TITLE_ANIM_SPEED, NUM_TITLE_FRAMES, false }; // play-once
 
 void MainMenu_Load()
 {
@@ -77,6 +77,7 @@ void MainMenu_Initialize()
     fade_out_alpha   = 0.0f;
     pendingNextState = 0;
 
+    titleAnim.Reset();
     Credits_Initialize();
 
     std::cout << "MainMenu: Initialize\n";
@@ -101,13 +102,7 @@ void MainMenu_Update()
     if (fade_in_timer > 0.0f)
         fade_in_timer = AEMax(fade_in_timer - dt, 0.0f);
 
-    if (currentTitleFrame < NUM_TITLE_FRAMES - 1) {
-        titleAnimTimer += dt;
-        if (titleAnimTimer >= TITLE_ANIM_SPEED) {
-            titleAnimTimer = 0.0f;
-            currentTitleFrame++;
-        }
-    }
+    titleAnim.Update(dt);
 
     Particles_Update();
     Update_StandaloneLight(dt, menuLightX, menuLightY);
@@ -143,8 +138,8 @@ void MainMenu_Draw()
     DrawTextureMesh(squareMesh, main_menu_bg, 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
     DrawTextureMesh(squareMesh, title_bg,     0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
 
-    if (title_frames[currentTitleFrame])
-        DrawTextureMesh(squareMesh, title_frames[currentTitleFrame], 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
+    if (title_frames[titleAnim.currentFrame])
+        DrawTextureMesh(squareMesh, title_frames[titleAnim.currentFrame], 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
 
     Credits_DrawCharacter(squareMesh);
 

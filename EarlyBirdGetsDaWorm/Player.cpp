@@ -96,7 +96,7 @@ void Player_GenerateMission() {
     CarriedPatientIsGhost = false;
     VisualBluff = false;
     GhostExtraAnomalies = 0;
-    TrueDiagnosis = AnomalyIllness = ILLNESSES{};
+    TrueDiagnosis = AnomalyIllness = ILLNESSES::NONE;
 
     IsBlinking              = false;
     BlinkTimer              = 0.0f;
@@ -125,8 +125,8 @@ void SetPatientScaryByDay(int day) {
     int Day = (day < 1) ? 1 : (day > 5 ? 5 : day);
     bool IsScary = false;
 
-    // Use the predetermined shuffled pool for the first 5 patients of the day
-    if (PatientsHandled < 5) {
+    // Use the predetermined shuffled pool for the first REQUIRED_PATIENTS patients of the day
+    if (PatientsHandled < REQUIRED_PATIENTS) {
         IsScary = (CurrentDayPool[PatientsHandled] == 1);
     }
     else {
@@ -425,8 +425,8 @@ void Player_StopSounds() {
 }
 
 void Player_DebugFulfillPatientQuota() {
-    // Ensures PatientsHandled >= 5 so the day-end check passes when debug-skipping a day
-    if (PatientsHandled < 5) PatientsHandled = 5;
+    // Ensures PatientsHandled >= REQUIRED_PATIENTS so the day-end check passes when debug-skipping a day
+    if (PatientsHandled < REQUIRED_PATIENTS) PatientsHandled = REQUIRED_PATIENTS;
 }
 
 void Player_SetIllness(ILLNESSES illness) { TrueDiagnosis = AnomalyIllness = illness; }
