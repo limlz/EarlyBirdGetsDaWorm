@@ -11,6 +11,7 @@ struct Bullet {
 
 static AEGfxVertexList* squareMesh;
 static AEGfxVertexList* circleMesh;
+static s8 ammoFontId = -1;
 // Allow more water droplets on the screen at once
 static constexpr int MAX_BULLETS = 300;
 std::vector<Bullet> bullets(MAX_BULLETS);
@@ -25,6 +26,8 @@ const float RELOAD_TIME = 1.5f; // Takes 1.5 seconds to reload
 void Bullets_Initialize() {
     squareMesh = CreateSquareMesh(0xFFFFFFFF);
     circleMesh = CreateCircleMesh(0.5f, 16, 0xFFFFFFFF);
+    if (ammoFontId >= 0) { AEGfxDestroyFont(ammoFontId); }
+    ammoFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 35);
     bullets.assign(MAX_BULLETS, Bullet{});
     for (int i = 0; i < MAX_BULLETS; i++) {
         bullets[i].active = false;
@@ -216,12 +219,13 @@ void Bullets_DrawAmmoUI()
     AEGfxSetTransparency(1.0f);
 
     // BOTTOM RIGHT — mirrors the HP bar position on the right side
-    const float barCenterX =  520.0f;
+    const float barCenterX =  535.0f;  // right edge aligns with boss health bar right edge (675)
     const float barCenterY = -390.0f;
     const float barW       = 280.0f;
     const float barH       =  18.0f;
     const float pad        =   3.0f;
     const float barLeft    = barCenterX - barW * 0.5f;
+    const float barRight   = barCenterX + barW * 0.5f + pad;
 
     // Outer dark border
     DrawSquareMesh(squareMesh, barCenterX, barCenterY, barW + pad * 2.0f, barH + pad * 2.0f, 0xFF111111);
@@ -267,6 +271,14 @@ void Bullets_DrawAmmoUI()
             AEGfxSetTransparency(1.0f);
         }
     }
+
+    // "H2O" label to the right of the bar — mirrors the HP label style
+    if (ammoFontId >= 0) {
+        float ndcX = (barRight + 10.0f) / 800.0f;
+        float ndcY = (barCenterY - 7.0f) / 450.0f;
+        AEGfxPrint(ammoFontId, "H2O", ndcX, ndcY, 0.50f,
+                   0.0f, 0.75f, 0.75f, 1.0f);  // cyan, matching the ammo bar fill
+    }
 }
 
 bool Bullets_HasAmmo() {
@@ -276,4 +288,5 @@ bool Bullets_HasAmmo() {
 void Bullets_Free() {
     FreeMeshSafe(squareMesh);
     std::vector<Bullet>().swap(bullets);
+    if (ammoFontId >= 0) { AEGfxDestroyFont(ammoFontId); ammoFontId = -1; }
 }

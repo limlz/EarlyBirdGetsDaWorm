@@ -11,6 +11,7 @@ static AEGfxTexture* player_walk1 = nullptr;
 static AEGfxTexture* player_walk2 = nullptr;
 static AEGfxTexture* player_crouch = nullptr;
 static AEGfxTexture* player_arm_gun = nullptr;
+static AEGfxTexture* gun_tex        = nullptr;
 
 // --- PLAYER PHYSICS SETTINGS ---
 static f32 playerX, playerY;
@@ -45,8 +46,10 @@ static float bossDodgeCooldown = 0.0f;
 static float armAngle = 0.0f; // angle from shoulder to mouse (radians)
 const float ARM_LENGTH = 45.0f;
 const float ARM_WIDTH  = 24.0f;
-const float GUN_LENGTH = 32.0f;
-const float GUN_WIDTH  = 10.0f;
+const float GUN_LENGTH  = 32.0f;
+const float GUN_WIDTH   = 10.0f;
+const float GUN1_LENGTH = 85.0f;  // draw size of the separate gun1.png sprite
+const float GUN1_WIDTH  = 32.0f;
 
 // --- BOSS INSTANCE ---
 static Boss myBoss;
@@ -60,7 +63,8 @@ const float FADE_IN_SPEED = 1.0f; // Takes 1 second to fade in
 static bool isVictorySequence = false;
 static float victoryAlpha = 0.0f;
 static float victoryHoldTimer = 0.0f;
-static s8 victoryFontId = -1;
+static s8 victoryFontId    = -1;
+static s8 victorySubFontId = -1;
 
 void Player_DrawHealthBar(AEGfxVertexList* mesh)
 {
@@ -103,7 +107,7 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
     if (playerHP > 0) {
         float fillW = barW * hpPercent;
         float fillX = (barLeft + fillW * 0.5f) + shakeX;
-        DrawSquareMesh(mesh, fillX, cy, fillW, barH, 0xCC0000FF);
+        DrawSquareMesh(mesh, fillX, cy, fillW, barH, 0x740404FF);
 
         // Thin gloss stripe along the top edge
         float hiH = barH * 0.22f;
@@ -115,7 +119,7 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
 
     // "HP" label to the left of the bar
     if (victoryFontId >= 0) {
-        float ndcX = (barLeft - 36.0f) / 800.0f;
+        float ndcX = (barLeft - 52.0f) / 800.0f;
         float ndcY = (barCenterY - 7.0f) / 450.0f;
         AEGfxPrint(victoryFontId, "HP", ndcX, ndcY, 0.50f,
                    0.80f, 0.20f, 0.20f, 1.0f);
@@ -129,7 +133,8 @@ void Player_DrawHealthBar(AEGfxVertexList* mesh)
 void Boss_Fight_Load()
 {
     // Load the font for the victory text (size 35)
-    victoryFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 35);
+    victoryFontId    = AEGfxCreateFont(Assets::Fonts::Buggy, 35);
+    victorySubFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
     wallBgTexture = LoadTextureChecked(Assets::Background::WallBg);
 
     // Load player textures
@@ -137,6 +142,7 @@ void Boss_Fight_Load()
     player_walk2   = LoadTextureChecked(Assets::Boss_Fight::PlayerShooting2);
     player_crouch  = LoadTextureChecked(Assets::Boss_Fight::PlayerCrouch); // Placeholder for crouch texture
     player_arm_gun = LoadTextureChecked(Assets::Boss_Fight::PlayerArmGun);
+    gun_tex        = LoadTextureChecked(Assets::Boss_Fight::Gun1);
 
     Boss_Load();
     BossDebug_Load();
@@ -291,8 +297,9 @@ void Boss_Fight_Update()
                 float drawY     = isCrouching ? playerY - 30.0f : playerY;
                 float shoulderX = playerX - 7.0f;
                 float shoulderY = drawY + 20.0f;
-                float startX = shoulderX + cosf(armAngle) * (ARM_LENGTH + GUN_LENGTH);
-                float startY = shoulderY + sinf(armAngle) * (ARM_LENGTH + GUN_LENGTH);
+                const float GRIP_OFFSET = 10.0f; // must match the draw offset in Boss_Fight_Draw
+                float startX = shoulderX + cosf(armAngle) * (ARM_LENGTH + GUN1_LENGTH) - sinf(armAngle) * GRIP_OFFSET;
+                float startY = shoulderY + sinf(armAngle) * (ARM_LENGTH + GUN1_LENGTH) + cosf(armAngle) * GRIP_OFFSET;
 
                 float dirX = cosf(armAngle);
                 float dirY = sinf(armAngle);
@@ -488,29 +495,46 @@ void Boss_Fight_Draw()
         DrawSquareMesh(squareMesh, playerX, drawY, 70.0f, drawHeight, playerColor);
     }
 
-    // --- DRAW ARM AND GUN (single texture) ---
-    if (player_arm_gun)
+    // Shared shoulder position used by both gun and arm draws
     {
-        const float TOTAL_LENGTH = ARM_LENGTH + GUN_LENGTH; // texture spans shoulder -> gun tip
-
         float drawY     = isCrouching ? playerY - 30.0f : playerY;
-        float shoulderX = playerX - 7.0f; // fixed offset so shoulder stays inside the body on both sides
+        float shoulderX = playerX - 7.0f;
         float shoulderY = drawY + 20.0f;
 
-        // The texture pivot is its center, so offset half the total length along the aim direction
-        float texCX = shoulderX + cosf(armAngle) * (TOTAL_LENGTH * 0.5f);
-        float texCY = shoulderY + sinf(armAngle) * (TOTAL_LENGTH * 0.5f);
-
-        // V-flip when facing left: V-flip + 180° arm rotation = correct mirrored arm without upside-down artifact
-        float texHeight = facingRight ? ARM_WIDTH : -ARM_WIDTH;
-
-        if (isPlayerHit) {
-            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
-            AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.0f);
+        // --- DRAW GUN FIRST (behind arm) ---
+        // Gun center is shifted perpendicular to the aim ("above" the barrel axis) so the
+        // grip, which hangs below the barrel, aligns with the arm's hand position.
+        if (gun_tex)
+        {
+            const float GRIP_OFFSET = 10.0f; // perpendicular shift so grip meets the hand
+            float gunCX = shoulderX + cosf(armAngle) * (ARM_LENGTH + GUN1_LENGTH * 0.5f) - sinf(armAngle) * GRIP_OFFSET;
+            float gunCY = shoulderY + sinf(armAngle) * (ARM_LENGTH + GUN1_LENGTH * 0.5f) + cosf(armAngle) * GRIP_OFFSET;
+            float gunH  = facingRight ? GUN1_WIDTH : -GUN1_WIDTH;
+            if (isPlayerHit) {
+                AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
+                AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.0f);
+            }
+            DrawTextureMeshRotated(squareMesh, gun_tex, gunCX, gunCY, GUN1_LENGTH, gunH, armAngle, 1.0f);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
         }
-        DrawTextureMeshRotated(squareMesh, player_arm_gun, texCX, texCY, TOTAL_LENGTH, texHeight, armAngle, 1.0f);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+
+        // --- DRAW ARM ON TOP OF GUN ---
+        // Arm overlays the grip area of the gun so it looks like the player is holding it.
+        if (player_arm_gun)
+        {
+            const float TOTAL_LENGTH = ARM_LENGTH + GUN_LENGTH; // texture spans shoulder -> hand tip
+            float texCX    = shoulderX + cosf(armAngle) * (TOTAL_LENGTH * 0.5f);
+            float texCY    = shoulderY + sinf(armAngle) * (TOTAL_LENGTH * 0.5f);
+            float texHeight = facingRight ? ARM_WIDTH : -ARM_WIDTH;
+            if (isPlayerHit) {
+                AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f);
+                AEGfxSetColorToAdd(0.6f, 0.0f, 0.0f, 0.0f);
+            }
+            DrawTextureMeshRotated(squareMesh, player_arm_gun, texCX, texCY, TOTAL_LENGTH, texHeight, armAngle, 1.0f);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+        }
     }
 
     DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
@@ -552,11 +576,11 @@ void Boss_Fight_Draw()
 
     // --- DRAW VICTORY SEQUENCE ---
     if (isVictorySequence) {
-        // 1. Draw black overlay screen
+        // 1. Fade in a dark teal overlay (matches the hospital/success tone)
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetTransparency(victoryAlpha);
-        AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+        AEGfxSetColorToMultiply(0.0f, 0.04f, 0.06f, 1.0f);  // very dark teal instead of pure black
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
         AEMtx33 scale, trans, transform;
@@ -566,12 +590,45 @@ void Boss_Fight_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
 
-        // 2. Draw victory text once the screen is fully black
+        // 2. Draw text once the screen is fully faded
         if (victoryAlpha >= 1.0f && victoryFontId >= 0) {
             AEGfxSetTransparency(1.0f);
 
-            // -1.0f adjusts the X position
-            AEGfxPrint(victoryFontId, "Patient Successfully Subdued", -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+            // Centering helpers — NDC width per character scales with font pt size.
+            // Size 35 title  → ~0.042f/char   (calibrated from Endgame's 0.036f at size 30)
+            // Size 20 subtitle → ~0.024f/char  (0.036f * 20/30)
+            auto titleX = [](std::string_view text) -> float {
+                return -(static_cast<float>(text.size()) * 0.042f * 0.5f);
+            };
+            auto subX = [](std::string_view text) -> float {
+                return -(static_cast<float>(text.size()) * 0.024f * 0.5f);
+            };
+
+            // --- Title: "PATIENT SUBDUED" with green glow ---
+            AEGfxPrintWithGlow(victoryFontId, "PATIENT SUBDUED",
+                titleX("PATIENT SUBDUED"), 0.22f, 1.0f,
+                0.3f, 1.0f, 0.65f, 1.0f,    // bright teal-green text
+                0.0f, 0.45f, 0.25f, 0.9f,   // dark teal glow
+                0.004f);
+
+            // --- Subtitle ---
+            if (victorySubFontId >= 0) {
+                AEGfxPrintWithGlow(victorySubFontId, "The patient has been successfully contained.",
+                    subX("The patient has been successfully contained."), 0.02f, 1.0f,
+                    0.85f, 0.95f, 0.9f, 1.0f,   // soft white-teal text
+                    0.0f, 0.2f, 0.15f, 0.5f,    // subtle green glow
+                    0.003f);
+
+                // --- Blinking "Returning to ward..." prompt ---
+                float blinkAlpha = (sinf(victoryHoldTimer * 4.0f) + 1.0f) * 0.5f;
+                AEGfxSetTransparency(blinkAlpha);
+                AEGfxPrintWithGlow(victorySubFontId, "Returning to ward...",
+                    subX("Returning to ward..."), -0.3f, 1.0f,
+                    0.5f, 0.8f, 0.65f, 1.0f,   // dim teal
+                    0.0f, 0.2f, 0.1f, 0.4f,
+                    0.002f);
+                AEGfxSetTransparency(1.0f);
+            }
         }
     }
     AEGfxSetTransparency(1.0f);
@@ -625,10 +682,15 @@ void Boss_Fight_Unload() {
     UnloadTextureSafe(player_walk2);
     UnloadTextureSafe(player_crouch);
     UnloadTextureSafe(player_arm_gun);
+    UnloadTextureSafe(gun_tex);
 
     if (victoryFontId >= 0) {
         AEGfxDestroyFont(victoryFontId);
         victoryFontId = -1;
+    }
+    if (victorySubFontId >= 0) {
+        AEGfxDestroyFont(victorySubFontId);
+        victorySubFontId = -1;
     }
 }
 

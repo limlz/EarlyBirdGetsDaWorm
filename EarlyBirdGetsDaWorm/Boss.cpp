@@ -211,8 +211,22 @@ void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
 
-    // Outer frame: electric blue when shielded, near-black otherwise
-    u32 borderColor = boss.shieldActive ? 0xFF2266FF : 0xFF0D0008;
+    // Purple pulse timer — advances while shielded, resets otherwise
+    static float shieldPulseTimer = 0.0f;
+    float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
+    if (boss.shieldActive) shieldPulseTimer += dt;
+    else                   shieldPulseTimer  = 0.0f;
+
+    // pulse: 0.0 = dark purple, 1.0 = bright purple
+    float pulse = (sinf(shieldPulseTimer * 3.5f) + 1.0f) * 0.5f;
+
+    // Build pulsing purple fill color (RGBA)
+    u32 pr = static_cast<u32>(0x44 + static_cast<int>(pulse * (0xAA - 0x44)));
+    u32 pb = static_cast<u32>(0x66 + static_cast<int>(pulse * (0xFF - 0x66)));
+    u32 purpleColor = (pr << 24) | (0x00u << 16) | (pb << 8) | 0xFFu;
+
+    // Outer frame: pulses between dark/bright purple when shielded, near-black otherwise
+    u32 borderColor = boss.shieldActive ? purpleColor : 0xFF0D0008u;
     DrawSquareMesh(mesh, startX, startY, barWidth + pad * 2.0f, barHeight + pad * 2.0f, borderColor);
     // Dark corrupted background trough
     DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0xFF1A0012);
@@ -221,21 +235,16 @@ void Boss_DrawHealthBar(Boss& boss, AEGfxVertexList* mesh)
         float fillW = barWidth * hpPercent;
         float fillX = startX - barWidth * 0.5f + fillW * 0.5f;
 
-        // Pure blood-crimson fill — deep red, no pink tint
-        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, 0xCC0000FF);
+        // Fill: pulsing purple when shielded, blood-crimson otherwise
+        u32 fillColor = boss.shieldActive ? purpleColor : 0xCC0000FFu;
+        DrawSquareMesh(mesh, fillX, startY, fillW, barHeight, fillColor);
 
         // Thin glossy highlight stripe along the top edge
         float hiH = barHeight * 0.22f;
         float hiY = startY + (barHeight - hiH) * 0.5f;
         AEGfxSetTransparency(0.30f);
-        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, 0xFF4444FF);
-        AEGfxSetTransparency(1.0f);
-    }
-
-    // Bright light-green healing overlay during shield phase
-    if (boss.shieldActive) {
-        AEGfxSetTransparency(0.45f);
-        DrawSquareMesh(mesh, startX, startY, barWidth, barHeight, 0x44FF44FF);
+        u32 glossColor = boss.shieldActive ? 0xDD88FFFFu : 0xFF4444FFu;
+        DrawSquareMesh(mesh, fillX, hiY, fillW, hiH, glossColor);
         AEGfxSetTransparency(1.0f);
     }
 
