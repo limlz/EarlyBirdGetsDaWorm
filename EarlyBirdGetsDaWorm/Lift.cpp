@@ -742,6 +742,7 @@ void Lift::Unload() {
 
     if (tex.door) { AEGfxTextureUnload(tex.door);  tex.door = nullptr; }
     if (tex.panel) { AEGfxTextureUnload(tex.panel); tex.panel = nullptr; }
+    if (tex.screen) { AEGfxTextureUnload(tex.screen); tex.screen = nullptr; }
 
     AEGfxDestroyFont(fontId);
     fontId = -1;
