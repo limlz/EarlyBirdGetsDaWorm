@@ -15,7 +15,7 @@ STANDALONE_BRIGHTNESS=0.15      // Baseline ambient brightness added on top of i
 // ==========================================
 // JUMPSCARE
 // ==========================================
-JUMPSCARE_DURATION=2.1          // Total duration of the jumpscare event (seconds)
+JUMPSCARE_DURATION=3.1          // Total duration of the jumpscare event (seconds)
 JUMPSCARE_SCREEN_SHAKE=35.0     // Intensity of the screen shake during a jumpscare (pixels)
 JUMPSCARE_IMAGE_SHAKE=18.0      // Additional shake applied to the jumpscare image itself (pixels)
 JUMPSCARE_FLASH_DURATION=0.08   // Duration of the white flash at the peak of the jumpscare (seconds)

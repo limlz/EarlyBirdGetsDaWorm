@@ -14,7 +14,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     // Initialize System
     AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, true, nullptr);
-    AESysSetWindowTitle("The Porter: Ward 8");
+    AESysSetWindowTitle("Echoes of the Ward");
     AESysReset();
 
     // Initialize Game State Manager (Start at Menu or Game)

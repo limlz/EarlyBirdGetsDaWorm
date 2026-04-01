@@ -244,31 +244,40 @@ void Pager::Trigger()
 
 void Pager::Update(bool LiftActive, f32 DT)
 {
-	// Toggles the pager when user press Q, pager will not be displayed if lift is active
-	// Small Icon Hover and Select
+	// Small Icon Hover Animation
 	PagerIcon.IsHovered = IsAreaHovered(PagerIcon.X, PagerIcon.Y, PagerIcon.Width, PagerIcon.Height);
 	HoverAnimation(PagerIcon.Alpha, PagerIcon.IsHovered, PagerIcon.FadeSpeed, DT, PagerIcon.MinAlpha, PagerIcon.MaxAlpha);
 
-	if (!LiftActive) {
-		if (PagerIcon.IsHovered && AEInputCheckTriggered(AEVK_LBUTTON)) {
-			PagerState.IsActive = !PagerState.IsActive;
-			return;
-		}
+	// ==========================================================
+	// 1. HOLD-TO-VIEW LOGIC (MANUAL OPEN/CLOSE)
+	// ==========================================================
+	static bool wasTabHeld = false;
+	bool isTabHeld = AEInputCheckCurr(AEVK_TAB);
 
-		if (AEInputCheckTriggered(AEVK_TAB)) {
-			PagerState.IsActive = !PagerState.IsActive;
-			return;
-		}
+	// Icon Click Fallback
+	if (PagerIcon.IsHovered && AEInputCheckTriggered(AEVK_LBUTTON)) {
+		PagerState.IsActive = !PagerState.IsActive;
 	}
 
-	if (PagerState.IsActive) {
+	// Hold TAB to open, Release to close
+	if (isTabHeld) {
+		PagerState.IsActive = true;
+	}
+	else if (wasTabHeld && !isTabHeld) {
+		PagerState.IsActive = false;
+		PagerPopUp.FirstPopUp = false;
+	}
+	wasTabHeld = isTabHeld;
+
+	// Click outside to close (Useful for when it pops up automatically)
+	if (PagerState.IsActive && !isTabHeld) {
 		bool OutsidePager{ (IsAreaClickedByMouse(0.0f, 0.0f, BigPager.Width, BigPager.Height)) ? false : true };
 
 		if (OutsidePager && AEInputCheckTriggered(AEVK_LBUTTON))
 		{
 			PagerState.IsActive = false;
 		}
-	}	
+	}
 
 	// Game start delayed pop up
 	bool WantTutorial{ Doing_Tutorial() };
@@ -313,7 +322,7 @@ void Pager::Update(bool LiftActive, f32 DT)
 	}
 
 	if (PagerPopUp.FirstPopUp) {
-		if (AEInputCheckTriggered(AEVK_TAB) && !LiftActive) {
+		if (AEInputCheckTriggered(AEVK_TAB)) {
 			PagerPopUp.FirstPopUp = false;
 		}
 	}
@@ -338,9 +347,13 @@ void Pager::Update(bool LiftActive, f32 DT)
 void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber)
 {
 	// Draws the icon pager in the corner
-	DrawTextureMesh(PagerMesh, PagerTexture.Icon, PagerIcon.X, PagerIcon.Y, PagerIcon.Width, PagerIcon.Height, PagerIcon.Alpha);
-	if (PagerIcon.IsHovered && !PagerState.IsActive && !Doing_Tutorial()) {
-		AEGfxPrint(BigPager.Font, "Pager", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	if (!Lift_IsActive())
+	{
+		// Draws the icon pager in the corner
+		DrawTextureMesh(PagerMesh, PagerTexture.Icon, PagerIcon.X, PagerIcon.Y, PagerIcon.Width, PagerIcon.Height, PagerIcon.Alpha);
+		if (PagerIcon.IsHovered && !PagerState.IsActive && !Doing_Tutorial()) {
+			AEGfxPrint(BigPager.Font, "Pager", textPosition(-30.0f, -380.0f).first, textPosition(-30.0f, -380.0f).second, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
 	}
 
 	if (PagerState.IsActive) {

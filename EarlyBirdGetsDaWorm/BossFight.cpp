@@ -389,7 +389,7 @@ void Boss_Fight_Update()
                     if (!BossDebug_IsGodMode()) playerHP--;
                     myBoss.bullets[i].active = false;
                     isPlayerHit = true;
-                    hitTimer = 0.2f;
+                    hitTimer = 0.2f;  
                     vignetteAlpha = 1.0f; // Hook: set to 1.0f to trigger vignette / cracked-glass overlay
                     AudioManager_PlaySFX(SoundID::SFX_EXHALE, 0.7f);  // Player hurt reaction
 

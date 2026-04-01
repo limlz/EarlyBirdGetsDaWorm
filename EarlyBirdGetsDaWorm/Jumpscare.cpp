@@ -104,7 +104,7 @@ void JumpScare_Start()
         AudioManager_PlaySFX(SoundID::SFX_AA, 1.0f, 1.5f, 0); // AA
     }
     else {
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 1.0f);
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.65f);
     }
 }
 
@@ -134,6 +134,8 @@ bool JumpScare_Update(float dt)
         gShakeX = 0.0f;
         gShakeY = 0.0f;
         gFlashTimer = 0.0f;
+
+        AudioManager_StopSFX();
         return false; // finished, resume gameplay
     }
 

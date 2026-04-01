@@ -242,6 +242,7 @@ namespace Assets
         constexpr const char* LiftBg = "Assets/Lift/Lift_bg.png";
         constexpr const char* LiftDoor = "Assets/Lift/LiftDoor_bg.png";
         constexpr const char* LiftPanel = "Assets/Lift/LiftPanel_buttons.png";
+        constexpr const char* LiftScreen = "Assets/Lift/LiftScreen.png";
         constexpr const char* LiftButton[] =
         {
             "Assets/Lift/LiftButton_B1.png",

@@ -268,13 +268,13 @@ void Game_Update()
     // PHASE 3: INTERRUPTIONS & OVERLAYS
     // ------------------------------------------------------------
     bool freeze = JumpScare_Update(dt);
-    if (freeze) return;
+    if (freeze) { Player_StopSounds(); return; }
 
     Timer_UpdateDayOverlay(dt);
-    if (Timer_IsDayOverlayActive()) return;
+    if (Timer_IsDayOverlayActive()) { Player_StopSounds(); return; }
 
     PauseMenu_Update(dt);
-    if (PauseMenu_IsPaused()) return;
+    if (PauseMenu_IsPaused()) { Player_StopSounds(); return; }
 
     // For Tutorial DT
     f32 gameDT = Timer_IsPaused() ? 0.0f : dt;
@@ -283,20 +283,25 @@ void Game_Update()
     }
     else {
         Journal_Update(liftActive, IsGuideActive(), IsPagerActive(), gameDT);
-        if (Journal_IsOpen()) return;
+        if (Journal_IsOpen()) {
+            Player_StopSounds(); // <--- Stops audio when Journal opens
+            return;
+        }
     }
-
 
     if (IsGuideActive()) {
         Guide_Update(liftActive, dt, IsPagerActive());
+        Player_StopSounds();     // <--- Stops audio when Guide opens
         return;
     }
 
     if (Tutorial_Prompt_Answered() == false && IsTutorialActive())
     {
         Tutorial_Update(dt);
+        Player_StopSounds();     // <--- Stops audio when Tutorial overlay is open
         return;
     }
+
     // ------------------------------------------------------------
     // PHASE 4: TIME TRACKING & DAY ADVANCEMENT
     // ------------------------------------------------------------
@@ -670,11 +675,11 @@ void Game_Draw()
 
     Journal_DrawSmallIcon(squareMesh);
     Guide_Draw();
-    Notifications_Draw(targetFloor, targetDoor, destFloor, destDoor);
     Timer_Draw(0.0f, 0.85f);
+    Lift_Draw(squareMesh, floorNum);
+    Notifications_Draw(targetFloor, targetDoor, destFloor, destDoor);
     Timer_DrawDayOverlay(squareMesh);
-    Lift_Draw(squareMesh);
-
+    
     DebugInfo info;
     info.camX = camX;
     info.day = CurrentDay;

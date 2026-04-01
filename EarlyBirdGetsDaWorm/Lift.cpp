@@ -24,6 +24,7 @@ public:
         AEGfxTexture* bg      = nullptr;
         AEGfxTexture* door    = nullptr;
         AEGfxTexture* panel   = nullptr;
+        AEGfxTexture* screen = nullptr;
         AEGfxTexture* wall[NUM_OF_FLOOR]{};
         AEGfxTexture* button[NUM_OF_FLOOR]{};
     };
@@ -67,7 +68,7 @@ public:
     void HandleInput(s8& floorNum);
     void DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor);
     void DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float textXoffset, float textY);
-    void Draw(AEGfxVertexList* squareMesh);
+    void Draw(AEGfxVertexList* squareMesh, s8 currentFloor); 
     void Unload();
     bool IsActive();
     bool IsNear();
@@ -93,7 +94,7 @@ void Lift_Update(float dt, float camX, float maxDist, bool dementiaActive)      
 void Lift_HandleInput(s8& floorNum)                                                       { TheLift.HandleInput(floorNum); }
 void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor) { TheLift.DrawBackground(mesh, x, y, w, h, floor); }
 void Lift_DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float textXoffset, float textY) { TheLift.DrawWorld(squareMesh, x, y, w, h, floorNum, textXoffset, textY); }
-void Lift_Draw(AEGfxVertexList* squareMesh)                                               { TheLift.Draw(squareMesh); }
+void Lift_Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { TheLift.Draw(squareMesh, currentFloor); } // <-- Add currentFloor here
 void Lift_Unload()                                                                        { TheLift.Unload(); }
 bool Lift_IsActive()                                                                      { return TheLift.IsActive(); }
 bool Lift_IsNear()                                                                        { return TheLift.IsNear(); }
@@ -354,6 +355,7 @@ void Lift::Load() {
     tex.bg = LoadTextureChecked(Assets::Lift::LiftBg);
     tex.door = LoadTextureChecked(Assets::Lift::LiftDoor);
     tex.panel = LoadTextureChecked(Assets::Lift::LiftPanel);
+	tex.screen = LoadTextureChecked(Assets::Lift::LiftScreen);
 
     for (int i = 0; i < NUM_OF_FLOOR; i++) {
         tex.button[i] = AEGfxTextureLoad(Assets::Lift::LiftButton[i]);
@@ -618,7 +620,7 @@ void Lift::DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, flo
     }
 }
 
-void Lift::Draw(AEGfxVertexList* squareMesh) {
+void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added currentFloor
     if (!liftActive) return;
 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -627,12 +629,9 @@ void Lift::Draw(AEGfxVertexList* squareMesh) {
     float jitterX = 0.0f;
     float jitterY = 0.0f;
 
-    // How long to wait after clicking before the elevator starts moving
     const float JITTER_DELAY = 0.6f;
 
-    // Shake ONLY during Phase 3, AFTER the delay, and BEFORE the doors open
     if (phase.phase == 3 && phase.timer >= JITTER_DELAY && phase.timer < TRANSIT_TIMER) {
-        // Generates a random offset between -3 and +3 pixels
         jitterX = static_cast<float>(RandInt(-3, 1));
         jitterY = static_cast<float>(RandInt(-3, 1));
     }
@@ -643,23 +642,76 @@ void Lift::Draw(AEGfxVertexList* squareMesh) {
 
     float gapOffset = phase.doorProgress * SCREEN_W / 2.0f;
 
-    // Apply jitterX to the base door positions
     float leftDoorX = -450.0f - gapOffset + jitterX;
     float rightDoorX = 450.0f + gapOffset + jitterX;
 
     if (quadMesh && tex.door) {
-        // Draw with jitterY
         DrawTextureMesh(quadMesh, tex.door, leftDoorX, jitterY, doorW, doorH, 1.0f);
         DrawTextureMesh(quadMesh, tex.door, rightDoorX, jitterY, doorW, doorH, 1.0f);
     }
 
-    // --- 2) DRAW INTERACTIVE PANEL (Drawn on top of doors) ---
-    // Only drawn when doors are fully closed (Phase 2, and the beginning of Phase 3)
+    // --- 2) DRAW INTERACTIVE PANEL & SIDE SCREEN ---
     if (phase.phase == 2 || (phase.phase == 3 && phase.timer < TRANSIT_TIMER)) {
         if (quadMesh && tex.panel) {
-            // Draw panel background with jitter
+
+            // Draw main panel background with jitter
             DrawTextureMesh(quadMesh, tex.panel, jitterX, jitterY, 450.0f, 750.0f, 1.0f);
 
+            // Draw side screen background
+            float screenX = jitterX + 300.0f;
+            DrawTextureMesh(quadMesh, tex.screen, screenX, jitterY, 100.0f, 750.0f, 1.0f);
+
+            // ========================================================
+            // VERTICAL FLOOR INDICATOR STRIP
+            // ========================================================
+            float startY = 300.0f;          // Highest point on the screen (Floor 9)
+            float ySpacing = 600.0f / 9.0f; // Distributes 10 floors evenly down the screen
+
+            // --- CALCULATE DYNAMIC GLOWING FLOOR ---
+            int glowingFloor = currentFloor;
+
+            // If in the transit phase and actually moving to a new floor
+            if (phase.phase == 3 && phase.pendingFloor != -1 && phase.timer < TRANSIT_TIMER) {
+                // Get progress from 0.0 to 1.0
+                float progress = phase.timer / TRANSIT_TIMER;
+                float distance = static_cast<float>(phase.pendingFloor - currentFloor);
+
+                float offset = distance * progress;
+                if (offset > 0) offset += 0.5f;
+                else            offset -= 0.5f;
+
+                glowingFloor = currentFloor + static_cast<int>(offset);
+            }
+
+            for (int i = 9; i >= 0; --i) {
+                float drawY = jitterY + startY - ((9 - i) * ySpacing);
+
+                if (fontId >= 0) {
+                    std::ostringstream oss;
+                    if (i == 0) oss << "B1";
+                    else        oss << i;
+                    std::string text = oss.str();
+
+                    const float CHAR_NDC = 0.018f;
+                    const float halfTextWidthNDC = (text.length() * CHAR_NDC) * 0.5f;
+
+                    float ndcX = screenX / SCREEN_WIDTH_HALF - halfTextWidthNDC;
+                    float ndcY = drawY / SCREEN_HEIGHT_HALF - 0.020f; // Visual center tweak
+
+                    // Check against glowingFloor instead of currentFloor!
+                    if (i == glowingFloor) {
+                        // Glowing Red Text for the active moving floor
+                        AEGfxPrintWithGlow(fontId, text.c_str(), ndcX, ndcY, 1.0f, 1.0f, 0.1f, 0.1f, 1.0f, 0.6f, 0.0f, 0.0f, 0.8f, 0.006f);
+                    }
+                    else {
+                        // Dim Grey Text for inactive floors
+                        AEGfxPrintWithGlow(fontId, text.c_str(), ndcX, ndcY, 1.0f, 0.4f, 0.4f, 0.4f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+                    }
+                }
+            }
+            // ========================================================
+
+            // Draw clickable Buttons on the main panel
             for (int i = 0; i < NUM_OF_FLOOR; i++) {
                 int floorToDraw = anomaly.buttonMap[i];
 
@@ -667,14 +719,11 @@ void Lift::Draw(AEGfxVertexList* squareMesh) {
                     float drawX, drawY, btnWidth, btnHeight;
                     GetButtonRect(i, drawX, drawY, btnWidth, btnHeight);
 
-                    // Apply jitter to the individual button coordinates
                     drawX += jitterX;
                     drawY += jitterY;
 
-                    // Highlight Red if this button was clicked!
                     u32 bgColor = (i == phase.selectedSlot) ? 0xFF0000FF : COLOR_LIGHT_GREY;
                     DrawSquareMesh(squareMesh, drawX, drawY, btnWidth + 10.0f, btnHeight + 10.0f, bgColor);
-
                     DrawTextureMesh(quadMesh, tex.button[floorToDraw], drawX, drawY, btnWidth, btnHeight, 1.0f);
                 }
             }
@@ -683,7 +732,6 @@ void Lift::Draw(AEGfxVertexList* squareMesh) {
 
     Anomaly_OnDraw(squareMesh);
 }
-
 // ============================================================
 // UNLOAD
 // ============================================================
