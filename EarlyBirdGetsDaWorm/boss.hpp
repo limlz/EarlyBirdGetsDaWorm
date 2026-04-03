@@ -32,6 +32,19 @@ struct Boss {
     int currentState;     // 0 = Normal, 1 = Spread, 2 = Shield
     float stateTimer;     // How long to stay in the current state
     bool shieldActive;    // Is the defense shield currently on?
+
+    // -- Horror Phase System --
+    int phase;                  // 0=Paranoia, 1=Schizophrenia, 2=Insomnia, 3=Scotophobia
+    float phaseTransitionTimer; // brief flash/shake on phase change
+
+    // -- Flicker (all phases, more erratic at higher phases) --
+    float flickerTimer;
+    bool flickerVisible;
+
+    // -- Horror Teleport --
+    bool isVanished;         // true while mid-teleport vanish
+    float vanishTimer;       // countdown during vanish
+    float vanishReappearY;   // target Y position after vanish
 };
 
 

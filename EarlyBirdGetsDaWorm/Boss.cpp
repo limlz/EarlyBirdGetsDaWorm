@@ -52,6 +52,15 @@ void Boss_Initialize(Boss& boss)
     boss.stateTimer = 4.0f;
     boss.shieldActive = false;
 
+    // Horror phase system
+    boss.phase = 0;
+    boss.phaseTransitionTimer = 0.0f;
+    boss.flickerTimer = 0.0f;
+    boss.flickerVisible = true;
+    boss.isVanished = false;
+    boss.vanishTimer = 0.0f;
+    boss.vanishReappearY = 0.0f;
+
     // Reset static animation state so replays start from frame 0
     bossAnim.Reset();
     bulletAnim.Reset();
@@ -63,6 +72,80 @@ void Boss_Initialize(Boss& boss)
 
 void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 {
+    // --- HORROR PHASE COMPUTATION ---
+    float hpPercent = static_cast<float>(boss.health) / static_cast<float>(BOSS_MAX_HEALTH);
+    int newPhase = 0;
+    if (hpPercent <= 0.25f)      newPhase = 3; // Scotophobia
+    else if (hpPercent <= 0.50f) newPhase = 2; // Insomnia
+    else if (hpPercent <= 0.75f) newPhase = 1; // Schizophrenia
+    else                         newPhase = 0; // Paranoia
+
+    if (newPhase != boss.phase) {
+        boss.phase = newPhase;
+        boss.phaseTransitionTimer = 0.5f;
+        if (!Settings_IsHorrorLessEnabled())
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.4f, 0.5f); // low-pitched transition sting
+    }
+    if (boss.phaseTransitionTimer > 0.0f)
+        boss.phaseTransitionTimer -= dt;
+
+    // --- HORROR TELEPORT (vanish phase) ---
+    if (boss.isVanished) {
+        boss.vanishTimer -= dt;
+        if (boss.vanishTimer <= 0.0f) {
+            boss.isVanished = false;
+            boss.baseY = boss.vanishReappearY;
+            boss.y = boss.vanishReappearY;
+            boss.flickerVisible = true;
+
+            // Immediate 3-shot burst on reappearance
+            float handX = boss.x - 120.0f;
+            float handY = boss.y + 20.0f;
+            int fired = 0;
+            for (int i = 0; i < MAX_BOSS_BULLETS && fired < 3; i++) {
+                if (!boss.bullets[i].active) {
+                    boss.bullets[i].active = true;
+                    boss.bullets[i].is_scatter = false;
+                    boss.bullets[i].hp = 15;
+                    boss.bullets[i].x = handX;
+                    boss.bullets[i].y = handY;
+                    float diffX = playerX - handX;
+                    float diffY = playerY - handY;
+                    float spread = (fired - 1) * 0.15f;
+                    float angle = atan2f(diffY, diffX) + spread;
+                    boss.bullets[i].dirX = cosf(angle) * 700.0f;
+                    boss.bullets[i].dirY = sinf(angle) * 700.0f;
+                    fired++;
+                }
+            }
+        }
+        // While vanished, still advance bullets
+        for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
+            if (boss.bullets[i].active) {
+                boss.bullets[i].x += boss.bullets[i].dirX * dt;
+                boss.bullets[i].y += boss.bullets[i].dirY * dt;
+                if (boss.bullets[i].x < -1000 || boss.bullets[i].x > 1000 || boss.bullets[i].y < -1000 || boss.bullets[i].y > 1000)
+                    boss.bullets[i].active = false;
+            }
+        }
+        bulletAnim.Update(dt);
+        return;
+    }
+
+    // --- BOSS SPRITE FLICKER (all phases, horror only) ---
+    if (!Settings_IsHorrorLessEnabled()) {
+        boss.flickerTimer -= dt;
+        if (boss.flickerTimer <= 0.0f) {
+            boss.flickerVisible = !boss.flickerVisible;
+            float maxOn  = (boss.phase >= 3) ? 0.08f : (boss.phase >= 2) ? 0.12f : (boss.phase >= 1) ? 0.22f : 0.5f;
+            float maxOff = (boss.phase >= 3) ? 0.18f : (boss.phase >= 2) ? 0.12f : (boss.phase >= 1) ? 0.07f : 0.05f;
+            boss.flickerTimer = boss.flickerVisible
+                ? (0.02f + static_cast<float>(RandInt(0, 99)) / 100.0f * maxOn)
+                : (0.01f + static_cast<float>(RandInt(0, 99)) / 100.0f * maxOff);
+        }
+    } else {
+        boss.flickerVisible = true;
+    }
 
     // Boss body animation — ping-pong: 0→1→2→1→0→1→2…
     bossAnim.Update(dt);
@@ -120,7 +203,11 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     // State 0: Normal Targeted Shot (From the Hand!)
     if (boss.currentState == 0 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.0f;
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.25f); // Boss attack screech
+        // Eerie whisper for normal shot — less repetitive than constant screaming
+        if (!Settings_IsHorrorLessEnabled())
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.18f, 0.9f + static_cast<float>(RandInt(0, 20)) / 100.0f);
+        else
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.12f);
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
@@ -145,7 +232,8 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     // State 1: Spread Attack (From the Hand!)
     else if (boss.currentState == 1 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.5f;
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.45f, 0.75f); // Boss spread attack (louder, lower pitch)
+        // Spread attack: screaming is earned — but not blaring
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.18f, 0.75f);
 
         float diffX = playerX - handX;
         float diffY = playerY - handY;
@@ -294,17 +382,28 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 {
     if (!boss.active) return;
 
-    // --- DRAW BOSS (animated) — shield textures replace body textures during shield phase ---
-    AEGfxTexture* activeTex = boss.shieldActive
-        ? bossShieldTex[bossAnim.currentFrame]
-        : bossTex[bossAnim.currentFrame];
+    // Skip drawing boss body while vanished (mid-teleport)
+    if (!boss.isVanished) {
+        AEGfxTexture* activeTex = boss.shieldActive
+            ? bossShieldTex[bossAnim.currentFrame]
+            : bossTex[bossAnim.currentFrame];
 
-    if (activeTex) {
-        DrawTextureMesh(mesh, activeTex, boss.x, boss.y, boss.w, boss.h, 1.0f);
-    }
-    else {
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        DrawSquareMesh(mesh, boss.x, boss.y, boss.w, boss.h, 0xFFFF00FF);
+        float flickerAlpha = boss.flickerVisible ? 1.0f : 0.12f;
+
+        // Shield phase: additive purple glow (horror only)
+        if (boss.shieldActive && !Settings_IsHorrorLessEnabled())
+            AEGfxSetColorToAdd(0.15f, 0.0f, 0.25f, 0.0f);
+
+        if (activeTex) {
+            DrawTextureMesh(mesh, activeTex, boss.x, boss.y, boss.w, boss.h, flickerAlpha);
+        }
+        else {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetTransparency(flickerAlpha);
+            DrawSquareMesh(mesh, boss.x, boss.y, boss.w, boss.h, 0xFFFF00FF);
+            AEGfxSetTransparency(1.0f);
+        }
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     // =================================================================
@@ -334,7 +433,11 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
                 AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-                AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+                // Red tint on bullets during shield phase (horror only)
+                if (boss.shieldActive && !Settings_IsHorrorLessEnabled())
+                    AEGfxSetColorToAdd(0.5f, 0.0f, 0.0f, 0.0f);
+                else
+                    AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
                 AEGfxSetTransparency(1.0f);
                 AEGfxTextureSet(currentTex, 0.0f, 0.0f);
 
@@ -360,7 +463,7 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
 // --- NEW: COMPOUND COLLISION MESH CHECK ---
 bool Boss_CheckCollision(Boss& boss, float objX, float objY, float objW, float objH)
 {
-    if (!boss.active) return false;
+    if (!boss.active || boss.isVanished) return false;
 
 
     // Define the 4 custom hitboxes that wrap tightly around the monster's drawing

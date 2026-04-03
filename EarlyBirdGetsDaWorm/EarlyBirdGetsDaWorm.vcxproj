@@ -148,6 +148,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analytics.hpp" />
+    <ClInclude Include="Animation.hpp" />
     <ClInclude Include="assets_catalog.hpp" />
     <ClInclude Include="audio_manager.hpp" />
     <ClInclude Include="boss.hpp" />

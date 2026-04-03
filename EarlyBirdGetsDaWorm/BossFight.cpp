@@ -66,6 +66,33 @@ static float victoryHoldTimer = 0.0f;
 static s8 victoryFontId    = -1;
 static s8 victorySubFontId = -1;
 
+// --- HORROR ATMOSPHERE ---
+static float horrorTime        = 0.0f;
+static float bossShakeX        = 0.0f;
+static float bossShakeY        = 0.0f;
+static float bossShakeTimer    = 0.0f;
+static float whisperTimer      = 0.0f;
+static float heartbeatTimer    = 0.0f;
+static float heartbeatInterval = 1.5f;
+static float whisperTextTimer  = 0.0f;
+static float whisperTextAlpha  = 0.0f;
+static float whisperTextX      = 0.0f;
+static float whisperTextY      = 0.0f;
+static float whisperTextScale  = 0.7f;
+static int   whisperTextIndex  = 0;
+static float shieldDarkenAlpha = 0.0f;
+static float bgmVolume         = 0.5f;
+static float victoryDarkTimer  = 0.0f;
+static bool  victoryHeartbeatPlayed = false;
+static bool  victoryReleasePlayed   = false;
+
+static const char* WHISPER_TEXTS[] = {
+    "HELP ME", "DON'T LOOK", "IT'S BEHIND YOU",
+    "YOU CAN'T SAVE THEM", "WRONG PATIENT", "LET ME OUT",
+    "CAN YOU HEAR IT", "NOT REAL"
+};
+static const int NUM_WHISPER_TEXTS = 8;
+
 void Player_DrawHealthBar(AEGfxVertexList* mesh)
 {
     float hpPercent = static_cast<float>(playerHP) / static_cast<float>(MAX_PLAYER_HP);
@@ -185,7 +212,22 @@ void Boss_Fight_Initialize()
 
     // Start boss fight music
     AudioManager_StopBGM();
-    AudioManager_PlayBGM(SoundID::BGM_MAIN_MENU, 0.4f);
+    AudioManager_PlayBGM(SoundID::SFX_BOSS_FIGHT, 0.5f);
+
+    // Reset horror atmosphere
+    horrorTime = 0.0f;
+    bossShakeX = bossShakeY = bossShakeTimer = 0.0f;
+    whisperTimer = 5.0f + static_cast<float>(RandInt(0, 50)) / 10.0f;
+    heartbeatTimer = 1.5f;
+    heartbeatInterval = 1.5f;
+    whisperTextTimer = 3.0f + static_cast<float>(RandInt(0, 30)) / 10.0f;
+    whisperTextAlpha = 0.0f;
+    whisperTextIndex = 0;
+    shieldDarkenAlpha = 0.0f;
+    bgmVolume = 0.5f;
+    victoryDarkTimer = 0.0f;
+    victoryHeartbeatPlayed = false;
+    victoryReleasePlayed = false;
 
     // Auto-open the guide to the Boss Fight instructions page
     Guide_BossFight();
@@ -204,24 +246,57 @@ void Boss_Fight_Update()
 
     if (myBoss.health <= 0 && !isVictorySequence) {
         isVictorySequence = true;
-        AudioManager_StopBGM();                        // Cut boss music on defeat
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.5f);    // Boss defeat scream
+        victoryDarkTimer = 0.0f;
+        victoryHeartbeatPlayed = false;
+        victoryReleasePlayed = false;
+        AudioManager_StopBGM();
+
+        if (!Settings_IsHorrorLessEnabled()) {
+            bossShakeTimer = 0.6f;
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.6f, 0.4f);
+        } else {
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.5f);
+        }
     }
 
     // Run the victory animation and block all gameplay input
     if (isVictorySequence) {
-        victoryAlpha += 1.0f * dt; // Fade the screen to black over 1 second
-        if (victoryAlpha >= 1.0f) {
-            victoryAlpha = 1.0f;
-            victoryHoldTimer += dt;
+        bool isHorrorVictory = !Settings_IsHorrorLessEnabled();
+        victoryDarkTimer += dt;
 
-            // Show the text for 3 seconds, then return to the main game
-            if (victoryHoldTimer > 3.0f) {
-
-                Player_GenerateMission();
-                Timer_SetPaused(false);
-
-                next = GAME_STATE;
+        if (isHorrorVictory) {
+            if (victoryDarkTimer < 1.5f) {
+                victoryAlpha = victoryDarkTimer / 1.5f;
+                if (victoryDarkTimer > 0.8f && !victoryHeartbeatPlayed) {
+                    AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.8f, 0.6f);
+                    victoryHeartbeatPlayed = true;
+                }
+            } else if (victoryDarkTimer < 2.0f) {
+                victoryAlpha = 1.0f;
+            } else {
+                victoryAlpha = 1.0f;
+                if (!victoryReleasePlayed) {
+                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.4f, 0.7f);
+                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.3f, 1.2f);
+                    victoryReleasePlayed = true;
+                }
+                victoryHoldTimer += dt;
+                if (victoryHoldTimer > 3.0f) {
+                    Player_GenerateMission();
+                    Timer_SetPaused(false);
+                    next = GAME_STATE;
+                }
+            }
+        } else {
+            victoryAlpha += 1.0f * dt;
+            if (victoryAlpha >= 1.0f) {
+                victoryAlpha = 1.0f;
+                victoryHoldTimer += dt;
+                if (victoryHoldTimer > 3.0f) {
+                    Player_GenerateMission();
+                    Timer_SetPaused(false);
+                    next = GAME_STATE;
+                }
             }
         }
         return;
@@ -380,7 +455,20 @@ void Boss_Fight_Update()
     // ----------------------------------------------------
     // --- UPDATE BOSS ---
     // ----------------------------------------------------
+    int preUpdateState = myBoss.currentState;
+    bool preUpdateShield = myBoss.shieldActive;
+
     Boss_Update(myBoss, dt, playerX, playerY);
+
+    // Trigger screen shake on spread attack or shield activation
+    if (!Settings_IsHorrorLessEnabled()) {
+        if (myBoss.currentState == 1 && preUpdateState != 1)
+            bossShakeTimer = 0.25f;
+        if (myBoss.shieldActive && !preUpdateShield)
+            bossShakeTimer = 0.3f;
+        if (myBoss.phaseTransitionTimer > 0.3f && bossShakeTimer <= 0.0f)
+            bossShakeTimer = 0.4f;
+    }
 
     if (myBoss.active) {
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
@@ -436,12 +524,172 @@ void Boss_Fight_Update()
         }
     }
 
+    // ====================================================
+    // HORROR ATMOSPHERE UPDATE
+    // ====================================================
+    horrorTime += dt;
+    float hpPct = static_cast<float>(myBoss.health) / static_cast<float>(BOSS_MAX_HEALTH);
+    bool isHorror = !Settings_IsHorrorLessEnabled();
+
+    // Screen shake decay
+    if (bossShakeTimer > 0.0f) {
+        bossShakeTimer -= dt;
+        float intensity = bossShakeTimer * 40.0f;
+        bossShakeX = sinf(horrorTime * 90.0f) * intensity;
+        bossShakeY = cosf(horrorTime * 80.0f) * intensity * 0.7f;
+    } else {
+        bossShakeX = bossShakeY = 0.0f;
+    }
+
+    // Shield darken effect
+    if (isHorror) {
+        float shieldTarget = myBoss.shieldActive ? 0.6f : 0.0f;
+        shieldDarkenAlpha += (shieldTarget - shieldDarkenAlpha) * 4.0f * dt;
+    }
+
+    // Dynamic BGM volume — fades as boss weakens
+    {
+        float targetVol = 0.15f + 0.35f * hpPct;
+        bgmVolume += (targetVol - bgmVolume) * 0.5f * dt;
+        AudioManager_SetBGMVolume(bgmVolume);
+    }
+
+    // Sound anomalies per phase (horror only)
+    if (isHorror) {
+        whisperTimer -= dt;
+        if (whisperTimer <= 0.0f) {
+            switch (myBoss.phase) {
+            case 0:
+                AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.15f, 0.85f + static_cast<float>(RandInt(0, 15)) / 100.0f);
+                whisperTimer = 5.0f + static_cast<float>(RandInt(0, 50)) / 10.0f;
+                break;
+            case 1:
+                AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.3f, 0.6f + static_cast<float>(RandInt(0, 80)) / 100.0f);
+                whisperTimer = 3.0f + static_cast<float>(RandInt(0, 40)) / 10.0f;
+                break;
+            case 2:
+                whisperTimer = 99.0f;
+                break;
+            case 3:
+                AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.5f, 1.0f, -1);
+                whisperTimer = 99.0f;
+                break;
+            }
+        }
+
+        // Phase 2+ heartbeat
+        if (myBoss.phase >= 2) {
+            heartbeatTimer -= dt;
+            if (heartbeatTimer <= 0.0f) {
+                AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.6f);
+                heartbeatInterval = heartbeatInterval * 0.92f;
+                if (heartbeatInterval < 0.4f) heartbeatInterval = 0.4f;
+                heartbeatTimer = heartbeatInterval;
+            }
+        }
+    }
+
+    // Whisper text overlay (horror only)
+    if (isHorror) {
+        whisperTextTimer -= dt;
+        if (whisperTextTimer <= 0.0f && whisperTextAlpha <= 0.0f) {
+            whisperTextIndex = RandInt(0, NUM_WHISPER_TEXTS - 1);
+            whisperTextAlpha = 0.6f + static_cast<float>(RandInt(0, 30)) / 100.0f;
+            whisperTextX = -0.6f + static_cast<float>(RandInt(0, 120)) / 100.0f;
+            whisperTextY = -0.4f + static_cast<float>(RandInt(0, 80)) / 100.0f;
+            whisperTextScale = 0.5f + static_cast<float>(RandInt(0, 50)) / 100.0f;
+            float interval = (myBoss.phase >= 3) ? 2.5f : (myBoss.phase >= 1) ? 5.0f : 7.0f;
+            float variance = (myBoss.phase >= 3) ? 1.5f : 3.0f;
+            whisperTextTimer = interval + static_cast<float>(RandInt(0, static_cast<int>(variance * 10))) / 10.0f;
+        }
+        if (whisperTextAlpha > 0.0f) {
+            whisperTextAlpha -= dt * 1.5f;
+            if (whisperTextAlpha < 0.0f) whisperTextAlpha = 0.0f;
+        }
+    }
+
     Bullets_Update(dt, 0.0f, myBoss);
 }
 
 void Boss_Fight_Draw()
 {
-    DrawTextureMesh(squareMesh, wallBgTexture, 0.0f, 0.0f, 1600.0f, 900.0f, 1.0f);
+    bool isHorror = !Settings_IsHorrorLessEnabled();
+    float shakeOX = bossShakeX;
+    float shakeOY = bossShakeY;
+
+    // Background with subtle UV drift in later phases
+    {
+        float uvX = 0.0f, uvY = 0.0f;
+        if (isHorror && myBoss.phase >= 2) {
+            uvX = sinf(horrorTime * 0.3f) * 0.015f;
+            uvY = cosf(horrorTime * 0.2f) * 0.01f;
+        }
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+        AEGfxSetTransparency(1.0f);
+        AEGfxTextureSet(wallBgTexture, uvX, uvY);
+        AEMtx33 bgScale, bgTrans, bgXform;
+        AEMtx33Scale(&bgScale, 1600.0f, 900.0f);
+        AEMtx33Trans(&bgTrans, shakeOX, shakeOY);
+        AEMtx33Concat(&bgXform, &bgTrans, &bgScale);
+        AEGfxSetTransform(bgXform.m);
+        AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // Darkness overlay — base 0.2 always, grows with HP loss
+    if (isHorror) {
+        float hpPct2 = static_cast<float>(myBoss.health) / static_cast<float>(BOSS_MAX_HEALTH);
+        float baseAlpha = 0.20f + (1.0f - hpPct2) * 0.45f;
+        float pulseSpeed = 1.0f + myBoss.phase * 2.5f;
+        float pulse = 0.05f * sinf(horrorTime * pulseSpeed);
+        float overlayAlpha = baseAlpha + pulse + shieldDarkenAlpha;
+        if (overlayAlpha > 0.88f) overlayAlpha = 0.88f;
+        DrawBlackOverlay(squareMesh, overlayAlpha);
+    }
+
+    // Lighting tint per phase (all phases including 0)
+    if (isHorror) {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        float tintR = 0.0f, tintG = 0.0f, tintB = 0.0f, tintA = 0.0f;
+        switch (myBoss.phase) {
+        case 0: // Paranoia: sickly desaturated yellow
+            tintR = 0.12f; tintG = 0.08f; tintB = 0.0f;
+            tintA = 0.10f + 0.03f * sinf(horrorTime * 0.7f);
+            break;
+        case 1: // Schizophrenia: shifting purple
+            tintR = 0.15f + 0.1f * sinf(horrorTime * 3.0f);
+            tintG = 0.03f;
+            tintB = 0.2f + 0.08f * cosf(horrorTime * 4.0f);
+            tintA = 0.18f;
+            break;
+        case 2: // Insomnia: cold flickering white
+            tintR = 0.25f; tintG = 0.25f; tintB = 0.3f;
+            tintA = 0.10f + 0.08f * fabsf(sinf(horrorTime * 7.0f));
+            break;
+        case 3: // Scotophobia: deep purple
+            tintR = 0.08f; tintG = 0.0f; tintB = 0.12f;
+            tintA = 0.28f;
+            break;
+        }
+        if (tintA > 0.01f) {
+            u32 tintColor = (static_cast<u32>(tintR * 255) << 24) |
+                            (static_cast<u32>(tintG * 255) << 16) |
+                            (static_cast<u32>(tintB * 255) << 8) | 0xFF;
+            AEGfxSetTransparency(tintA);
+            DrawSquareMesh(squareMesh, 0.0f, 0.0f, 1600.0f, 900.0f, tintColor);
+            AEGfxSetTransparency(1.0f);
+        }
+    }
+
+    // Phase transition flash
+    if (myBoss.phaseTransitionTimer > 0.0f) {
+        float flashAlpha = myBoss.phaseTransitionTimer * 2.0f;
+        if (flashAlpha > 1.0f) flashAlpha = 1.0f;
+        DrawBlackOverlay(squareMesh, flashAlpha * 0.85f);
+    }
 
 
     // --- DRAW TEXTURED PLAYER ---
@@ -470,13 +718,13 @@ void Boss_Fight_Draw()
         float drawY = isCrouching ? playerY - 15.0f : playerY;
 
         AEMtx33Scale(&scale, dirScale, drawHeight);
-        AEMtx33Trans(&trans, playerX, drawY);
+        AEMtx33Trans(&trans, playerX + shakeOX, drawY + shakeOY);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
 
         // Select texture based on crouch state first, then fallback to walk animation
-        AEGfxTexture* currentTex = isCrouching ? player_crouch : ((playerWalkAnim.currentFrame == 0) ? player_walk1 : player_walk2);
+        AEGfxTexture* currentTex = (playerWalkAnim.currentFrame == 0) ? player_walk1 : player_walk2;
         AEGfxTextureSet(currentTex, 0.0f, 0.0f);
 
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
@@ -537,23 +785,51 @@ void Boss_Fight_Draw()
         }
     }
 
-    DrawSquareMesh(squareMesh, 0.0f, -400.0f, 1600.0f, 100.0f, COLOR_BLACK);
-    DrawSquareMesh(squareMesh, 0.0f, 400.0f, 1600.0f, 100.0f, COLOR_BLACK);
+    // Arena encroachment — bars grow taller in later phases
+    {
+        float barHeight = 100.0f;
+        if (isHorror) barHeight += myBoss.phase * 20.0f;
+        DrawSquareMesh(squareMesh, shakeOX, -400.0f + shakeOY, 1600.0f, barHeight, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, shakeOX,  400.0f + shakeOY, 1600.0f, barHeight, COLOR_BLACK);
+    }
 
     Bullets_Draw(0.0f);
     Boss_Draw(myBoss, squareMesh);
+
+    // Second darkness pass after sprites — darkens everything including player/boss
+    if (isHorror) {
+        float hpPct2 = static_cast<float>(myBoss.health) / static_cast<float>(BOSS_MAX_HEALTH);
+        float afterAlpha = 0.12f + (1.0f - hpPct2) * 0.25f + shieldDarkenAlpha * 0.4f;
+        if (afterAlpha > 0.5f) afterAlpha = 0.5f;
+        DrawBlackOverlay(squareMesh, afterAlpha);
+    }
+
     Player_DrawHealthBar(squareMesh);
     Bullets_DrawAmmoUI();
     Boss_DrawHealthBar(myBoss, squareMesh);
     // Guide clipboard icon anchored just right of the boss HP bar (bar right edge ≈ 679)
     Guide_DrawIconAt(739.0f, 375.0f);
 
-    // Damage vignette — auto-decays; set vignetteAlpha = 1.0f to re-trigger (e.g., cracked-glass overlay)
+    // Persistent pulsing vignette (horror only)
+    if (isHorror) {
+        float hpPct2 = static_cast<float>(myBoss.health) / static_cast<float>(BOSS_MAX_HEALTH);
+        float pulseBase = 0.03f + (1.0f - hpPct2) * 0.08f;
+        float pulseAlpha = pulseBase + 0.03f * sinf(horrorTime * 2.0f);
+        if (pulseAlpha > 0.01f) {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetTransparency(pulseAlpha);
+            DrawSquareMesh(squareMesh, 0.0f, 0.0f, 1600.0f, 900.0f, 0x550A0020);
+            AEGfxSetTransparency(1.0f);
+        }
+    }
+
+    // Damage vignette — auto-decays; set vignetteAlpha = 1.0f to re-trigger
     if (vignetteAlpha > 0.0f) {
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetTransparency(vignetteAlpha * 0.55f);
-        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 1600.0f, 900.0f, 0xFF110000);
+        DrawSquareMesh(squareMesh, 0.0f, 0.0f, 1600.0f, 900.0f, 0xFF0A0020); // purple-red
         AEGfxSetTransparency(1.0f);
     }
 
@@ -572,6 +848,17 @@ void Boss_Fight_Draw()
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // --- WHISPER TEXT OVERLAYS (horror only) ---
+    if (isHorror && whisperTextAlpha > 0.0f && victoryFontId >= 0 && !isVictorySequence) {
+        AEGfxSetTransparency(whisperTextAlpha * 0.7f);
+        AEGfxPrintWithGlow(victoryFontId, WHISPER_TEXTS[whisperTextIndex],
+            whisperTextX, whisperTextY, whisperTextScale,
+            0.6f, 0.2f, 0.8f, 1.0f,
+            0.3f, 0.0f, 0.4f, 0.8f,
+            0.005f);
+        AEGfxSetTransparency(1.0f);
     }
 
     // --- DRAW VICTORY SEQUENCE ---
@@ -619,11 +906,14 @@ void Boss_Fight_Draw()
                     0.0f, 0.2f, 0.15f, 0.5f,    // subtle green glow
                     0.003f);
 
-                // --- Blinking "Returning to ward..." prompt ---
+                // --- Blinking prompt ---
+                const char* promptText = Settings_IsHorrorLessEnabled()
+                    ? "Returning to ward..."
+                    : "...silence restored.";
                 float blinkAlpha = (sinf(victoryHoldTimer * 4.0f) + 1.0f) * 0.5f;
                 AEGfxSetTransparency(blinkAlpha);
-                AEGfxPrintWithGlow(victorySubFontId, "Returning to ward...",
-                    subX("Returning to ward..."), -0.3f, 1.0f,
+                AEGfxPrintWithGlow(victorySubFontId, promptText,
+                    subX(promptText), -0.3f, 1.0f,
                     0.5f, 0.8f, 0.65f, 1.0f,   // dim teal
                     0.0f, 0.2f, 0.1f, 0.4f,
                     0.002f);
@@ -706,14 +996,24 @@ void Boss_Fight_TryDodge()
         impactSoundCooldown = 0.1f; // Cap at ~10 impact sounds per second
     }
 
-    // Only dodge when the boss is active, unshielded, and the cooldown has expired.
-    if (!myBoss.active || myBoss.shieldActive || bossDodgeCooldown > 0.0f)
+    // Only dodge when the boss is active, unshielded, not vanished, and the cooldown has expired.
+    if (!myBoss.active || myBoss.shieldActive || myBoss.isVanished || bossDodgeCooldown > 0.0f)
         return;
 
     if (RandInt(0, 99) < 15) // 15% chance per hit
     {
-        myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
-        bossDodgeCooldown = 3.0f; // Longer cooldown so the boss has time to reach the new position
-        AudioManager_PlaySFX(SoundID::SFX_DODGE, 0.6f); // Boss dodge whoosh
+        if (!Settings_IsHorrorLessEnabled()) {
+            // Horror teleport: vanish, then reappear with burst
+            myBoss.isVanished = true;
+            myBoss.vanishTimer = (myBoss.phase >= 3) ? 0.7f : 0.4f;
+            myBoss.vanishReappearY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
+            bossDodgeCooldown = (myBoss.phase >= 3) ? 1.5f : 3.0f;
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.6f, 0.8f + static_cast<float>(RandInt(0, 40)) / 100.0f);
+            bossShakeTimer = 0.15f;
+        } else {
+            myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
+            bossDodgeCooldown = 3.0f;
+            AudioManager_PlaySFX(SoundID::SFX_DODGE, 0.6f);
+        }
     }
 }
