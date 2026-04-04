@@ -88,8 +88,8 @@ void PresentationEndgame_Draw()
     if (titleFontId >= 0 && bodyFontId >= 0) {
 
         // --- Title: game name ---
-        // titleFontId size 34 → ~0.042f NDC per char (same calibration as BossFight's size 35)
-        // bodyFontId  size 22 → ~0.026f NDC per char (scaled from Endgame's 0.036f at size 30)
+        // titleFontId size 34 → ~0.042f NDC per char (calibrated from screenshot measurements)
+        // bodyFontId  size 22 → centerX 0.016f aligns its center to the title's center
         auto titleX = [](std::string_view text) -> float {
             return -(static_cast<float>(text.size()) * 0.042f * 0.5f);
         };
@@ -106,7 +106,7 @@ void PresentationEndgame_Draw()
         if (lineRevealTime > 0.6f) {
             float alpha2 = AEClamp((lineRevealTime - 0.6f) / 0.5f, 0.0f, 1.0f);
             AEGfxPrintCentered(bodyFontId, "Thank you for experiencing our demo!",
-                0.0f, 0.28f, 1.0f, 0.85f, 0.85f, 0.85f, alpha2, 0.026f);
+                0.016f, 0.28f, 1.0f, 0.85f, 0.85f, 0.85f, alpha2, 0.028f);
         }
 
         // --- Divider line ---
@@ -121,13 +121,13 @@ void PresentationEndgame_Draw()
         if (lineRevealTime > 1.5f) {
             float alpha4 = AEClamp((lineRevealTime - 1.5f) / 0.5f, 0.0f, 1.0f);
             AEGfxPrintCentered(bodyFontId, "We now hand it over to our team",
-                0.0f, 0.10f, 1.0f, 0.70f, 0.85f, 0.95f, alpha4, 0.026f);
+                0.016f, 0.10f, 1.0f, 0.70f, 0.85f, 0.95f, alpha4, 0.028f);
         }
 
         if (lineRevealTime > 2.0f) {
             float alpha5 = AEClamp((lineRevealTime - 2.0f) / 0.5f, 0.0f, 1.0f);
             AEGfxPrintCentered(bodyFontId, "for the main project takeaways:",
-                0.0f, -0.02f, 1.0f, 0.70f, 0.85f, 0.95f, alpha5, 0.026f);
+                0.016f, -0.02f, 1.0f, 0.70f, 0.85f, 0.95f, alpha5, 0.028f);
         }
 
         // --- Names ---
@@ -144,7 +144,7 @@ void PresentationEndgame_Draw()
         if (lineRevealTime > 3.5f && !isFadingOut) {
             float blinkAlpha = (sinf(totalTime * 4.0f) + 1.0f) * 0.5f;
             AEGfxPrintCentered(bodyFontId, "[ Click or Space to return to menu ]",
-                0.0f, -0.52f, 1.0f, 0.55f, 0.55f, 0.55f, blinkAlpha * 0.65f, 0.026f);
+                0.016f, -0.52f, 1.0f, 0.55f, 0.55f, 0.55f, blinkAlpha * 0.65f, 0.028f);
         }
     }
 

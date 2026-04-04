@@ -114,7 +114,7 @@ void MainMenu_Update()
     // Main Menu Buttons
     bool hoverAdmit    = IsAreaClickedByMouse(480.0f,  270.0f, 490.0f, 290.0f);
     bool hoverPlaytest      = IsAreaClickedByMouse(650.0f, -410.0f, 80.0f, 30.0f);
-    bool hoverPresentation  = IsAreaClickedByMouse(510.0f, -410.0f, 80.0f, 30.0f);
+    bool hoverPresentation  = IsAreaClickedByMouse(350.0f, -410.0f, 80.0f, 30.0f);
     bool hoverOptions  = IsAreaClickedByMouse(500.0f,   15.0f, 500.0f, 200.0f);
     bool hoverQuit     = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
 
@@ -177,7 +177,7 @@ void MainMenu_Draw()
 
         // Presentation Mode (to the left of playtest)
         {
-            const float pmSwX = 510.0f;
+            const float pmSwX = 350.0f;
             bool pmOn = Game_IsPresentationMode();
             if (menuFontId >= 0)
                 AEGfxPrintCentered(menuFontId, "PRESENTATION MODE",

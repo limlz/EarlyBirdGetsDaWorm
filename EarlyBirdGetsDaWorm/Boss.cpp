@@ -189,7 +189,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 
     // Play shield break sound when the boss drops its shield
     if (prevShieldActive && !boss.shieldActive) {
-        AudioManager_PlaySFX(SoundID::SFX_SHIELD_BREAK, 0.25f);
+        AudioManager_PlaySFX(SoundID::SFX_SHIELD_BREAK, 0.10f);
     }
     prevShieldActive = boss.shieldActive;
 
@@ -205,7 +205,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         boss.shootTimer = 1.0f;
         // Eerie whisper for normal shot — less repetitive than constant screaming
         if (!Settings_IsHorrorLessEnabled())
-            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.18f, 0.9f + static_cast<float>(RandInt(0, 20)) / 100.0f);
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.08f, 0.9f + static_cast<float>(RandInt(0, 20)) / 100.0f);
         else
             AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.12f);
 
