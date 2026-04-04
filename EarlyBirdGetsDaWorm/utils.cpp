@@ -5,7 +5,8 @@ AEGfxTexture* LoadTextureChecked(const char* path)
 	AEGfxTexture* texture = AEGfxTextureLoad(path);
 	if (!texture)
 	{
-		std::cout << "FAILED TO LOAD TEXTURE: " << path << "\n";
+		std::cerr << "FATAL: FAILED TO LOAD TEXTURE: " << path << "\n";
+		AE_ASSERT_MESG(texture, "LoadTextureChecked: texture file not found or failed to load!");
 	}
 	return texture;
 }

@@ -17,3 +17,6 @@ void Credits_DrawOverlay(AEGfxVertexList* mesh);   // scrolling credits overlay
 bool Credits_IsOpen();
 bool Credits_IsHovering();
 void Credits_Open();
+
+// Call once at program shutdown to release static vector buffers before the CRT leak check runs
+void Credits_Shutdown();

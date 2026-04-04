@@ -50,10 +50,8 @@ void Particles_Update()
 {
     float dt = static_cast<float>(AEFrameRateControllerGetFrameTime());
 
-    for (int i = 0; i < particleList.size(); i++)
+    for (auto& p : particleList)
     {
-        Particle& p = particleList[i];
-
         // 1. Gravity (Pull down)
         p.velY -= 1000.0f * dt;
 
@@ -73,13 +71,13 @@ void Particles_Update()
             p.y = -250.0f;
             p.velY = -p.velY * 0.5f; // Bounce with energy loss
         }
-
-        // 6. Remove Dead
-        if (p.life <= 0.0f) {
-            particleList.erase(particleList.begin() + i);
-            i--;
-        }
     }
+
+    // 6. Remove Dead — erase-remove idiom (O(n) instead of O(n^2))
+    particleList.erase(
+        std::remove_if(particleList.begin(), particleList.end(),
+            [](const Particle& p) { return p.life <= 0.0f; }),
+        particleList.end());
 }
 
 void Particles_Draw(AEGfxVertexList* mesh, float camX)

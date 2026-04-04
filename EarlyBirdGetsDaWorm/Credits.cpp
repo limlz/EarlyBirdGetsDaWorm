@@ -361,3 +361,9 @@ void Credits_Open()
     creditsScrollY = -600.0f;
     araFlyTimer    = 0.0f;
 }
+
+// Call once at program shutdown to release static vector buffer before _CrtDumpMemoryLeaks runs.
+void Credits_Shutdown()
+{
+    { std::vector<CreditLine> tmp; parsedCredits.swap(tmp); }
+}

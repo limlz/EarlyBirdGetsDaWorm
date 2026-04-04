@@ -225,6 +225,10 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
                     boss.bullets[i].dirX = (diffX / length) * 600.0f;
                     boss.bullets[i].dirY = (diffY / length) * 600.0f;
                 }
+                else {
+                    boss.bullets[i].dirX = 0.0f;
+                    boss.bullets[i].dirY = 0.0f;
+                }
                 break;
             }
         }
@@ -261,7 +265,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     else if (boss.currentState == 2 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 0.5f;
         if (boss.health < BOSS_MAX_HEALTH) {
-            boss.health += 15;
+            boss.health = (std::min)(boss.health + 15, BOSS_MAX_HEALTH);
         }
     }
 

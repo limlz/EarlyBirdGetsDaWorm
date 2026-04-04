@@ -284,6 +284,8 @@ void Doors::Initialize()
 
     for (int i = 0; i < NUM_DOORS; ++i)
         DoorStates[i] = DoorState{};
+
+    ResetAllLocks();
 }
 
 void Doors::Unload()

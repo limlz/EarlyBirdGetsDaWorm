@@ -2,7 +2,8 @@
 // Main.cpp
 // ---------------------------------------------------------------------------
 #include "pch.hpp"
-#include <crtdbg.h> 
+#include "Credits.hpp"
+#include <crtdbg.h>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -94,6 +95,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     Analytics::Shutdown();    // free session-ID string before _CrtDumpMemoryLeaks runs
     CentralPool_Shutdown();   // free static vector buffers before _CrtDumpMemoryLeaks runs
     Journal_Shutdown();       // free Observed/Unread vector buffers before _CrtDumpMemoryLeaks runs
+    Credits_Shutdown();       // free parsedCredits vector buffer before _CrtDumpMemoryLeaks runs
     AESysExit();
     return 0;
 }

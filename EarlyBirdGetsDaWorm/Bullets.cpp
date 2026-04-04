@@ -287,6 +287,8 @@ bool Bullets_HasAmmo() {
 
 void Bullets_Free() {
     FreeMeshSafe(squareMesh);
-    std::vector<Bullet>().swap(bullets);
+    // Clear and reset to default state instead of deallocating — prevents OOB
+    // if anything touches bullets[] before the next Bullets_Initialize()
+    bullets.assign(MAX_BULLETS, Bullet{});
     if (ammoFontId >= 0) { AEGfxDestroyFont(ammoFontId); ammoFontId = -1; }
 }
