@@ -27,8 +27,8 @@ const int MAX_JUMPS = 2;
 bool facingRight = true;
 
 // --- PLAYER HEALTH ---
-int playerHP = MAX_PLAYER_HP;
 const int MAX_PLAYER_HP = 20;
+int playerHP = MAX_PLAYER_HP;
 bool isPlayerHit = false;
 float hitTimer = 0.0f;
 static float vignetteAlpha = 0.0f; // Set to 1.0f to flash the damage vignette overlay
