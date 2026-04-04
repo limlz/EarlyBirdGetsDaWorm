@@ -19,3 +19,6 @@ float Game_GetTimeSurvived();
 
 bool  Game_IsPlaytestMode();
 void  Game_SetPlaytestMode(bool enabled);
+
+bool  Game_IsPresentationMode();
+void  Game_SetPresentationMode(bool enabled);

@@ -263,7 +263,8 @@ void Lift::Anomaly_OnDraw(AEGfxVertexList* squareMesh) {
     }
 
     // --- SCOTOPHOBIA ANOMALY (PITCH BLACK TRANSIT) ---
-    if (illness == ILLNESSES::SCOTOPHOBIA) {
+    // Skip in presentation mode — pitch black would derail the demo
+    if (illness == ILLNESSES::SCOTOPHOBIA && !Game_IsPresentationMode()) {
         if (phase.phase == 3 && phase.timer < TRANSIT_TIMER) {
             Journal_ReportAnomaly(ANOMALYID::Lift_Scotophobia); // Report the anomaly to the journal
 

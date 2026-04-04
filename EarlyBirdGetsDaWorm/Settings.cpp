@@ -271,3 +271,4 @@ float Settings_GetMasterVolume()     { return masterVolume; }
 float Settings_GetBGMVolume()        { return bgmVolume; }
 float Settings_GetSFXVolume()        { return sfxVolume; }
 bool  Settings_IsHorrorLessEnabled() { return horrorLessMode; }
+bool  Settings_IsPresentationModeEnabled()  { return Game_IsPresentationMode(); }

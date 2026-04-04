@@ -68,9 +68,21 @@ static ILLNESSES PatientRandomIllness() {
 // appropriate illness anomalies. Ghosts secretly mimic human illnesses but add an extra modifier.
 /*****************************************************************************************/
 static void ApplyNewPatientFromTruth(bool isGhostTruth) {
+    // Presentation mode: always a Scotophobia ghost with every anomaly active
+    if (Game_IsPresentationMode()) {
+        CarriedPatientIsGhost = true;
+        TrueDiagnosis  = ILLNESSES::GHOST;
+        AnomalyIllness = ILLNESSES::SCOTOPHOBIA;
+        GhostExtraAnomalies = 99; // force all anomalies
+        VisualBluff = false;
+        Frame = 0;
+        Timer = 0.0f;
+        CentralPool_GeneratePatientAnomalies(AnomalyIllness, GhostExtraAnomalies);
+        return;
+    }
+
     CarriedPatientIsGhost = isGhostTruth;
     AnomalyIllness = PatientRandomIllness();
-    //AnomalyIllness = ILLNESSES::DEPRESSION; // TESTING
 
     if (CarriedPatientIsGhost) {
         TrueDiagnosis = ILLNESSES::GHOST;   // according to the ILLNESSES enum in central_pool.hpp
@@ -181,7 +193,11 @@ void ResetPatientCounter(int day) {
     PatientsHandled = 0;
     int CurrentDay = (day < 1) ? 1 : (day > 5 ? 5 : day);
 
-    if (Game_IsPlaytestMode()) {
+    if (Game_IsPresentationMode()) {
+        // Presentation: exactly 1 ghost patient, no shuffle needed
+        CurrentDayPool[0] = 1;
+    }
+    else if (Game_IsPlaytestMode()) {
         // Playtest: guaranteed 1 ghost and 1 human per day, order randomised
         CurrentDayPool[0] = PlaytestDayPool[0];
         CurrentDayPool[1] = PlaytestDayPool[1];

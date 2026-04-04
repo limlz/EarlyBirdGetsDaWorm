@@ -41,7 +41,8 @@ bool dementia{ false };
 
 static int  CurrentDay = 1;
 static bool gSessionStarted = false; // Guards Game_Load so day/timer only reset on a fresh session, not a reload
-static bool gPlaytestMode   = false; // Compressed demo mode: 2 patients/day, 3x clock, no visual bluff
+static bool gPlaytestMode      = false; // Compressed demo mode: 2 patients/day, 3x clock, no visual bluff
+static bool gPresentationMode  = false; // Demo-day mode: 1 day, 1 forced Scotophobia ghost, all anomalies
 
 // ============================================================
 //  SPAWN
@@ -311,7 +312,7 @@ void Game_Update()
     if (Timer_IsTimeUp())
     {
         // Check quota first so a failed playtest day still ends with DIED_TO_BOSS
-        const int requiredPatients = Game_IsPlaytestMode() ? 1 : REQUIRED_PATIENTS;
+        const int requiredPatients = (Game_IsPlaytestMode() || Game_IsPresentationMode()) ? 1 : REQUIRED_PATIENTS;
         if (Player_GetPatientsHandled() < requiredPatients) {
             currentEndReason = EndGameReason::REASON_QUOTA_NOT_MET;
             Analytics::LogRun(currentEndReason, CurrentDay, Player_GetPatientsHandled(), IsGhostPatient(),
@@ -807,3 +808,6 @@ float Game_GetTimeSurvived()
 
 bool  Game_IsPlaytestMode()              { return gPlaytestMode; }
 void  Game_SetPlaytestMode(bool enabled) { gPlaytestMode = enabled; }
+
+bool  Game_IsPresentationMode()              { return gPresentationMode; }
+void  Game_SetPresentationMode(bool enabled) { gPresentationMode = enabled; }

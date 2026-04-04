@@ -113,7 +113,8 @@ void MainMenu_Update()
 
     // Main Menu Buttons
     bool hoverAdmit    = IsAreaClickedByMouse(480.0f,  270.0f, 490.0f, 290.0f);
-    bool hoverPlaytest = IsAreaClickedByMouse(650.0f, -410.0f,  80.0f,  30.0f);
+    bool hoverPlaytest      = IsAreaClickedByMouse(650.0f, -410.0f, 80.0f, 30.0f);
+    bool hoverPresentation  = IsAreaClickedByMouse(510.0f, -410.0f, 80.0f, 30.0f);
     bool hoverOptions  = IsAreaClickedByMouse(500.0f,   15.0f, 500.0f, 200.0f);
     bool hoverQuit     = IsAreaClickedByMouse(490.0f, -210.0f, 490.0f, 190.0f);
 
@@ -125,6 +126,7 @@ void MainMenu_Update()
     if (AEInputCheckTriggered(AEVK_LBUTTON)) {
         if      (hoverAdmit)            { pendingNextState = GAME_STATE; isFadingOut = true; }
         else if (hoverPlaytest)         { Game_SetPlaytestMode(!Game_IsPlaytestMode()); }
+        else if (hoverPresentation)     { Game_SetPresentationMode(!Game_IsPresentationMode()); }
         else if (hoverOptions)          { Settings_Open(); }
         else if (hoverQuit)             { pendingNextState = GS_QUIT; isFadingOut = true; }
         else if (Credits_IsHovering())  { Credits_Open(); }
@@ -153,30 +155,40 @@ void MainMenu_Draw()
     DrawTextureMesh(squareMesh, quit_tag,           500.0f, -220.0f, 500.0f * quit_scale,    200.0f * quit_scale,    1.0f);
     DrawTextureMesh(squareMesh, quit_text,          515.0f, -220.0f, 400.0f * quit_scale,    150.0f * quit_scale,    1.0f);
 
-    // --- Playtest Mode pill switch (bottom right, matches Settings style) ---
+    // --- Playtest / Presentation Mode pill switches (bottom right) ---
     {
-        const float ptSwX = 650.0f, ptSwY = -410.0f;
-        bool ptOn = Game_IsPlaytestMode();
+        const float swY = -410.0f;
 
-        // Label above the switch
-        if (menuFontId >= 0) {
-            AEGfxPrintCentered(menuFontId, "PLAYTEST MODE",
-                ptSwX / 800.0f, (ptSwY + 25.0f) / 450.0f,
-                0.6f, 0.75f, 0.95f, 0.75f, 1.0f);
+        // Playtest Mode
+        {
+            const float ptSwX = 650.0f;
+            bool ptOn = Game_IsPlaytestMode();
+            if (menuFontId >= 0)
+                AEGfxPrintCentered(menuFontId, "PLAYTEST MODE",
+                    ptSwX / 800.0f, (swY + 25.0f) / 450.0f,
+                    0.6f, 0.75f, 0.95f, 0.75f, 1.0f);
+            DrawSquareMesh(squareMesh, ptSwX, swY, 80.0f, 26.0f, ptOn ? 0xFF228B22 : 0xFF2A2A2A);
+            DrawSquareMesh(squareMesh, ptSwX + (ptOn ? 22.0f : -22.0f), swY, 28.0f, 28.0f, 0xFFEEEEEE);
+            if (menuFontId >= 0)
+                AEGfxPrintCentered(menuFontId, ptOn ? "ON" : "OFF",
+                    (ptSwX + (ptOn ? -18.0f : 18.0f)) / 800.0f, (swY - 7.0f) / 450.0f,
+                    0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
 
-        // Pill track (green when ON, dark when OFF)
-        DrawSquareMesh(squareMesh, ptSwX, ptSwY, 80.0f, 26.0f,
-            ptOn ? 0xFF228B22 : 0xFF2A2A2A);
-
-        // Sliding nub
-        DrawSquareMesh(squareMesh, ptSwX + (ptOn ? 22.0f : -22.0f), ptSwY, 28.0f, 28.0f, 0xFFEEEEEE);
-
-        // ON / OFF label on the opposite side of the nub
-        if (menuFontId >= 0) {
-            AEGfxPrintCentered(menuFontId, ptOn ? "ON" : "OFF",
-                (ptSwX + (ptOn ? -18.0f : 18.0f)) / 800.0f, (ptSwY - 7.0f) / 450.0f,
-                0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
+        // Presentation Mode (to the left of playtest)
+        {
+            const float pmSwX = 510.0f;
+            bool pmOn = Game_IsPresentationMode();
+            if (menuFontId >= 0)
+                AEGfxPrintCentered(menuFontId, "PRESENTATION MODE",
+                    pmSwX / 800.0f, (swY + 25.0f) / 450.0f,
+                    0.6f, 1.0f, 0.85f, 0.4f, 1.0f); // gold tint
+            DrawSquareMesh(squareMesh, pmSwX, swY, 80.0f, 26.0f, pmOn ? 0xFF8B6914 : 0xFF2A2A2A);
+            DrawSquareMesh(squareMesh, pmSwX + (pmOn ? 22.0f : -22.0f), swY, 28.0f, 28.0f, 0xFFEEEEEE);
+            if (menuFontId >= 0)
+                AEGfxPrintCentered(menuFontId, pmOn ? "ON" : "OFF",
+                    (pmSwX + (pmOn ? -18.0f : 18.0f)) / 800.0f, (swY - 7.0f) / 450.0f,
+                    0.6f, 1.0f, 1.0f, 1.0f, 1.0f);
         }
     }
 

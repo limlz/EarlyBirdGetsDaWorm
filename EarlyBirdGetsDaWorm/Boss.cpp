@@ -84,7 +84,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         boss.phase = newPhase;
         boss.phaseTransitionTimer = 0.5f;
         if (!Settings_IsHorrorLessEnabled())
-            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.4f, 0.5f); // low-pitched transition sting
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.06f, 0.5f); // low-pitched transition sting
     }
     if (boss.phaseTransitionTimer > 0.0f)
         boss.phaseTransitionTimer -= dt;
@@ -189,7 +189,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
 
     // Play shield break sound when the boss drops its shield
     if (prevShieldActive && !boss.shieldActive) {
-        AudioManager_PlaySFX(SoundID::SFX_SHIELD_BREAK, 0.6f);
+        AudioManager_PlaySFX(SoundID::SFX_SHIELD_BREAK, 0.25f);
     }
     prevShieldActive = boss.shieldActive;
 
@@ -233,7 +233,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     else if (boss.currentState == 1 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.5f;
         // Spread attack: screaming is earned — but not blaring
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.18f, 0.75f);
+        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.03f, 0.75f);
 
         float diffX = playerX - handX;
         float diffY = playerY - handY;

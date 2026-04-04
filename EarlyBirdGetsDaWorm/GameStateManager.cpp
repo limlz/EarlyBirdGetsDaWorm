@@ -133,7 +133,16 @@ void GSM_Update()
 		fpDraw = Endgame_Draw;
 		fpFree = Endgame_Free;
 		fpUnload = Endgame_Unload;
-		break; // DO NOT FORGET THE BREAK!
+		break;
+
+	case PRESENTATION_ENDGAME_STATE:
+		fpLoad = PresentationEndgame_Load;
+		fpInitialize = PresentationEndgame_Initialize;
+		fpUpdate = PresentationEndgame_Update;
+		fpDraw = PresentationEndgame_Draw;
+		fpFree = PresentationEndgame_Free;
+		fpUnload = PresentationEndgame_Unload;
+		break;
 
 	default:
 		// Invalid state, no action taken

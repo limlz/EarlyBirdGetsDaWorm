@@ -27,8 +27,8 @@ const int MAX_JUMPS = 2;
 bool facingRight = true;
 
 // --- PLAYER HEALTH ---
-int playerHP = 10;
-const int MAX_PLAYER_HP = 10;
+int playerHP = MAX_PLAYER_HP;
+const int MAX_PLAYER_HP = 20;
 bool isPlayerHit = false;
 float hitTimer = 0.0f;
 static float vignetteAlpha = 0.0f; // Set to 1.0f to flash the damage vignette overlay
@@ -81,7 +81,7 @@ static float whisperTextY      = 0.0f;
 static float whisperTextScale  = 0.7f;
 static int   whisperTextIndex  = 0;
 static float shieldDarkenAlpha = 0.0f;
-static float bgmVolume         = 0.5f;
+static float bgmVolume         = 0.25f;
 static float victoryDarkTimer  = 0.0f;
 static bool  victoryHeartbeatPlayed = false;
 static bool  victoryReleasePlayed   = false;
@@ -212,7 +212,7 @@ void Boss_Fight_Initialize()
 
     // Start boss fight music
     AudioManager_StopBGM();
-    AudioManager_PlayBGM(SoundID::SFX_BOSS_FIGHT, 0.5f);
+    AudioManager_PlayBGM(SoundID::SFX_BOSS_FIGHT, 0.25f);
 
     // Reset horror atmosphere
     horrorTime = 0.0f;
@@ -224,7 +224,7 @@ void Boss_Fight_Initialize()
     whisperTextAlpha = 0.0f;
     whisperTextIndex = 0;
     shieldDarkenAlpha = 0.0f;
-    bgmVolume = 0.5f;
+    bgmVolume = 0.25f;
     victoryDarkTimer = 0.0f;
     victoryHeartbeatPlayed = false;
     victoryReleasePlayed = false;
@@ -253,9 +253,9 @@ void Boss_Fight_Update()
 
         if (!Settings_IsHorrorLessEnabled()) {
             bossShakeTimer = 0.6f;
-            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.6f, 0.4f);
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.07f, 0.4f);
         } else {
-            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.5f);
+            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.05f);
         }
     }
 
@@ -268,7 +268,7 @@ void Boss_Fight_Update()
             if (victoryDarkTimer < 1.5f) {
                 victoryAlpha = victoryDarkTimer / 1.5f;
                 if (victoryDarkTimer > 0.8f && !victoryHeartbeatPlayed) {
-                    AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.8f, 0.6f);
+                    AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.3f, 0.6f);
                     victoryHeartbeatPlayed = true;
                 }
             } else if (victoryDarkTimer < 2.0f) {
@@ -276,15 +276,19 @@ void Boss_Fight_Update()
             } else {
                 victoryAlpha = 1.0f;
                 if (!victoryReleasePlayed) {
-                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.4f, 0.7f);
-                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.3f, 1.2f);
+                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.15f, 0.7f);
+                    AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.1f, 1.2f);
                     victoryReleasePlayed = true;
                 }
                 victoryHoldTimer += dt;
                 if (victoryHoldTimer > 3.0f) {
-                    Player_GenerateMission();
-                    Timer_SetPaused(false);
-                    next = GAME_STATE;
+                    if (Game_IsPresentationMode()) {
+                        next = PRESENTATION_ENDGAME_STATE;
+                    } else {
+                        Player_GenerateMission();
+                        Timer_SetPaused(false);
+                        next = GAME_STATE;
+                    }
                 }
             }
         } else {
@@ -293,9 +297,13 @@ void Boss_Fight_Update()
                 victoryAlpha = 1.0f;
                 victoryHoldTimer += dt;
                 if (victoryHoldTimer > 3.0f) {
-                    Player_GenerateMission();
-                    Timer_SetPaused(false);
-                    next = GAME_STATE;
+                    if (Game_IsPresentationMode()) {
+                        next = PRESENTATION_ENDGAME_STATE;
+                    } else {
+                        Player_GenerateMission();
+                        Timer_SetPaused(false);
+                        next = GAME_STATE;
+                    }
                 }
             }
         }
@@ -348,9 +356,9 @@ void Boss_Fight_Update()
                 jumpCount++;
                 // Horror-less mode uses a silly WEOW instead of a grunt
                 if (Settings_IsHorrorLessEnabled())
-                    AudioManager_PlaySFX(SoundID::SFX_WEOW, 0.6f);
+                    AudioManager_PlaySFX(SoundID::SFX_WEOW, 0.3f);
                 else
-                    AudioManager_PlaySFX(SoundID::SFX_JUMP_GRUNT, 0.5f);
+                    AudioManager_PlaySFX(SoundID::SFX_JUMP_GRUNT, 0.25f);
             }
         }
 
@@ -481,12 +489,16 @@ void Boss_Fight_Update()
                 if (abs(myBoss.bullets[i].x - playerX) < 46.66f &&
                     abs(myBoss.bullets[i].y - currentHitboxY) < currentHitboxH)
                 {
-                    if (!BossDebug_IsGodMode()) playerHP--;
+                    if (!BossDebug_IsGodMode()) {
+                        playerHP--;
+                        if (Game_IsPlaytestMode() && playerHP < MAX_PLAYER_HP / 4)
+                            playerHP = MAX_PLAYER_HP / 4;
+                    }
                     myBoss.bullets[i].active = false;
                     isPlayerHit = true;
                     hitTimer = 0.2f;  
                     vignetteAlpha = 1.0f; // Hook: set to 1.0f to trigger vignette / cracked-glass overlay
-                    AudioManager_PlaySFX(SoundID::SFX_EXHALE, 0.7f);  // Player hurt reaction
+                    AudioManager_PlaySFX(SoundID::SFX_EXHALE, 0.35f);  // Player hurt reaction
 
                     if (playerHP <= 0 && !BossDebug_IsGodMode()) {
                         Player_StopSounds(); // prevent walking SFX persisting into endgame
@@ -511,6 +523,10 @@ void Boss_Fight_Update()
         vignetteAlpha -= dt * 2.5f;
         if (vignetteAlpha < 0.0f) vignetteAlpha = 0.0f;
     }
+
+    // Playtest mode: hard floor at 25% HP — enforced every frame so no damage path can bypass it
+    if (Game_IsPlaytestMode() && !isVictorySequence && playerHP < MAX_PLAYER_HP / 4)
+        playerHP = MAX_PLAYER_HP / 4;
 
     // Lag (ghost) bar slowly catches up to actual HP
     {
@@ -549,7 +565,7 @@ void Boss_Fight_Update()
 
     // Dynamic BGM volume — fades as boss weakens
     {
-        float targetVol = 0.15f + 0.35f * hpPct;
+        float targetVol = 0.08f + 0.17f * hpPct;
         bgmVolume += (targetVol - bgmVolume) * 0.5f * dt;
         AudioManager_SetBGMVolume(bgmVolume);
     }
@@ -564,14 +580,14 @@ void Boss_Fight_Update()
                 whisperTimer = 5.0f + static_cast<float>(RandInt(0, 50)) / 10.0f;
                 break;
             case 1:
-                AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.3f, 0.6f + static_cast<float>(RandInt(0, 80)) / 100.0f);
+                AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.12f, 0.6f + static_cast<float>(RandInt(0, 80)) / 100.0f);
                 whisperTimer = 3.0f + static_cast<float>(RandInt(0, 40)) / 10.0f;
                 break;
             case 2:
                 whisperTimer = 99.0f;
                 break;
             case 3:
-                AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.5f, 1.0f, -1);
+                AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.2f, 1.0f, -1);
                 whisperTimer = 99.0f;
                 break;
             }
@@ -581,7 +597,7 @@ void Boss_Fight_Update()
         if (myBoss.phase >= 2) {
             heartbeatTimer -= dt;
             if (heartbeatTimer <= 0.0f) {
-                AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.6f);
+                AudioManager_PlaySFX(SoundID::SFX_HEARTBEAT, 0.25f);
                 heartbeatInterval = heartbeatInterval * 0.92f;
                 if (heartbeatInterval < 0.4f) heartbeatInterval = 0.4f;
                 heartbeatTimer = heartbeatInterval;
@@ -992,7 +1008,7 @@ void Boss_Fight_TryDodge()
     static float impactSoundCooldown = 0.0f;
     impactSoundCooldown -= static_cast<f32>(AEFrameRateControllerGetFrameTime());
     if (impactSoundCooldown <= 0.0f) {
-        AudioManager_PlaySFX(SoundID::SFX_WATER_IMPACT, 0.5f);
+        AudioManager_PlaySFX(SoundID::SFX_WATER_IMPACT, 0.25f);
         impactSoundCooldown = 0.1f; // Cap at ~10 impact sounds per second
     }
 
@@ -1008,12 +1024,12 @@ void Boss_Fight_TryDodge()
             myBoss.vanishTimer = (myBoss.phase >= 3) ? 0.7f : 0.4f;
             myBoss.vanishReappearY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
             bossDodgeCooldown = (myBoss.phase >= 3) ? 1.5f : 3.0f;
-            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.6f, 0.8f + static_cast<float>(RandInt(0, 40)) / 100.0f);
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.3f, 0.8f + static_cast<float>(RandInt(0, 40)) / 100.0f);
             bossShakeTimer = 0.15f;
         } else {
             myBoss.baseY = (myBoss.baseY > 0) ? -200.0f : 200.0f;
             bossDodgeCooldown = 3.0f;
-            AudioManager_PlaySFX(SoundID::SFX_DODGE, 0.6f);
+            AudioManager_PlaySFX(SoundID::SFX_DODGE, 0.3f);
         }
     }
 }

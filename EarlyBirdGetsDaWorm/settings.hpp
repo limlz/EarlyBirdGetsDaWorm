@@ -20,3 +20,4 @@ float Settings_GetMasterVolume();
 float Settings_GetBGMVolume();
 float Settings_GetSFXVolume();
 bool  Settings_IsHorrorLessEnabled();
+bool  Settings_IsPresentationModeEnabled();

@@ -115,6 +115,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="Credits.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Endgame.cpp" />
+    <ClCompile Include="PresentationEndgame.cpp" />
     <ClCompile Include="Frames.cpp" />
     <ClCompile Include="Doors.cpp" />
     <ClCompile Include="Game.cpp" />
