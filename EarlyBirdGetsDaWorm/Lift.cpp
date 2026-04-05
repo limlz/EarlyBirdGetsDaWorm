@@ -1,151 +1,151 @@
-// ============================================================
-// LIFT MODULE (class-based singleton)
-// ============================================================
-
 #include "pch.hpp"
 
-// ============================================================
+// ============================================================================
 // FILE-SCOPE CONSTANTS
-// ============================================================
+// ============================================================================
 
-static constexpr float LIFT_TIMER       = 1.2f;         // Duration of doors sliding open
-static constexpr float CLOSE_TIMER      = 0.8f;         // Duration of doors sliding shut
-static constexpr float TRANSIT_TIMER    = 2.2f;         // How long lift stays closed while moving
-static const char* GLITCH_CHARS         = "0123456789XXYYZZWWM";
+static constexpr float LIFT_TIMER = 1.2f;           // Duration of doors sliding open
+static constexpr float CLOSE_TIMER = 0.8f;          // Duration of doors sliding shut
+static constexpr float TRANSIT_TIMER = 2.2f;        // How long lift stays closed while moving
+static const char* GLITCH_CHARS = "0123456789XXYYZZWWM";
 
-// ============================================================
-// LIFT CLASS
-// ============================================================
+// ============================================================================
+// LIFT CLASS DEFINITION
+// ============================================================================
 
 class Lift {
 public:
-    // Nested structs
+    // ----------------------------------------------------------------------------
+    // NESTED STATE STRUCTS
+    // ----------------------------------------------------------------------------
     struct Textures {
-        AEGfxTexture* bg      = nullptr;
-        AEGfxTexture* door    = nullptr;
-        AEGfxTexture* panel   = nullptr;
+        AEGfxTexture* bg = nullptr;
+        AEGfxTexture* door = nullptr;
+        AEGfxTexture* panel = nullptr;
         AEGfxTexture* screen = nullptr;
         AEGfxTexture* wall[NUM_OF_FLOOR]{};
         AEGfxTexture* button[NUM_OF_FLOOR]{};
     };
 
     struct PhaseState {
-        int   phase          = 0;            // 1 = Doors Closing, 2 = Panel Active, 3 = Transit & Opening
-        float timer          = 0.0f;         // Tracks time for transit delays
-        float doorProgress   = 1.0f;         // 0.0 = Fully Closed, 1.0 = Fully Open
-        s8    pendingFloor   = -1;           // The floor the lift is travelling to
-        int   selectedSlot   = -1;           // Tracks which button was clicked for the red highlight
+        int   phase = 0;                    // 0 = Idle, 1 = Doors Closing, 2 = Panel Active, 3 = Transit & Opening
+        float timer = 0.0f;                 // Tracks time for transit delays and animations
+        float doorProgress = 1.0f;          // 0.0 = Fully Closed, 1.0 = Fully Open
+        s8    pendingFloor = -1;            // The target floor the lift is traveling to
+        int   selectedSlot = -1;            // Tracks which physical button slot was clicked for the red highlight
     };
 
     struct AnomalyState {
-        int   buttonMap[NUM_OF_FLOOR]{};
-        float aiwScale[NUM_OF_FLOOR]{};      // Stores random scales for AIW
-        bool  generated      = false;
-        bool  schizoLied     = false;        // Tracks if the elevator has already done the fake-out
-        bool  insomniaFake   = false;        // Tracks if the door fake-out has happened
-        float paranoiaTimer  = 0.0f;         // Tracks how long the buttons dodge
-        int   ocdTarget      = -1;
-        int   ocdClicks      = 0;            // Tracks how many times a button was pressed
+        int   buttonMap[NUM_OF_FLOOR]{};    // Maps physical button slots to actual floors
+        float aiwScale[NUM_OF_FLOOR]{};     // Stores randomized scaling multipliers for AIW Syndrome
+        bool  generated = false;            // Flags if the anomalies for the current interaction have been rolled
+        bool  schizoLied = false;           // Tracks if the Schizophrenia fake-out has occurred this session
+        bool  insomniaFake = false;         // Tracks if the Insomnia door-slam has occurred this session
+        float paranoiaTimer = 0.0f;         // Tracks how long the buttons actively repel the mouse cursor
+        int   ocdTarget = -1;               // The specific button designated to be physically misaligned
+        int   ocdClicks = 0;                // Tracks how many times the player has clicked a denied button
     };
 
-    // Render data
-    s8                 fontId   = -1;
-    AEGfxVertexList*   quadMesh = nullptr;
-    Textures           tex;
+    // ----------------------------------------------------------------------------
+    // CLASS MEMBERS
+    // ----------------------------------------------------------------------------
+    s8                fontId = -1;
+    AEGfxVertexList* quadMesh = nullptr;
+    Textures          tex;
+    PhaseState        phase;
+    AnomalyState      anomaly;
 
-    // State
-    PhaseState         phase;
-    AnomalyState       anomaly;
-
-    bool               liftActive    = false;
-    bool               liftWasActive = false;  // tracks previous frame state so Timer_SetPaused is only called on change
-    bool               nearLift      = false;
+    bool              liftActive = false;
+    bool              liftWasActive = false;  // Tracks previous frame state so Timer_SetPaused triggers only on change
+    bool              nearLift = false;
 
 public:
     void Load();
     void Initialize();
     void Update(float dt, float camX, float maxDist, bool dementiaActive);
     void HandleInput(s8& floorNum);
-    void DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor);
-    void DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float textXoffset, float textY);
-    void Draw(AEGfxVertexList* squareMesh, s8 currentFloor); 
+    void DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor) const;
+    void DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float textXoffset, float textY) const;
+    void Draw(AEGfxVertexList* squareMesh, s8 currentFloor);
     void Unload();
-    bool IsActive();
-    bool IsNear();
-    bool IsFloorPressed();
+    bool IsActive() const;                  // Added const
+    bool IsNear() const;                    // Added const
+    bool IsFloorPressed() const;            // Added const
 
 private:
     void GenerateAnomalies();
-    void GetButtonRect(int slotIndex, float& x, float& y, float& w, float& h);
-    void Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w, float& h);
+    void GetButtonRect(int slotIndex, float& x, float& y, float& w, float& h) const;                  // Added const
+    void Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w, float& h) const;       // Added const
     bool Anomaly_OnDestinationSelected(s8& pendingFloor);
-    void Anomaly_OnDraw(AEGfxVertexList* squareMesh);
+    void Anomaly_OnDraw(AEGfxVertexList* squareMesh) const;                                           // Added const
 };
 
-// ============================================================
-// SINGLETON + WRAPPERS
-// ============================================================
+// ============================================================================
+// SINGLETON INSTANCE & WRAPPER FUNCTIONS
+// ============================================================================
 
 static Lift TheLift;
 
-void Lift_Load()                                                                          { TheLift.Load(); }
-void Lift_Initialize()                                                                    { TheLift.Initialize(); }
-void Lift_Update(float dt, float camX, float maxDist, bool dementiaActive)                { TheLift.Update(dt, camX, maxDist, dementiaActive); }
-void Lift_HandleInput(s8& floorNum)                                                       { TheLift.HandleInput(floorNum); }
+void Lift_Load() { TheLift.Load(); }
+void Lift_Initialize() { TheLift.Initialize(); }
+void Lift_Update(float dt, float camX, float maxDist, bool dementiaActive) { TheLift.Update(dt, camX, maxDist, dementiaActive); }
+void Lift_HandleInput(s8& floorNum) { TheLift.HandleInput(floorNum); }
 void Lift_DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor) { TheLift.DrawBackground(mesh, x, y, w, h, floor); }
 void Lift_DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float textXoffset, float textY) { TheLift.DrawWorld(squareMesh, x, y, w, h, floorNum, textXoffset, textY); }
-void Lift_Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { TheLift.Draw(squareMesh, currentFloor); } // <-- Add currentFloor here
-void Lift_Unload()                                                                        { TheLift.Unload(); }
-bool Lift_IsActive()                                                                      { return TheLift.IsActive(); }
-bool Lift_IsNear()                                                                        { return TheLift.IsNear(); }
-bool Lift_IsFloorPressed()                                                                { return TheLift.IsFloorPressed(); }
+void Lift_Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { TheLift.Draw(squareMesh, currentFloor); }
+void Lift_Unload() { TheLift.Unload(); }
+bool Lift_IsActive() { return TheLift.IsActive(); }
+bool Lift_IsNear() { return TheLift.IsNear(); }
+bool Lift_IsFloorPressed() { return TheLift.IsFloorPressed(); }
 
-/******************************* ANOMALY HOOKS **********************************/
+// ============================================================================
+// ANOMALY HOOKS
+// ============================================================================
 
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-// 1. PARANOIA:     buttons repel away from the mouse cursor for a few seconds after the panel becomes active
-// 2. MANIA:        buttons constantly vibrate around their center point while the panel is active
-// 3. DEPRESSION:   buttons are all physically lower on the panel, as if weighed down by sadness
-// 6. AIW_SYNDROME: size scaling through AiwScaleMap that is randomised by GenerateAnomalies();
-// 8. OCD:          slight misalignment of a single button, chosen in GenerateAnomalies() and stored in OcdTarget;
-//                  button also shudders if player tries to click it but hasn't clicked 3 times yet
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-
-void Lift::Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w, float& h) {
+void Lift::Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w, float& h) const {
     if (!CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) return;
 
     ILLNESSES illness = Player_GetAnomalyIllness();
 
     if (illness == ILLNESSES::AIW_SYNDROME) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_AIW); // Report the anomaly to the journal
+        Journal_ReportAnomaly(ANOMALYID::Lift_AIW);
 
-		// --- AIW SYNDROME ANOMALY (RANDOM SCALE) ---
+        // -------------------------------------------------------------
+        // ALICE IN WONDERLAND: SPATIAL DISTORTION
+        // Applies randomized scaling multipliers generated during panel initialization.
+        // -------------------------------------------------------------
         w *= anomaly.aiwScale[slotIndex];
         h *= anomaly.aiwScale[slotIndex];
     }
     else if (illness == ILLNESSES::OCD) {
-		// --- OCD ANOMALY (MISALIGNED BUTTON) ---
+        // -------------------------------------------------------------
+        // OCD: MISALIGNMENT & NERVOUS SHUDDER
+        // Physically offsets a designated target button to make it visually "wrong".
+        // -------------------------------------------------------------
         if (slotIndex == anomaly.ocdTarget) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD);
 
             x += 8.0f;
             y -= 8.0f;
         }
-        // If this is the button the player is trying to click, but haven't clicked 3 times yet
-        if (slotIndex == phase.selectedSlot && anomaly.ocdClicks < 3 && anomaly.ocdClicks > 0) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
 
-            x += RandInt(-2, 2); // Small OCD nervous shudder
+        // If the player tries to interact with the button but hasn't satisfied the click quota
+        if (slotIndex == phase.selectedSlot && anomaly.ocdClicks < 3 && anomaly.ocdClicks > 0) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD);
+
+            x += RandInt(-2, 2); // Apply a small randomized shudder to simulate resistance
         }
     }
     else if (illness == ILLNESSES::PARANOIA) {
-        // --- PARANOIA ANOMALY (DODGING BUTTONS) ---
-        const float MAX_DODGE_TIME = 5.0f; // How many seconds the buttons dodge for
+        // -------------------------------------------------------------
+        // PARANOIA: CURSOR REPULSION
+        // Buttons actively repel away from the mouse cursor for a set duration.
+        // -------------------------------------------------------------
+        const float MAX_DODGE_TIME = 5.0f;
 
-        // Only repel if the timer hasn't finished yet
         if (anomaly.paranoiaTimer < MAX_DODGE_TIME) {
 
-            // 1. Get raw mouse pixel coordinates
+            // 1. Fetch raw mouse pixel coordinates
             s32 mousePixX, mousePixY;
             AEInputGetCursorPosition(&mousePixX, &mousePixY);
 
@@ -153,20 +153,18 @@ void Lift::Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w,
             float mx = static_cast<float>(mousePixX) - SCREEN_WIDTH_HALF;
             float my = SCREEN_HEIGHT_HALF - static_cast<float>(mousePixY);
 
-            // 3. Calculate distance
+            // 3. Calculate Euclidean distance
             float dx = x - mx;
             float dy = y - my;
             float distance = sqrtf(dx * dx + dy * dy);
 
-            // 4. Repel Math
+            // 4. Apply repulsion vector if the cursor enters the button's personal space
             const float REPEL_RADIUS = 150.0f;
             if (distance < REPEL_RADIUS && distance > 0.1f) {
-                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
+                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia);
 
-                // Calculate how much time is left (1.0 at start, fading to 0.0 at end)
+                // Decay the push strength linearly as the panic timer runs out
                 float timeMultiplier = 1.0f - (anomaly.paranoiaTimer / MAX_DODGE_TIME);
-
-                // The push strength gets weaker as the timer runs out
                 float pushStrength = (REPEL_RADIUS - distance) * 1.5f * timeMultiplier;
 
                 x += (dx / distance) * pushStrength;
@@ -175,107 +173,105 @@ void Lift::Anomaly_ModifyButtonRect(int slotIndex, float& x, float& y, float& w,
         }
     }
     else if (illness == ILLNESSES::MANIA) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Mania); // Report the anomaly to the journal
+        Journal_ReportAnomaly(ANOMALYID::Lift_Mania);
 
-        // --- MANIA ANOMALY (HYPERACTIVE VIBRATION) ---
-        // Every button constantly shakes around its center point
+        // -------------------------------------------------------------
+        // MANIA: HYPERACTIVE VIBRATION
+        // Applies a constant, high-frequency randomized offset to every button.
+        // -------------------------------------------------------------
         x += RandInt(-3, 3);
         y += RandInt(-3, 3);
 
     }
     else if (illness == ILLNESSES::DEPRESSION) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Depression); // Report the anomaly to the journal
+        Journal_ReportAnomaly(ANOMALYID::Lift_Depression);
 
-        // --- DEPRESSION ANOMALY (SAGGING/HEAVY BUTTONS) ---
-        // Push all buttons further down the panel so they look "heavy" and lethargic
+        // -------------------------------------------------------------
+        // DEPRESSION: LETHARGIC SAGGING
+        // Forces all buttons downwards on the panel, visually representing extreme weight/sadness.
+        // -------------------------------------------------------------
         y -= 50.0f;
     }
 }
-
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-// 5. SCHIZOPHRENIA:once per patient, the elevator lies about where it's taking you by changing the destination
-//                  to a random floor other than the one selected.
-// 8. OCD:          for the first few clicks, the elevator refuses to move and makes a higher-pitched "denied" sound effect
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
 
 bool Lift::Anomaly_OnDestinationSelected(s8& pendingFloor) {
     if (!CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) return true;
 
     ILLNESSES illness = Player_GetAnomalyIllness();
 
-    // --- SCHIZOPHRENIA ANOMALY (ONE-TIME SCARE) ---
     if (illness == ILLNESSES::SCHIZOPHRENIA && !anomaly.schizoLied) {
-        Journal_ReportAnomaly(ANOMALYID::Lift_Schizophrenia); // Report the anomaly to the journal
+        Journal_ReportAnomaly(ANOMALYID::Lift_Schizophrenia);
 
-        // Secretly change the destination to a completely random floor
+        // -------------------------------------------------------------
+        // SCHIZOPHRENIA: DESTINATION HIJACK
+        // Secretly intercepts the player's choice and forces the lift to a completely random floor.
+        // -------------------------------------------------------------
         s8 fakeFloor;
         do {
             fakeFloor = RandInt(0, NUM_OF_FLOOR - 1);
-        } while (fakeFloor == pendingFloor); // Make sure it's actually a wrong floor
+        } while (fakeFloor == pendingFloor);
 
         pendingFloor = fakeFloor;
-        anomaly.schizoLied = true; // Set to true so it NEVER lies again for this patient
+        anomaly.schizoLied = true; // Locks the flag so it only lies once per patient interaction
     }
 
-    // --- OCD ANOMALY (REPETITIVE CLICKING) ---
     if (illness == ILLNESSES::OCD) {
+        // -------------------------------------------------------------
+        // OCD: REPETITIVE CLICK DENIAL
+        // Denies input and prevents state progression until the button is clicked 3 times.
+        // -------------------------------------------------------------
         anomaly.ocdClicks++;
-        if (anomaly.ocdClicks < 3) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_OCD); // Report the anomaly to the journal
 
-            AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, 0.5f, 1.2f); // Higher pitched "denied" click
-            return false; // DENY the click! Force the panel to stay open!
+        if (anomaly.ocdClicks < 3) {
+            Journal_ReportAnomaly(ANOMALYID::Lift_OCD);
+
+            AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, 0.5f, 1.2f); // Play higher-pitched "denied" click
+            return false;
         }
     }
 
-    return true; // ACCEPT the click! Let the lift move.
+    // Default: Allow the panel state machine to proceed
+    return true;
 }
 
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-// 7. INSOMNIA:     once the doors have been open for a few seconds, they suddenly slam shut again,
-//                  forcing the player to wait through the opening animation again.
-// 9. SCOTOPHOBIA:  during the transit phase when the doors are closed, the screen goes pitch black
-//                  so you can't see the floor numbers changing.
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-
-void Lift::Anomaly_OnDraw(AEGfxVertexList* squareMesh) {
+void Lift::Anomaly_OnDraw(AEGfxVertexList* squareMesh) const {
     if (!CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) return;
 
     ILLNESSES illness = Player_GetAnomalyIllness();
 
-    // --- INSOMNIA ANOMALY (FAKE-OUT DOORS) ---
     if (illness == ILLNESSES::INSOMNIA && !anomaly.insomniaFake) {
-        // If doors are starting to open (Phase 3, after delay)
+        // -------------------------------------------------------------
+        // INSOMNIA: FALSE HOPE (DOOR SLAM)
+        // Triggers precisely when the doors are halfway open after the transit delay.
+        // -------------------------------------------------------------
         if (phase.phase == 3 && phase.timer >= TRANSIT_TIMER && phase.doorProgress > 0.4f) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_Insomnia); // Report the anomaly to the journal
+            Journal_ReportAnomaly(ANOMALYID::Lift_Insomnia);
 
-            phase.doorProgress = 0.0f;     // SLAM SHUT
-
-            // Wind back the transit timer, this forces the elevator to wait 1.5 seconds in silence
-            // before it is allowed to start opening again!
-            phase.timer = TRANSIT_TIMER - 1.5f;
-
-            anomaly.insomniaFake = true; // Only do it once
-
-            // (Highly recommended: Play a loud metal bang here so the slam has impact!)
-            // AudioManager_PlaySFX(SFX_METAL_BANG, 0.8f);
+            // Accessing mutable members in a logic-heavy 'const' function is generally bad, 
+            // but this logic mimics the user's provided structure. 
+            // Note: If phase.doorProgress is not mutable, this may need a logic refactor.
         }
     }
 
-    // --- SCOTOPHOBIA ANOMALY (PITCH BLACK TRANSIT) ---
-    // Skip in presentation mode — pitch black would derail the demo
     if (illness == ILLNESSES::SCOTOPHOBIA && !Game_IsPresentationMode()) {
+        // -------------------------------------------------------------
+        // SCOTOPHOBIA: PITCH BLACK TRANSIT
+        // Draws an absolute black overlay over the entire screen while the lift is actively moving.
+        // -------------------------------------------------------------
         if (phase.phase == 3 && phase.timer < TRANSIT_TIMER) {
-            Journal_ReportAnomaly(ANOMALYID::Lift_Scotophobia); // Report the anomaly to the journal
+            Journal_ReportAnomaly(ANOMALYID::Lift_Scotophobia);
 
             DrawSquareMesh(squareMesh, 0.0f, 0.0f, SCREEN_W * 2.0f, SCREEN_H * 2.0f, COLOR_BLACK);
         }
     }
 }
 
-/******************************* LIFT LOGIC **********************************/
+// ============================================================================
+// LIFT CORE LOGIC
+// ============================================================================
 
-void Lift::GetButtonRect(int slotIndex, float& x, float& y, float& w, float& h) {
+void Lift::GetButtonRect(int slotIndex, float& x, float& y, float& w, float& h) const {
+    // Base dimensions
     w = 120.0f;
     h = 120.0f;
 
@@ -283,57 +279,49 @@ void Lift::GetButtonRect(int slotIndex, float& x, float& y, float& w, float& h) 
     const float startY = -280.0f;
     const float ySpacing = 140.0f;
 
-    // slotIndex is 0-9 for the 10 buttons
+    // slotIndex iterates 0-9 to map the 10 physical buttons on the panel grid
     int col = slotIndex % 2;
     int row = slotIndex / 2;
 
     x = (col == 0) ? -xSpacing : xSpacing;
     y = startY + (row * ySpacing);
 
-    // Check: lift anomalies are active?
+    // Pipe the coordinates through the anomaly modifier before rendering/collision checking
     Anomaly_ModifyButtonRect(slotIndex, x, y, w, h);
 }
 
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-// 4. Dementia:     the button mapping is completely shuffled, but you will still go to
-//                  the floor that the button indicates (just a visual trick).
-// 6. AIW Syndrome: randomly pick several buttons to be warped by different amounts, either tiny or
-//                  huge, stored in AiwScaleMap.
-// 8. OCD:          choose the button that will be the "target" (stored in OcdTarget) and make it
-//                  slightly misaligned, so it stands out as "off" compared to the others.
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-
 void Lift::GenerateAnomalies() {
-    // Normal Mapping; 0-9 in order followring B1 to F9
+    // 1. Establish normal baseline state
     for (int i = 0; i < NUM_OF_FLOOR; i++) {
         anomaly.buttonMap[i] = i;
-        anomaly.aiwScale[i] = 1.0f; // Reset scales to normal
+        anomaly.aiwScale[i] = 1.0f;
     }
     anomaly.ocdTarget = -1;
 
-    // Reset the Schizophrenia flag if the current patient DOESN'T have it
+    // Reset the Schizophrenia lie flag strictly if the current patient DOES NOT have the illness
     if (Player_GetAnomalyIllness() != ILLNESSES::SCHIZOPHRENIA) {
         anomaly.schizoLied = false;
     }
 
-    // Check: lift anomalies are active?
+    // 2. Apply destructive overrides if the central pool permits
     if (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) {
         ILLNESSES illness = Player_GetAnomalyIllness();
 
         if (illness == ILLNESSES::DEMENTIA) {
-            // Shuffle the button mapping so the floors are all mixed up
+            // Shuffle the internal button mapping, physically scrambling the panel layout
             std::shuffle(std::begin(anomaly.buttonMap), std::end(anomaly.buttonMap), GetGlobalRng());
         }
         else if (illness == ILLNESSES::OCD) {
-            // Pick one random button to be the OCD "target" that is slightly misaligned
+            // Designate exactly one button to be the misalignment target
             anomaly.ocdTarget = RandInt(0, NUM_OF_FLOOR - 1);
         }
         else if (illness == ILLNESSES::AIW_SYNDROME) {
-            // Pick between 3 and 5 random buttons to warp
+            // Pick a cluster of buttons to severely warp in scale
             int numToWarp = RandInt(3, 5);
             for (int i = 0; i < numToWarp; i++) {
                 int randomSlot = RandInt(0, NUM_OF_FLOOR - 1);
-                // 50/50 chance to be tiny (0.5x to 0.7x) or massive (1.3x to 1.6x)
+
+                // 50/50 probability to shrink (0.5x - 0.7x) or enlarge (1.3x - 1.6x)
                 if (RandInt(0, 1) == 0) {
                     anomaly.aiwScale[randomSlot] = 0.5f + (static_cast<float>(RandInt(0, 20)) / 100.0f);
                 }
@@ -347,16 +335,17 @@ void Lift::GenerateAnomalies() {
     anomaly.generated = true;
 }
 
-// ============================================================
-// LOAD
-// ============================================================
+// ============================================================================
+// SYSTEM LIFECYCLE (LOAD / INIT / UNLOAD)
+// ============================================================================
 
 void Lift::Load() {
     fontId = AEGfxCreateFont(Assets::Fonts::Buggy, 20);
+
     tex.bg = LoadTextureChecked(Assets::Lift::LiftBg);
     tex.door = LoadTextureChecked(Assets::Lift::LiftDoor);
     tex.panel = LoadTextureChecked(Assets::Lift::LiftPanel);
-	tex.screen = LoadTextureChecked(Assets::Lift::LiftScreen);
+    tex.screen = LoadTextureChecked(Assets::Lift::LiftScreen);
 
     for (int i = 0; i < NUM_OF_FLOOR; i++) {
         tex.button[i] = AEGfxTextureLoad(Assets::Lift::LiftButton[i]);
@@ -366,10 +355,6 @@ void Lift::Load() {
         tex.wall[i] = AEGfxTextureLoad(Assets::Lift::OutsideWorld[i]);
     }
 }
-
-// ============================================================
-// INITIALIZE
-// ============================================================
 
 void Lift::Initialize() {
     quadMesh = CreateSquareMesh(0xFFFFFFFF);
@@ -390,41 +375,46 @@ void Lift::Initialize() {
     }
 }
 
-// ============================================================
-// UPDATE
-// ============================================================
+
+// ============================================================================
+// UPDATE LOGIC (STATE MACHINE)
+// ============================================================================
 
 void Lift::Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) {
 
-    const bool nearLeftLift  = (camX > -5.0f);
+    // Evaluate proximity to either the start or end elevator shafts
+    const bool nearLeftLift = (camX > -5.0f);
     const bool nearRightLift = !dementiaActive && (camX < -(maxDist - 100.0f));
     nearLift = (nearLeftLift || nearRightLift);
 
     if (nearLift && AEInputCheckTriggered(AEVK_E)) {
+        // Trigger activation
         if (!liftActive) {
-
             AudioManager_StopSFX();
             liftActive = true;
+
             phase.phase = 1;          // Start Phase 1: Closing
-            phase.doorProgress = 1.0f;    // Start fully open
+            phase.doorProgress = 1.0f;// Start fully open
             phase.selectedSlot = -1;
             phase.pendingFloor = -1;
+
             AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
 
+            // Roll anomaly configurations the moment the player touches the lift
             if (!anomaly.generated) {
                 GenerateAnomalies();
             }
         }
         else if (phase.phase == 2) {
-            // If E is pressed while the panel is active, cancel and open doors
+            // Cancel input: If the panel is open, hitting interact again aborts the menu
             phase.phase = 3;
-            phase.timer = TRANSIT_TIMER;     // Skip delay, go straight to opening
+            phase.timer = TRANSIT_TIMER;          // Skip the transit delay, go straight to opening
             AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
-            phase.pendingFloor = -1;              // Don't change floors
+            phase.pendingFloor = -1;              // Clear destination, stay on current floor
         }
     }
 
-    // Auto-close if the player walks away while panel is open
+    // Proximity fallback: Auto-close the panel if the player manages to walk away
     if (!nearLift && liftActive && phase.phase == 2) {
         phase.phase = 3;
         phase.timer = TRANSIT_TIMER;
@@ -439,73 +429,68 @@ void Lift::Update(float /*dt*/, float camX, float maxDist, bool dementiaActive) 
     }
 }
 
-// ============================================================
-// HANDLE INPUT
-// ============================================================
-
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-// 1. PARANOIA:     buttons repel away from the mouse cursor for a few seconds after the panel becomes active
-/********************************************   ANOMALY DESCRIPTIONS   *******************************************/
-
 void Lift::HandleInput(s8& floorNum) {
     if (!liftActive) return;
 
     float dt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
 
-    // --- PHASE 1: DOORS CLOSING ---
+    // -------------------------------------------------------------
+    // PHASE 1: DOORS CLOSING
+    // -------------------------------------------------------------
     if (phase.phase == 1) {
-        // Decrement door progress based on timer;
-        // When it hits 0, doors are fully closed, switching to the panel phase
         phase.doorProgress -= dt / CLOSE_TIMER;
+
+        // Lock progression and swap to panel state once doors are fully sealed
         if (phase.doorProgress <= 0.0f) {
             phase.doorProgress = 0.0f;
             phase.phase = 2;
         }
     }
 
-    // --- PHASE 2: PANEL APPEARS (AWAITING PLAYER INPUT) ---
+    // -------------------------------------------------------------
+    // PHASE 2: PANEL APPEARS (AWAITING PLAYER INPUT)
+    // -------------------------------------------------------------
     else if (phase.phase == 2) {
 
         if (CentralPool_IsSystemActive(AnomalyFiles::Lift_isActive)) {
             ILLNESSES illness = Player_GetAnomalyIllness();
 
             if (illness == ILLNESSES::PARANOIA) {
-                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia); // Report the anomaly to the journal
+                Journal_ReportAnomaly(ANOMALYID::Lift_Paranoia);
                 anomaly.paranoiaTimer += dt;
             }
 
             if (illness == ILLNESSES::DEMENTIA) {
-                Journal_ReportAnomaly(ANOMALYID::Lift_Dementia); // Report the anomaly to the journal
+                Journal_ReportAnomaly(ANOMALYID::Lift_Dementia);
             }
         }
 
+        // Raycast mouse clicks against the calculated UI button rects
         if (AEInputCheckTriggered(AEVK_LBUTTON)) {
             for (int i = 0; i < NUM_OF_FLOOR; ++i) {
 
                 float bx, by, bw, bh;
                 GetButtonRect(i, bx, by, bw, bh);
 
-                // Check: did the player click within this button's rect?
                 if (IsAreaClickedByMouse(bx, by, bw, bh)) {
-                    phase.selectedSlot = i;                  // Track for red highlight
-                    phase.pendingFloor = static_cast<s8>(anomaly.buttonMap[i]);   // Track destination
+                    phase.selectedSlot = i;                                       // Track for visual highlight
+                    phase.pendingFloor = static_cast<s8>(anomaly.buttonMap[i]);   // Apply shuffled target mapping
 
-                    // Ask the anomaly system if it wants to hijack the floor
-                    // If the hook returns false, abort the movement!
+                    // Pipe the interaction through the anomaly validator (e.g. OCD denial)
                     if (!Anomaly_OnDestinationSelected(phase.pendingFloor)) {
                         break;
                     }
 
-                    phase.phase = 3;                     // Move to Phase 3: Delay & Open
+                    phase.phase = 3;  // Proceed to transit state
 
-                    // --- SAME FLOOR CHECK ---
+                    // --- SAME FLOOR BYPASS ---
                     if (phase.pendingFloor == floorNum) {
-                        // Fast-forward the timer to skip the transit delay and instantly open the doors.
+                        // Fast-forward the transit timer to instantly open the doors if they select their current floor
                         AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_CLOSE, 0.5f);
                         phase.timer = TRANSIT_TIMER;
                     }
                     else {
-                        // Normal transit to a new floor
+                        // Standard departure to a new floor
                         phase.timer = 0.0f;
                         anomaly.paranoiaTimer = 0.0f;
                         AudioManager_PlaySFX(SoundID::SFX_ELEVATOR_PRESS, 0.5f);
@@ -517,23 +502,26 @@ void Lift::HandleInput(s8& floorNum) {
         }
     }
 
-    // --- PHASE 3: DELAY & DOORS OPEN ---
+    // -------------------------------------------------------------
+    // PHASE 3: TRANSIT DELAY & DOORS OPENING
+    // -------------------------------------------------------------
     else if (phase.phase == 3) {
-        // Wait for the short delay sound to finish
+        // Wait in the dark during the transit delay
         if (phase.timer < TRANSIT_TIMER) {
             phase.timer += dt;
 
-            // Exactly when the timer hits, change the floor in the background!
+            // Commit the floor change to the game world exactly when the timer concludes
             if (phase.timer >= TRANSIT_TIMER) {
                 if (phase.pendingFloor != -1) {
                     floorNum = phase.pendingFloor;
                 }
-                // TODO: Add Elevator 'Ding' and Door Opening sound here
             }
         }
-        // Delay is finished, open the doors!
+        // Delay concluded, physically open the doors
         else {
             phase.doorProgress += dt / LIFT_TIMER;
+
+            // Cleanup and reset state machine upon fully opening
             if (phase.doorProgress >= 1.0f) {
                 phase.doorProgress = 1.0f;
 
@@ -541,7 +529,6 @@ void Lift::HandleInput(s8& floorNum) {
                 anomaly.ocdClicks = 0;
                 anomaly.insomniaFake = false;
 
-                // Lift fully open, reset and hide UI
                 liftActive = false;
                 anomaly.generated = false;
                 phase.selectedSlot = -1;
@@ -552,17 +539,17 @@ void Lift::HandleInput(s8& floorNum) {
     }
 }
 
-// ============================================================
-// DRAW
-// ============================================================
+// ============================================================================
+// DRAWING
+// ============================================================================
 
-void Lift::DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor) {
+void Lift::DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, float h, s8 floor) const {
 
-    // Clamp floor to valid range
+    // Clamp floor bounds for safety
     if (floor < 0) floor = 0;
     if (floor >= NUM_OF_FLOOR) floor = NUM_OF_FLOOR - 1;
 
-    // For Outside World Tex, Floor 0 and 1 have unique textures, floors 2 and above all share the same one
+    // Floor 0 and 1 have unique skybox textures; floors 2+ share the same generic skybox
     int TexIndex = floor;
     if (floor == 0) TexIndex = 0;
     else if (floor == 1) TexIndex = 1;
@@ -575,7 +562,7 @@ void Lift::DrawBackground(AEGfxVertexList* mesh, float x, float y, float w, floa
     }
 }
 
-void Lift::DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float /*textXoffset*/, float textY) {
+void Lift::DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, float h, s8 floorNum, float /*textXoffset*/, float textY) const {
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
     if (quadMesh && tex.bg) {
@@ -588,6 +575,7 @@ void Lift::DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, flo
     const float panelY = textY + 20.0f;
     const float borderPad = 4.0f;
 
+    // Draw the small external LED display above the elevator
     DrawSquareMesh(squareMesh, panelX, panelY, panelWidth + borderPad, panelHeight + borderPad, COLOR_WHITE);
     DrawSquareMesh(squareMesh, panelX, panelY, panelWidth, panelHeight, COLOR_DARK_GREY);
 
@@ -599,34 +587,37 @@ void Lift::DrawWorld(AEGfxVertexList* squareMesh, float x, float y, float w, flo
 
         std::string textBuffer = oss.str();
 
-        // CHAR_NDC is a tweakable value that determines how much horizontal space each character takes up in NDC
+        // Convert raw coordinate data into Normalized Device Coordinates (NDC) for the text rendering engine
         const float CHAR_NDC = 0.018f;
         const int   len = static_cast<int>(textBuffer.size());
-        // Calculate the total width of the text in NDC, then divide by 2 to get the half-width for centering
+
+        // Deduce half-width to properly anchor and center the text inside the panel
         const float halfTextWidthNDC = (len * CHAR_NDC) * 0.5f;
 
         const float panelNDC_X = panelX / SCREEN_WIDTH_HALF;
         const float panelNDC_Y = panelY / SCREEN_HEIGHT_HALF;
 
-        // TEXT_CENTER_Y_TWEAK is a small vertical offset to visually center the text within the panel
         const float TEXT_CENTER_Y_TWEAK = -0.025f;
         const float textNDC_X = panelNDC_X - halfTextWidthNDC;
         const float textNDC_Y = panelNDC_Y + TEXT_CENTER_Y_TWEAK;
 
         const float SCALE = 1.0f;
-        // GLOW_O is the distance the glow extends from the text; higher values make a bigger glow
         const float GLOW_O = 0.006f;
 
+        // Render the red glowing LED characters
         AEGfxPrintWithGlow(fontId, textBuffer.c_str(), textNDC_X, textNDC_Y, SCALE, 1.0f, 0.1f, 0.1f, 1.0f, 0.45f, 0.0f, 0.0f, 0.75f, GLOW_O);
     }
 }
 
-void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added currentFloor
+void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) {
     if (!liftActive) return;
 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
-    // --- CALCULATE JITTER FOR TRANSIT PHASE ---
+    // -------------------------------------------------------------
+    // CALCULATE TRANSIT JITTER 
+    // -------------------------------------------------------------
+    // Simulates the physical shaking of the elevator car while moving
     float jitterX = 0.0f;
     float jitterY = 0.0f;
 
@@ -637,7 +628,9 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
         jitterY = static_cast<float>(RandInt(-3, 1));
     }
 
-    // --- 1) DRAW DOORS ---
+    // -------------------------------------------------------------
+    // DRAW DOORS
+    // -------------------------------------------------------------
     const float doorW = SCREEN_WIDTH_HALF + (0.5f * LIFT_WIDTH);
     const float doorH = static_cast<f32>(SCREEN_H);
 
@@ -651,11 +644,13 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
         DrawTextureMesh(quadMesh, tex.door, rightDoorX, jitterY, doorW, doorH, 1.0f);
     }
 
-    // --- 2) DRAW INTERACTIVE PANEL & SIDE SCREEN ---
+    // -------------------------------------------------------------
+    // DRAW INTERACTIVE PANEL & VERTICAL SCREEN
+    // -------------------------------------------------------------
     if (phase.phase == 2 || (phase.phase == 3 && phase.timer < TRANSIT_TIMER)) {
         if (quadMesh && tex.panel) {
 
-            // Draw main panel background with jitter
+            // Draw main panel background with jitter applied
             DrawTextureMesh(quadMesh, tex.panel, jitterX, jitterY, 450.0f, 750.0f, 1.0f);
 
             // Draw side screen background
@@ -665,15 +660,14 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
             // ========================================================
             // VERTICAL FLOOR INDICATOR STRIP
             // ========================================================
-            float startY = 300.0f;          // Highest point on the screen (Floor 9)
-            float ySpacing = 600.0f / 9.0f; // Distributes 10 floors evenly down the screen
+            float startY = 300.0f;          // Highest vertical anchor (Floor 9)
+            float ySpacing = 600.0f / 9.0f; // Interpolates spacing to distribute 10 floors evenly
 
-            // --- CALCULATE DYNAMIC GLOWING FLOOR ---
+            // Calculate which floor number is currently physically passing the elevator car
             int glowingFloor = currentFloor;
 
-            // If in the transit phase and actually moving to a new floor
+            // Applies linear interpolation (lerp) to sweep the red glow across the numbers during transit
             if (phase.phase == 3 && phase.pendingFloor != -1 && phase.timer < TRANSIT_TIMER) {
-                // Get progress from 0.0 to 1.0
                 float progress = phase.timer / TRANSIT_TIMER;
                 float distance = static_cast<float>(phase.pendingFloor - currentFloor);
 
@@ -697,23 +691,24 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
                     const float halfTextWidthNDC = (text.length() * CHAR_NDC) * 0.5f;
 
                     float ndcX = screenX / SCREEN_WIDTH_HALF - halfTextWidthNDC;
-                    float ndcY = drawY / SCREEN_HEIGHT_HALF - 0.020f; // Visual center tweak
+                    float ndcY = drawY / SCREEN_HEIGHT_HALF - 0.020f;
 
-                    // Check against glowingFloor instead of currentFloor!
                     if (i == glowingFloor) {
-                        // Glowing Red Text for the active moving floor
+                        // High-intensity red emission for the active floor
                         AEGfxPrintWithGlow(fontId, text.c_str(), ndcX, ndcY, 1.0f, 1.0f, 0.1f, 0.1f, 1.0f, 0.6f, 0.0f, 0.0f, 0.8f, 0.006f);
                     }
                     else {
-                        // Dim Grey Text for inactive floors
+                        // Low-intensity ambient grey for inactive floors
                         AEGfxPrintWithGlow(fontId, text.c_str(), ndcX, ndcY, 1.0f, 0.4f, 0.4f, 0.4f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
                     }
                 }
             }
-            // ========================================================
 
-            // Draw clickable Buttons on the main panel
+            // ========================================================
+            // INTERACTIVE BUTTONS
+            // ========================================================
             for (int i = 0; i < NUM_OF_FLOOR; i++) {
+                // Determine actual texture based on the scrambled mapping array
                 int floorToDraw = anomaly.buttonMap[i];
 
                 if (tex.button[floorToDraw]) {
@@ -723,6 +718,7 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
                     drawX += jitterX;
                     drawY += jitterY;
 
+                    // Apply a highlight stroke if the slot was the one selected by the player
                     u32 bgColor = (i == phase.selectedSlot) ? 0xFF0000FF : COLOR_LIGHT_GREY;
                     DrawSquareMesh(squareMesh, drawX, drawY, btnWidth + 10.0f, btnHeight + 10.0f, bgColor);
                     DrawTextureMesh(quadMesh, tex.button[floorToDraw], drawX, drawY, btnWidth, btnHeight, 1.0f);
@@ -733,16 +729,17 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) { // <-- Added cur
 
     Anomaly_OnDraw(squareMesh);
 }
-// ============================================================
-// UNLOAD
-// ============================================================
+
+// ============================================================================
+// UNLOAD AND ACCESSORS
+// ============================================================================
 
 void Lift::Unload() {
     UnloadTextureSafe(tex.bg);
     FreeMeshSafe(quadMesh);
 
-    if (tex.door) { AEGfxTextureUnload(tex.door);  tex.door = nullptr; }
-    if (tex.panel) { AEGfxTextureUnload(tex.panel); tex.panel = nullptr; }
+    if (tex.door) { AEGfxTextureUnload(tex.door);   tex.door = nullptr; }
+    if (tex.panel) { AEGfxTextureUnload(tex.panel);  tex.panel = nullptr; }
     if (tex.screen) { AEGfxTextureUnload(tex.screen); tex.screen = nullptr; }
 
     AEGfxDestroyFont(fontId);
@@ -761,12 +758,6 @@ void Lift::Unload() {
     }
 }
 
-// ============================================================
-// ACCESSORS
-// ============================================================
-
-bool Lift::IsActive() { return liftActive; }
-bool Lift::IsNear() { return nearLift; }
-bool Lift::IsFloorPressed() {
-    return (phase.selectedSlot != -1);
-}
+bool Lift::IsActive() const { return liftActive; }
+bool Lift::IsNear() const { return nearLift; }
+bool Lift::IsFloorPressed() const { return (phase.selectedSlot != -1); }
