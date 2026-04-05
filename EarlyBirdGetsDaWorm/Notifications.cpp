@@ -1,104 +1,104 @@
 #include "pch.hpp"
 
 class Pager {
-	public:
-		// Mesh
-		AEGfxVertexList* PagerMesh;
+public:
+	// Mesh
+	AEGfxVertexList* PagerMesh;
 
-		// Texture
-		struct Textures {
-			AEGfxTexture* Icon;
-			AEGfxTexture* Pager;
-		} PagerTexture;
+	// Texture
+	struct Textures {
+		AEGfxTexture* Icon;
+		AEGfxTexture* Pager;
+	} PagerTexture;
 
-		// Input 
-		struct Input {
-			s32 InitialX, InitialY; 
-			s32 MouseX, MouseY;
-		} PagerInput;
-
-
-		// State
-		struct State {
-			bool IsActive;
-			bool HasPatient;
-			s8 PreviousFloor;
-			s8 CurrentPage;
-		} PagerState;
+	// Input 
+	struct Input {
+		s32 InitialX, InitialY;
+		s32 MouseX, MouseY;
+	} PagerInput;
 
 
-		// Icon 
-		struct Icon {
-			bool IsClicked;
-			bool IsHovered;       
-
-			f32 Width, Height;
-			f32 X, Y;
-
-			f32 Alpha;
-			f32 MinAlpha;
-			f32 MaxAlpha;
-			f32 FadeSpeed;
-		} PagerIcon;
+	// State
+	struct State {
+		bool IsActive;
+		bool HasPatient;
+		s8 PreviousFloor;
+		s8 CurrentPage;
+	} PagerState;
 
 
-		// Pager
-		struct PagerInfo {
-			s8 Font;
+	// Icon 
+	struct Icon {
+		bool IsClicked;
+		bool IsHovered;
 
-			f32 Width, Height;
+		f32 Width, Height;
+		f32 X, Y;
 
-			bool IsVibrating;
-
-			f32 VibrateTimer;
-			f32 TaskTimer;
-			f32 Duration;
-
-			f32 Intensity;
-			f32 Speed;
-		} BigPager;
+		f32 Alpha;
+		f32 MinAlpha;
+		f32 MaxAlpha;
+		f32 FadeSpeed;
+	} PagerIcon;
 
 
-		// Pop Up
-		struct PopUp {
-			f32 Timer;
+	// Pager
+	struct PagerInfo {
+		s8 Font;
 
-			bool IsActive;
-			bool FirstPopUp;
+		f32 Width, Height;
 
-			bool TutorialShown;
-			bool TaskShown;
-			bool WaitTaskDisplay;
-			bool BeenShown;
+		bool IsVibrating;
 
-			bool HadPatientPrev;
-			bool TaskComplete;
-		} PagerPopUp;
+		f32 VibrateTimer;
+		f32 TaskTimer;
+		f32 Duration;
 
-	public:
-		void Load();
-		/*!*****************************************************************************
-		\brief
-			Loads pager configuration values from a file.
+		f32 Intensity;
+		f32 Speed;
+	} BigPager;
 
-			Reads configuration data such as state, icon properties,
-			pager settings, and popup behavior from the specified file.
 
-			If the file cannot be opened or parsing fails, error messages
-			will be printed to the console.
+	// Pop Up
+	struct PopUp {
+		f32 Timer;
 
-		\param Filename
-			The path to the configuration file.
+		bool IsActive;
+		bool FirstPopUp;
 
-		\return
-			None.
-		*******************************************************************************/
-		void LoadConfigFromFile(const std::string& Filename);
-		void Initialize();
-		void Trigger();
-		void Update(bool LiftActive, f32 DT);
-		void Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber);
-		void Free();
+		bool TutorialShown;
+		bool TaskShown;
+		bool WaitTaskDisplay;
+		bool BeenShown;
+
+		bool HadPatientPrev;
+		bool TaskComplete;
+	} PagerPopUp;
+
+public:
+	void Load();
+	/*!*****************************************************************************
+	\brief
+		Loads pager configuration values from a file.
+
+		Reads configuration data such as state, icon properties,
+		pager settings, and popup behavior from the specified file.
+
+		If the file cannot be opened or parsing fails, error messages
+		will be printed to the console.
+
+	\param Filename
+		The path to the configuration file.
+
+	\return
+		None.
+	*******************************************************************************/
+	void LoadConfigFromFile(const std::string& Filename);
+	void Initialize();
+	void Trigger();
+	void Update(bool LiftActive, f32 DT);
+	void Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloorNumber, s8 DestinationDoorNumber);
+	void Free();
 };
 
 static Pager ThePager;
@@ -255,22 +255,40 @@ void Pager::Update(bool LiftActive, f32 DT)
 	bool isTabHeld = AEInputCheckCurr(AEVK_TAB);
 
 	// Icon Click Fallback
-	if (PagerIcon.IsHovered && AEInputCheckTriggered(AEVK_LBUTTON)) {
+	bool iconClicked = PagerIcon.IsHovered && AEInputCheckTriggered(AEVK_LBUTTON);
+
+	if (iconClicked) {
 		PagerState.IsActive = !PagerState.IsActive;
 	}
 
-	// Hold TAB to open, Release to close
-	if (isTabHeld) {
-		PagerState.IsActive = true;
+	bool isTutorialMode = Doing_Tutorial() && !IsTutorialFinished();
+
+	// Tab Logic
+	if (isTutorialMode)
+	{
+		if (AEInputCheckTriggered(AEVK_TAB)) {
+			PagerState.IsActive = !PagerState.IsActive;
+		}
 	}
-	else if (wasTabHeld && !isTabHeld) {
-		PagerState.IsActive = false;
-		PagerPopUp.FirstPopUp = false;
+	else
+	{
+		// ONLY run hold logic if NOT clicking this frame
+		if (!iconClicked)
+		{
+			if (isTabHeld) {
+				PagerState.IsActive = true;
+			}
+			else if (wasTabHeld && !isTabHeld) {
+				PagerState.IsActive = false;
+				PagerPopUp.FirstPopUp = false;
+			}
+		}
 	}
+
 	wasTabHeld = isTabHeld;
 
 	// Click outside to close (Useful for when it pops up automatically)
-	if (PagerState.IsActive && !isTabHeld) {
+	if (PagerState.IsActive && !isTabHeld && !isTutorialMode && !iconClicked) {
 		bool OutsidePager{ (IsAreaClickedByMouse(0.0f, 0.0f, BigPager.Width, BigPager.Height)) ? false : true };
 
 		if (OutsidePager && AEInputCheckTriggered(AEVK_LBUTTON))
@@ -386,14 +404,14 @@ void Pager::Draw(s8 PatientFloorNumber, s8 PatientDoorNumber, s8 DestinationFloo
 		// Text
 		std::ostringstream ossCollect;
 		ossCollect << "Collect patient from room #"
-		           << std::setw(2) << std::setfill('0') << static_cast<int>(PatientFloorNumber) << "-"
-		           << std::setw(2) << std::setfill('0') << static_cast<int>(PatientDoorNumber);
+			<< std::setw(2) << std::setfill('0') << static_cast<int>(PatientFloorNumber) << "-"
+			<< std::setw(2) << std::setfill('0') << static_cast<int>(PatientDoorNumber);
 		std::string CollectionText = ossCollect.str();
 
 		std::ostringstream ossDest;
 		ossDest << "Bring patient to room #"
-		        << std::setw(2) << std::setfill('0') << static_cast<int>(DestinationFloorNumber) << "-"
-		        << std::setw(2) << std::setfill('0') << static_cast<int>(DestinationDoorNumber);
+			<< std::setw(2) << std::setfill('0') << static_cast<int>(DestinationFloorNumber) << "-"
+			<< std::setw(2) << std::setfill('0') << static_cast<int>(DestinationDoorNumber);
 		std::string DestinationText = ossDest.str();
 
 		AEGfxPrint(BigPager.Font, CollectionText.c_str(), CollectionX, CollectionY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
