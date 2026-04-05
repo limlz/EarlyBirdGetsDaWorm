@@ -158,9 +158,19 @@ void CentralPool_GeneratePatientAnomalies(ILLNESSES illness, int ghostExtraAnoma
         totalSystemsToActivate = static_cast<int>(AnomalyFiles::Count);
     }
 
-    // Build a temporary pool of all available system indices (0 through AnomalyFiles::Count)
+    // Build a temporary pool of all available system indices
     std::vector<int> availableSystems;
-    for (int i = 0; i < static_cast<int>(AnomalyFiles::Count); ++i) {
+    for (int i = 0; i < static_cast<int>(AnomalyFiles::Count); ++i)
+    {
+        if (static_cast<AnomalyFiles>(i) == AnomalyFiles::Doors_isActive)
+        {        
+            if (illness == ILLNESSES::MANIA || illness == ILLNESSES::DEPRESSION ||
+                illness == ILLNESSES::DEMENTIA || illness == ILLNESSES::AIW_SYNDROME)
+            {
+                continue;
+            }
+        }
+
         availableSystems.push_back(i);
     }
 

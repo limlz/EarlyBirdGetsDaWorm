@@ -143,10 +143,13 @@ void Player_GenerateMission() {
     PickupDoor = static_cast<s8>(RandInt(1, 10));
     PickupFloor = static_cast<s8>(RandInt(1, 9));
 
-    // Door can be rolled once since the floor will guarantee they are different locations
-    DestDoor = static_cast<s8>(RandInt(1, 10));
+    // --- DOOR GENERATION WITH DISTANCE CONSTRAINT ---
+    // Keep rolling the destination door until it is at least 5 doors away from the pickup.
+    do {
+        DestDoor = static_cast<s8>(RandInt(1, 10));
+    } while (std::abs(DestDoor - PickupDoor) < 5);
 
-    // --- CONSTRAINED RANDOMIZATION ---
+    // --- FLOOR GENERATION ---
     // Keep rolling the destination floor until it is strictly different from the pickup floor.
     do {
         DestFloor = static_cast<s8>(RandInt(1, 9));

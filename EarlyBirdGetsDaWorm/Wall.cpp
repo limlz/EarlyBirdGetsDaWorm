@@ -226,9 +226,14 @@ void Wall::Initialize()
     // Generate random positions for anomalies on each floor
     for (int i{}; i < MAX_FLOORS; ++i)
     {
-        WallFloor.X[i] = static_cast<f32>(RandInt(0, 5999));
-        WallFloor.Y[i] = static_cast<f32>(RandInt(0, 199));
+        if (Game_IsPresentationMode()) {
+            WallFloor.X[i] = static_cast<f32>(RandInt(500, 1500));
+        }
+        else {
+            WallFloor.X[i] = static_cast<f32>(RandInt(0, 5999));
+        }
 
+        WallFloor.Y[i] = static_cast<f32>(RandInt(0, 199));
         WallFloor.Anomaly[i] = ANOMALYID::None;
         WallFloor.IsAnomalyAssigned[i] = false;
     }
