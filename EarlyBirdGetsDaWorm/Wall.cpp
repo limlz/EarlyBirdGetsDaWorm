@@ -316,13 +316,6 @@ void Wall::Draw(f32 CamX, s8 FloorNumber)
         WallFloor.IsAnomalyAssigned[FloorIndex] = true;
         WallFloor.LastIllness[FloorIndex] = TrueDiagnosis;
 
-        //// Sound
-        //if (gWallPick[idx] == ANOMALYID::Wall_Drawing1 ||
-        //    gWallPick[idx] == ANOMALYID::Wall_Drawing2 ||
-        //    gWallPick[idx] == ANOMALYID::Wall_Drawing3)
-        //{
-        //    AudioManager_PlaySFX(SFX_MAIN_MENU_WRITING_SCRATCH, 0.5f);
-        //}
     }
 
     // The eye moves depending on camera position to simulate

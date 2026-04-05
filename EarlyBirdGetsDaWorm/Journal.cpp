@@ -1116,13 +1116,6 @@ void Journal_Draw(AEGfxVertexList* squareMesh)
         float RightStartY   = HeaderY;
         float spacing       = 60.0f;
 
-        //AEGfxPrint(journalFontId, "How To Use",
-        //    X(LeftStartX),
-        //    Y(HeaderY),
-        //    Header,
-        //    0, 0, 0,
-        //    1.0f);
-
         // Left Page
         for (int i = 0; i < static_cast<int>(HelpData.leftLines.size()); ++i)
         {

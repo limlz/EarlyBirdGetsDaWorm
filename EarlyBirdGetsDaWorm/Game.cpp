@@ -575,23 +575,24 @@ void Game_Draw()
     Doors_Draw(camX, floorNum, textXoffset, textY, dementia);
     AEGfxSetTransparency(1.0f);
 
-    // Outside World Persona // Persona Movement + Anim
-    //f32 personaDt{ (f32)AEFrameRateControllerGetFrameTime() };
-    //imageTimer += personaDt;
+    // Outside World Persona — only shown in horror-less mode
+    f32 floatOffset1 = 0.0f, floatOffset2 = 0.0f;
+    if (Settings_IsHorrorLessEnabled()) {
+        f32 personaDt = static_cast<f32>(AEFrameRateControllerGetFrameTime());
+        imageTimer += personaDt;
 
-    //if (imageTimer >= imageDuration) // Switch frame when duration is exceeded
-    //{
-    //    imageTimer = 0.0f;
-    //    currentImage++;
+        if (imageTimer >= imageDuration) {
+            imageTimer = 0.0f;
+            currentImage++;
+            if (currentImage >= 4) {
+                currentImage = 0;
+            }
+        }
 
-    //    if (currentImage >= 4) {
-    //        currentImage = 0; // loops the animation
-    //    }
-    //}
-
-    //floatingTimer += personaDt; // Different floating movement
-    //f32 floatOffset1{ sinf(floatingTimer * 2.0f) * 20.0f };
-    //f32 floatOffset2{ sinf(floatingTimer * 2.0f + 1.5f) * 20.0f };
+        floatingTimer += personaDt;
+        floatOffset1 = sinf(floatingTimer * 2.0f) * 20.0f;
+        floatOffset2 = sinf(floatingTimer * 2.0f + 1.5f) * 20.0f;
+    }
 
     // Left lift only renders when the camera is close enough to the left end of the corridor
     if (camX > -(2 * DIST_BETWEEN_DOORS))
@@ -600,14 +601,16 @@ void Game_Draw()
         Lift_DrawWorld(squareMesh, camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, -700.0f + camX - 100.0f, 0.0f, 800.0f, 900.0f, floorNum);
 
-        /*f32 personaX{ -700.0f + camX - 100.0f }, personaY{ 0.0f };
-        if (floorNum == 1) {
-            DrawTextureMesh(squareMesh, OutsideGraveTex[0], personaX + 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+        if (Settings_IsHorrorLessEnabled()) {
+            f32 personaX = -700.0f + camX - 100.0f, personaY = 0.0f;
+            if (floorNum == 1) {
+                DrawTextureMesh(squareMesh, OutsideGraveTex[0], personaX + 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+            }
+            if (floorNum >= 2) {
+                DrawTextureMesh(squareMesh, OutsideNadTex[currentImage], personaX + 300.0f, personaY + 150.0f + floatOffset1, 100.0f, 106.0f, 0.35f);
+                DrawTextureMesh(squareMesh, OutsideLZTex[currentImage], personaX + 100.0f, personaY - 120.0f + floatOffset2, 132.0f, 106.0f, 0.35f);
+            }
         }
-        if (floorNum >= 2) {
-            DrawTextureMesh(squareMesh, OutsideNadTex[currentImage], personaX + 300.0f, personaY + 150.0f + floatOffset1, 100.0f, 106.0f, 0.35f);
-            DrawTextureMesh(squareMesh, OutsideLZTex[currentImage], personaX + 100.0f, personaY - 120.0f + floatOffset2, 132.0f, 106.0f, 0.35f);
-        }*/
     }
 
     // Right lift only renders near the right end; suppressed entirely in dementia mode where the corridor is infinite
@@ -620,45 +623,22 @@ void Game_Draw()
         Lift_DrawWorld(squareMesh, liftOffset + camX, -100.0f, LIFT_WIDTH, LIFT_HEIGHT, floorNum, textXoffset, textY);
         Lift_DrawBackground(squareMesh, endOffset + camX + 200.0f, 0.0f, 800.0f, 900.0f, floorNum);
 
-        /*f32 personaX{ endOffset + camX + 200.0f }, personaY{ 0.0f };
-        if (floorNum == 1) {
-            DrawTextureMesh(squareMesh, OutsideGraveTex[1], personaX - 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+        if (Settings_IsHorrorLessEnabled()) {
+            f32 personaX = endOffset + camX + 200.0f, personaY = 0.0f;
+            if (floorNum == 1) {
+                DrawTextureMesh(squareMesh, OutsideGraveTex[1], personaX - 200.0f, personaY - 210.0f, 200.0f, 103.0f, 1.0f);
+            }
+            if (floorNum >= 2) {
+                DrawTextureMesh(squareMesh, OutsideSyaTex[currentImage], personaX - 100.0f, personaY - 150.0f + floatOffset2, 86.0f, 106.0f, 0.35f);
+                DrawTextureMesh(squareMesh, OutsideAraTex[currentImage], personaX - 280.0f, personaY + 150.0f + floatOffset1, 160.0f, 133.0f, 0.35f);
+            }
         }
-        if (floorNum >= 2) {
-            DrawTextureMesh(squareMesh, OutsideSyaTex[currentImage], personaX - 100.0f, personaY - 150.0f + floatOffset2, 86.0f, 106.0f, 0.35f);
-            DrawTextureMesh(squareMesh, OutsideAraTex[currentImage], personaX - 280.0f, personaY + 150.0f + floatOffset1, 160.0f, 133.0f, 0.35f);
-        }*/
     }
 
     AEMtx33 scale;
 
     // Full-screen dark overlay between world geometry and lights; alpha driven by active illness
     DrawBlackOverlay(squareMesh, Lighting_GetOverlayAlpha());
-
-    // Basement (floor 0) gets an extra red tint overlay with a slow sin pulse and rare random brightness spikes
-    //if (floorNum == 0)
-    //{
-    //    static float t = 0.0f;
-    //    t += (float)AEFrameRateControllerGetFrameTime();
-
-    //    AEMtx33Scale(&scale, 2000.0f, 2000.0f);
-
-    //    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    //    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    //    AEGfxSetColorToMultiply(0.5f, 0.1f, 0.1f, 1.0f);
-    //    AEGfxSetTransform(scale.m);
-    //    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-
-    //    float pulse = 0.10f + 0.12f * (0.5f + 0.5f * sinf(t * 2.5f));
-    //    if ((rand() % 100) < 2) pulse += 0.05f; // 2% chance per frame of a sudden red flash
-
-    //    AEGfxSetTransparency(pulse);
-    //    AEGfxSetColorToMultiply(0.6f, 0.15f, 0.15f, 1.0f);
-    //    AEGfxMeshDraw(squareMesh, AE_GFX_MDM_TRIANGLES);
-
-    //    AEGfxSetTransparency(1.0f);
-    //    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-    //}
 
     // Y is computed from the border collider so the player always sits flush on the floor regardless of sprite height
     float computedPlayerY = -650.0f + (800.0f * 0.5f) + (Player_GetHeight() * 0.5f);
