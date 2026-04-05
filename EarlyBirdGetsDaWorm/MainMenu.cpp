@@ -36,6 +36,18 @@ static float quit_scale    = 1.0f;
 
 static s8 menuFontId = -1;
 
+// --- Quit Confirmation ---
+static bool showQuitConfirm = false;
+static AEGfxTexture* btnYesTex = nullptr;
+static AEGfxTexture* btnNoTex = nullptr;
+static s8 confirmFontId = -1;
+static float yesScale = 1.0f;
+static float noScale = 1.0f;
+static float confirmFadeAlpha = 0.0f;
+static bool confirmClosing = false;
+static bool confirmAccepted = false;
+static constexpr float CONFIRM_FADE_SPEED = 6.0f;
+
 static Animation titleAnim = { 0, 0.0f, TITLE_ANIM_SPEED, NUM_TITLE_FRAMES, false }; // play-once
 
 void MainMenu_Load()
@@ -59,6 +71,9 @@ void MainMenu_Load()
     }
 
     menuFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 24);
+    btnYesTex = LoadTextureChecked(Assets::Tutorial::YesButton);
+    btnNoTex = LoadTextureChecked(Assets::Tutorial::NoButton);
+    confirmFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 30);
 
     std::cout << "MainMenu: Load\n";
     Settings_Load();
@@ -76,6 +91,12 @@ void MainMenu_Initialize()
     isFadingOut      = false;
     fade_out_alpha   = 0.0f;
     pendingNextState = 0;
+    showQuitConfirm  = false;
+    confirmClosing   = false;
+    confirmAccepted  = false;
+    confirmFadeAlpha = 0.0f;
+    yesScale = 1.0f;
+    noScale = 1.0f;
 
     titleAnim.Reset();
     Credits_Initialize();
@@ -123,16 +144,59 @@ void MainMenu_Update()
     UpdateButtonScale(options_scale, hoverOptions, 1.15f, animSpeed, dt);
     UpdateButtonScale(quit_scale,    hoverQuit,    1.15f, animSpeed, dt);
 
+    // --- QUIT CONFIRMATION PROMPT ---
+    if (showQuitConfirm) {
+        if (confirmClosing) {
+            confirmFadeAlpha -= CONFIRM_FADE_SPEED * dt;
+            if (confirmFadeAlpha <= 0.0f) {
+                confirmFadeAlpha = 0.0f;
+                showQuitConfirm = false;
+                confirmClosing = false;
+                if (confirmAccepted) {
+                    confirmAccepted = false;
+                    pendingNextState = GS_QUIT;
+                    isFadingOut = true;
+                }
+            }
+        } else {
+            confirmFadeAlpha += CONFIRM_FADE_SPEED * dt;
+            if (confirmFadeAlpha > 1.0f) confirmFadeAlpha = 1.0f;
+
+            float mx2 = Input_GetMouseX();
+            float my2 = Input_GetMouseY();
+            float animSpeed2 = 15.0f;
+            bool hoverYes = IsAreaClicked(-250.0f, -120.0f, 280.0f, 130.0f, mx2, my2);
+            bool hoverNo  = IsAreaClicked( 250.0f, -120.0f, 280.0f, 130.0f, mx2, my2);
+
+            UpdateButtonScale(yesScale, hoverYes, 1.15f, animSpeed2, dt);
+            UpdateButtonScale(noScale,  hoverNo,  1.15f, animSpeed2, dt);
+
+            if (confirmFadeAlpha >= 0.9f && AEInputCheckTriggered(AEVK_LBUTTON)) {
+                if (hoverYes) {
+                    confirmClosing = true;
+                    confirmAccepted = true;
+                }
+                if (hoverNo) {
+                    confirmClosing = true;
+                    confirmAccepted = false;
+                }
+            }
+            if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+                confirmClosing = true;
+                confirmAccepted = false;
+            }
+        }
+        return;
+    }
+
     if (AEInputCheckTriggered(AEVK_LBUTTON)) {
         if      (hoverAdmit)            { pendingNextState = GAME_STATE; isFadingOut = true; }
         else if (hoverPlaytest)         { Game_SetPlaytestMode(!Game_IsPlaytestMode()); }
         else if (hoverPresentation)     { Game_SetPresentationMode(!Game_IsPresentationMode()); }
         else if (hoverOptions)          { Settings_Open(); }
-        else if (hoverQuit)             { pendingNextState = GS_QUIT; isFadingOut = true; }
+        else if (hoverQuit)             { showQuitConfirm = true; yesScale = 1.0f; noScale = 1.0f; }
         else if (Credits_IsHovering())  { Credits_Open(); }
     }
-
-
 }
 
 void MainMenu_Draw()
@@ -196,6 +260,28 @@ void MainMenu_Draw()
                                               : (isFadingOut ? fade_out_alpha : 0.0f);
     DrawBlackOverlay(squareMesh, fadeAlpha);
 
+    // Quit confirmation overlay
+    if (showQuitConfirm && confirmFadeAlpha > 0.0f) {
+        float a = confirmFadeAlpha;
+
+        DrawBlackOverlay(squareMesh, 0.7f * a);
+
+        if (confirmFontId >= 0) {
+            AEGfxPrintWithGlow(confirmFontId, "Are you sure?",
+                -0.42f, -0.08f, 1.8f,
+                1.0f, 1.0f, 1.0f, a,
+                0.4f, 0.0f, 0.0f, a * 0.5f,
+                0.004f, true);
+        }
+
+        if (btnYesTex) {
+            DrawTextureMesh(squareMesh, btnYesTex, -250.0f, -120.0f, 280.0f * yesScale, 130.0f * yesScale, a);
+        }
+        if (btnNoTex) {
+            DrawTextureMesh(squareMesh, btnNoTex, 250.0f, -120.0f, 280.0f * noScale, 130.0f * noScale, a);
+        }
+    }
+
     Credits_DrawOverlay(squareMesh);
     Settings_Draw(squareMesh);
 }
@@ -223,8 +309,11 @@ void MainMenu_Unload()
     for (int i = 0; i < NUM_TITLE_FRAMES; i++) UnloadTextureSafe(title_frames[i]);
 
     Credits_Unload();
+    UnloadTextureSafe(btnYesTex);
+    UnloadTextureSafe(btnNoTex);
 
     if (menuFontId >= 0) { AEGfxDestroyFont(menuFontId); menuFontId = -1; }
+    if (confirmFontId >= 0) { AEGfxDestroyFont(confirmFontId); confirmFontId = -1; }
 
     Particles_Free();
     Settings_Unload();

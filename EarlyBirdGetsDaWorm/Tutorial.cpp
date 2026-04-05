@@ -482,7 +482,6 @@ void Tutorial::Update(f32 DT) {
 			TutorialPrompt.Shown = false;
 			TutorialInput.PromptAnswered = true;
 			TutorialInput.DoTutorial = true;
-			//CurrentStage = Stages::TUTORIAL_START;
 			ResetTutorial();
 		}
 	}

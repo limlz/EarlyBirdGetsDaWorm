@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "Animation.hpp"
+#include "BossDebug.hpp"
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
@@ -409,20 +410,17 @@ void Boss_Draw(Boss& boss, AEGfxVertexList* mesh)
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    // =================================================================
-    // DEBUG: UNCOMMENT THIS BLOCK TO SEE THE COMPOUND HITBOXES!
-    // Feel free to tweak the numbers in Boss_CheckCollision to fit perfectly
-    // =================================================================
-    
-    //AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    //AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    //AEGfxSetTransparency(0.4f);
-    //DrawSquareMesh(mesh, boss.x + 20.0f, boss.y + 110.0f, 100.0f, 180.0f, 0xFF00FFFF); // Head/Torso
-    //DrawSquareMesh(mesh, boss.x - 70.0f, boss.y - 30.0f, 140.0f,  50.0f, 0xFF00FFFF); // Reaching Arm
-    //DrawSquareMesh(mesh, boss.x + 70.0f, boss.y - 60.0f, 60.0f, 150.0f, 0xFF00FFFF); // Skirt/Legs
-    //DrawSquareMesh(mesh, boss.x + 90.0f, boss.y - 120.0f, 50.0f, 240.0f, 0xFF00FFFF); // Dangling Arm
-    //AEGfxSetTransparency(1.0f);
-    
+    if (BossDebug_IsActive()) {
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(0.4f);
+        DrawSquareMesh(mesh, boss.x + 20.0f, boss.y + 110.0f, 100.0f, 180.0f, 0xFF00FFFF); // Head/Torso
+        DrawSquareMesh(mesh, boss.x - 70.0f, boss.y - 30.0f, 140.0f,  50.0f, 0xFF00FFFF); // Reaching Arm
+        DrawSquareMesh(mesh, boss.x + 70.0f, boss.y - 60.0f, 60.0f, 150.0f, 0xFF00FFFF); // Skirt/Legs
+        DrawSquareMesh(mesh, boss.x + 90.0f, boss.y - 120.0f, 50.0f, 240.0f, 0xFF00FFFF); // Dangling Arm
+        AEGfxSetTransparency(1.0f);
+    }
+
 
     // Draw Boss Bullets
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) {

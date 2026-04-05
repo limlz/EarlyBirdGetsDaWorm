@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -13,249 +13,305 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Gameplay">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Anomalies">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Boss Fight">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Audio">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Gameplay">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Anomalies">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Boss Fight">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Audio">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Rendering">
+      <UniqueIdentifier>{A1B2C3D4-0002-0001-0001-000000000007}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <!-- Core -->
     <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshCreation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="GameStateManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MainMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Quit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Startup.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="Input.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Frames.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Doors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Lighting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleEffects.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Notifications.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BossFight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Wall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Boss.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Bullets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Prompts.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Lift.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CentralPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PauseMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Jumpscare.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tutorial.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Endgame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Analytics.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="Config.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Guide.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Analytics.cpp">
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Journal.cpp">
-      <Filter>Source Files</Filter>
+    <!-- Gameplay -->
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="Settings.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="SoundAnomaly.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="Credits.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Startup.cpp">
+      <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="BossDebug.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Quit.cpp">
+      <Filter>Source Files\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="Endgame.cpp">
+      <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="PresentationEndgame.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Gameplay</Filter>
+    </ClCompile>
+    <!-- Anomalies -->
+    <ClCompile Include="CentralPool.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Frames.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Doors.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Lighting.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Wall.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Lift.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundAnomaly.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <ClCompile Include="Jumpscare.cpp">
+      <Filter>Source Files\Anomalies</Filter>
+    </ClCompile>
+    <!-- Boss Fight -->
+    <ClCompile Include="BossFight.cpp">
+      <Filter>Source Files\Boss Fight</Filter>
+    </ClCompile>
+    <ClCompile Include="Boss.cpp">
+      <Filter>Source Files\Boss Fight</Filter>
+    </ClCompile>
+    <ClCompile Include="Bullets.cpp">
+      <Filter>Source Files\Boss Fight</Filter>
+    </ClCompile>
+    <ClCompile Include="BossDebug.cpp">
+      <Filter>Source Files\Boss Fight</Filter>
+    </ClCompile>
+    <!-- UI -->
+    <ClCompile Include="MainMenu.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="PauseMenu.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Notifications.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Prompts.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Journal.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Guide.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Tutorial.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Credits.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <!-- Audio -->
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <!-- Rendering -->
+    <ClCompile Include="MeshCreation.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleEffects.cpp">
+      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mesh_creation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="utils.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <!-- Core -->
     <ClInclude Include="pch.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="state_list.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="gsm.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="main_menu.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="quit.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="startup.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="game.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="input.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="frames.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="doors.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lighting.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="particle_effects.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="notifications.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="boss_fight.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="player.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="timer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="wall.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="boss.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bullets.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="prompts.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Lift.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="debug.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="assets_catalog.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="central_pool.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pause_menu.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="audio_manager.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jumpscare.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="endgame.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="analytics.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="utils.hpp">
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="config.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="guide.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="analytics.hpp">
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="journal.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="assets_catalog.hpp">
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="settings.hpp">
-      <Filter>Header Files</Filter>
+    <!-- Gameplay -->
+    <ClInclude Include="game.hpp">
+      <Filter>Header Files\Gameplay</Filter>
     </ClInclude>
-    <ClInclude Include="sound_anomaly.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="player.hpp">
+      <Filter>Header Files\Gameplay</Filter>
     </ClInclude>
-    <ClInclude Include="Credits.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="timer.hpp">
+      <Filter>Header Files\Gameplay</Filter>
     </ClInclude>
-    <ClInclude Include="BossDebug.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="startup.hpp">
+      <Filter>Header Files\Gameplay</Filter>
     </ClInclude>
-    <ClInclude Include="Animation.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="quit.hpp">
+      <Filter>Header Files\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="endgame.hpp">
+      <Filter>Header Files\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="presentation_endgame.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.hpp">
+      <Filter>Header Files\Gameplay</Filter>
+    </ClInclude>
+    <!-- Anomalies -->
+    <ClInclude Include="central_pool.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="frames.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="doors.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="lighting.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="wall.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="Lift.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="sound_anomaly.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <ClInclude Include="jumpscare.hpp">
+      <Filter>Header Files\Anomalies</Filter>
+    </ClInclude>
+    <!-- Boss Fight -->
+    <ClInclude Include="boss_fight.hpp">
+      <Filter>Header Files\Boss Fight</Filter>
+    </ClInclude>
+    <ClInclude Include="boss.hpp">
+      <Filter>Header Files\Boss Fight</Filter>
+    </ClInclude>
+    <ClInclude Include="bullets.hpp">
+      <Filter>Header Files\Boss Fight</Filter>
+    </ClInclude>
+    <ClInclude Include="BossDebug.hpp">
+      <Filter>Header Files\Boss Fight</Filter>
+    </ClInclude>
+    <!-- UI -->
+    <ClInclude Include="main_menu.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="pause_menu.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="notifications.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="prompts.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="journal.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="guide.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="tutorial.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Credits.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.hpp">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <!-- Audio -->
+    <ClInclude Include="audio_manager.hpp">
+      <Filter>Header Files\Audio</Filter>
+    </ClInclude>
+    <!-- Rendering -->
+    <ClInclude Include="mesh_creation.hpp">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="particle_effects.hpp">
+      <Filter>Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
