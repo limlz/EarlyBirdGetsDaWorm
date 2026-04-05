@@ -59,8 +59,8 @@ enum class EndGameReason : int {
     REASON_SURVIVED_5_DAYS,
     REASON_DIED_TO_BOSS,
     REASON_SENT_HUMAN_TO_BASEMENT,
-	REASON_SENT_GHOST_TO_ROOM,
-	REASON_QUIT_FROM_MENU,
+    REASON_SENT_GHOST_TO_ROOM,
+    REASON_QUIT_FROM_MENU,
     REASON_QUOTA_NOT_MET
 };
 
@@ -70,40 +70,40 @@ extern EndGameReason currentEndReason;
 
 // --- CONSTANTS --- //
 // Colors
-inline constexpr unsigned int COLOR_WHITE        = 0xFFFFFFFF;
-inline constexpr unsigned int COLOR_BLACK        = 0x000000FF;
-inline constexpr unsigned int COLOR_RED          = 0xFFFF0000;
-inline constexpr unsigned int COLOR_LIFT_RED     = 0xFF5C5CFF;
-inline constexpr unsigned int COLOR_LIGHT_GREY   = 0x696969FF;
-inline constexpr unsigned int COLOR_DARK_GREY    = 0x333333FF;
-inline constexpr unsigned int COLOR_NIGHT_BLUE   = 0x191970FF;
-inline constexpr unsigned int COLOR_DOOR_BROWN   = 0x8B4513FF;
-inline constexpr unsigned int COLOR_LIFT_BG      = 0x2F4F4FFF;
-inline constexpr unsigned int COLOR_LIFT_CONSOLE = 0xC0C0C0FF;
-inline constexpr unsigned int COLOR_LIFT_BUTTON  = 0xFFD700FF;
+constexpr unsigned int COLOR_WHITE = 0xFFFFFFFF;
+constexpr unsigned int COLOR_BLACK = 0x000000FF;
+constexpr unsigned int COLOR_RED = 0xFFFF0000;
+constexpr unsigned int COLOR_LIFT_RED = 0xFF5C5CFF;
+constexpr unsigned int COLOR_LIGHT_GREY = 0x696969FF;
+constexpr unsigned int COLOR_DARK_GREY = 0x333333FF;
+constexpr unsigned int COLOR_NIGHT_BLUE = 0x191970FF;
+constexpr unsigned int COLOR_DOOR_BROWN = 0x8B4513FF;
+constexpr unsigned int COLOR_LIFT_BG = 0x2F4F4FFF;
+constexpr unsigned int COLOR_LIFT_CONSOLE = 0xC0C0C0FF;
+constexpr unsigned int COLOR_LIFT_BUTTON = 0xFFD700FF;
 
 // --- CONSTANTS --- //
 // Dimensions & Settings
-inline constexpr int   SCREEN_W           = 1600;
-inline constexpr int   SCREEN_H           = 900;
+constexpr int   SCREEN_W = 1600;
+constexpr int   SCREEN_H = 900;
 
-inline constexpr float PLAYER_SPEED       = 400.0f;
-inline constexpr float PLAYER_WIDTH       = 220.0f;
-inline constexpr float PLAYER_HEIGHT      = 200.0f;
+constexpr float PLAYER_SPEED = 400.0f;
+constexpr float PLAYER_WIDTH = 220.0f;
+constexpr float PLAYER_HEIGHT = 200.0f;
 
-inline constexpr float DOOR_WIDTH         = 200.0f;
-inline constexpr float DOOR_HEIGHT        = 300.0f;
-inline constexpr float DIST_BETWEEN_DOORS = 600.0f;
+constexpr float DOOR_WIDTH = 200.0f;
+constexpr float DOOR_HEIGHT = 300.0f;
+constexpr float DIST_BETWEEN_DOORS = 600.0f;
 
-inline constexpr float LIFT_WIDTH         = 200.0f;
-inline constexpr float LIFT_HEIGHT        = 300.0f;
-inline constexpr float LIFT_DOOR_WIDTH    = 500.0f;
-inline constexpr float LIFT_DOOR_HEIGHT   = 800.0f;
+constexpr float LIFT_WIDTH = 200.0f;
+constexpr float LIFT_HEIGHT = 300.0f;
+constexpr float LIFT_DOOR_WIDTH = 500.0f;
+constexpr float LIFT_DOOR_HEIGHT = 800.0f;
 
-inline constexpr int   NUM_OF_FLOOR       = 10;
-inline constexpr int   NUM_DOORS          = 10;
-inline constexpr int   REQUIRED_PATIENTS  = 5;
-inline constexpr float SCREEN_WIDTH_HALF  = 800.0f;
-inline constexpr float SCREEN_HEIGHT_HALF = 450.0f;
-inline constexpr float FLOOR_CENTER_Y     = 650.0f;
-inline constexpr float FLOOR_HEIGHT       = 800.0f;
+constexpr int   NUM_OF_FLOOR = 10;
+constexpr int   NUM_DOORS = 10;
+constexpr int   REQUIRED_PATIENTS = 5;
+constexpr float SCREEN_WIDTH_HALF = 800.0f;
+constexpr float SCREEN_HEIGHT_HALF = 450.0f;
+constexpr float FLOOR_CENTER_Y = 650.0f;
+constexpr float FLOOR_HEIGHT = 800.0f;

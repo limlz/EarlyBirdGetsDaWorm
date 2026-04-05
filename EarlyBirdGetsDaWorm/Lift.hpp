@@ -1,4 +1,5 @@
 #pragma once
+#include "AEEngine.h"
 
 // ============================================================================
 // SYSTEM LIFECYCLE (LOAD / INIT)

@@ -41,8 +41,8 @@ bool dementia{ false };
 
 static int  CurrentDay = 1;
 static bool gSessionStarted = false; // Guards Game_Load so day/timer only reset on a fresh session, not a reload
-static bool gPlaytestMode      = false; // Compressed demo mode: 2 patients/day, 3x clock, no visual bluff
-static bool gPresentationMode  = false; // Demo-day mode: 1 day, 1 forced Scotophobia ghost, all anomalies
+static bool gPlaytestMode = false; // Compressed demo mode: 2 patients/day, 3x clock, no visual bluff
+static bool gPresentationMode = false; // Demo-day mode: 1 day, 1 forced Scotophobia ghost, all anomalies
 
 // ============================================================
 //  SPAWN
@@ -171,7 +171,8 @@ void Game_Initialize()
     if (Timer_IsDayOverlayActive()) {
         isFadingFromBoss = false;
         returnFadeAlpha = 0.0f;
-    } else {
+    }
+    else {
         isFadingFromBoss = true;
         returnFadeAlpha = 1.0f;
     }
@@ -429,12 +430,13 @@ void Game_Update()
 
         // P: Auto collect patient (if idle) or auto deliver (if carrying)
         if (AEInputCheckTriggered(AEVK_P)) {
-            s8 tFloor, tDoor, dFloor, dDoor;
+            s8 tFloor{}, tDoor{}, dFloor{}, dDoor{}; // <-- ZERO INITIALIZED
             Player_GetTargetRoom(tFloor, tDoor, dFloor, dDoor);
             if (!Player_HasPatient()) {
                 Player_HandleInteraction(tFloor, tDoor, CurrentDay);
                 SoundAnomaly.Initialize();
-            } else {
+            }
+            else {
                 if (Player_HandleInteraction(dFloor, dDoor, CurrentDay))
                     liftActive = false;
             }
@@ -443,7 +445,7 @@ void Game_Update()
 
     // Endless hallway: only active when the lighting anomaly is running AND the current illness is Dementia
     dementia = CentralPool_IsSystemActive(AnomalyFiles::Lighting_isActive)
-            && (Player_GetAnomalyIllness() == ILLNESSES::DEMENTIA);
+        && (Player_GetAnomalyIllness() == ILLNESSES::DEMENTIA);
 
     // Clamp camera so the player can't scroll past either end of the corridor.
     // Also kill velocity at each boundary so it doesn't fight against the clamp.
@@ -473,7 +475,7 @@ void Game_Update()
     {
         const s8 doorAtPlayer1Based = static_cast<s8>(doorNumAtPlayer) + 1;
 
-        s8 targetFloor, targetDoor, destFloor, destDoor;
+        s8 targetFloor{}, targetDoor{}, destFloor{}, destDoor{}; // <-- ZERO INITIALIZED
         Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
         const bool hasPatient = Player_HasPatient();
@@ -630,7 +632,7 @@ void Game_Draw()
         }*/
     }
 
-    AEMtx33 scale;
+    AEMtx33 scale{}; // <-- ZERO INITIALIZED
 
     // Full-screen dark overlay between world geometry and lights; alpha driven by active illness
     DrawBlackOverlay(squareMesh, Lighting_GetOverlayAlpha());
@@ -672,7 +674,7 @@ void Game_Draw()
 
     Prompts_Draw();
 
-    s8 targetFloor, targetDoor, destFloor, destDoor;
+    s8 targetFloor{}, targetDoor{}, destFloor{}, destDoor{}; // <-- ZERO INITIALIZED
     Player_GetTargetRoom(targetFloor, targetDoor, destFloor, destDoor);
 
     Journal_DrawSmallIcon(squareMesh);
@@ -681,8 +683,8 @@ void Game_Draw()
     Lift_Draw(squareMesh, floorNum);
     Notifications_Draw(targetFloor, targetDoor, destFloor, destDoor);
     Timer_DrawDayOverlay(squareMesh);
-    
-    DebugInfo info;
+
+    DebugInfo info{}; // <-- ZERO INITIALIZED
     info.camX = camX;
     info.day = CurrentDay;
     info.floorNum = floorNum;
@@ -703,7 +705,7 @@ void Game_Draw()
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 
-        AEMtx33 trans, transform;
+        AEMtx33 trans{}, transform{}; // <-- ZERO INITIALIZED
         AEMtx33Scale(&scale, 1600.0f, 900.0f);
         AEMtx33Trans(&trans, 0.0f, 0.0f);
         AEMtx33Concat(&transform, &trans, &scale);
@@ -787,9 +789,9 @@ void Game_Unload()
 // Called before a full game restart; clears the guard so Game_Load reinitialises day and timer
 void Game_ResetSession()
 {
-    gSessionStarted      = false;
-    gPlaytestMode        = false;
-    totalTimeSurvived    = 0.0f;
+    gSessionStarted = false;
+    gPlaytestMode = false;
+    totalTimeSurvived = 0.0f;
     Notifications_ResetTaskComplete();
 }
 
@@ -803,8 +805,8 @@ float Game_GetTimeSurvived()
     return totalTimeSurvived;
 }
 
-bool  Game_IsPlaytestMode()              { return gPlaytestMode; }
+bool  Game_IsPlaytestMode() { return gPlaytestMode; }
 void  Game_SetPlaytestMode(bool enabled) { gPlaytestMode = enabled; }
 
-bool  Game_IsPresentationMode()              { return gPresentationMode; }
+bool  Game_IsPresentationMode() { return gPresentationMode; }
 void  Game_SetPresentationMode(bool enabled) { gPresentationMode = enabled; }
