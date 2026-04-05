@@ -7,12 +7,24 @@ static AEGfxTexture* pauseTitleTex = nullptr;
 static AEGfxTexture* btnResumeTex = nullptr;
 static AEGfxTexture* btnOptionsTex = nullptr;
 static AEGfxTexture* btnQuitTex = nullptr;
+static AEGfxTexture* btnYesTex = nullptr;
+static AEGfxTexture* btnNoTex = nullptr;
 
 // --- Variables ---
 static bool gamePaused = false;
 static bool isUnpausing = false; // Tracks the slide-out animation
 static float pauseAlpha = 0.0f;
 const float FADE_SPEED = 3.0f;
+
+// --- Quit Confirmation ---
+static bool showQuitConfirm = false;
+static bool confirmClosing = false;
+static bool confirmAccepted = false;
+static s8 confirmFontId = -1;
+static float yesScale = 1.0f;
+static float noScale = 1.0f;
+static float confirmFadeAlpha = 0.0f;
+static constexpr float CONFIRM_FADE_SPEED = 6.0f;
 
 // --- Menu Animation Variables ---
 static float pauseMenuTimer = 0.0f;
@@ -50,6 +62,9 @@ void PauseMenu_Load()
     btnResumeTex = LoadTextureChecked(Assets::Pause_Menu::ResumeButton);
     btnOptionsTex = LoadTextureChecked(Assets::Pause_Menu::OptionsButton);
     btnQuitTex = LoadTextureChecked(Assets::Pause_Menu::QuitButton);
+    btnYesTex = LoadTextureChecked(Assets::Tutorial::YesButton);
+    btnNoTex = LoadTextureChecked(Assets::Tutorial::NoButton);
+    confirmFontId = AEGfxCreateFont(Assets::Fonts::Buggy, 30);
 	Settings_Load();
 }
 
@@ -59,6 +74,12 @@ void PauseMenu_Initialize()
     isUnpausing = false;
     pauseAlpha = 0.0f;
     pauseMenuTimer = 0.0f;
+    showQuitConfirm = false;
+    confirmClosing = false;
+    confirmAccepted = false;
+    confirmFadeAlpha = 0.0f;
+    yesScale = 1.0f;
+    noScale = 1.0f;
 
     titleX = -1200.0f;
     resumeX = -1200.0f;
@@ -241,10 +262,53 @@ void PauseMenu_Update(float dt)
                 Settings_Open();
             }
             if (hoverQuit && AEInputCheckTriggered(AEVK_LBUTTON)) {
-                currentEndReason = EndGameReason::REASON_QUIT_FROM_MENU;
-                Analytics::LogRun(EndGameReason::REASON_QUIT_FROM_MENU, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
-                    static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
-                next = MAIN_MENU;
+                showQuitConfirm = true;
+                yesScale = 1.0f;
+                noScale = 1.0f;
+            }
+        }
+
+        // --- QUIT CONFIRMATION PROMPT ---
+        if (showQuitConfirm) {
+            if (confirmClosing) {
+                confirmFadeAlpha -= CONFIRM_FADE_SPEED * dt;
+                if (confirmFadeAlpha <= 0.0f) {
+                    confirmFadeAlpha = 0.0f;
+                    showQuitConfirm = false;
+                    confirmClosing = false;
+                    if (confirmAccepted) {
+                        confirmAccepted = false;
+                        currentEndReason = EndGameReason::REASON_QUIT_FROM_MENU;
+                        Analytics::LogRun(EndGameReason::REASON_QUIT_FROM_MENU, Game_GetCurrentDay(), Player_GetPatientsHandled(), IsGhostPatient(),
+                            static_cast<int>(Player_GetTrueDiagnosis()), static_cast<int>(Player_GetAnomalyIllness()), Game_GetTimeSurvived());
+                        next = MAIN_MENU;
+                    }
+                }
+            } else {
+                confirmFadeAlpha += CONFIRM_FADE_SPEED * dt;
+                if (confirmFadeAlpha > 1.0f) confirmFadeAlpha = 1.0f;
+
+                float animSpeed = 15.0f;
+                bool hoverYes = IsAreaClicked(-250.0f, -120.0f, 280.0f, 130.0f, mx, my);
+                bool hoverNo  = IsAreaClicked( 250.0f, -120.0f, 280.0f, 130.0f, mx, my);
+
+                UpdateButtonScale(yesScale, hoverYes, 1.15f, animSpeed, dt);
+                UpdateButtonScale(noScale,  hoverNo,  1.15f, animSpeed, dt);
+
+                if (confirmFadeAlpha >= 0.9f) {
+                    if (hoverYes && AEInputCheckTriggered(AEVK_LBUTTON)) {
+                        confirmClosing = true;
+                        confirmAccepted = true;
+                    }
+                    if (hoverNo && AEInputCheckTriggered(AEVK_LBUTTON)) {
+                        confirmClosing = true;
+                        confirmAccepted = false;
+                    }
+                }
+                if (AEInputCheckTriggered(AEVK_ESCAPE)) {
+                    confirmClosing = true;
+                    confirmAccepted = false;
+                }
             }
         }
     }
@@ -305,6 +369,28 @@ void PauseMenu_Draw(AEGfxVertexList* squareMesh)
         }
     }
 
+    // LAYER 4: Quit Confirmation Prompt
+    if (showQuitConfirm && gamePaused && confirmFadeAlpha > 0.0f) {
+        float a = confirmFadeAlpha;
+
+        DrawBlackOverlay(squareMesh, 0.6f * a);
+
+        if (confirmFontId >= 0) {
+            AEGfxPrintWithGlow(confirmFontId, "Are you sure?",
+                -0.42f, -0.08f, 1.8f,
+                1.0f, 1.0f, 1.0f, a,
+                0.4f, 0.0f, 0.0f, a * 0.5f,
+                0.004f, true);
+        }
+
+        if (btnYesTex) {
+            DrawTextureMesh(squareMesh, btnYesTex, -250.0f, -120.0f, 280.0f * yesScale, 130.0f * yesScale, a);
+        }
+        if (btnNoTex) {
+            DrawTextureMesh(squareMesh, btnNoTex, 250.0f, -120.0f, 280.0f * noScale, 130.0f * noScale, a);
+        }
+    }
+
     // Reset Global Engine State
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -326,6 +412,9 @@ void PauseMenu_Unload()
     UnloadTextureSafe(btnResumeTex);
     UnloadTextureSafe(btnOptionsTex);
     UnloadTextureSafe(btnQuitTex);
+    UnloadTextureSafe(btnYesTex);
+    UnloadTextureSafe(btnNoTex);
+    if (confirmFontId >= 0) { AEGfxDestroyFont(confirmFontId); confirmFontId = -1; }
 	Settings_Unload();
 }
 

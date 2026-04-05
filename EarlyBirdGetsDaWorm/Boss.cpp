@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "Animation.hpp"
+#include "BossDebug.hpp"
 
 // --- Boss Textures ---
 static AEGfxTexture* bossTex[3]          = { nullptr, nullptr, nullptr };
