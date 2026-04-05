@@ -141,6 +141,18 @@ bool Doors::TryDisposal(int floorNum, int doorIdx, bool& outDidJumpscare)
 
     s.lockedThisDay = true;
 
+    // Presentation mode: force exactly 1 jumpscare on the first attempt
+    if (Game_IsPresentationMode()) {
+        static bool presentationScared = false;
+        if (!presentationScared) {
+            presentationScared = true;
+            JumpScare_Start();
+            outDidJumpscare = true;
+            return false;
+        }
+        return true;
+    }
+
     if (RandInt(0, 99) < 30)
     {
         JumpScare_Start();

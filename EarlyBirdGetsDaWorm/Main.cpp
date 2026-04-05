@@ -7,7 +7,7 @@
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -97,5 +97,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     Journal_Shutdown();       // free Observed/Unread vector buffers before _CrtDumpMemoryLeaks runs
     Credits_Shutdown();       // free parsedCredits vector buffer before _CrtDumpMemoryLeaks runs
     AESysExit();
+    _CrtDumpMemoryLeaks();
     return 0;
 }

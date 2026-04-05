@@ -27,7 +27,7 @@ const int MAX_JUMPS = 2;
 bool facingRight = true;
 
 // --- PLAYER HEALTH ---
-const int MAX_PLAYER_HP = 20;
+const int MAX_PLAYER_HP = 25;
 int playerHP = MAX_PLAYER_HP;
 bool isPlayerHit = false;
 float hitTimer = 0.0f;
@@ -803,16 +803,14 @@ void Boss_Fight_Draw()
         }
     }
 
-    // Arena encroachment — bars grow taller in later phases
-    {
-        float barHeight = 100.0f;
-        if (isHorror) barHeight += myBoss.phase * 20.0f;
-        DrawSquareMesh(squareMesh, shakeOX, -400.0f + shakeOY, 1600.0f, barHeight, COLOR_BLACK);
-        DrawSquareMesh(squareMesh, shakeOX,  400.0f + shakeOY, 1600.0f, barHeight, COLOR_BLACK);
-    }
-
     Bullets_Draw(0.0f);
     Boss_Draw(myBoss, squareMesh);
+
+    // Arena border bars — drawn after sprites so they clip bullets and boss at the edges
+    {
+        DrawSquareMesh(squareMesh, shakeOX, -400.0f + shakeOY, 1600.0f, 100.0f, COLOR_BLACK);
+        DrawSquareMesh(squareMesh, shakeOX,  400.0f + shakeOY, 1600.0f, 100.0f, COLOR_BLACK);
+    }
 
     // Second darkness pass after sprites — darkens everything including player/boss
     if (isHorror) {

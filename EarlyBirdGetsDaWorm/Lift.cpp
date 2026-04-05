@@ -728,6 +728,29 @@ void Lift::Draw(AEGfxVertexList* squareMesh, s8 currentFloor) {
     }
 
     Anomaly_OnDraw(squareMesh);
+
+    // -------------------------------------------------------------
+    // LIFT LIGHT FLICKER DURING TRANSIT (drawn last, on top of everything)
+    // -------------------------------------------------------------
+    if (phase.phase == 3 && phase.timer < TRANSIT_TIMER) {
+        float progress = phase.timer / TRANSIT_TIMER;
+
+        float darkAlpha = 0.0f;
+
+        if (progress < 0.1f) {
+            darkAlpha = (progress / 0.1f) * 0.85f;
+        } else if (progress < 0.8f) {
+            float flicker = sinf(phase.timer * 25.0f) + sinf(phase.timer * 37.0f) + sinf(phase.timer * 53.0f);
+            darkAlpha = (flicker > 0.5f) ? 0.85f : 0.15f;
+        } else {
+            float fadeOut = (progress - 0.8f) / 0.2f;
+            darkAlpha = 0.85f * (1.0f - fadeOut);
+        }
+
+        if (darkAlpha > 0.01f) {
+            DrawBlackOverlay(quadMesh, darkAlpha);
+        }
+    }
 }
 
 // ============================================================================
