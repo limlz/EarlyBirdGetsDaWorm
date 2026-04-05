@@ -115,8 +115,6 @@ void Game_Load()
     PauseMenu_Load();
     Debug_Load();
     Timer_Load();
-    Doors_Load();
-    Lift_Load();
     Player_Load();
     Journal_Load();
     Prompts_Load();
@@ -178,8 +176,6 @@ void Game_Initialize()
         returnFadeAlpha = 1.0f;
     }
 
-    Doors_Initialize();
-    Lift_Initialize();
     JumpScare_Initialize();
     PauseMenu_Initialize();
     Notifications_Initialize();
@@ -737,21 +733,17 @@ void Game_Unload()
     AudioManager_StopSFX();
     AudioManager_StopWalkingSFX();
 
-    Frames_Unload();
     Player_Unload();
     Prompts_Unload();
-    Lighting_Unload();
-    Doors_Unload();
     Debug_Unload();
     Notifications_Free();
     Timer_Unload();
-    Wall_Unload();
-    Lift_Unload();
     PauseMenu_Unload();
     JumpScare_Unload();
     Tutorial_Free();
     Guide_Free();
     Journal_Unload();
+    AllAnomalies_Unload();
 
     // Grave + Persona Unloading
     for (int i{}; i < 2; i++) {

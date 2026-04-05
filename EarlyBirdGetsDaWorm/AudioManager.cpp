@@ -1,17 +1,24 @@
 #include "pch.hpp"
 
-// --- AUDIO ENGINE DATA ---
-static AEAudio      soundBank[static_cast<int>(SoundID::SND_COUNT)];
+// ============================================================================
+// AUDIO DATA & CHANNEL ISOLATION
+// ============================================================================
 
-// --- CHANNEL ISOLATION ---
+// Array acting as the central memory bank for all pre-loaded sound files
+static AEAudio    soundBank[static_cast<int>(SoundID::SND_COUNT)];
+
+// Isolated audio groups. Separating the channels ensures that stopping one 
+// specific type of sound (like footsteps) doesn't accidentally mute the BGM or SFX.
 static AEAudioGroup groupBGM;
 static AEAudioGroup groupSFX;
-static AEAudioGroup groupWalking; // Separate group so stopping walk sounds never kills anomaly SFX
+static AEAudioGroup groupWalking;
 
-/*****************************************************************************************/
-// Initializes the audio engine and creates the isolated audio channels.
-/*****************************************************************************************/
+// ============================================================================
+// SYSTEM LIFECYCLE (INIT / LOAD / UNLOAD)
+// ============================================================================
+
 void AudioManager_Init() {
+    // Initialize the engine and create the isolated audio channels
     AEAudioInit();
 
     groupBGM = AEAudioCreateGroup();
@@ -19,12 +26,12 @@ void AudioManager_Init() {
     groupWalking = AEAudioCreateGroup();
 }
 
-/*****************************************************************************************/
-// --- MEMORY OPTIMIZATION ---
+// ----------------------------------------------------------------------------
+// MEMORY OPTIMIZATION
 // Centralized loading: Instead of having individual files constantly load and delete 
 // their own .wav files (which causes lag spikes and memory fragmentation), the Audio Manager 
 // pre-loads everything into RAM at startup. Other files simply trigger them via Enums.
-/*****************************************************************************************/
+// ----------------------------------------------------------------------------
 void AudioManager_LoadAll() {
     // BGM
     soundBank[static_cast<int>(SoundID::BGM_GAME_AMBIENCE)] = AEAudioLoadSound("Assets/Audio/BGM_GAME_AMBIENCE.ogg");
@@ -48,12 +55,12 @@ void AudioManager_LoadAll() {
     soundBank[static_cast<int>(SoundID::SFX_CLOCK_TICK)] = AEAudioLoadSound("Assets/Audio/SFX_CLOCK_TICK.ogg");
 
     // Boss Fight
-    soundBank[static_cast<int>(SoundID::SFX_JUMP_GRUNT)]        = AEAudioLoadSound("Assets/Audio/SFX_JUMP_GRUNT.ogg");
-    soundBank[static_cast<int>(SoundID::SFX_WEOW)]              = AEAudioLoadSound("Assets/Audio/SFX_WEOW.ogg");
-    soundBank[static_cast<int>(SoundID::SFX_WATER_GUN_SQUIRT)]  = AEAudioLoadSound("Assets/Audio/SFX_WATER_GUN_SQUIRT.ogg");
-    soundBank[static_cast<int>(SoundID::SFX_WATER_IMPACT)]      = AEAudioLoadSound("Assets/Audio/SFX_WATER_IMPACT.ogg");
-    soundBank[static_cast<int>(SoundID::SFX_SHIELD_BREAK)]      = AEAudioLoadSound("Assets/Audio/SFX_SHIELD_BREAK.ogg");
-    soundBank[static_cast<int>(SoundID::SFX_DODGE)]             = AEAudioLoadSound("Assets/Audio/SFX_DODGE.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_JUMP_GRUNT)] = AEAudioLoadSound("Assets/Audio/SFX_JUMP_GRUNT.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_WEOW)] = AEAudioLoadSound("Assets/Audio/SFX_WEOW.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_WATER_GUN_SQUIRT)] = AEAudioLoadSound("Assets/Audio/SFX_WATER_GUN_SQUIRT.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_WATER_IMPACT)] = AEAudioLoadSound("Assets/Audio/SFX_WATER_IMPACT.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_SHIELD_BREAK)] = AEAudioLoadSound("Assets/Audio/SFX_SHIELD_BREAK.ogg");
+    soundBank[static_cast<int>(SoundID::SFX_DODGE)] = AEAudioLoadSound("Assets/Audio/SFX_DODGE.ogg");
 
     // UI
     soundBank[static_cast<int>(SoundID::SFX_MAIN_MENU_WRITING_SCRATCH)] = AEAudioLoadSound("Assets/Audio/SFX_MAIN_MENU_WRITING_SCRATCH.ogg");
@@ -68,11 +75,11 @@ void AudioManager_LoadAll() {
     soundBank[static_cast<int>(SoundID::SFX_ELEVATOR_CLOSE)] = AEAudioLoadSound("Assets/Audio/SFX_ELEVATOR_CLOSE.ogg");
 }
 
-/*****************************************************************************************/
-// --- MEMORY SAFETY ---
+// ----------------------------------------------------------------------------
+// MEMORY SAFETY
 // Strictly stops all playing audio and unloads every single pointer when the game closes 
 // to prevent catastrophic audio buffer memory leaks.
-/*****************************************************************************************/
+// ----------------------------------------------------------------------------
 void AudioManager_Unload() {
     AEAudioStopGroup(groupSFX);
     AEAudioStopGroup(groupBGM);
@@ -86,10 +93,12 @@ void AudioManager_Unload() {
     AEAudioUnloadAudioGroup(groupBGM);
     AEAudioUnloadAudioGroup(groupWalking);
 
-    AEAudioExit(); // release audio engine internal state (matches AEAudioInit in AudioManager_Init)
+    AEAudioExit();
 }
 
-/********************************* PLAYBACK FUNCTIONS ************************************/
+// ============================================================================
+// PLAYBACK
+// ============================================================================
 
 void AudioManager_PlayBGM(SoundID id, float volume) {
     AEAudioPlay(soundBank[static_cast<int>(id)], groupBGM, volume, 1.0f, -1);
@@ -99,30 +108,9 @@ void AudioManager_PlaySFX(SoundID id, float volume, float pitch, s32 loops) {
     AEAudioPlay(soundBank[static_cast<int>(id)], groupSFX, volume, pitch, loops);
 }
 
-/*****************************************************************************************/
-// --- 2D SPATIAL AUDIO MATH ---
-// Dynamically scales the volume of a sound effect based on how far away it is from the camera.
-/*****************************************************************************************/
-void AudioManager_PlaySpatialSound(SoundID id, float anomalyX, float playerX) {
-    // 1. Calculate absolute distance between the sound source and the player
-    float distance = fabsf(anomalyX - playerX);
-    float maxDistance = 500.0f; // Beyond this pixel range, the sound is completely silent
-
-    // 2. Linear Attenuation: Creates a percentage from 1.0 (right next to player) to 0.0 (far away)
-    float volume = 1.0f - (distance / maxDistance);
-
-    // 3. Mathematical Clamping: Prevents glitches where volume becomes negative if anomalies 
-    // spawn excessively far off-screen.
-    if (volume < 0.0f) volume = 0.0f;
-    if (volume > 1.0f) volume = 1.0f;
-
-    // 4. Optimization: Only command the audio engine to play the sound if it's actually audible
-    if (volume > 0.0f) {
-        AudioManager_PlaySFX(id, volume);
-    }
-}
-
-/********************************* VOLUME CONTROLS ***************************************/
+// ============================================================================
+// VOLUME & HALT CONTROLS
+// ============================================================================
 
 void AudioManager_SetBGMVolume(float volume) {
     AEAudioSetGroupVolume(groupBGM, volume);
@@ -131,8 +119,6 @@ void AudioManager_SetBGMVolume(float volume) {
 void AudioManager_SetSFXVolume(float volume) {
     AEAudioSetGroupVolume(groupSFX, volume);
 }
-
-/********************************* HALT CONTROLS *****************************************/
 
 void AudioManager_StopBGM()
 {
@@ -144,9 +130,12 @@ void AudioManager_StopSFX()
     AEAudioStopGroup(groupSFX);
 }
 
-/********************************* WALKING OVERRIDES *************************************/
+// ============================================================================
+// WALKING/MOVEMENT OVERRIDES
+// ============================================================================
 // These isolated overrides allow the game to kill the looping wheelchair/footstep sounds 
 // instantly during menus or boss fights without muting the active horror SFX in `groupSFX`.
+// ----------------------------------------------------------------------------
 
 void AudioManager_PlayWalkingSFX(SoundID id, float volume, float pitch, s32 loops)
 {

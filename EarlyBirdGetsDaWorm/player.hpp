@@ -3,7 +3,9 @@
 
 struct AEGfxVertexList;
 
-/******************************* PLAYER & PATIENT LOGIC **********************************/
+// ============================================================================
+// PLAYER & PATIENT LOGIC
+// ============================================================================
 
 /******************************************************************************************
     @brief  Resets the player/patient state, clears previous anomalies, and
@@ -45,7 +47,9 @@ bool Player_HandleInteraction(s8 currentFloor, s8 doorNumAtPlayer, int day);
 void ResetPatientCounter(int day);
 
 
-/********************************* CORE LIFECYCLE ****************************************/
+// ============================================================================
+// CORE LIFECYCLE (LOAD / UPDATE / DRAW)
+// ============================================================================
 
 /******************************************************************************************
     @brief  Initializes the player graphics, random seed, and loads all
@@ -90,7 +94,9 @@ void Player_DrawBlinkOverlay(AEGfxVertexList* squareMesh);
 void Player_Unload();
 
 
-/*************************************** MODIFIERS ***************************************/
+// ============================================================================
+// MODIFIERS & DEBUG
+// ============================================================================
 
 /******************************************************************************************
     @brief  Safely forces the current patient to be a normal human and clears
@@ -127,7 +133,9 @@ void Player_SetFacing(int dir);
 void Player_StopSounds();
 
 
-/*************************************** ACCESSORS ***************************************/
+// ============================================================================
+// ACCESSORS
+// ============================================================================
 
 /******************************************************************************************
     @brief  Checks the hidden truth value of the carried patient.
@@ -173,8 +181,8 @@ bool Player_HasPatient();
 int Player_GetPatientsHandled();
 
 /******************************************************************************************
-    @brief  Debug helper: bumps PatientsHandled to 5 so the day-end quota check passes
-            when a day skip is forced via the debug menu.
+    @brief  Debug helper: bumps PatientsHandled to a specific value so the day-end
+            quota check passes when a day skip is forced via the debug menu.
 ******************************************************************************************/
 void Player_DebugFulfillPatientQuota();
 
