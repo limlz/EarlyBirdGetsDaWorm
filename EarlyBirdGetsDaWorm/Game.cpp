@@ -209,6 +209,10 @@ void Game_Update()
 
     Config::PollAndReload();
 
+    // Restore guide icon after returning from boss fight (Game_Initialize is
+    // skipped on resume, so this is the earliest point to clear the flag).
+    Guide_ShowIcon();
+
     // ------------------------------------------------------------
     // PHASE 1: JUMPSCARE & DEATH HANDOFF
     // ------------------------------------------------------------
@@ -242,6 +246,7 @@ void Game_Update()
             PauseMenu_SetPaused(false);
             isFadingToBoss = false;
             AudioManager_StopBGM();
+            AudioManager_StopSFX();
             next = BOSS_FIGHT_STATE;
         }
         return;

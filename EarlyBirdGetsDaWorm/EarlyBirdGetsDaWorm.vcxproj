@@ -174,6 +174,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="particle_effects.hpp" />
     <ClInclude Include="pause_menu.hpp" />
     <ClInclude Include="player.hpp" />
+    <ClInclude Include="presentation_endgame.hpp" />
     <ClInclude Include="prompts.hpp" />
     <ClInclude Include="quit.hpp" />
     <ClInclude Include="settings.hpp" />

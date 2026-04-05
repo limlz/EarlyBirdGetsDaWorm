@@ -9,6 +9,13 @@ struct Animation {
     int direction = 1;       // 1 = forward, -1 = reverse (for ping-pong)
     bool pingPong = false;   // reverses direction at ends
 
+    /******************************************************************************************
+        @brief  Advances the animation by one tick based on delta time. Handles looping,
+                ping-pong reversal, and one-shot stop-on-last-frame behavior.
+
+        @param  dt
+                Frame delta time in seconds.
+    ******************************************************************************************/
     void Update(float dt) {
         timer += dt;
         if (timer < speed) return;
@@ -25,6 +32,15 @@ struct Animation {
         }
     }
 
+    /******************************************************************************************
+        @brief  Resets the animation back to frame 0 with a fresh timer and forward direction.
+    ******************************************************************************************/
     void Reset() { currentFrame = 0; timer = 0.0f; direction = 1; }
+
+    /******************************************************************************************
+        @brief  Checks whether a non-looping animation has reached its final frame.
+
+        @return true if the animation does not loop and is on the last frame.
+    ******************************************************************************************/
     bool IsFinished() const { return !loops && currentFrame >= frameCount - 1; }
 };

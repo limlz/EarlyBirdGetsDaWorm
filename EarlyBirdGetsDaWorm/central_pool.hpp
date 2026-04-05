@@ -178,8 +178,3 @@ bool CentralPool_IsSystemActive(AnomalyFiles systemFile);
 ******************************************************************************************/
 void CentralPool_ForceSystemActive(AnomalyFiles systemFile);
 
-/******************************************************************************************
-    @brief  Call once at program shutdown to release static vector buffers before the
-            CRT leak check runs. Overrides trailing memory references.
-******************************************************************************************/
-void CentralPool_Shutdown();

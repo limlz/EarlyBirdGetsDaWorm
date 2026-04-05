@@ -84,7 +84,7 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         boss.phase = newPhase;
         boss.phaseTransitionTimer = 0.5f;
         if (!Settings_IsHorrorLessEnabled())
-            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.06f, 0.5f); // low-pitched transition sting
+            AudioManager_PlaySFX(SoundID::SFX_EXHALE, 0.15f, 0.5f);
     }
     if (boss.phaseTransitionTimer > 0.0f)
         boss.phaseTransitionTimer -= dt;
@@ -206,8 +206,6 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
         // Eerie whisper for normal shot — less repetitive than constant screaming
         if (!Settings_IsHorrorLessEnabled())
             AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.08f, 0.9f + static_cast<float>(RandInt(0, 20)) / 100.0f);
-        else
-            AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.12f);
 
         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
             if (!boss.bullets[i].active) {
@@ -236,8 +234,9 @@ void Boss_Update(Boss& boss, float dt, float playerX, float playerY)
     // State 1: Spread Attack (From the Hand!)
     else if (boss.currentState == 1 && boss.shootTimer <= 0.0f) {
         boss.shootTimer = 1.5f;
-        // Spread attack: screaming is earned — but not blaring
-        AudioManager_PlaySFX(SoundID::SFX_SCREAMING, 0.03f, 0.75f);
+        // Spread attack: whisper cue instead of overlapping screams
+        if (!Settings_IsHorrorLessEnabled())
+            AudioManager_PlaySFX(SoundID::SFX_VOICE_WHISPER, 0.06f, 0.7f);
 
         float diffX = playerX - handX;
         float diffY = playerY - handY;

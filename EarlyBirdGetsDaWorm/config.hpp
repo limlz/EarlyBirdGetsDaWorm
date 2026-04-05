@@ -108,6 +108,15 @@ namespace Config {
     extern int posterGlitch[11][5];
 
     // --- CORE FUNCTIONS ---
+
+    /******************************************************************************************
+        @brief  Parses Assets/config.txt and populates all configuration tables and constants.
+    ******************************************************************************************/
     void Load();
-    void PollAndReload(); // call every frame; reloads only when config.txt changes on disk
+
+    /******************************************************************************************
+        @brief  Checks if Assets/config.txt has been modified on disk since the last load.
+                If changed, reloads all values. Safe to call every frame.
+    ******************************************************************************************/
+    void PollAndReload();
 }
