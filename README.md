@@ -25,6 +25,12 @@ Some details worth calling out:
 - **Presentation mode** — a separate endgame path (`PresentationEndgame.cpp`) used for demos
 - Built at warning level 4, with a late pass dedicated to resolving memory leaks
 
+## My contribution
+
+- **Game state manager** (`GameStateManager.cpp`, `gsm.hpp`) — switches states through function pointers, and keeps the ward level loaded during the boss fight so the player returns to it without a reload
+- **Config hot-reload** (`Config.cpp`) — watches `Assets/config.txt` for changes and applies new values while the game is running, printing what changed
+- **Dynamic lighting** (`Lighting.cpp`) — per-floor flicker, a cone light, and checks for whether the player is standing in darkness, tied into the anomaly system
+
 ## Build
 
 Open `EarlyBirdGetsDaWorm.sln` in Visual Studio and build. AlphaEngine is vendored under `Extern/`.
